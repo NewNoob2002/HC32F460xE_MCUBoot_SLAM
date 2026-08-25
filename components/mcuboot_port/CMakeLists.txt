@@ -1,0 +1,3 @@
+add_library(mcuboot_port_hc32 STATIC Src/flash_map_backend.c)
+target_include_directories(mcuboot_port_hc32 PUBLIC Inc)
+target_link_libraries(mcuboot_port_hc32 PUBLIC hc32_platform)

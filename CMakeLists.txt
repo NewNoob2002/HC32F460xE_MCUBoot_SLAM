@@ -24,5 +24,6 @@ include(cmake/FirmwareArtifacts.cmake)
 
 add_subdirectory(Drivers)
 add_subdirectory(Platform)
+add_subdirectory(components)
 add_subdirectory(Boot)
 add_subdirectory(App)
