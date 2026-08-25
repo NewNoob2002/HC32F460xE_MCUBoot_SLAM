@@ -17,7 +17,7 @@
 - Task 2 complete at `f707d3f`.
 - Task 3 complete at `103d647`.
 - Task 4 complete at `6d79421`.
-- Task 5 is the next development node; Tasks 6-8 remain pending.
+- Task 5 complete on `task5/validated-boot-handover`; Task 6 is next and Tasks 7-8 remain pending.
 
 ## Global Constraints
 
