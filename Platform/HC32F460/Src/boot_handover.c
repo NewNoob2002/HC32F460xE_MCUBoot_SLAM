@@ -13,7 +13,7 @@ uint32_t boot_handover_vector_address(uint32_t image_offset, uint16_t header_siz
 #include "bootutil/image.h"
 #include "hc32f460.h"
 
-#define HC32_SRAM_END 0x20027FFFUL
+#define HC32_SRAM_END 0x20026FFFUL
 
 static _Noreturn void halt(void) {
     __disable_irq();
@@ -59,6 +59,7 @@ _Noreturn void boot_handover(const struct boot_rsp *rsp) {
     SCB->VTOR = vector_address;
     __DSB();
     __ISB();
+    __enable_irq();
     __set_MSP(stack_pointer);
     ((void (*)(void))(uintptr_t)reset_vector)();
     halt();
