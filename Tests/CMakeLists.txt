@@ -22,3 +22,15 @@ target_include_directories(boot_handover_tests PRIVATE
 )
 target_compile_definitions(boot_handover_tests PRIVATE BOOT_HOST_TEST)
 add_test(NAME boot_handover COMMAND boot_handover_tests)
+
+add_executable(app_confirm_tests
+    app_confirm_tests.c
+    ${PROJECT_SOURCE_DIR}/App/Core/Src/app_confirm.c
+)
+target_include_directories(app_confirm_tests PRIVATE
+    "${PROJECT_SOURCE_DIR}/App/Core/Inc"
+    "${PROJECT_SOURCE_DIR}/components/mcuboot-2.4.0/boot/bootutil/include"
+    "${PROJECT_SOURCE_DIR}/components/mcuboot_port/Inc"
+    "${CMAKE_BINARY_DIR}/generated/Config"
+)
+add_test(NAME app_confirm COMMAND app_confirm_tests)
