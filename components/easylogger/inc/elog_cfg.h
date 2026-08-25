@@ -66,8 +66,6 @@
 #define ELOG_FMT_USING_DIR
 #define ELOG_FMT_USING_LINE
 /*---------------------------------------------------------------------------*/
-#if defined(HC32F460)
-#else
 // /* enable asynchronous output mode */
 // #define ELOG_ASYNC_OUTPUT_ENABLE
 // /* the highest output level for async mode, other level will sync output */
@@ -78,7 +76,6 @@
 // #define ELOG_ASYNC_LINE_OUTPUT
 // /* asynchronous output mode using POSIX pthread implementation */
 // #define ELOG_ASYNC_OUTPUT_USING_PTHREAD
-#endif
 /*---------------------------------------------------------------------------*/
 /* enable buffered output mode */
 //#define ELOG_BUF_OUTPUT_ENABLE
