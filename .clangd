@@ -1,0 +1,28 @@
+CompileFlags:
+  CompilationDatabase: build/Debug
+  Add:
+    - -D__PROGRAM_START=Reset_Handler
+  Remove:
+    - -fcyclomatic-complexity
+    - -mcmse
+
+Diagnostics:
+  UnusedIncludes: None
+  MissingIncludes: None
+  ClangTidy:
+    FastCheckFilter: Strict
+
+Index:
+  Background: Build
+
+---
+If:
+  PathMatch: .*\.c
+CompileFlags:
+  Compiler: arm-none-eabi-gcc
+
+---
+If:
+  PathMatch: .*\.cpp
+CompileFlags:
+  Compiler: arm-none-eabi-g++
