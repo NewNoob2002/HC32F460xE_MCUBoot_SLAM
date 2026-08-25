@@ -21,6 +21,7 @@ endif()
 
 include(cmake/ProjectOptions.cmake)
 include(cmake/FirmwareArtifacts.cmake)
+include(cmake/Imgtool.cmake)
 
 add_subdirectory(Drivers)
 add_subdirectory(Platform)

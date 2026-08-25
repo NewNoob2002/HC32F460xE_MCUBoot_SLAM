@@ -380,7 +380,7 @@ Add .venv/ to .gitignore. Network approval is required for pip.
 #define MCUBOOT_USE_TINYCRYPT 1
 #define MCUBOOT_VALIDATE_PRIMARY_SLOT 1
 #define MCUBOOT_USE_FLASH_AREA_GET_SECTORS 1
-#define MCUBOOT_BOOT_MAX_ALIGN 4
+#define MCUBOOT_BOOT_MAX_ALIGN 8
 #define MCUBOOT_FIH_PROFILE_OFF 1
 #define MCUBOOT_HAVE_ASSERT_H 1
 ~~~
@@ -404,7 +404,7 @@ imgtool.py keygen -t ecdsa-p256 -k build/Debug/generated/keys/dev-ec-p256.pem
 imgtool.py getpub -k build/Debug/generated/keys/dev-ec-p256.pem -l c -o build/Debug/generated/keys/signing_keys.c
 ~~~
 
-Release fails configure without MCUBOOT_SIGNING_KEY. keys.c wraps generated ecdsa_pub_key/length in bootutil_keys[]. config_checks.c asserts image count=1, max sectors=25 and align=4.
+Release fails configure without MCUBOOT_SIGNING_KEY. keys.c wraps generated ecdsa_pub_key/length in bootutil_keys[]. config_checks.c asserts image count=1, max sectors=25, hardware write align=4 and MCUboot max align=8.
 
 - [ ] **Step 5: Build and commit**
 

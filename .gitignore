@@ -1,6 +1,7 @@
 Platform/project/Objects/
 Platform/project/*.bin
 build/
+.venv/
 .codegraph/
 /debug_artifacts/
 
