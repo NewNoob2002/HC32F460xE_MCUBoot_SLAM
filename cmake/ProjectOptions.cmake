@@ -7,15 +7,12 @@ set(CPU_FLAGS
 
 add_library(hc32_project_options INTERFACE)
 target_include_directories(hc32_project_options INTERFACE
-    ${CMAKE_CURRENT_BINARY_DIR}/generated/Platform/Config
+    ${CMAKE_CURRENT_BINARY_DIR}/generated/Config
 )
 target_compile_definitions(hc32_project_options INTERFACE
     HC32F460
     USE_DDL_DRIVER
-    ARDUINO=111
-    LV_CONF_INCLUDE_SIMPLE
     $<$<CONFIG:Debug>:__CORE_DEBUG>
-    # RGK_LOGO_USE
 )
 target_compile_options(hc32_project_options INTERFACE
     ${CPU_FLAGS}
@@ -23,8 +20,15 @@ target_compile_options(hc32_project_options INTERFACE
     -fdata-sections
     -Wall
     -Wextra
+    -Werror=return-type
     $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
     $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
     $<$<CONFIG:Debug>:-Og -g3>
     $<$<CONFIG:Release>:-Os -g0>
+)
+target_link_options(hc32_project_options INTERFACE
+    ${CPU_FLAGS}
+    -Wl,--gc-sections
+    --specs=nano.specs
+    --specs=nosys.specs
 )

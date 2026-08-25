@@ -18,3 +18,11 @@ if(BOOT_BUILD_HOST_TESTS)
     add_subdirectory(Tests)
     return()
 endif()
+
+include(cmake/ProjectOptions.cmake)
+include(cmake/FirmwareArtifacts.cmake)
+
+add_subdirectory(Drivers)
+add_subdirectory(Platform)
+add_subdirectory(Boot)
+add_subdirectory(App)

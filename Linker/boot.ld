@@ -31,7 +31,7 @@ __OTP_DATA_B1_OFFSET = __OTP_DATA_B1_START - __OTP_DATA_BASE;
 __OTP_LOCK_B1_OFFSET = __OTP_LOCK_B1_START - __OTP_LOCK_BASE;
 
 FLASH_ORIGIN = DEFINED(FLASH_ORIGIN) ? FLASH_ORIGIN : 0x00000000;
-FLASH_LENGTH = DEFINED(FLASH_LENGTH) ? FLASH_LENGTH : 512K;
+FLASH_LENGTH = DEFINED(FLASH_LENGTH) ? FLASH_LENGTH : 0x00010000;
 /* Use contiguous memory regions for simple. */
 MEMORY
 {
@@ -47,7 +47,7 @@ ENTRY(Reset_Handler)
 SECTIONS
 {
     ASSERT(FLASH_ORIGIN == 0x00000000, "boot image must start at Flash base")
-    ASSERT(FLASH_LENGTH <= 0x00008000, "boot image region exceeds 32 KiB")
+    ASSERT(FLASH_LENGTH == 0x00010000, "boot image region must be 64 KiB")
     .vectors :
     {
         . = ALIGN(4);
