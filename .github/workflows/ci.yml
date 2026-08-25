@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      ASAN_OPTIONS: detect_leaks=0
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Arm toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gcc-arm-none-eabi ninja-build python3-venv
+          cmake --version
+          arm-none-eabi-gcc --version
+
+      - name: Prepare imgtool
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install --disable-pip-version-check -r components/mcuboot-2.4.0/scripts/requirements.txt
+
+      - name: Run strict host tests
+        run: |
+          cmake --preset HostTests \
+            -DCMAKE_C_FLAGS="-Wall -Wextra -Wconversion -Wshadow -Werror -fsanitize=address,undefined -fno-omit-frame-pointer" \
+            -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
+          cmake --build build/HostTests --parallel
+          ctest --test-dir build/HostTests --output-on-failure
+
+      - name: Build Debug firmware
+        run: |
+          cmake --preset Debug
+          cmake --build build/Debug --parallel
+          arm-none-eabi-size build/Debug/Boot/boot_firmware.elf build/Debug/App/app_firmware.elf
+
+      - name: Check Release signing-key policy
+        run: |
+          if cmake -S . -B build/ReleaseMissingKey -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE=cmake/gcc-arm-none-eabi.cmake; then
+            echo "Release configure unexpectedly accepted a missing signing key" >&2
+            exit 1
+          fi
+
+          mkdir -p build/ci-keys
+          .venv/bin/python components/mcuboot-2.4.0/scripts/imgtool.py keygen \
+            -t ecdsa-p384 -k build/ci-keys/p384.pem
+          if cmake -S . -B build/ReleaseP384 -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_TOOLCHAIN_FILE=cmake/gcc-arm-none-eabi.cmake \
+            -DMCUBOOT_SIGNING_KEY=${{ github.workspace }}/build/ci-keys/p384.pem; then
+            echo "Release configure unexpectedly accepted an ECDSA-P384 key" >&2
+            exit 1
+          fi
+
+      - name: Build Release firmware
+        run: |
+          .venv/bin/python components/mcuboot-2.4.0/scripts/imgtool.py keygen \
+            -t ecdsa-p256 -k build/ci-keys/release.pem
+          cmake --preset Release \
+            -DMCUBOOT_SIGNING_KEY=${{ github.workspace }}/build/ci-keys/release.pem
+          cmake --build build/Release --parallel
+          arm-none-eabi-size build/Release/Boot/boot_firmware.elf build/Release/App/app_firmware.elf

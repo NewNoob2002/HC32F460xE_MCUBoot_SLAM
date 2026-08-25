@@ -10,6 +10,15 @@
 
 **Spec:** docs/superpowers/specs/2026-08-25-mcuboot-minimal-boot-app-design.md
 
+## Implementation Status (2026-08-25)
+
+- Task 0 complete at baseline commit `70f6297`.
+- Task 1 complete at `875238d`.
+- Task 2 complete at `f707d3f`.
+- Task 3 complete at `103d647`.
+- Task 4 complete at `6d79421`.
+- Task 5 is the next development node; Tasks 6-8 remain pending.
+
 ## Global Constraints
 
 - Prefix every shell command with rtk.
