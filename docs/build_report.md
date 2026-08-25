@@ -8,7 +8,7 @@ Implementation baseline: ac8c03844d706937ec068357395e3bdf8bd9b676
 
 ## Result
 
-Clean HostTests, Debug, and Release verification passed. The software evidence satisfies the Task8 build, layout, signing, and artifact checks. Physical rollback HIL has not yet been executed.
+Clean HostTests, Debug, Release, and physical rollback HIL verification passed. The evidence satisfies the Task8 build, layout, signing, artifact, upgrade, revert, and confirmation-persistence checks.
 
 ## Toolchain
 
@@ -86,6 +86,18 @@ Release artifact SHA-256 values:
 
 Signatures contain ECDSA randomness, so signed-image file hashes may change across otherwise identical rebuilds. imgtool verify, the embedded image digest, version, sizes, and trailer state are the reproducible acceptance checks.
 
-## Remaining hardware verification
+## Physical HIL verification
 
-The required HIL sequence is: confirmed v1 Primary -> test v2 Secondary -> reset without confirmation and observe revert to v1 -> reinstall v2 -> confirm v2 -> reset and observe persistent v2. This must be executed on the HC32F460xE target with captured reset/boot evidence before claiming rollback is hardware-verified.
+The rollback sequence was executed on 2026-08-25 using an HC32F460xE target, J-Link serial 20781318, SWD at 4 MHz, and VTref between 3.351 V and 3.356 V. The target identified as Cortex-M4 r0p1. Reserved Flash at 0x00076000-0x0007FFFF was not accessed; the previous contents of 0x00000000-0x00075FFF were backed up before the test.
+
+| Stage | Primary after boot | Secondary after boot | App state | Result |
+| --- | --- | --- | --- | --- |
+| Confirmed v1 baseline | 1.0.0 | erased | PC in App, image_ok set | Passed |
+| Unconfirmed v2 test boot | 2.0.0 | 2.0.0 during test state | PC in App, image_ok unset | Passed |
+| Reset without confirming v2 | 1.0.0 | 2.0.0 | PC in App | Revert passed |
+| Auto-confirming v2 boot | 2.0.0 | 2.0.0 during test state | confirmation returned 0, image_ok set | Passed |
+| Reset after confirming v2 | 2.0.0 | 1.0.0 | PC in App, image_ok retained | Persistence passed |
+
+The first 5-second sample caught execution inside TinyCrypt ECDSA verification. Subsequent boot gates used a 30-second bounded wait and observed the App at PC 0x00010730. The final target state is confirmed v2 running from Primary.
+
+Local evidence is stored under build/HIL/evidence/. The pre-test Flash backup is 483,328 bytes with SHA-256 60e089f7542b41156d24f1e65bbb14332574a7b1bd3118ea882bf47211f80f7f.
