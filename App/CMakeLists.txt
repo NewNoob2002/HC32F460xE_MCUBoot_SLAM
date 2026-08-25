@@ -1,4 +1,5 @@
 option(APP_AUTO_CONFIRM "Confirm the running MCUboot image at startup" ON)
+set(APP_VERSION "1.0.0" CACHE STRING "MCUboot application image version")
 
 add_executable(app_firmware
     Core/Src/app_confirm.c
@@ -17,3 +18,4 @@ target_link_options(app_firmware PRIVATE
     -Wl,-Map,${CMAKE_CURRENT_BINARY_DIR}/app_firmware.map
 )
 add_firmware_artifacts(app_firmware)
+add_mcuboot_signed_artifacts(app_firmware)

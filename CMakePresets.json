@@ -7,7 +7,9 @@
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "toolchainFile": "${sourceDir}/cmake/gcc-arm-none-eabi.cmake",
-            "cacheVariables": {}
+            "cacheVariables": {
+                "APP_VERSION": "1.0.0"
+            }
         },
         {
             "name": "Debug",
