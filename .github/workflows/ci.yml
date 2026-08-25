@@ -47,6 +47,7 @@ jobs:
         run: |
           cmake --preset Debug
           cmake --build build/Debug --parallel
+          cmake --build build/Debug --target verify_app_image
           arm-none-eabi-size build/Debug/Boot/boot_firmware.elf build/Debug/App/app_firmware.elf
 
       - name: Check Release signing-key policy
@@ -76,4 +77,5 @@ jobs:
           cmake --preset Release \
             -DMCUBOOT_SIGNING_KEY=${{ github.workspace }}/build/ci-keys/release.pem
           cmake --build build/Release --parallel
+          cmake --build build/Release --target verify_app_image
           arm-none-eabi-size build/Release/Boot/boot_firmware.elf build/Release/App/app_firmware.elf

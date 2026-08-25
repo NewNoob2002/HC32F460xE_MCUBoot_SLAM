@@ -100,4 +100,12 @@ The rollback sequence was executed on 2026-08-25 using an HC32F460xE target, J-L
 
 The first 5-second sample caught execution inside TinyCrypt ECDSA verification. Subsequent boot gates used a 30-second bounded wait and observed the App at PC 0x00010730. The final target state is confirmed v2 running from Primary.
 
-Local evidence is stored under build/HIL/evidence/. The pre-test Flash backup is 483,328 bytes with SHA-256 60e089f7542b41156d24f1e65bbb14332574a7b1bd3118ea882bf47211f80f7f.
+At test time, local evidence was stored under build/HIL/evidence/. The pre-test Flash backup was 483,328 bytes with SHA-256 60e089f7542b41156d24f1e65bbb14332574a7b1bd3118ea882bf47211f80f7f.
+
+## HIL evidence retention decision
+
+The summarized 2026-08-25 result above is retained, but its ignored build/HIL/evidence/ directory is not present in the current workspace and cannot be reconstructed after the fact.
+
+Future release-qualifying HIL runs will archive a manifest, command transcript, raw probe and serial logs, slot/trailer readouts, and SHA256SUMS from a dedicated manual or self-hosted HIL workflow. The workflow will upload one immutable GitHub Actions artifact named with the commit and run ID, fail when evidence files are missing, retain it for 90 days, and record the returned artifact ID, URL, and SHA-256 digest in the release report. Before expiry, release evidence will be copied to access-controlled long-term storage and referenced by URI and digest. Full pre-test Flash backups remain excluded by default; retain their digest unless storage of device contents is explicitly approved.
+
+The normal CI workflow does not upload build/HIL/evidence/ because it does not execute hardware tests.

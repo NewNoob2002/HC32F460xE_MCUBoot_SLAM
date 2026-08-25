@@ -17,7 +17,10 @@
 - Task 2 complete at `f707d3f`.
 - Task 3 complete at `103d647`.
 - Task 4 complete at `6d79421`.
-- Task 5 complete on `task5/validated-boot-handover`; Task 6 is next and Tasks 7-8 remain pending.
+- Task 5 complete at `c61eeda`; the handover CPU-state fix is `78d83a4`.
+- Task 6 complete at `9603cd4`.
+- Task 7 complete at `ac8c038`.
+- Task 8 documentation complete at `339f32c`; physical rollback HIL complete at `369312a`.
 
 ## Global Constraints
 
@@ -63,7 +66,7 @@
 - Consumes: root commit 1ee825b.
 - Produces: tracked baseline for reviewable moves and diffs.
 
-- [ ] **Step 1: Review untracked files**
+- [x] **Step 1: Review untracked files**
 
 ~~~sh
 rtk git status --short
@@ -72,7 +75,7 @@ rtk git check-ignore -v .serena .vscode .codegraph build 2>/dev/null || true
 
 Expected: project sources are untracked; local state is not staged.
 
-- [ ] **Step 2: Stage only project files**
+- [x] **Step 2: Stage only project files**
 
 ~~~sh
 rtk git add .clang-format .clangd .gitignore CMakeLists.txt CMakePresets.json Config Core Drivers HC32F460xE.ld Libraries Platform cmake components docs
@@ -81,7 +84,7 @@ rtk git status --short
 
 Expected: no local-state directory is staged.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ~~~sh
 rtk git diff --cached --check
@@ -104,7 +107,7 @@ rtk git commit -m "chore: import HC32 firmware baseline"
 - Consumes: no production code.
 - Produces: generated/Config/boot_memory_map.h with all partition and image constants.
 
-- [ ] **Step 1: Add the failing test**
+- [x] **Step 1: Add the failing test**
 
 ~~~c
 #include <assert.h>
@@ -126,7 +129,7 @@ int main(void) {
 
 Create HostTests preset and target without the generated header.
 
-- [ ] **Step 2: Confirm red**
+- [x] **Step 2: Confirm red**
 
 ~~~sh
 rtk cmake --preset HostTests
@@ -135,7 +138,7 @@ rtk cmake --build build/HostTests --target memory_map_tests
 
 Expected: boot_memory_map.h is missing.
 
-- [ ] **Step 3: Implement MemoryMap.cmake**
+- [x] **Step 3: Implement MemoryMap.cmake**
 
 ~~~cmake
 set(FLASH_TOTAL_SIZE         0x00080000)
@@ -180,7 +183,7 @@ add_subdirectory(Boot)
 add_subdirectory(App)
 ~~~
 
-- [ ] **Step 4: Run the test**
+- [x] **Step 4: Run the test**
 
 ~~~sh
 rtk cmake --preset HostTests
@@ -190,7 +193,7 @@ rtk ctest --test-dir build/HostTests -R memory_map --output-on-failure
 
 Expected: pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ~~~sh
 rtk git add CMakeLists.txt CMakePresets.json cmake/MemoryMap.cmake Config/boot_memory_map.h.in Tests
@@ -219,7 +222,7 @@ rtk git commit -m "build: centralize MCUboot flash layout"
 - Consumes: generated memory header and vendor CMSIS/LL sources.
 - Produces: Boot/App ELF/MAP/HEX/BIN skeletons.
 
-- [ ] **Step 1: Reference missing layered targets and confirm red**
+- [x] **Step 1: Reference missing layered targets and confirm red**
 
 ~~~sh
 rtk cmake --preset Debug
@@ -227,7 +230,7 @@ rtk cmake --preset Debug
 
 Expected: missing hc32_startup_boot, hc32_startup_app or hc32_platform.
 
-- [ ] **Step 2: Implement target-scoped options**
+- [x] **Step 2: Implement target-scoped options**
 
 ~~~cmake
 target_compile_options(hc32_project_options INTERFACE
@@ -239,15 +242,15 @@ target_link_options(hc32_project_options INTERFACE
     -Wl,--gc-sections --specs=nano.specs --specs=nosys.specs)
 ~~~
 
-- [ ] **Step 3: Implement Driver/startup targets**
+- [x] **Step 3: Implement Driver/startup targets**
 
 Create hc32_device INTERFACE; hc32_ll STATIC from hc32_ll.c, clk, efm, fcg, gpio, pwc, sram and utility sources; hc32_startup_boot OBJECT from startup_hc32f460.S, system_hc32f460.c and hc32_ll_icg.c with VECT_TAB_OFFSET=0; hc32_startup_app OBJECT from startup/system sources with VECT_TAB_OFFSET=0x00010200. Do not place hc32_ll_icg.c in hc32_ll.
 
-- [ ] **Step 4: Implement hc32_platform**
+- [x] **Step 4: Implement hc32_platform**
 
 Move the BSP directory intact. Initially compile bsp_clock.c and bsp_flash.c and publish Platform/HC32F460/Inc.
 
-- [ ] **Step 5: Implement linker scripts**
+- [x] **Step 5: Implement linker scripts**
 
 Boot script keeps normal sections plus:
 
@@ -266,11 +269,11 @@ FLASH_LENGTH = DEFINED(FLASH_LENGTH) ? FLASH_LENGTH : 0x0002FA00;
 ASSERT(FLASH_ORIGIN == 0x00010200, "App vector must follow header")
 ~~~
 
-- [ ] **Step 6: Add minimal mains and raw artifacts**
+- [x] **Step 6: Add minimal mains and raw artifacts**
 
 Boot initializes the clock and loops; App loops. Add map plus objcopy HEX/BIN commands. Do not sign yet.
 
-- [ ] **Step 7: Build and inspect**
+- [x] **Step 7: Build and inspect**
 
 ~~~sh
 rtk cmake --preset Debug
@@ -282,7 +285,7 @@ rtk arm-none-eabi-objdump -h build/Debug/App/app_firmware.elf
 
 Expected: Boot ICG=0x400/0x20; App vectors=0x10200 and no ICG.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ~~~sh
 rtk git add CMakeLists.txt cmake Drivers/CMakeLists.txt Platform Boot App Linker
@@ -306,7 +309,7 @@ rtk git commit -m "build: add layered HC32 boot and app targets"
 - Consumes: bsp_flash_read/write/erase_sector.
 - Produces: MCUboot flash_area APIs and slot-ID mapping.
 
-- [ ] **Step 1: Write failing mock-backed tests**
+- [x] **Step 1: Write failing mock-backed tests**
 
 ~~~c
 assert(flash_area_open(FLASH_AREA_IMAGE_PRIMARY(0), &area) == 0);
@@ -321,14 +324,14 @@ assert(flash_area_erase(area, 4, FLASH_SECTOR_SIZE) != 0);
 assert(flash_area_open(FLASH_AREA_BOOTLOADER, &area) != 0);
 ~~~
 
-- [ ] **Step 2: Confirm red**
+- [x] **Step 2: Confirm red**
 
 ~~~sh
 rtk cmake --preset HostTests
 rtk cmake --build build/HostTests --target flash_map_tests
 ~~~
 
-- [ ] **Step 3: Implement descriptors and bounds**
+- [x] **Step 3: Implement descriptors and bounds**
 
 ~~~c
 static const struct flash_area areas[] = {
@@ -340,7 +343,7 @@ static const struct flash_area areas[] = {
 
 Use len > 0 and off <= fa_size - len. Writes require offset/length divisible by 4; erases require offset/length divisible by 0x2000. Boot is absent. flash_area_get_sectors returns 25/25/1 relative sectors; align=4; erased=0xff.
 
-- [ ] **Step 4: Run tests and commit**
+- [x] **Step 4: Run tests and commit**
 
 ~~~sh
 rtk cmake --preset HostTests
@@ -368,7 +371,7 @@ rtk git commit -m "feat: port MCUboot flash map to HC32"
 - Consumes: MCUboot, TinyCrypt, imgtool and Flash backend.
 - Produces: tinycrypt, mcuboot_asn1, mcuboot_bootutil and generated ECDSA public source.
 
-- [ ] **Step 1: Prepare imgtool**
+- [x] **Step 1: Prepare imgtool**
 
 ~~~sh
 rtk python3 -m venv .venv
@@ -378,7 +381,7 @@ rtk .venv/bin/python components/mcuboot-2.4.0/scripts/imgtool.py version
 
 Add .venv/ to .gitignore. Network approval is required for pip.
 
-- [ ] **Step 2: Add exact MCUboot configuration**
+- [x] **Step 2: Add exact MCUboot configuration**
 
 ~~~c
 #pragma once
@@ -396,7 +399,7 @@ Add .venv/ to .gitignore. Network approval is required for pip.
 
 Logging macros are no-ops; assert header includes assert.h.
 
-- [ ] **Step 3: Add library source lists**
+- [x] **Step 3: Add library source lists**
 
 TinyCrypt: sha256.c, utils.c, ecc.c, ecc_dsa.c, ecc_platform_specific.c.
 
@@ -404,7 +407,7 @@ mcuboot_asn1: ext/mbedtls-asn1/src/asn1parse.c and platform_util.c, exposing ext
 
 MCUboot: bootutil_area.c, bootutil_find_key.c, bootutil_img_hash.c, bootutil_img_security_cnt.c, bootutil_loader.c, bootutil_misc.c, bootutil_public.c, caps.c, fault_injection_hardening.c, image_ecdsa.c, image_validate.c, loader.c, swap_misc.c, swap_scratch.c and tlv.c.
 
-- [ ] **Step 4: Implement key plumbing**
+- [x] **Step 4: Implement key plumbing**
 
 Debug without a key runs:
 
@@ -415,7 +418,7 @@ imgtool.py getpub -k build/Debug/generated/keys/dev-ec-p256.pem -l c -o build/De
 
 Release fails configure without MCUBOOT_SIGNING_KEY. keys.c wraps generated ecdsa_pub_key/length in bootutil_keys[]. config_checks.c asserts image count=1, max sectors=25, hardware write align=4 and MCUboot max align=8.
 
-- [ ] **Step 5: Build and commit**
+- [x] **Step 5: Build and commit**
 
 ~~~sh
 rtk cmake --preset Debug
@@ -442,7 +445,7 @@ rtk git commit -m "build: integrate MCUboot and TinyCrypt"
 - Consumes: fih_ret boot_go(struct boot_rsp *rsp).
 - Produces: uint32_t boot_handover_vector_address(uint32_t image_offset, uint16_t header_size) and noreturn boot_handover(const struct boot_rsp *rsp).
 
-- [ ] **Step 1: Write the failing helper test**
+- [x] **Step 1: Write the failing helper test**
 
 ~~~c
 #include <assert.h>
@@ -454,7 +457,7 @@ int main(void) {
 }
 ~~~
 
-- [ ] **Step 2: Confirm red**
+- [x] **Step 2: Confirm red**
 
 ~~~sh
 rtk cmake --preset HostTests
@@ -463,7 +466,7 @@ rtk cmake --build build/HostTests --target boot_handover_tests
 
 Expected: boot_handover_vector_address is undefined.
 
-- [ ] **Step 3: Implement the pure address helper and target handover**
+- [x] **Step 3: Implement the pure address helper and target handover**
 
 ~~~c
 uint32_t boot_handover_vector_address(uint32_t image_offset, uint16_t header_size) {
@@ -473,7 +476,7 @@ uint32_t boot_handover_vector_address(uint32_t image_offset, uint16_t header_siz
 
 The target path validates MSP in 0x1FFF8000..0x20027FFF and the reset vector, with bit zero cleared, in 0x00010200..0x0003FBFF. It disables IRQs and SysTick, clears every implemented NVIC enable/pending word, sets SCB->VTOR, executes DSB/ISB, sets MSP and calls the reset handler. Guard CMSIS-only code with BOOT_HOST_TEST so the helper remains host-buildable.
 
-- [ ] **Step 4: Replace Boot main with MCUboot flow**
+- [x] **Step 4: Replace Boot main with MCUboot flow**
 
 ~~~c
 int main(void) {
@@ -490,7 +493,7 @@ int main(void) {
 
 Do not add a raw-vector fallback.
 
-- [ ] **Step 5: Test and build Boot**
+- [x] **Step 5: Test and build Boot**
 
 ~~~sh
 rtk cmake --preset HostTests
@@ -503,7 +506,7 @@ rtk arm-none-eabi-size build/Debug/Boot/boot_firmware.elf
 
 Expected: host tests pass and Boot remains at most 65536 bytes.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ~~~sh
 rtk git add Boot Platform Tests
@@ -527,7 +530,7 @@ rtk git commit -m "feat: boot validated MCUboot image on HC32"
 - Consumes: int boot_set_confirmed(void).
 - Produces: int app_confirm_running_image(bool auto_confirm).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ~~~c
 #include <assert.h>
@@ -546,7 +549,7 @@ int main(void) {
 }
 ~~~
 
-- [ ] **Step 2: Confirm red**
+- [x] **Step 2: Confirm red**
 
 ~~~sh
 rtk cmake --preset HostTests
@@ -555,7 +558,7 @@ rtk cmake --build build/HostTests --target app_confirm_tests
 
 Expected: app_confirm_running_image is undefined.
 
-- [ ] **Step 3: Implement confirmation**
+- [x] **Step 3: Implement confirmation**
 
 ~~~c
 int app_confirm_running_image(bool auto_confirm) {
@@ -565,7 +568,7 @@ int app_confirm_running_image(bool auto_confirm) {
 
 App/CMakeLists exposes APP_AUTO_CONFIRM as ON/OFF and compiles it to 1/0. App main initializes the clock, calls the wrapper, stores the result in a volatile debugger-visible variable and loops. Do not add LED or Key dependencies.
 
-- [ ] **Step 4: Test and build both modes**
+- [x] **Step 4: Test and build both modes**
 
 ~~~sh
 rtk cmake --preset HostTests
@@ -579,7 +582,7 @@ rtk cmake --build build/Debug --target app_firmware --clean-first --parallel
 
 Expected: both branches are tested and both firmware variants link at 0x10200.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ~~~sh
 rtk git add App Tests
@@ -600,11 +603,11 @@ rtk git commit -m "feat: confirm running MCUboot application"
 - Consumes: app_firmware.bin, APP_VERSION and the selected ECDSA key.
 - Produces: app_signed.bin, app_primary.bin, app_update.bin and verify_app_image.
 
-- [ ] **Step 1: Declare signing targets without commands**
+- [x] **Step 1: Declare signing targets without commands**
 
 Declare app_signed, app_primary, app_update and verify_app_image dependencies before adding the custom commands.
 
-- [ ] **Step 2: Confirm red**
+- [x] **Step 2: Confirm red**
 
 ~~~sh
 rtk cmake --preset Debug
@@ -613,7 +616,7 @@ rtk cmake --build build/Debug --target app_update
 
 Expected: app_update has no producing command.
 
-- [ ] **Step 3: Implement exact signing commands**
+- [x] **Step 3: Implement exact signing commands**
 
 All images use:
 
@@ -631,7 +634,7 @@ The implementation substitutes the configured APP_VERSION and key path, then gen
 
 Each command depends on app_firmware.bin, the selected key and imgtool.py.
 
-- [ ] **Step 4: Add verification**
+- [x] **Step 4: Add verification**
 
 ~~~sh
 rtk .venv/bin/python components/mcuboot-2.4.0/scripts/imgtool.py verify -k build/Debug/generated/keys/dev-ec-p256.pem build/Debug/artifacts/app_signed.bin
@@ -643,7 +646,7 @@ rtk .venv/bin/python components/mcuboot-2.4.0/scripts/imgtool.py dumpinfo build/
 
 verify_app_image also fails if either padded file is not exactly 204800 bytes.
 
-- [ ] **Step 5: Build Debug images**
+- [x] **Step 5: Build Debug images**
 
 ~~~sh
 rtk cmake --preset Debug -DAPP_VERSION=1.0.0 -DAPP_AUTO_CONFIRM=ON
@@ -653,7 +656,7 @@ rtk ls -lh build/Debug/artifacts
 
 Expected: raw, signed, confirmed-primary and test-secondary images exist.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ~~~sh
 rtk git add cmake/FirmwareArtifacts.cmake App/CMakeLists.txt CMakePresets.json
@@ -674,11 +677,11 @@ rtk git commit -m "build: generate signed MCUboot images"
 - Consumes: all targets and artifacts.
 - Produces: reproducible instructions, evidence and manual HIL steps.
 
-- [ ] **Step 1: Document prerequisites and safe artifacts**
+- [x] **Step 1: Document prerequisites and safe artifacts**
 
 README states how to create .venv; only boot_firmware.bin, app_primary.bin and app_update.bin are directly programmable; app_firmware.bin is not an MCUboot image; Debug keys are ephemeral; Release requires MCUBOOT_SIGNING_KEY; software builds do not prove hardware rollback.
 
-- [ ] **Step 2: Run clean HostTests**
+- [x] **Step 2: Run clean HostTests**
 
 ~~~sh
 rtk cmake --preset HostTests
@@ -688,7 +691,7 @@ rtk ctest --test-dir build/HostTests --output-on-failure
 
 Expected: memory_map, flash_map, boot_handover and app_confirm pass.
 
-- [ ] **Step 3: Run clean Debug**
+- [x] **Step 3: Run clean Debug**
 
 ~~~sh
 rtk cmake --preset Debug -DAPP_VERSION=1.0.0 -DAPP_AUTO_CONFIRM=ON
@@ -697,7 +700,7 @@ rtk cmake --build build/Debug --target verify_app_image
 rtk arm-none-eabi-size build/Debug/Boot/boot_firmware.elf build/Debug/App/app_firmware.elf
 ~~~
 
-- [ ] **Step 4: Run clean Release with an explicit test key**
+- [x] **Step 4: Run clean Release with an explicit test key**
 
 ~~~sh
 rtk cmake --preset Release -DMCUBOOT_SIGNING_KEY=$PWD/build/Debug/generated/keys/dev-ec-p256.pem -DAPP_VERSION=1.0.0 -DAPP_AUTO_CONFIRM=ON
@@ -707,7 +710,7 @@ rtk cmake --build build/Release --target verify_app_image
 
 Expected: Release does not generate a key.
 
-- [ ] **Step 5: Verify placement, sizes and hashes**
+- [x] **Step 5: Verify placement, sizes and hashes**
 
 ~~~sh
 rtk arm-none-eabi-objdump -h build/Debug/Boot/boot_firmware.elf
@@ -718,11 +721,11 @@ rtk sha256sum build/Debug/artifacts/*
 
 Expected: Boot ICG=0x400/0x20, App vectors=0x10200, App has no ICG, padded images=204800 bytes and Boot<=65536 bytes.
 
-- [ ] **Step 6: Record evidence and manual HIL sequence**
+- [x] **Step 6: Record evidence and manual HIL sequence**
 
 Record tool versions, presets, ELF sizes, section addresses, image versions and hashes. Include v1 confirmed -> v2 test -> unconfirmed reset/revert -> confirmed v2 persistence. Mark physical execution pending until run.
 
-- [ ] **Step 7: Commit documentation**
+- [x] **Step 7: Commit documentation**
 
 ~~~sh
 rtk git add README.md docs
