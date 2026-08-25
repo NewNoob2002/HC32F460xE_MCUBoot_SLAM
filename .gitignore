@@ -26,7 +26,10 @@ Platform/project/*.uvguix.*
 # Simulator build outputs
 Simulator/build/
 Simulator/bin/
+components/mcuboot-2.4.0/ext/tinycrypt/tests/pseudo-random-data.bin
 
 # Personal IDE state
+.serena/
+.vscode/
 .vscode/ipch/
 Simulator/.idea/
