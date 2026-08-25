@@ -103,22 +103,23 @@ hc32_device (INTERFACE)
                 └── mcuboot_port_hc32 (STATIC)
 
 tinycrypt (STATIC)
+mcuboot_asn1 (STATIC)
     └── mcuboot_bootutil (STATIC)
 
 boot_firmware
-    ├── hc32_startup (OBJECT)
+    ├── hc32_startup_boot (OBJECT)
     ├── hc32_platform
     ├── mcuboot_port_hc32
     └── mcuboot_bootutil
 
 app_firmware
-    ├── hc32_startup (OBJECT)
+    ├── hc32_startup_app (OBJECT)
     ├── hc32_platform
     ├── mcuboot_port_hc32
     └── mcuboot_bootutil
 ```
 
-`hc32_startup` is an object library so the vector table and `Reset_Handler` cannot be omitted by static-library extraction. The App links `mcuboot_bootutil` so `boot_set_confirmed()` uses MCUboot's public API rather than duplicating trailer layout logic. Static-library extraction keeps unrelated bootloader objects out of the App image.
+`hc32_startup_boot` and `hc32_startup_app` compile the same vendor startup and system sources with target-specific `VECT_TAB_OFFSET` values, so `SystemInit()` preserves the correct VTOR for each image. The ICG source is included only in the Boot startup object. Object libraries ensure the vector table, `Reset_Handler` and Boot ICG data cannot be omitted by static-library extraction. The App links `mcuboot_bootutil` so `boot_set_confirmed()` uses MCUboot's public API rather than duplicating trailer layout logic. Static-library extraction keeps unrelated bootloader objects out of the App image.
 
 All compile definitions, include directories and options use `target_*` commands. The project does not use global `include_directories()`, `add_definitions()` or duplicated Boot/App vendor source lists.
 
@@ -179,7 +180,7 @@ Application handover uses the `boot_rsp` returned by `boot_go()`. The vector add
 
 ## Cryptography and Key Handling
 
-The initial configuration uses ECDSA-P256 signatures with MCUboot's vendored TinyCrypt implementation and SHA-256. Mbed TLS is not added.
+The initial configuration uses ECDSA-P256 signatures with MCUboot's vendored TinyCrypt implementation and SHA-256. The small vendored `mbedtls-asn1` parser is compiled only to decode DER public keys and signatures; the Mbed TLS cryptography backend is not added.
 
 Debug builds may generate a temporary ECDSA-P256 development key under the build directory. The private key is never added to the source tree. The generated public key source is an explicit dependency of `boot_firmware`.
 
@@ -288,4 +289,3 @@ The software milestone is complete when:
 - MCUboot scratch-swap and App confirmation code are linked into the corresponding firmware;
 - build instructions state that only signed/padded artifacts are programmable images;
 - USB, transport protocol and hardware rollback execution remain explicitly documented as later work.
-
