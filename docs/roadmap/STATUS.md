@@ -8,7 +8,7 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 | --- | --- | --- | --- | --- | --- | --- |
 | Phase 0 — Verified MCUboot Baseline | PASSED | G0 | HostTests 4/4; Debug/Release/signing CI passed | rollback/confirmation passed | None | `evidence/hil/2026-08-25-339f32c/`, CI run `32922559686` |
 | Phase 1 — Architecture Audit and Contract Freeze | PASSED | G1 | Local G1 passed; remote CI passed | Not required | None | revision `1429e30`, CI run `32925552505` |
-| Phase 2 — Secondary Storage and Boot Control | IN_PROGRESS | G2 | Strict HostTests 7/7; Debug/Release/signing passed | Required before `PASSED` | Secondary range-isolation HIL not executed | Working tree |
+| Phase 2 — Secondary Storage and Boot Control | READY_FOR_REVIEW | G2 | Strict HostTests 7/7; Debug/Release/signing and implementation CI passed | Storage/range-isolation/Pending/restore passed | Evidence commit and remote CI | `evidence/hil/2026-08-26-5ebeae6-phase2/`, revision `5ebeae6`, CI `32928199086` |
 | Phase 3 — Protocol Core | NOT_STARTED | G3 | Not run | Not required | G2 | None |
 | Phase 4 — CherryUSB + HC32 DCD Loopback | NOT_STARTED | G4 | Not run | Required | G3, USB hardware details | None |
 | Phase 5 — USB Upgrade E2E | NOT_STARTED | G5 | Not run | Required | G4 | None |
@@ -32,7 +32,7 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 
 ## Immediate next action
 
-Complete the Phase 2 host contracts and MCUboot Secondary/Boot-Control backends. Do not start USB or Protocol work concurrently.
+Commit the Phase 2 HIL evidence and pass remote CI. Do not start Phase 3 until G2 is marked `PASSED`.
 
 ## Latest local G1 verification
 
@@ -56,4 +56,8 @@ Date: 2026-08-26
 - Debug and Release firmware/signing verification: passed; existing Boot/App sizes unchanged because the updater backend is not yet linked into App.
 - Logical writable capacity: `SECONDARY_SLOT_SIZE - MCUBOOT_TRAILER_RESERVE` (`0x30000`).
 - Full-slot erase is backend-controlled; Host logical offsets cannot write the final `0x2000` trailer sector.
-- HIL Secondary range-isolation and known-valid pending-image checks: not executed.
+- Storage HIL: passed with logical capacity `0x30000`, first/last logical-word readback and erased trailer boundary.
+- Boot-Control HIL: passed with known-valid unpadded signed image, TEST swap-info `0x02` and MCUboot magic written only in the trailer.
+- Scratch SHA-256 was unchanged before/after both HIL profiles; Reserved was never accessed.
+- The final non-Reserved readback was byte-identical to the pre-HIL backup, SHA-256 `3cadc91626a565bf3ee5454d21e29a58243f58f1ae1b118279d1c70e1f6a8dcf`.
+- Evidence: `evidence/hil/2026-08-26-5ebeae6-phase2/`; evidence commit/remote CI pending.

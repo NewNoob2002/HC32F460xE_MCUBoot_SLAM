@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-26T03:57:00Z"
+  operation: "debug-read"
+  authorization: "User authorized Phase 2 HIL; exact pre-test backup is required before Flash modification"
+  target:
+    board: "HC32F460xE target board; Cortex-M4 r0p1 identified"
+    hardware_revision: "unknown"
+    probe_or_adapter_serial: "20781318"
+    transport: "swd"
+  artifact_or_stimulus: "Read 0x00000000-0x00075FFF into ignored local backup; no target write"
+  limits: "VTref 3.354 V; SWD 4000 kHz; read exactly 0x76000 bytes; never access Reserved 0x00076000-0x0007FFFF; no erase, load, reset, unlock, recover, OTP, option-byte, or protection changes"
+  recovery_plan: "Resume the core after save; reject the backup unless its exact size is 483328 bytes and a SHA-256 digest is recorded"
+  approved: true

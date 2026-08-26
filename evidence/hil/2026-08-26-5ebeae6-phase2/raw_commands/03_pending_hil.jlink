@@ -1,0 +1,20 @@
+device HC32F460xE
+si SWD
+speed 4000
+connect
+halt
+erase 0x00010000, 0x00073FFF
+loadbin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot/build/HIL/phase2-pending/artifacts/app_primary.bin, 0x00010000
+verifybin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot/build/HIL/phase2-pending/artifacts/app_primary.bin, 0x00010000
+loadbin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot/build/HIL/phase2-pending/artifacts/app_signed.bin, 0x00042000
+verifybin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot/build/HIL/phase2-pending/artifacts/app_signed.bin, 0x00042000
+r
+g
+sleep 30000
+halt
+mem32 0x1FFF807C 5
+mem32 0x00042000 8
+mem32 0x00073FD0 12
+savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot/build/HIL/phase2-evidence/snapshots/after_pending_00000000_00075fff.bin, 0x00000000, 0x00076000
+g
+exit

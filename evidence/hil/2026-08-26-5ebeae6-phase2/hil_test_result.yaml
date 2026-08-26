@@ -1,0 +1,59 @@
+test_result:
+  schema_version: 1
+  source_revision: "5ebeae6686ba83bce6b6bb366796d5943caf36a3"
+  ci_run: "32928199086 success"
+  level: "hil"
+  target: "HC32F460xE via J-Link 20781318"
+  date: "2026-08-26"
+  passed: true
+  attempts: 3
+  counts:
+    requirements_total: 3
+    passed: 3
+    failed: 0
+    inconclusive_harness_attempts: 1
+  classified_observations:
+    - attempt: "storage attempt 1"
+      classification: "inconclusive"
+      reason: "5-second wait halted inside known slow Debug ECDSA verification before Application handover"
+      recovery: "Exact pre-HIL backup restored and verified before retry"
+  storage:
+    passed: true
+    result: 0
+    stage: "0x600D0000"
+    logical_capacity: "0x30000"
+    first_offset: "0x00000"
+    first_value: "0x13579BDF"
+    last_offset: "0x2FFFC"
+    last_value: "0x2468ACE0"
+    trailer_start: "0x00072000"
+    trailer_observation: "erased 0xFF after backend-controlled full-slot erase and logical writes"
+  boot_control:
+    passed: true
+    result: 0
+    stage: "0x600D0000"
+    candidate_body_compare: "byte-identical to artifacts/pending_app_signed.bin"
+    swap_info_address: "0x00073FD8"
+    swap_info_value: "0x02 (image 0, BOOT_SWAP_TYPE_TEST)"
+    magic_address: "0x00073FF0"
+    magic_words_little_endian: ["0xF395C277", "0x7FEFD260", "0x0F505235", "0x8079B62C"]
+    reset_into_swap: false
+  isolation:
+    passed: true
+    scratch_hash_unchanged: true
+    reserved_accessed: false
+    host_writable_trailer_access: false
+  restoration:
+    passed: true
+    verifybin: "successful"
+    pre_hil_sha256: "3cadc91626a565bf3ee5454d21e29a58243f58f1ae1b118279d1c70e1f6a8dcf"
+    post_restore_sha256: "3cadc91626a565bf3ee5454d21e29a58243f58f1ae1b118279d1c70e1f6a8dcf"
+    byte_compare: "identical"
+  logs:
+    - "logs/00_identify.txt"
+    - "logs/01_backup.txt"
+    - "logs/02_storage_hil_attempt1_5s.txt"
+    - "logs/04_restore_after_attempt1.txt"
+    - "logs/02_storage_hil.txt"
+    - "logs/03_pending_hil.txt"
+    - "logs/04_restore_final.txt"

@@ -1,0 +1,22 @@
+device HC32F460xE
+si SWD
+speed 4000
+connect
+halt
+erase 0x00000000, 0x00073FFF
+loadbin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot/build/HIL/phase2-storage/Boot/boot_firmware.bin, 0x00000000
+verifybin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot/build/HIL/phase2-storage/Boot/boot_firmware.bin, 0x00000000
+loadbin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot/build/HIL/phase2-storage/artifacts/app_primary.bin, 0x00010000
+verifybin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot/build/HIL/phase2-storage/artifacts/app_primary.bin, 0x00010000
+r
+g
+sleep 5000
+halt
+mem32 0x1FFF807C 5
+mem32 0x00042000 4
+mem32 0x00071FFC 1
+mem32 0x00072000 4
+mem32 0x00073FE0 8
+savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot/build/HIL/phase2-evidence/snapshots/after_storage_00000000_00075fff.bin, 0x00000000, 0x00076000
+g
+exit

@@ -1,0 +1,16 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-26T03:56:03Z"
+  operation: "debug-halt"
+  authorization: "User authorized Phase 2 Secondary Storage and Boot-Control HIL"
+  target:
+    board: "HC32F460xE target board"
+    hardware_revision: "unknown; read-only identification"
+    probe_or_adapter_serial: "20781318"
+    transport: "swd"
+  source_revision: "5ebeae6686ba83bce6b6bb366796d5943caf36a3"
+  ci_run: "32928199086 success"
+  artifact_or_stimulus: "No artifact write; read CPUID and Boot ICG words only"
+  limits: "J-Link HC32F460xE, SWD 4000 kHz; no erase, flash write, option-byte, OTP, protection, mass erase, unlock, recover, or Reserved access"
+  recovery_plan: "Resume the core before disconnecting; if attach fails, exit without modifying target state and leave power unchanged"
+  approved: true

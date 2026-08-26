@@ -118,11 +118,11 @@ cmake --build build/Debug --parallel
 
 ### Automated tests
 
-Secondary-only bounds/overflow/alignment, erase/write/read/finalize/abort, fake driver failures, pending-call ordering and forbidden includes.
+Secondary-only bounds/overflow/alignment, backend-controlled erase, write/read, fake driver failures, Boot-Control call mapping and forbidden includes. Session finalize/abort remain Phase 3 Manager responsibilities.
 
 ### Manual / HIL tests
 
-Bounded Secondary erase/write/readback; before/after hashes prove Boot, Primary, Scratch and Reserved were not modified. Request test-pending only with a known valid signed image.
+Bounded Secondary erase/write/readback; logical writes prove the image/trailer boundary and Scratch remains unchanged. A controlled harness may temporarily deploy Boot/Primary but must restore the exact pre-HIL non-Reserved image. Reserved is never accessed. Request test-pending only with a known valid signed image and inspect trailer state before any swap reset.
 
 ### Expected results
 
@@ -134,7 +134,7 @@ CTest output, dependency report, region hashes, HIL raw log, firmware/map sizes 
 
 ### PASS criteria
 
-All tests pass, no HC32 header enters portable code, and HIL proves range isolation.
+All tests pass, no HC32 header enters portable code, HIL proves logical image/trailer and Secondary/Scratch isolation, and the target is restored byte-for-byte.
 
 ### FAIL criteria
 

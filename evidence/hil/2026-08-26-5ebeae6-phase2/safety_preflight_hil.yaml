@@ -1,0 +1,22 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-26T04:00:00Z"
+  operation: "flash"
+  authorization: "User explicitly authorized Phase 2 HIL"
+  target:
+    board: "HC32F460xE target board; Cortex-M4 r0p1 identified"
+    hardware_revision: "unknown"
+    probe_or_adapter_serial: "20781318"
+    transport: "swd"
+  source_revision: "5ebeae6686ba83bce6b6bb366796d5943caf36a3"
+  ci_run: "32928199086 success"
+  artifacts:
+    storage_boot_sha256: "72b2a457aef61d73c9ac1ea10531f70c5b00f5ddf34c8f6c03e8907c3cf5fbfd"
+    storage_primary_sha256: "81a0e6e37589ab9d1e7f060806371ae2416319d12067b54946e8b6fce2f92f62"
+    pending_primary_sha256: "f901d0f7707a739f220dc776273d428e2a9615936bd824b7b389a7912e57f27e"
+    pending_candidate_sha256: "8d4f51d35b56cebec872f6ee3019c4146b983f000fa31202588072b6e2704aa5"
+    pre_hil_backup_sha256: "3cadc91626a565bf3ee5454d21e29a58243f58f1ae1b118279d1c70e1f6a8dcf"
+    pre_hil_backup_size: 483328
+  limits: "VTref 3.351-3.354 V; J-Link HC32F460xE over SWD at 4000 kHz; writes limited to Boot 0x00000000-0x0000FFFF, Primary 0x00010000-0x00041FFF, Secondary 0x00042000-0x00073FFF, and restore-only Scratch 0x00074000-0x00075FFF; never access Reserved 0x00076000-0x0007FFFF; no mass erase, unlock, recover, OTP, protection, or standalone option-byte changes"
+  recovery_plan: "On success or failure, halt the target, erase exactly 0x00000000-0x00075FFF, reload the exact 483328-byte backup at 0x00000000, verify it byte-for-byte, reset/run, then capture and hash a post-restore readback"
+  approved: true

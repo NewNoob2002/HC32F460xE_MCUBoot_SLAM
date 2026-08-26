@@ -1,0 +1,14 @@
+deployment_result:
+  schema_version: 1
+  source_revision: "5ebeae6686ba83bce6b6bb366796d5943caf36a3"
+  safety_preflight: "safety_preflight_hil.yaml"
+  tool: {id: "J-Link Commander", version: "9.70"}
+  temporary_artifacts:
+    - {path: "artifacts/boot_firmware.bin", destination: "0x00000000", sha256: "72b2a457aef61d73c9ac1ea10531f70c5b00f5ddf34c8f6c03e8907c3cf5fbfd"}
+    - {path: "artifacts/storage_app_primary.bin", destination: "0x00010000", sha256: "81a0e6e37589ab9d1e7f060806371ae2416319d12067b54946e8b6fce2f92f62"}
+    - {path: "artifacts/pending_app_primary.bin", destination: "0x00010000", sha256: "f901d0f7707a739f220dc776273d428e2a9615936bd824b7b389a7912e57f27e"}
+    - {path: "artifacts/pending_app_signed.bin", destination: "0x00042000", sha256: "8d4f51d35b56cebec872f6ee3019c4146b983f000fa31202588072b6e2704aa5"}
+  reserved_accessed: false
+  reset_into_pending_swap: false
+  final_state: "Exact pre-HIL 0x00000000-0x00075FFF contents restored; target reset and running"
+  final_verification: "J-Link verifybin successful; post-restore readback SHA-256 and byte compare equal pre-HIL backup"
