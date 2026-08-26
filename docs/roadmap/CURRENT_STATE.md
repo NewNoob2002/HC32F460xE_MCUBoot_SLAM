@@ -4,9 +4,9 @@ Audit date: 2026-08-26
 
 Audited baseline revision: `9d29ee9843c711d7f853d7c24a7df58be8e8e1e9`
 
-Current Phase 3 scope: reviewed Phase 3A-3D source revision `e7899bd` has a
-complete immutable Phase 3E Host Evidence bundle. Its evidence revision must pass
-remote CI before G3 may be marked PASSED.
+Phase 3/G3 passed on 2026-08-26. Source revision `e7899bd`, immutable Host
+Evidence revision `515d0c5` and GitHub Actions CI run `32948384485` form the
+accepted gate record. Phase 4 remains NOT_STARTED.
 
 This document describes the repository as implemented. Historical milestone documents are supporting evidence, not the source of truth for current code.
 
@@ -51,7 +51,7 @@ Sources: `CMakeLists.txt`, `Drivers/CMakeLists.txt`, `Platform/CMakeLists.txt`, 
 | `components/fw_update/` | Portable Storage/Boot-Control contracts, Protocol V1 codec/parser, receive/verification Manager and MCUboot backends | Core is host-buildable and dependency-checked; MCUboot backend is intentionally non-portable |
 | `Platform/HC32F460/` | Clock, Flash, startup support and boot handover | Intentionally HC32-specific |
 | `Drivers/` | CMSIS/device/LL libraries and Boot/App startup objects | HC32-specific |
-| `Tests/` | Nine strict HostTests, Golden Vector verifier, fixed-seed malformed corpus, portable dependency check and reusable HIL assets | G3 tracked evidence/remote CI remain |
+| `Tests/` | Nine strict HostTests, Golden Vector verifier, fixed-seed malformed corpus, portable dependency check and reusable HIL assets | Phase 4 USB stack/HIL coverage remains |
 | `cmake/` | Memory map, toolchain/options, signing and artifacts | Project/HC32 build policy |
 
 There is now a bounded portable `fw_update` Storage/Boot-Control foundation,
@@ -179,10 +179,10 @@ MCUboot's upstream ability to validate or swap an image is not evidence that thi
 | Firmware build | Debug/Release, image signing/verification, layout and key policy in CI | No size regression threshold beyond partition/link failure |
 | HIL/manual | Boot/swap/revert/confirmation plus Phase 2 Secondary erase/boundary readback, Pending trailer and exact restoration | No runtime transfer or reset/power loss during individual operations |
 | Fault injection | Unconfirmed test boot followed by reset/revert | No erase/write failure, corrupted trailer or interrupted swap matrix |
-| CI | Evidence checksum, nine strict local HostTests, portable dependency rule, firmware builds/signing | G3 Host Evidence revision is not yet remote-verified |
+| CI | Evidence checksum, nine strict HostTests, portable dependency rule, firmware builds/signing; G3 evidence revision passed CI `32948384485` | No USB stack or runtime update E2E CI/HIL yet |
 
-The largest current delivery gap is Phase 3E remote CI, followed by production
-Application/Transport integration. The largest baseline reliability gap remains systematic
+The largest current delivery gap is production Application/Transport integration.
+The largest baseline reliability gap remains systematic
 power-interruption testing during swap/update operations.
 
 ## Technical debt and risks
@@ -219,8 +219,7 @@ No P0 defect was identified in the protected baseline. A new P0 is any path that
 
 The minimal compile/build/sign/boot/swap/rollback/confirmation baseline and the
 Phase 2 Secondary Storage/Boot-Control foundation are complete and CI/HIL
-evidenced. Phase 3A-3D portable Protocol/Manager implementation and tracked Host
-Evidence are complete, but G3 remains open until the evidence revision passes
-remote CI.
-The full runtime firmware-update framework is not implemented; no USB/UART/CAN
-work may start before G3.
+evidenced. Phase 3 portable Protocol/Manager implementation and tracked Host
+Evidence passed G3. The full runtime firmware-update framework is not implemented;
+the next permitted activity is Phase 4 planning/review, not concurrent USB/UART/
+CAN implementation.

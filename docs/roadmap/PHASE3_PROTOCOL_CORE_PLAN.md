@@ -1,6 +1,6 @@
 # Phase 3 Protocol Core Plan
 
-Status: Approved; Phase 3E local evidence complete, remote CI pending
+Status: Completed; G3 PASSED
 
 Date: 2026-08-26
 
@@ -419,8 +419,8 @@ recovery is required because Phase 3 does not change target state.
 
 ## Recommended immediate next action
 
-Execute only Phase 3E immutable G3 host evidence and remote CI. Do not start
-Phase 4 or mark G3 PASSED before that evidence revision passes remotely.
+Plan and review Phase 4 CherryUSB + HC32 DCD loopback. Phase 4 implementation
+remains subject to explicit approval and its own hard gate.
 
 ## Phase 3A execution result
 
@@ -496,3 +496,12 @@ Phase 4 or mark G3 PASSED before that evidence revision passes remotely.
 - Strict HostTests 9/9, Golden Vectors 19/19, portable dependency check, scoped
   cppcheck, Debug/Release ARM builds and signed-image verification passed.
 - HIL required: no; Phase 3E started: no; G3 passed: no; commit/push: no.
+
+## Phase 3E gate result
+
+- Source revision `e7899bd8c2f96b138f6daab7d491268286e40a14` was verified from a clean
+  worktree and preserved under `evidence/host/2026-08-26-e7899bd-phase3/`.
+- Evidence revision `515d0c548d0c6f243673eda461bd4786d653bd65` passed GitHub Actions CI run
+  `32948384485`; retained evidence, strict HostTests, Debug/Release firmware,
+  signed-image verification and Release signing-key policy all passed.
+- Phase 3: PASSED. G3: PASSED. HIL required: no. Phase 4 started: no.

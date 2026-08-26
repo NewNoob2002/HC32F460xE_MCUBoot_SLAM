@@ -9,8 +9,8 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 | Phase 0 — Verified MCUboot Baseline | PASSED | G0 | HostTests 4/4; Debug/Release/signing CI passed | rollback/confirmation passed | None | `evidence/hil/2026-08-25-339f32c/`, CI run `32922559686` |
 | Phase 1 — Architecture Audit and Contract Freeze | PASSED | G1 | Local G1 passed; remote CI passed | Not required | None | revision `1429e30`, CI run `32925552505` |
 | Phase 2 — Secondary Storage and Boot Control | PASSED | G2 | Strict HostTests 7/7; Debug/Release/signing and remote CI passed | Storage/range-isolation/Pending/restore passed | None | `evidence/hil/2026-08-26-5ebeae6-phase2/`, revisions `5ebeae6`/`0e1abd8`, CI `32928199086`/`32929570437` |
-| Phase 3 — Protocol Core | IN_PROGRESS | G3 | Phase 3E local matrix PASS: HostTests 9/9; corpus 10,000; Debug/Release/signing PASS | Not required | Remote CI | `evidence/host/2026-08-26-e7899bd-phase3/` |
-| Phase 4 — CherryUSB + HC32 DCD Loopback | NOT_STARTED | G4 | Not run | Required | G3, USB hardware details | None |
+| Phase 3 — Protocol Core | PASSED | G3 | HostTests 9/9; corpus 10,000; Debug/Release/signing and remote CI PASS | Not required | None | `evidence/host/2026-08-26-e7899bd-phase3/`, revisions `e7899bd`/`515d0c5`, CI `32948384485` |
+| Phase 4 — CherryUSB + HC32 DCD Loopback | NOT_STARTED | G4 | Not run | Required | Phase 4 plan approval, USB hardware details | None |
 | Phase 5 — USB Upgrade E2E | NOT_STARTED | G5 | Not run | Required | G4 | None |
 | Phase 6 — Failure and Recovery | NOT_STARTED | G6 | Not run | Required | G5, power/reset fixture | None |
 | Phase 7 — UART Portability | NOT_STARTED | G7 | Not run | Required | G6 | None |
@@ -32,7 +32,7 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 
 ## Immediate next action
 
-Push the immutable G3 Host Evidence revision, pass remote CI, then mark G3 `PASSED` in a separate commit.
+Plan and review Phase 4 CherryUSB + HC32 DCD loopback; do not begin implementation before explicit approval.
 
 ## Latest local G1 verification
 
@@ -171,3 +171,16 @@ Date: 2026-08-26
 - Existing retained evidence verification: 2/2 bundles PASS before adding the
   new Host bundle. HIL: not required and not performed.
 - Phase 3/G3 remain `IN_PROGRESS`; evidence push and remote CI are pending.
+
+## Phase 3E remote gate result
+
+Date: 2026-08-26
+
+- Source revision: `e7899bd8c2f96b138f6daab7d491268286e40a14`.
+- Immutable Host Evidence revision: `515d0c548d0c6f243673eda461bd4786d653bd65`.
+- GitHub Actions CI run `32948384485`: PASS. Job `build-and-test` and every
+  required step passed: retained evidence verification, strict HostTests, Debug
+  firmware, Release signing-key policy and Release firmware/signing.
+- Phase 3 status: `PASSED`. G3 status: `PASSED`. HIL: not required.
+- Phase 4 remains `NOT_STARTED`; no USB/CherryUSB/HC32 DCD implementation was
+  started by this gate-close change.

@@ -240,8 +240,8 @@ No CherryUSB source is added in Phase 1. Phase 4 must re-check the current upstr
 | Question | Result |
 | --- | --- |
 | 1. What is actually complete? | Signed Boot/App baseline, Secondary Storage/Boot-Control, Protocol codec/parser and host-tested Manager lifecycle through COMMIT and RESET action |
-| 2. What should happen next? | Execute only Phase 3E immutable G3 evidence and remote CI |
-| 3. What should not happen now? | USB/CAN/UART integration, Boot recovery or claiming G3 before Phase 3E evidence/remote CI |
+| 2. What should happen next? | Plan and review Phase 4 CherryUSB + HC32 DCD loopback |
+| 3. What should not happen now? | Concurrent USB/CAN/UART implementation, full updater integration or Boot recovery before Phase 4 scope/gate approval |
 | 4. Top three risks? | Parser bounds/desync, duplicate side effects, unsigned compatibility metadata assumptions |
 | 5. Boot/App/Slot distinguished? | Yes |
 | 6. Full manager in Application? | Yes |
