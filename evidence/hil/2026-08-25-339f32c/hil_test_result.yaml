@@ -1,0 +1,39 @@
+test_result:
+  schema_version: 1
+  source_revision: "339f32cc0145ecdc71878c68a8cb4af543be2920"
+  implementation_baseline: "ac8c03844d706937ec068357395e3bdf8bd9b676"
+  artifact_checksums:
+    artifacts/boot_firmware.bin: "72b2a457aef61d73c9ac1ea10531f70c5b00f5ddf34c8f6c03e8907c3cf5fbfd"
+    artifacts/v1_app_primary.bin: "ec990760b5fa0937d882402fd36d6bb9ae7a00855c02673cda06ee49609d0263"
+    artifacts/v2_test_app_update.bin: "df041c499b56e578609caabad58aa204944f7260cb92e82a0d00e625c6a5683b"
+    artifacts/v2_confirm_app_update.bin: "d9bcc34ffc160084281516b7e731d568b742a8390ade4619e9b8b3c28e3c44a4"
+  safety_preflight: "safety_preflight_hil.yaml"
+  level: "hil"
+  target: "HC32F460xE via J-Link 20781318"
+  command: "J-Link command files preserved under raw_commands/"
+  timing:
+    started_at_utc: "2026-08-25T12:10:54Z"
+    duration_ms: 0
+    duration_note: "Original total duration was not measured"
+    timeout_ms: 30000
+  attempts: 1
+  passed: true
+  counts:
+    total: 4
+    passed: 4
+    failed: 0
+    skipped: 0
+  classified_failures: []
+  log: "logs/jlink_hil_01_v1.txt"
+  logs:
+    - "logs/jlink_hil_01_v1.txt"
+    - "logs/jlink_hil_01_v1_recheck.txt"
+    - "logs/jlink_hil_02_v2_test_boot.txt"
+    - "logs/jlink_hil_03_v2_test_revert.txt"
+    - "logs/jlink_hil_04_v2_confirm_boot.txt"
+    - "logs/jlink_hil_05_v2_confirm_persist.txt"
+  requirements:
+    - "confirmed v1 baseline boots"
+    - "unconfirmed v2 test image boots"
+    - "unconfirmed v2 reverts to v1 after reset"
+    - "confirmed v2 persists after reset"

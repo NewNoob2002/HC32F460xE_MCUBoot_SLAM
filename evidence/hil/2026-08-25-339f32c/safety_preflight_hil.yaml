@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-25T12:10:54Z"
+  operation: "flash"
+  authorization: "User-requested physical MCUboot upgrade, rollback, and confirmation-persistence HIL"
+  target:
+    board: "HC32F460xE target board; Cortex-M4 r0p1 identified"
+    hardware_revision: "unknown"
+    probe_or_adapter_serial: "20781318"
+    transport: "swd"
+  artifact_or_stimulus: "Boot SHA256 72b2a457aef61d73c9ac1ea10531f70c5b00f5ddf34c8f6c03e8907c3cf5fbfd; v1 Primary ec990760b5fa0937d882402fd36d6bb9ae7a00855c02673cda06ee49609d0263; v2-test Update df041c499b56e578609caabad58aa204944f7260cb92e82a0d00e625c6a5683b; v2-confirm Update d9bcc34ffc160084281516b7e731d568b742a8390ade4619e9b8b3c28e3c44a4"
+  limits: "VTref 3.354 V; J-Link HC32F460xE over SWD at 4000 kHz; Boot 0x00000000/0x10000, Primary 0x00010000/0x32000, Secondary 0x00042000/0x32000, Scratch 0x00074000/0x2000; never access Reserved 0x00076000-0x0007FFFF; no mass erase, unlock, recover, OTP, ICG/option-byte modification outside the Boot artifact, or protection changes"
+  recovery_plan: "Save 0x00000000-0x00075FFF before erase; on failure restore that backup to the same address, verify it, reset/run, and leave target power unchanged"
+  approved: true

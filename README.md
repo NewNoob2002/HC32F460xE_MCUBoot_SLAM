@@ -26,6 +26,12 @@ cmake --build build/HostTests --clean-first --parallel
 ctest --test-dir build/HostTests --output-on-failure
 ~~~
 
+Verify retained HIL evidence from previous release-qualified runs:
+
+~~~sh
+python3 Tests/HIL/verify_evidence.py
+~~~
+
 Build and verify Debug images. Debug configuration creates an ephemeral development key under build/Debug/generated/keys/; it must not be committed or used for production:
 
 ~~~sh
@@ -69,6 +75,8 @@ Use the same signing key for both application versions and preserve each build's
 6. Rebuild version 2 with APP_AUTO_CONFIRM=ON, program the new app_update.bin, and boot it so the application confirms the image.
 7. Reset again and verify that version 2 remains active.
 
-The build and host tests validate layout, signing, handover, and confirmation contracts. They do not prove physical flash swapping, reset behavior, or rollback on hardware; the HIL sequence above remains required.
+The build and host tests validate layout, signing, handover, and confirmation contracts. They do not prove physical flash swapping, reset behavior, or rollback on hardware; the HIL sequence above remains required for a new release baseline.
 
-See docs/build_report.md for the latest recorded verification evidence.
+The 2026-08-25 rollback HIL logs, exact programmed images, manifests, and checksums are retained under evidence/hil/2026-08-25-339f32c/. Reusable path-independent command templates live under Tests/HIL/. The full pre-test Flash backup is excluded because it may contain device-specific data; its size and hash remain in the evidence manifest.
+
+See docs/build_report.md for the latest recorded verification report.

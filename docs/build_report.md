@@ -6,6 +6,12 @@ Branch: task8/final-verification-docs
 
 Implementation baseline: ac8c03844d706937ec068357395e3bdf8bd9b676
 
+HIL source revision: 339f32cc0145ecdc71878c68a8cb4af543be2920
+
+Evidence freeze date: 2026-08-26
+
+Evidence freeze base revision: a004c63bd34745bdbd23b7d1888e8153d32f0fab
+
 ## Result
 
 Clean HostTests, Debug, Release, and physical rollback HIL verification passed. The evidence satisfies the Task8 build, layout, signing, artifact, upgrade, revert, and confirmation-persistence checks.
@@ -104,8 +110,8 @@ At test time, local evidence was stored under build/HIL/evidence/. The pre-test 
 
 ## HIL evidence retention decision
 
-The summarized 2026-08-25 result above is retained, but its ignored build/HIL/evidence/ directory is not present in the current workspace and cannot be reconstructed after the fact.
+Phase 0A preserved the exact four programmed firmware images, raw J-Link logs, historical command files, normalized build/deployment/test manifests, and SHA-256 checksums under evidence/hil/2026-08-25-339f32c/. These files are independent of the ignored build tree and survive a fresh clone.
 
-Future release-qualifying HIL runs will archive a manifest, command transcript, raw probe and serial logs, slot/trailer readouts, and SHA256SUMS from a dedicated manual or self-hosted HIL workflow. The workflow will upload one immutable GitHub Actions artifact named with the commit and run ID, fail when evidence files are missing, retain it for 90 days, and record the returned artifact ID, URL, and SHA-256 digest in the release report. Before expiry, release evidence will be copied to access-controlled long-term storage and referenced by URI and digest. Full pre-test Flash backups remain excluded by default; retain their digest unless storage of device contents is explicitly approved.
+The original 483,328-byte pre-test Flash backup remains excluded because a full-device dump may contain device-specific or sensitive data. Its SHA-256 remains 60e089f7542b41156d24f1e65bbb14332574a7b1bd3118ea882bf47211f80f7f. Reusable path-independent J-Link templates are tracked under Tests/HIL/; the preserved historical commands retain their original absolute paths as evidence only.
 
-The normal CI workflow does not upload build/HIL/evidence/ because it does not execute hardware tests.
+The normal CI workflow verifies every retained SHA256SUMS file but does not execute hardware tests. Future release-qualifying HIL runs must create a new immutable evidence directory; a successful hardware run without retained evidence does not pass its release gate.

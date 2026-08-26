@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-25T12:06:04Z"
+  operation: "debug-halt"
+  authorization: "User-requested physical MCUboot upgrade, rollback, and confirmation-persistence HIL"
+  target:
+    board: "HC32F460xE target board"
+    hardware_revision: "unknown; read-only target identification only"
+    probe_or_adapter_serial: "20781318"
+    transport: "swd"
+  artifact_or_stimulus: "No artifact write; read CPUID and Boot ICG words only"
+  limits: "J-Link HC32F460xE, SWD 4000 kHz; no erase, flash write, option-byte, OTP, protection, or reserved-region access; VTref 3.349 V"
+  recovery_plan: "Resume the core before disconnecting; if attach fails, exit without erase/unlock/recover and leave power unchanged"
+  approved: true

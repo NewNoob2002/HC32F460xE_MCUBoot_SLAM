@@ -1,0 +1,29 @@
+evidence_bundle:
+  schema_version: 1
+  run_id: "2026-08-25-339f32c-hc32f460-mcuboot-rollback"
+  status: "preserved"
+  test_date: "2026-08-25"
+  source_revision: "339f32cc0145ecdc71878c68a8cb4af543be2920"
+  implementation_baseline: "ac8c03844d706937ec068357395e3bdf8bd9b676"
+  evidence_freeze_base_revision: "a004c63bd34745bdbd23b7d1888e8153d32f0fab"
+  target:
+    board: "HC32F460xE"
+    hardware_revision: "unknown"
+    probe: "J-Link 20781318"
+    transport: "SWD"
+    speed_khz: 4000
+  retained:
+    exact_programmed_artifacts: true
+    raw_probe_logs: true
+    historical_command_files: true
+    normalized_manifests: true
+  excluded:
+    - path: "build/HIL/evidence/backup_before_hil_00000000_00075fff.bin"
+      reason: "Full-device Flash backup may contain device-specific or sensitive data"
+      size_bytes: 483328
+      sha256: "60e089f7542b41156d24f1e65bbb14332574a7b1bd3118ea882bf47211f80f7f"
+    - path: "build/HIL"
+      reason: "Reproducible compiler objects, caches, maps, and other build-tree files"
+  verification:
+    checksums: "SHA256SUMS"
+    command: "python3 Tests/HIL/verify_evidence.py evidence/hil/2026-08-25-339f32c/SHA256SUMS"

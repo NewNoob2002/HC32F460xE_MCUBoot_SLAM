@@ -1,0 +1,14 @@
+debug_session:
+  schema_version: 1
+  created_at_utc: "2026-08-25T12:06:04Z"
+  safety_preflight: "safety_preflight_identify.yaml"
+  target: "HC32F460xE via J-Link 20781318"
+  server: "J-Link Commander 9.70"
+  client: "J-Link Commander"
+  source_revision: "339f32cc0145ecdc71878c68a8cb4af543be2920"
+  symbols: "not-applicable"
+  build_ids: []
+  diagnosis: "Cortex-M4 r0p1 identified; Boot ICG words read without modifying target Flash"
+  transcript: "logs/jlink_identify.txt"
+  registers: "logs/jlink_identify.txt"
+  memory_dumps: []

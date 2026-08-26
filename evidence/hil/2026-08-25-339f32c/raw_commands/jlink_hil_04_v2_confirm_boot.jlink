@@ -1,0 +1,18 @@
+device HC32F460xE
+si SWD
+speed 4000
+connect
+halt
+loadbin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot/build/HIL/v2-confirm/artifacts/app_update.bin, 0x00042000
+verifybin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot/build/HIL/v2-confirm/artifacts/app_update.bin, 0x00042000
+r
+g
+sleep 30000
+halt
+mem32 0x00010000 8
+mem32 0x00042000 8
+mem32 0x00041FE0 8
+mem32 0x00073FE0 8
+mem32 0x1FFF8078 1
+g
+exit

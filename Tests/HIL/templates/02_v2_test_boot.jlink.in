@@ -1,0 +1,18 @@
+device HC32F460xE
+si SWD
+speed @HIL_SWD_SPEED_KHZ@
+connect
+halt
+loadbin @HIL_V2_TEST_BIN@, 0x00042000
+verifybin @HIL_V2_TEST_BIN@, 0x00042000
+r
+g
+sleep @HIL_BOOT_WAIT_MS@
+halt
+mem32 0x00010000 8
+mem32 0x00042000 8
+mem32 0x00041FE0 8
+mem32 0x00073FE0 8
+mem32 0x1FFF8078 1
+g
+exit

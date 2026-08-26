@@ -1,0 +1,23 @@
+release_evidence:
+  schema_version: 1
+  version: "baseline-hil-2026-08-25"
+  source_revision: "339f32cc0145ecdc71878c68a8cb4af543be2920"
+  safety_preflights:
+    - "safety_preflight_identify.yaml"
+    - "safety_preflight_hil.yaml"
+  build_outputs:
+    - "build_v1.yaml"
+    - "build_v2_test.yaml"
+    - "build_v2_confirm.yaml"
+  deployments:
+    - "deployment_result.yaml"
+  debug_sessions:
+    - "debug_session.yaml"
+  runtime_monitors: []
+  bus_validations: []
+  tests:
+    - "hil_test_result.yaml"
+  reviews:
+    - "../../../docs/build_report.md"
+  bundle_manifest: "manifest.yaml"
+  checksums: "SHA256SUMS"

@@ -2,7 +2,7 @@
 
 ## Status
 
-Approved in chat on 2026-08-25. This document defines the first buildable milestone for the HC32F460xE MCUboot project.
+Implemented historical design. Approved on 2026-08-25 and completed through the physical rollback HIL. Current verification evidence is retained under evidence/hil/2026-08-25-339f32c/; future architecture work must use a separate current-state document rather than extending this milestone specification.
 
 ## Goal
 
@@ -226,9 +226,9 @@ For initial installation, `boot_firmware.bin` is programmed into Boot and `app_p
 
 For an offline test upgrade, `app_update.bin` is programmed into Secondary. On reset, MCUboot validates the image, performs the scratch swap and starts the new image from Primary. MCUboot trailer state provides power-loss progress recovery during the swap.
 
-The simple App performs its local startup check and then follows the `APP_AUTO_CONFIRM` CMake setting:
+The simple App initializes the clock and then follows the `APP_AUTO_CONFIRM` CMake setting:
 
-- `ON`: call `boot_set_confirmed()` and report failure if confirmation cannot be written;
+- `ON`: call `boot_set_confirmed()` and store the result in a debugger-visible variable;
 - `OFF`: remain unconfirmed so the next reset exercises MCUboot revert.
 
 If the test image resets before confirmation, MCUboot swaps the previous image back from Secondary. If confirmation succeeds, subsequent resets retain the new image.
@@ -269,7 +269,7 @@ The firmware build enables `MCUBOOT_SWAP_USING_SCRATCH`; it does not substitute 
 
 ### Hardware Acceptance
 
-Hardware execution is recorded separately and is not claimed by the software-only milestone. The target procedure is:
+Hardware execution was completed separately on 2026-08-25 after the software-only milestone. The retained procedure is:
 
 1. program Boot and a v1 confirmed Primary image;
 2. confirm that v1 boots;
@@ -288,4 +288,5 @@ The software milestone is complete when:
 - signature, size, memory-map and ICG checks pass;
 - MCUboot scratch-swap and App confirmation code are linked into the corresponding firmware;
 - build instructions state that only signed/padded artifacts are programmable images;
-- USB, transport protocol and hardware rollback execution remain explicitly documented as later work.
+- USB and transport protocol remain explicitly documented as later work;
+- physical rollback and confirmation persistence have passed, with evidence retained outside the build tree.

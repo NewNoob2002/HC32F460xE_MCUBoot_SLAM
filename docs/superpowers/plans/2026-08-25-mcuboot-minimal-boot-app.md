@@ -12,6 +12,8 @@
 
 ## Implementation Status (2026-08-25)
 
+Phase 0A documentation and HIL evidence freeze completed on 2026-08-26 from base revision a004c63.
+
 - Task 0 complete at baseline commit `70f6297`.
 - Task 1 complete at `875238d`.
 - Task 2 complete at `f707d3f`.
@@ -474,7 +476,7 @@ uint32_t boot_handover_vector_address(uint32_t image_offset, uint16_t header_siz
 }
 ~~~
 
-The target path validates MSP in 0x1FFF8000..0x20027FFF and the reset vector, with bit zero cleared, in 0x00010200..0x0003FBFF. It disables IRQs and SysTick, clears every implemented NVIC enable/pending word, sets SCB->VTOR, executes DSB/ISB, sets MSP and calls the reset handler. Guard CMSIS-only code with BOOT_HOST_TEST so the helper remains host-buildable.
+The target path validates MSP in 0x1FFF8000..0x20026FFF and the reset vector, with bit zero cleared, in 0x00010200..0x0003FBFF. It disables IRQs and SysTick, clears every implemented NVIC enable/pending word, sets SCB->VTOR, executes DSB/ISB, sets MSP and calls the reset handler. Guard CMSIS-only code with BOOT_HOST_TEST so the helper remains host-buildable.
 
 - [x] **Step 4: Replace Boot main with MCUboot flow**
 
@@ -735,3 +737,92 @@ rtk git status --short
 ~~~
 
 Expected: no tracked modification remains.
+
+---
+
+### Phase 0A: Documentation and HIL Evidence Freeze
+
+**Objective:** Align all baseline documents with the implemented repository and preserve the successful 2026-08-25 HIL independently of the ignored build tree.
+
+**Preconditions:**
+
+- Tasks 0-8 are complete.
+- HostTests, Debug, Release, signing verification and physical rollback HIL have passed.
+- The original local HIL artifacts and logs are still available under build/HIL/.
+
+**Scope:**
+
+- Correct stale or conflicting baseline facts.
+- Separate firmware implementation revision, HIL source revision and evidence-freeze revision.
+- Retain exact programmed firmware, raw J-Link logs, normalized manifests and checksums in a Git-trackable evidence bundle.
+- Keep reusable J-Link command templates outside build/ and free of workstation-specific paths.
+- Add a deterministic evidence checksum check to CI.
+
+**Out of Scope:**
+
+- Re-running destructive HIL.
+- Committing compiler caches, objects, maps, private signing keys or the full-device Flash backup.
+- Implementing FW Update Manager, USB, CherryUSB, UART, CAN or a new protocol.
+
+**Files and Components:**
+
+- README.md and the existing baseline design, plan and build report.
+- Tests/HIL/ for reusable templates and evidence verification.
+- evidence/hil/2026-08-25-339f32c/ for the immutable historical bundle.
+- .github/workflows/ci.yml for checksum verification.
+
+**Implementation Steps:**
+
+- [x] Audit the current code, documents, CI and ignored HIL evidence.
+- [x] Correct the HIL retention statement and the documented SRAM upper bound.
+- [x] Preserve the exact Boot, v1 Primary, v2 test Update and v2 confirming Update images.
+- [x] Preserve raw probe logs and historical J-Link command files.
+- [x] Normalize build, deployment, test and release evidence manifests.
+- [x] Exclude the full Flash backup while retaining its size, range and SHA-256.
+- [x] Add path-independent J-Link templates and a CMake renderer.
+- [x] Add a standard-library checksum verifier and run it in CI.
+
+**Automated Tests:**
+
+~~~sh
+python3 Tests/HIL/verify_evidence.py
+cmake -DHIL_OUTPUT_DIR=/tmp/hc32-hil-commands \
+  -DHIL_BACKUP_BIN=/tmp/hc32-backup.bin \
+  -DHIL_BOOT_BIN=evidence/hil/2026-08-25-339f32c/artifacts/boot_firmware.bin \
+  -DHIL_V1_PRIMARY_BIN=evidence/hil/2026-08-25-339f32c/artifacts/v1_app_primary.bin \
+  -DHIL_V2_TEST_BIN=evidence/hil/2026-08-25-339f32c/artifacts/v2_test_app_update.bin \
+  -DHIL_V2_CONFIRM_BIN=evidence/hil/2026-08-25-339f32c/artifacts/v2_confirm_app_update.bin \
+  -P Tests/HIL/render_scripts.cmake
+~~~
+
+**HIL Tests:** No hardware state change is required for this phase. The retained evidence records the already completed run.
+
+**Evidence:**
+
+- Exact programmed artifacts and raw logs under evidence/hil/2026-08-25-339f32c/.
+- SHA256SUMS verified by Tests/HIL/verify_evidence.py.
+- The excluded Flash backup is represented only by range, byte count and SHA-256.
+
+**Exit Gate:**
+
+- A fresh clone contains the exact tested firmware, raw logs and normalized evidence manifests.
+- The reusable HIL templates contain no workstation-specific absolute path.
+- CI fails if any retained evidence file is missing or changed without updating SHA256SUMS.
+- Documentation identifies the exact revisions associated with implementation, HIL execution and evidence freezing.
+
+**Next Phase Constraint:** The next phase is architecture audit and interface design only. Storage and boot-control responsibilities must be evaluated separately; Protocol must not depend on a concrete USB/CAN/UART backend; Phase 1 must not create speculative plugin, factory or registry infrastructure.
+
+## Post-Baseline Roadmap Handoff
+
+- Protect the current MCUboot Boot/App baseline before adding updater features.
+- Keep the full Firmware Update Manager in the Application; Boot may later gain only an explicitly scoped minimal recovery profile.
+- Treat Primary and Secondary as MCUboot slots, not separate application projects.
+- Separate image storage operations from boot-control operations such as requesting a test upgrade or confirming the running image.
+- Portable update and protocol code must not include HC32 headers or call HC32 Flash APIs.
+- Protocol must consume transport-neutral byte/frame input and must not know CherryUSB, USB, UART or CAN implementations.
+- Transport backends must not know MCUboot slot addresses or call MCUboot state APIs.
+- Phase 1 should introduce only the smallest public contracts needed by one fake implementation and the next real backend.
+- Protocol V1 should remain an MVP; resume, windowing, advanced negotiation and general fragmentation wait for demonstrated requirements.
+- CherryUSB remains a proposed backend until its current upstream API, license, version and HC32 DCD feasibility are verified.
+- A production Application must confirm an image only after bounded essential health checks, not immediately on entry to main.
+- Every future hard gate must retain exact commands, revisions, artifact hashes, raw logs and an immutable evidence index.

@@ -3,5 +3,7 @@ Drivers/CMSIS/** whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab
 Drivers/hc32f4xx_ll_drivers/** whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab
 Libraries/SEGGER/** whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab
 components/** whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab
+# Preserve raw J-Link logs byte-for-byte as historical HIL evidence.
+evidence/hil/**/logs/*.txt -whitespace
 # Upstream RST heading; keep it out of diff whitespace/conflict-marker checks.
 components/mcuboot-2.4.0/sim/README.rst -diff
