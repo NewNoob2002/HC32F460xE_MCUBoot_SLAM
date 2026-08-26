@@ -1,0 +1,24 @@
+review_result:
+  schema_version: 1
+  source_revision: "e7899bd8c2f96b138f6daab7d491268286e40a14"
+  scope:
+    - "components/fw_update/include/fw_update/{protocol,manager}.h"
+    - "components/fw_update/src/{protocol,manager}.c"
+    - "Tests/fw_protocol_tests.c"
+    - "Tests/fw_update_manager_tests.c"
+    - "Phase 3 protocol/roadmap documents"
+    - "retained-evidence verifier and CI hook"
+  toolchain_context: "C11; GCC 13.3 host sanitizers; arm-none-eabi-gcc 14.3.1 Cortex-M4"
+  findings: []
+  residual_risks:
+    - "Host tests do not prove real Transport, ISR, Flash timing or platform reset behavior; G3 intentionally requires no HIL."
+    - "Production Application orchestration and USB/UART/CAN transports remain out of scope."
+  verification:
+    - "Strict HostTests 9/9 PASS under Werror, ASan and UBSan"
+    - "Golden Vectors 19/19 PASS"
+    - "10,000-case fixed-seed corpus PASS"
+    - "Portable dependency check PASS"
+    - "clang-format dry-run PASS"
+    - "scoped cppcheck PASS"
+    - "Debug/Release build and signed-image verification PASS"
+    - "Manager Host ABI 1824 <= 2048 bytes"

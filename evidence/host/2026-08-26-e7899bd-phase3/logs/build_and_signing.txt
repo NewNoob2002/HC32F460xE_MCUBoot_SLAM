@@ -1,0 +1,23 @@
+Source revision: e7899bd8c2f96b138f6daab7d491268286e40a14
+Arm compiler: arm-none-eabi-gcc 14.3.1 20250623
+
+Debug clean build: 63/63 targets built, PASS
+Debug signed-image verification: PASS
+Image version: 1.0.0+0
+Image digest: c097a45b42ffbf0215a8bae1658441d331504f0de3854f21e6342be4bda3ea4b
+Debug size:
+  Boot: text=24268 data=100 bss=2436 total=26804
+  App:  text=9328 data=92 bss=376 total=9796
+
+Release signing policy:
+  Missing signing key: rejected as required
+  ECDSA-P384 signing key: rejected as required
+  ECDSA-P256 development key: accepted
+
+Release clean build: 63/63 targets built, PASS
+Release signed-image verification: PASS
+Image version: 1.0.0+0
+Image digest: 688e967db617efa439d7d421b4c474c9115d1772b6877fa5fec2a2372e834095
+Release size:
+  Boot: text=21576 data=100 bss=2436 total=24112
+  App:  text=8756 data=92 bss=376 total=9224

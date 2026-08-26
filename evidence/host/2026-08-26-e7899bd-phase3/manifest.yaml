@@ -1,0 +1,30 @@
+evidence_bundle:
+  schema_version: 1
+  run_id: "2026-08-26-e7899bd-phase3-protocol-core"
+  status: "preserved-local-ci-pending"
+  created_at_utc: "2026-08-26T08:24:51Z"
+  source_revision: "e7899bd8c2f96b138f6daab7d491268286e40a14"
+  source_worktree_clean: true
+  gate: "G3"
+  hil_required: false
+  retained:
+    exact_commands: true
+    host_test_output: true
+    build_and_signing_output: true
+    analyzer_output: true
+    normalized_results: true
+    source_spec_vector_hashes: true
+    artifact_hashes: true
+  excluded:
+    - path: "build/Debug/generated/keys/dev-ec-p256.pem"
+      reason: "Private development signing key; ignored and never retained"
+    - path: "build/phase3e-p384.pem"
+      reason: "Temporary negative-test private key; ignored and never retained"
+    - path: "build/Debug and build/Release artifacts"
+      reason: "Rebuildable ignored outputs; exact hashes and size reports are retained"
+  verification:
+    checksums: "SHA256SUMS"
+    command: "python3 Tests/HIL/verify_evidence.py evidence/host/2026-08-26-e7899bd-phase3/SHA256SUMS"
+  remote_ci:
+    requirement: "Evidence commit must pass remote CI before G3 is marked PASSED"
+    result_location: "docs/roadmap/STATUS.md"

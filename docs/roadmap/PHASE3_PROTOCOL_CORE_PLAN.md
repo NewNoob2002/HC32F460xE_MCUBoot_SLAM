@@ -1,6 +1,6 @@
 # Phase 3 Protocol Core Plan
 
-Status: Approved; Phase 3D complete, Phase 3E in progress
+Status: Approved; Phase 3E local evidence complete, remote CI pending
 
 Date: 2026-08-26
 

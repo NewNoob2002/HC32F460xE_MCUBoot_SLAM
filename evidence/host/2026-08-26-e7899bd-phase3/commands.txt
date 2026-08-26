@@ -1,0 +1,33 @@
+Source revision: e7899bd8c2f96b138f6daab7d491268286e40a14
+
+cmake --preset HostTests --fresh \
+  '-DCMAKE_C_FLAGS=-Wall -Wextra -Wconversion -Wshadow -Werror -fsanitize=address,undefined -fno-omit-frame-pointer' \
+  '-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address,undefined'
+cmake --build build/HostTests --clean-first --parallel
+ASAN_OPTIONS=detect_leaks=0 ctest --test-dir build/HostTests --output-on-failure -V
+python3 Tests/Protocol/verify_golden_vectors.py
+python3 Tests/Architecture/check_portable_dependencies.py
+cppcheck --enable=warning,style,performance,portability --std=c11 --error-exitcode=2 \
+  --suppress=missingIncludeSystem -I components/fw_update/include \
+  components/fw_update/src/manager.c Tests/fw_update_manager_tests.c Tests/fw_protocol_tests.c
+clang-format --dry-run --Werror \
+  components/fw_update/include/fw_update/manager.h \
+  components/fw_update/include/fw_update/protocol.h \
+  components/fw_update/src/manager.c components/fw_update/src/protocol.c \
+  Tests/fw_update_manager_tests.c Tests/fw_protocol_tests.c
+gdb -batch -ex 'p sizeof(struct fw_update_manager)' build/HostTests/Tests/fw_update_manager_tests
+cmake --preset Debug --fresh
+cmake --build build/Debug --clean-first --parallel
+cmake --build build/Debug --target verify_app_image
+arm-none-eabi-size build/Debug/Boot/boot_firmware.elf build/Debug/App/app_firmware.elf
+cmake -S . -B build/ReleaseMissingKey -G Ninja -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_TOOLCHAIN_FILE=cmake/gcc-arm-none-eabi.cmake
+cmake -S . -B build/ReleaseP384 -G Ninja -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_TOOLCHAIN_FILE=cmake/gcc-arm-none-eabi.cmake \
+  -DMCUBOOT_SIGNING_KEY=build/phase3e-p384.pem
+cmake --preset Release --fresh \
+  -DMCUBOOT_SIGNING_KEY=build/Debug/generated/keys/dev-ec-p256.pem
+cmake --build build/Release --clean-first --parallel
+cmake --build build/Release --target verify_app_image
+arm-none-eabi-size build/Release/Boot/boot_firmware.elf build/Release/App/app_firmware.elf
+python3 Tests/HIL/verify_evidence.py

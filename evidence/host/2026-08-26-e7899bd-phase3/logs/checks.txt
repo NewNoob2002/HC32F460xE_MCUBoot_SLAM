@@ -1,0 +1,19 @@
+Source revision: e7899bd8c2f96b138f6daab7d491268286e40a14
+
+Golden Vector verifier:
+PASS: 19 Protocol V1 golden vectors verified
+
+Portable dependency check:
+Portable fw_update dependency check passed
+
+Scoped cppcheck 2.13.0:
+Checked components/fw_update/src/manager.c, Tests/fw_update_manager_tests.c and Tests/fw_protocol_tests.c
+Warnings/errors: 0
+Result: PASS
+
+clang-format 22.1.8 dry-run:
+Violations: 0
+Result: PASS
+
+Retained evidence verification before adding this bundle:
+Verified 2 evidence bundle(s)

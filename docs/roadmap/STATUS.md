@@ -9,7 +9,7 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 | Phase 0 — Verified MCUboot Baseline | PASSED | G0 | HostTests 4/4; Debug/Release/signing CI passed | rollback/confirmation passed | None | `evidence/hil/2026-08-25-339f32c/`, CI run `32922559686` |
 | Phase 1 — Architecture Audit and Contract Freeze | PASSED | G1 | Local G1 passed; remote CI passed | Not required | None | revision `1429e30`, CI run `32925552505` |
 | Phase 2 — Secondary Storage and Boot Control | PASSED | G2 | Strict HostTests 7/7; Debug/Release/signing and remote CI passed | Storage/range-isolation/Pending/restore passed | None | `evidence/hil/2026-08-26-5ebeae6-phase2/`, revisions `5ebeae6`/`0e1abd8`, CI `32928199086`/`32929570437` |
-| Phase 3 — Protocol Core | IN_PROGRESS | G3 | Phase 3D strict HostTests 9/9; 10,000-case corpus; Debug/Release/signing PASS | Not required | Phase 3E evidence capture and remote CI | `Tests/fw_update_manager_tests.c`, `Tests/fw_protocol_tests.c` |
+| Phase 3 — Protocol Core | IN_PROGRESS | G3 | Phase 3E local matrix PASS: HostTests 9/9; corpus 10,000; Debug/Release/signing PASS | Not required | Remote CI | `evidence/host/2026-08-26-e7899bd-phase3/` |
 | Phase 4 — CherryUSB + HC32 DCD Loopback | NOT_STARTED | G4 | Not run | Required | G3, USB hardware details | None |
 | Phase 5 — USB Upgrade E2E | NOT_STARTED | G5 | Not run | Required | G4 | None |
 | Phase 6 — Failure and Recovery | NOT_STARTED | G6 | Not run | Required | G5, power/reset fixture | None |
@@ -32,7 +32,7 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 
 ## Immediate next action
 
-Execute only Phase 3E: preserve immutable G3 host evidence, commit/push the reviewed Phase 3 implementation, pass remote CI, then mark G3 separately.
+Push the immutable G3 Host Evidence revision, pass remote CI, then mark G3 `PASSED` in a separate commit.
 
 ## Latest local G1 verification
 
@@ -151,3 +151,23 @@ Date: 2026-08-26
   image verification: passed.
 - Phase 3 status: `IN_PROGRESS`; Phase 3D complete, Phase 3E is `IN_PROGRESS`. G3 is
   not PASSED. HIL: not required. Commit/push: not performed.
+
+## Latest Phase 3E local evidence
+
+Date: 2026-08-26
+
+- Source revision: `e7899bd8c2f96b138f6daab7d491268286e40a14`;
+  worktree was clean before the evidence matrix.
+- Immutable bundle prepared at
+  `evidence/host/2026-08-26-e7899bd-phase3/` with commands, normalized
+  build/test/review contracts, raw result summaries, source/spec/vector hashes
+  and artifact hashes.
+- Strict Werror + ASan/UBSan HostTests: 9/9 PASS; corpus: 10,000 PASS;
+  Golden Vectors: 19/19 PASS; Manager Host ABI: 1,824/2,048 bytes.
+- Portable dependency, clang-format and scoped cppcheck checks: PASS.
+- Debug build/signing: PASS, Boot/App 26,804/9,796 B. Release build/signing:
+  PASS, Boot/App 24,112/9,224 B. Missing-key and ECDSA-P384 policy negatives
+  were rejected as required.
+- Existing retained evidence verification: 2/2 bundles PASS before adding the
+  new Host bundle. HIL: not required and not performed.
+- Phase 3/G3 remain `IN_PROGRESS`; evidence push and remote CI are pending.

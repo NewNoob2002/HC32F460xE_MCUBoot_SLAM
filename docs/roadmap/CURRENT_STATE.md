@@ -4,9 +4,9 @@ Audit date: 2026-08-26
 
 Audited baseline revision: `9d29ee9843c711d7f853d7c24a7df58be8e8e1e9`
 
-Current Phase 3 scope: reviewed Phase 3A-3D changes and the Phase 3E evidence
-verification hook form the source revision for host evidence. Evidence capture
-and remote CI are in progress.
+Current Phase 3 scope: reviewed Phase 3A-3D source revision `e7899bd` has a
+complete immutable Phase 3E Host Evidence bundle. Its evidence revision must pass
+remote CI before G3 may be marked PASSED.
 
 This document describes the repository as implemented. Historical milestone documents are supporting evidence, not the source of truth for current code.
 
@@ -179,10 +179,10 @@ MCUboot's upstream ability to validate or swap an image is not evidence that thi
 | Firmware build | Debug/Release, image signing/verification, layout and key policy in CI | No size regression threshold beyond partition/link failure |
 | HIL/manual | Boot/swap/revert/confirmation plus Phase 2 Secondary erase/boundary readback, Pending trailer and exact restoration | No runtime transfer or reset/power loss during individual operations |
 | Fault injection | Unconfirmed test boot followed by reset/revert | No erase/write failure, corrupted trailer or interrupted swap matrix |
-| CI | Evidence checksum, nine strict local HostTests, portable dependency rule, firmware builds/signing | Phase 3A-3D changes and G3 host evidence are not yet committed/remote-verified |
+| CI | Evidence checksum, nine strict local HostTests, portable dependency rule, firmware builds/signing | G3 Host Evidence revision is not yet remote-verified |
 
-The largest current delivery gap is Phase 3E immutable evidence and remote CI,
-followed by production Application/Transport integration. The largest baseline reliability gap remains systematic
+The largest current delivery gap is Phase 3E remote CI, followed by production
+Application/Transport integration. The largest baseline reliability gap remains systematic
 power-interruption testing during swap/update operations.
 
 ## Technical debt and risks
@@ -219,7 +219,8 @@ No P0 defect was identified in the protected baseline. A new P0 is any path that
 
 The minimal compile/build/sign/boot/swap/rollback/confirmation baseline and the
 Phase 2 Secondary Storage/Boot-Control foundation are complete and CI/HIL
-evidenced. Phase 3A-3D portable Protocol/Manager implementation is locally
-complete but G3 remains open until Phase 3E tracked evidence and remote CI pass.
+evidenced. Phase 3A-3D portable Protocol/Manager implementation and tracked Host
+Evidence are complete, but G3 remains open until the evidence revision passes
+remote CI.
 The full runtime firmware-update framework is not implemented; no USB/UART/CAN
 work may start before G3.

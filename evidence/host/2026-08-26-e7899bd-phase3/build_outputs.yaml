@@ -1,0 +1,45 @@
+build_outputs:
+  schema_version: 1
+  source_revision: "e7899bd8c2f96b138f6daab7d491268286e40a14"
+  project: "HC32F460xE_MCUBoot_SLAM"
+  target: "HC32F460xE"
+  mcu: "HC32F460"
+  operating_system: "bare-metal"
+  toolchain:
+    id: "arm-none-eabi-gcc"
+    version: "14.3.1 20250623"
+    target: "Arm Cortex-M4"
+  debug:
+    passed: true
+    signing_verification: "passed"
+    image_digest: "c097a45b42ffbf0215a8bae1658441d331504f0de3854f21e6342be4bda3ea4b"
+    boot_size_bytes: 26804
+    app_size_bytes: 9796
+    checksums:
+      boot_elf: "bf75e6a2a71a75a3215e5c0af139aeb4789b23e129c3ed90fb38e9cb6bc517af"
+      boot_bin: "72b2a457aef61d73c9ac1ea10531f70c5b00f5ddf34c8f6c03e8907c3cf5fbfd"
+      app_elf: "29d0119bae958afa555b12d9e115e61334bf64472a17a8bb47c2cb059cd2ab52"
+      app_bin: "b797693366dcc4fe813bd0c44ddbdc2d69604b724421f82fbdcca4b6b42cdfbd"
+      app_signed: "7293a01d73d5b18088422120e7f13431741ad8195b1d756075de25fea01dbe74"
+      app_primary: "992b7498252c7dd1e41e1049fe2052bb7de1b5e06a3a20e9cbf7b305bb4fddaf"
+      app_update: "220a3ab2d8af2c9f05c04f71b7b6348fa604bac1bdf194715b16346dc62fcff7"
+  release:
+    passed: true
+    signing_verification: "passed"
+    image_digest: "688e967db617efa439d7d421b4c474c9115d1772b6877fa5fec2a2372e834095"
+    boot_size_bytes: 24112
+    app_size_bytes: 9224
+    checksums:
+      boot_elf: "d4fd62f2072f2982d5b316f7a891d50f37fc905c03411a327f8543af9dd06910"
+      boot_bin: "719e535dc7514dc8098bef912e125bc300604130ab3d79938c0219e72553a756"
+      app_elf: "c895f123ac248462d6fad87428c299bd29fa04a7c5b4c0001ac72a714554c5b6"
+      app_bin: "e89010dfcfb9a2e2a5ac4acc5824a56b1e5bdcb1e82847ee9a0b1b3adfdcb603"
+      app_signed: "1b9e0dd9f287fd84a4a2e03fa042e0e221ed4e845b271c960e525cfe17976199"
+      app_primary: "153fc7617e243dc32977868b74f63812113988a44bc1f6638634465944e7f203"
+      app_update: "3e14d39d8acb5ec5006055120c7e44486100125080d403734d1b5a5fb7cdb71a"
+  signing_key_policy:
+    missing_release_key_rejected: true
+    ecdsa_p384_key_rejected: true
+    ecdsa_p256_key_accepted: true
+    private_key_retained: false
+  log: "logs/build_and_signing.txt"

@@ -1,0 +1,39 @@
+test_result:
+  schema_version: 1
+  source_revision: "e7899bd8c2f96b138f6daab7d491268286e40a14"
+  level: "host-unit"
+  target: "Ubuntu 24.04 x86_64 host"
+  command: "ASAN_OPTIONS=detect_leaks=0 ctest --test-dir build/HostTests --output-on-failure -V"
+  timing:
+    completed_at_utc: "2026-08-26T08:24:51Z"
+    ctest_duration_ms: 250
+  attempts: 1
+  passed: true
+  counts:
+    total: 9
+    passed: 9
+    failed: 0
+    skipped: 0
+  corpus:
+    cases: 10000
+    seed: "0x5EED3001"
+    decoded_frames: 3920
+    format_errors: 1960
+    crc_errors: 1960
+  protocol_vectors:
+    total: 19
+    passed: 19
+    failed: 0
+  manager_size:
+    host_abi_bytes: 1824
+    hard_limit_bytes: 2048
+  sanitizers: ["AddressSanitizer", "UndefinedBehaviorSanitizer"]
+  compiler_policy: ["-Wall", "-Wextra", "-Wconversion", "-Wshadow", "-Werror"]
+  artifact_checksums:
+    fw_protocol_tests: "43f428e05ea24f86d5fd956f776b36c4fe92aa8c6243f8f837c3c111cb42a66d"
+    fw_update_manager_tests: "87380b2cc8b34a7c797df1dce14df5663fe2c6ba48941915c42450134fbccfd9"
+    fw_update_contract_tests: "0ec8795708229838403cb7ccdcfe9efd46bd345d52982859fdafeeeddd0a8090"
+    fw_update_mcuboot_backend_tests: "54c11f30f45138d135b14dc779a2ec1ffd2a3b3ff2b2809bd6ba9440cf658e67"
+  classified_failures: []
+  log: "logs/host_tests.txt"
+  requirements: ["G3 Protocol Gate"]

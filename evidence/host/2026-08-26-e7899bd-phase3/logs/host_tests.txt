@@ -1,0 +1,23 @@
+Source revision: e7899bd8c2f96b138f6daab7d491268286e40a14
+Host compiler: GCC 13.3.0
+Flags: -Wall -Wextra -Wconversion -Wshadow -Werror -fsanitize=address,undefined -fno-omit-frame-pointer
+ASAN_OPTIONS: detect_leaks=0
+
+Host configure: PASS
+Host clean build: 30/30 targets built, PASS
+
+CTest results:
+  memory_map: PASS
+  flash_map: PASS
+  boot_handover: PASS
+  app_confirm: PASS
+  fw_update_contract: PASS
+  fw_update_mcuboot_backend: PASS
+  fw_protocol: PASS
+    Malformed corpus: cases=10000 seed=0x5EED3001 frames=3920 format=1960 crc=1960
+  fw_update_manager: PASS
+  fw_update_architecture: PASS
+
+100% tests passed, 0 tests failed out of 9
+Total CTest time: 0.25 sec
+Manager Host ABI size: 1824 bytes

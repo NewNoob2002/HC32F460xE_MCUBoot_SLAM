@@ -1,0 +1,17 @@
+release_evidence:
+  schema_version: 1
+  version: "phase3-g3-candidate"
+  source_revision: "e7899bd8c2f96b138f6daab7d491268286e40a14"
+  safety_preflights: []
+  build_outputs: ["build_outputs.yaml"]
+  deployments: []
+  debug_sessions: []
+  runtime_monitors: []
+  bus_validations: []
+  tests: ["test_result.yaml"]
+  reviews: ["review_result.yaml"]
+  commands: "commands.txt"
+  hashes: "source_hashes.txt"
+  remote_ci:
+    requirement: "Evidence commit must pass remote CI before G3 is marked PASSED"
+    result_location: "docs/roadmap/STATUS.md"
