@@ -7,7 +7,7 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 | Phase | Status | Gate | Tests | HIL | Blockers | Evidence |
 | --- | --- | --- | --- | --- | --- | --- |
 | Phase 0 — Verified MCUboot Baseline | PASSED | G0 | HostTests 4/4; Debug/Release/signing CI passed | rollback/confirmation passed | None | `evidence/hil/2026-08-25-339f32c/`, CI run `32922559686` |
-| Phase 1 — Architecture Audit and Contract Freeze | READY_FOR_REVIEW | G1 | Evidence 1/1; HostTests 4/4; Debug/Release/signing passed | Not required | Commit and CI required before `PASSED` | `docs/roadmap/`, `docs/adr/` |
+| Phase 1 — Architecture Audit and Contract Freeze | PASSED | G1 | Local G1 passed; remote CI passed | Not required | None | revision `1429e30`, CI run `32925552505` |
 | Phase 2 — Secondary Storage and Boot Control | NOT_STARTED | G2 | Not run | Required | G1 | None |
 | Phase 3 — Protocol Core | NOT_STARTED | G3 | Not run | Not required | G2 | None |
 | Phase 4 — CherryUSB + HC32 DCD Loopback | NOT_STARTED | G4 | Not run | Required | G3, USB hardware details | None |
@@ -28,11 +28,11 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 - [x] Review the plan against scope/YAGNI/layer/security constraints.
 - [x] Run G1 baseline checks after all Phase 1 files are complete.
 - [x] Confirm the worktree diff contains no production source/build-system change.
-- [ ] Commit the reviewed documents and pass remote CI.
+- [x] Commit the reviewed documents and pass remote CI.
 
 ## Immediate next action
 
-Commit the reviewed Phase 1 documents and pass remote CI. After G1 passes, start only Phase 2 by writing failing Secondary Storage/Boot-Control host contract tests. Do not start USB or Protocol work concurrently.
+Start only Phase 2 by writing failing Secondary Storage/Boot-Control host contract tests. Do not start USB or Protocol work concurrently.
 
 ## Latest local G1 verification
 
@@ -44,3 +44,4 @@ Date: 2026-08-26
 - Release build and `verify_app_image`: passed; Boot 24,112 B, App 9,224 B.
 - Documentation whitespace/diff review: passed.
 - Production source, CMake, CI and hardware state changed: no.
+- Phase 1 revision `1429e30`, remote CI run `32925552505`: passed.
