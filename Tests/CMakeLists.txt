@@ -34,3 +34,35 @@ target_include_directories(app_confirm_tests PRIVATE
     "${CMAKE_BINARY_DIR}/generated/Config"
 )
 add_test(NAME app_confirm COMMAND app_confirm_tests)
+
+add_executable(fw_update_contract_tests
+    fw_update_contract_tests.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/storage.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/boot_control.c
+)
+target_include_directories(fw_update_contract_tests PRIVATE
+    ${PROJECT_SOURCE_DIR}/components/fw_update/include
+)
+add_test(NAME fw_update_contract COMMAND fw_update_contract_tests)
+
+add_executable(fw_update_mcuboot_backend_tests
+    fw_update_mcuboot_backend_tests.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/storage.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/boot_control.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/backends/mcuboot/src/storage_mcuboot.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/backends/mcuboot/src/boot_control_mcuboot.c
+)
+target_include_directories(fw_update_mcuboot_backend_tests PRIVATE
+    ${PROJECT_SOURCE_DIR}/components/fw_update/include
+    ${PROJECT_SOURCE_DIR}/components/fw_update/backends/mcuboot/include
+    ${PROJECT_SOURCE_DIR}/components/mcuboot-2.4.0/boot/bootutil/include
+    ${PROJECT_SOURCE_DIR}/components/mcuboot_port/Inc
+    ${CMAKE_BINARY_DIR}/generated/Config
+)
+add_test(NAME fw_update_mcuboot_backend COMMAND fw_update_mcuboot_backend_tests)
+
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+add_test(
+    NAME fw_update_architecture
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Architecture/check_portable_dependencies.py
+)

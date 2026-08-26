@@ -109,15 +109,14 @@ Future extensions include resume metadata, windowing, optional authentication, a
 
 | Operation | Why it exists |
 | --- | --- |
-| capabilities | Supplies logical capacity, write/erase alignment and erased value without exposing an address |
-| begin(image_size) | Rejects zero/oversize images and starts one exclusive candidate session |
-| erase(offset, length) | Supports explicit, bounded preparation and deterministic failure reporting |
+| capabilities | Supplies writable image capacity, write/erase alignment and erased value without exposing an address; capacity excludes MCUboot trailer reserve |
+| erase all | V1 backend erases the complete Secondary Slot, including stale trailer metadata, without accepting a Host-controlled address/range |
 | write(offset, data, length) | Writes logical image bytes with overflow/alignment checks |
 | read(offset, data, length) | Enables readback/hash verification and host tests |
-| finalize(size, expected_digest) | Flushes if needed and proves stored bytes match session metadata; it does not claim MCUboot signature trust |
-| abort | Invalidates session state and guarantees the candidate is not marked pending |
 
-`open/close`, general partitions, physical addresses and arbitrary area IDs are excluded. V1 stores one complete image in Secondary. Marking an image pending is not a Storage operation.
+`open/close`, general partitions, physical addresses and arbitrary area IDs are excluded. V1 writes only the image region of Secondary; the final MCUboot trailer sector is never writable through logical Host offsets. Marking an image pending is not a Storage operation.
+
+Phase 3 Manager owns `begin`, received-range accounting, readback/digest verification, finalize and abort session semantics. Internal HC32 Flash has no separate flush operation, so Phase 2 does not add a no-op API for one backend. Runtime transfer uses the signed, unpadded `app_signed.bin`; slot-padded `app_update.bin` remains a direct-programming/HIL artifact because it contains trailer state outside the logical writable region.
 
 ### Boot Control and platform lifecycle
 

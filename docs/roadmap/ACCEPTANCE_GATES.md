@@ -110,7 +110,7 @@ G1 passed; Secondary Slot geometry and V1 Storage/Boot-Control semantics are app
 ```sh
 cmake --preset HostTests --fresh
 cmake --build build/HostTests --clean-first --parallel
-ASAN_OPTIONS=detect_leaks=0 ctest --test-dir build/HostTests -R 'fw_storage|fw_boot_control|flash_map' --output-on-failure
+ASAN_OPTIONS=detect_leaks=0 ctest --test-dir build/HostTests -R 'fw_update_contract|fw_update_mcuboot_backend|fw_update_architecture|flash_map' --output-on-failure
 python3 Tests/Architecture/check_portable_dependencies.py
 cmake --preset Debug --fresh
 cmake --build build/Debug --parallel

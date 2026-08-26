@@ -54,3 +54,5 @@ target_link_libraries(mcuboot_bootutil
     PRIVATE tinycrypt mcuboot_asn1 hc32_project_options
 )
 target_compile_options(mcuboot_bootutil PRIVATE $<$<CONFIG:Release>:-UNDEBUG>)
+
+add_subdirectory(fw_update)

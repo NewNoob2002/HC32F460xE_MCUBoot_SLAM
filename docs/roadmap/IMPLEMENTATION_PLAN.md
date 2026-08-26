@@ -199,7 +199,7 @@ G1 has passed and API names/semantics are approved.
 
 ### Scope
 
-- Logical-offset Secondary Slot capacity, erase, aligned write, readback and finalize.
+- Logical-offset Secondary image capacity excluding the trailer sector, full-slot prepare/erase, aligned write and readback.
 - Bounds/overflow checks before physical address translation.
 - Separate request-test-upgrade and confirm-running-image adapter.
 - Fake storage/boot-control implementations for host tests.
@@ -232,7 +232,7 @@ First public Storage and Boot-Control C contracts. No Transport or Protocol API 
 
 ### Automated Tests
 
-Zero/oversize image, offset overflow, end boundary, alignment, partial driver failure, readback and pending-call ordering.
+Offset overflow, image/trailer boundary, alignment, area-open/driver failure, readback and pending-call ordering. Zero/oversize session metadata is tested in Phase 3 where the manager first owns image size.
 
 ### HIL Tests
 

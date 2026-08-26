@@ -8,7 +8,7 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 | --- | --- | --- | --- | --- | --- | --- |
 | Phase 0 — Verified MCUboot Baseline | PASSED | G0 | HostTests 4/4; Debug/Release/signing CI passed | rollback/confirmation passed | None | `evidence/hil/2026-08-25-339f32c/`, CI run `32922559686` |
 | Phase 1 — Architecture Audit and Contract Freeze | PASSED | G1 | Local G1 passed; remote CI passed | Not required | None | revision `1429e30`, CI run `32925552505` |
-| Phase 2 — Secondary Storage and Boot Control | NOT_STARTED | G2 | Not run | Required | G1 | None |
+| Phase 2 — Secondary Storage and Boot Control | IN_PROGRESS | G2 | Strict HostTests 7/7; Debug/Release/signing passed | Required before `PASSED` | Secondary range-isolation HIL not executed | Working tree |
 | Phase 3 — Protocol Core | NOT_STARTED | G3 | Not run | Not required | G2 | None |
 | Phase 4 — CherryUSB + HC32 DCD Loopback | NOT_STARTED | G4 | Not run | Required | G3, USB hardware details | None |
 | Phase 5 — USB Upgrade E2E | NOT_STARTED | G5 | Not run | Required | G4 | None |
@@ -32,7 +32,7 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 
 ## Immediate next action
 
-Start only Phase 2 by writing failing Secondary Storage/Boot-Control host contract tests. Do not start USB or Protocol work concurrently.
+Complete the Phase 2 host contracts and MCUboot Secondary/Boot-Control backends. Do not start USB or Protocol work concurrently.
 
 ## Latest local G1 verification
 
@@ -45,3 +45,15 @@ Date: 2026-08-26
 - Documentation whitespace/diff review: passed.
 - Production source, CMake, CI and hardware state changed: no.
 - Phase 1 revision `1429e30`, remote CI run `32925552505`: passed.
+
+## Latest local Phase 2 verification
+
+Date: 2026-08-26
+
+- RED: HostTests configuration failed before `components/fw_update` implementation existed.
+- Strict HostTests with ASan/UBSan: 7/7 passed.
+- Portable dependency check: passed.
+- Debug and Release firmware/signing verification: passed; existing Boot/App sizes unchanged because the updater backend is not yet linked into App.
+- Logical writable capacity: `SECONDARY_SLOT_SIZE - MCUBOOT_TRAILER_RESERVE` (`0x30000`).
+- Full-slot erase is backend-controlled; Host logical offsets cannot write the final `0x2000` trailer sector.
+- HIL Secondary range-isolation and known-valid pending-image checks: not executed.
