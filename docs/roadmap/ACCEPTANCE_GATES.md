@@ -108,6 +108,7 @@ G1 passed; Secondary Slot geometry and V1 Storage/Boot-Control semantics are app
 ### Test commands
 
 ```sh
+python3 Tests/Protocol/verify_golden_vectors.py
 cmake --preset HostTests --fresh
 cmake --build build/HostTests --clean-first --parallel
 ASAN_OPTIONS=detect_leaks=0 ctest --test-dir build/HostTests -R 'fw_update_contract|fw_update_mcuboot_backend|fw_update_architecture|flash_map' --output-on-failure
@@ -149,16 +150,25 @@ G2 passed; protocol header fields, maxima and command/state table are frozen.
 ### Test commands
 
 ```sh
-cmake --preset HostTests --fresh
+cmake --preset HostTests --fresh \
+  -DCMAKE_C_FLAGS='-Wall -Wextra -Wconversion -Wshadow -Werror -fsanitize=address,undefined -fno-omit-frame-pointer' \
+  -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address,undefined'
 cmake --build build/HostTests --clean-first --parallel
-ASAN_OPTIONS=detect_leaks=0 ctest --test-dir build/HostTests -R 'fw_protocol|fw_update_manager|fw_fake' --output-on-failure
-python3 Tests/Protocol/run_malformed_corpus.py
+ASAN_OPTIONS=detect_leaks=0 ctest --test-dir build/HostTests -R 'fw_protocol|fw_update_manager|fw_update_architecture' --output-on-failure
+python3 Tests/Protocol/verify_golden_vectors.py
+# fw_protocol includes the 10,000-case seed 0x5EED3001 corpus.
 python3 Tests/Architecture/check_portable_dependencies.py
+cmake --preset Debug --fresh
+cmake --build build/Debug --parallel
+cmake --build build/Debug --target verify_app_image
+cmake --preset Release --fresh
+cmake --build build/Release --parallel
+cmake --build build/Release --target verify_app_image
 ```
 
 ### Automated tests
 
-Golden vectors, split/coalesced frames, CRC, lengths, sequence, duplicates, timeout, invalid state and fake transport/storage failures under ASan/UBSan.
+Golden vectors; every-byte split/coalesced frames; CRC/length/version/flags; sequence/duplicate/timeout/state; logical overflow; arbitrary DATA-to-Storage alignment staging and final tail padding; fake Storage/Boot-Control failures; short TX and TX-idle/reset ordering under ASan/UBSan.
 
 ### Manual / HIL tests
 
@@ -166,19 +176,19 @@ None.
 
 ### Expected results
 
-All arbitrary chunk boundaries yield identical protocol behavior; malformed input has bounded failure.
+All arbitrary transport/DATA chunk boundaries yield identical protocol behavior; malformed input has bounded failure; duplicate requests repeat no side effect; Storage writes remain aligned and logical image bytes are stored/verified exactly.
 
 ### Required artifacts
 
-Protocol specification/version, golden vectors, sanitizer logs, malformed corpus result and dependency report.
+Accepted Protocol specification/ADR, golden vectors, sanitizer logs, malformed corpus seed/count/result, Manager size, dependency report, Debug/Release CI and tracked host evidence.
 
 ### PASS criteria
 
-No memory error, unbounded wait/allocation or concrete transport/MCU include; all state and error paths have deterministic assertions.
+No memory error, unbounded wait/allocation or concrete transport/MCU include; Manager size is at most 2048 bytes; 10,000 fixed-seed malformed cases pass; all state/error/duplicate side effects and COMMIT response-drain ordering have deterministic assertions.
 
 ### FAIL criteria
 
-Parser crash/UB, one-read-one-frame assumption, transport-specific command semantics, uncontrolled retry or missing golden vectors.
+Parser crash/UB, one-read-one-frame assumption, DATA requiring Host knowledge of Flash alignment, transport-specific command semantics, repeated duplicate side effects, reset before response drain, incorrect staging/tail padding, uncontrolled retry or missing golden vectors/evidence.
 
 ## G4 — USB Stack Gate
 

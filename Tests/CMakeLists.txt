@@ -61,6 +61,27 @@ target_include_directories(fw_update_mcuboot_backend_tests PRIVATE
 )
 add_test(NAME fw_update_mcuboot_backend COMMAND fw_update_mcuboot_backend_tests)
 
+add_executable(fw_protocol_tests
+    fw_protocol_tests.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/protocol.c
+)
+target_include_directories(fw_protocol_tests PRIVATE
+    ${PROJECT_SOURCE_DIR}/components/fw_update/include
+)
+add_test(NAME fw_protocol COMMAND fw_protocol_tests)
+
+add_executable(fw_update_manager_tests
+    fw_update_manager_tests.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/manager.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/protocol.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/storage.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/boot_control.c
+)
+target_include_directories(fw_update_manager_tests PRIVATE
+    ${PROJECT_SOURCE_DIR}/components/fw_update/include
+)
+add_test(NAME fw_update_manager COMMAND fw_update_manager_tests)
+
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 add_test(
     NAME fw_update_architecture

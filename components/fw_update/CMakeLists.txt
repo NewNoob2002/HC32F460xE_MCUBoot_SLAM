@@ -1,6 +1,8 @@
 add_library(fw_update_core STATIC
     src/storage.c
     src/boot_control.c
+    src/protocol.c
+    src/manager.c
 )
 target_include_directories(fw_update_core PUBLIC include)
 target_link_libraries(fw_update_core PRIVATE hc32_project_options)

@@ -15,17 +15,17 @@ Planned coverage:
 - command/state transition table;
 - sequence, duplicate and retry limits;
 - offset/length overflow and Secondary capacity boundaries;
-- fixed-size fragmentation/chunk adaptation;
+- arbitrary byte split/coalesce behavior; Protocol V1 has no protocol-layer fragmentation;
 - compatibility decisions for protocol/hardware/board/image/slot versions;
 - error mapping and reboot permissions.
 
 Fakes:
 
-- Transport: scripted byte chunks, short writes, disconnect and timeout;
+- Transport-facing test driver: scripted byte chunks, partial TX consumption, TX-idle and disconnect;
 - Storage: bounded byte array, configurable erase/write/read failure index and corruption;
 - Boot Control: records pending/confirm calls and return values;
-- Clock: deterministic monotonic ticks;
-- Reset: records a request without terminating the test.
+- Clock: explicit deterministic monotonic `now_ms` passed to portable code;
+- Reset: an emitted lifecycle action recorded only after response drain and TX idle.
 
 Every fake must enforce the same alignment, ownership and ordering contract as the real boundary.
 
@@ -33,8 +33,8 @@ Every fake must enforce the same alignment, ownership and ordering contract as t
 
 Required combinations:
 
-- Protocol + fake Transport;
-- Manager + fake Protocol/Storage/Boot Control/Clock/Reset;
+- Protocol codec/parser with a test-local byte-chunk driver;
+- Manager with the real Protocol core plus fake Storage/Boot Control and explicit time/lifecycle events;
 - Storage backend + mocked MCUboot Flash area/BSP Flash;
 - Host tool + loopback/fake device;
 - CAN/UART/USB adapter + deterministic host-side emulator where representative.
@@ -130,7 +130,7 @@ A test without an oracle or linked requirement is not release evidence. Coverage
 - Storage/Boot-Control unit and fake tests;
 - Protocol parser/state/CRC/golden-vector tests;
 - deterministic malformed corpus;
-- fake transport/storage/clock/reset integration;
+- test-local byte driver plus fake Storage/Boot Control and explicit time/lifecycle integration;
 - size-regression budgets;
 - portable dependency checker rejecting `hc32f460.h`, HC32 LL/HAL and CherryUSB includes;
 - build isolation proving portable targets need no HC32 definitions/include paths.

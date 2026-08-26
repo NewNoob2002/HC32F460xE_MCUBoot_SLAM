@@ -1,8 +1,10 @@
 # Firmware Update Architecture
 
-Status: Phase 1 contract freeze
+Status: Phase 1 layering and ADR-003 Protocol V1 boundary accepted
 
-This document defines ownership and semantic boundaries. It intentionally does not create C APIs before Phase 2 has a real Storage/Boot-Control backend and host fake.
+This document defines ownership and semantic boundaries. Phase 2 has converted
+Storage/Boot-Control semantics into tested C contracts; Phase 3 Protocol/Manager
+details follow the accepted ADR-003 boundary and Protocol V1 wire contract.
 
 ## System ownership
 
@@ -14,7 +16,7 @@ Application firmware
 ├── Product health and image confirmation policy
 ├── Firmware Update Manager
 │   ├── lifecycle/state/error handling
-│   └── coordinates Protocol, Storage, Boot Control and Reset
+│   └── coordinates Protocol, Storage, Boot Control and lifecycle actions
 ├── Protocol V1
 │   ├── framing, commands, sequence, CRC and capabilities
 │   └── consumes/produces transport-neutral byte chunks
@@ -39,7 +41,7 @@ Application orchestration
        -> Protocol
        -> Storage contract
        -> Boot-Control contract
-       -> Reset/clock contracts
+       -> explicit time and lifecycle-action semantics
   -> Protocol -> Transport contract
   -> Transport backend -> platform/backend driver
   -> Storage backend -> MCUboot flash-area port -> BSP Flash
@@ -75,6 +77,11 @@ The names below describe required behavior, not final C identifiers. Phase 2/3 c
 
 V1 is cooperative and non-blocking at the manager boundary. ISR code may only move bytes/events into bounded backend buffers. Portable code owns no ISR callback and uses no `malloc/free`. Async completion registries and multiple simultaneous transports are future requirements.
 
+The accepted Phase 3 boundary freezes only the protocol-facing byte ingress/egress,
+disconnect, TX-idle and explicit-time semantics. It does not create a production
+Transport backend registry or lifecycle vtable before the first real backend.
+See accepted ADR-003 and the Phase 3 detailed plan.
+
 USB Bulk and UART may split/coalesce data arbitrarily. CAN/CAN FD may present each payload as a chunk; transport adaptation segments outgoing bytes as required. The Protocol incremental parser remains correct for every chunk boundary.
 
 ### Protocol
@@ -96,10 +103,10 @@ V1 commands:
 - `DEVICE_INFO`;
 - `BEGIN` with image metadata and logical size;
 - `DATA` with logical image offset;
-- `END`/`VERIFY`;
+- `END`, which performs readback verification;
 - `COMMIT` for a test upgrade;
 - `ABORT`;
-- ACK/NACK/error response.
+- a common response status that provides ACK/NACK/error semantics.
 
 V1 supports a single in-flight command, bounded retry, duplicate recognition and timeouts. It does not support resume after reset, sliding windows, arbitrary memory read/write, transport addresses, encrypted sessions or general-purpose RPC. Exact byte order, field widths, maxima and golden vectors are frozen in Phase 3 before parser implementation.
 
@@ -145,8 +152,8 @@ Any unrecoverable failure -> ERROR -> ABORTED/IDLE after explicit cleanup
 
 | State | Allowed behavior | Reboot / resume policy |
 | --- | --- | --- |
-| IDLE | Accept HELLO/DEVICE_INFO/BEGIN | Reboot safe; no session |
-| NEGOTIATING | Validate versions, board/hardware and capabilities | Disconnect returns to IDLE; no resume |
+| IDLE | Accept HELLO only; malformed input has no side effect | Reboot safe; no session |
+| NEGOTIATING | Accept DEVICE_INFO/BEGIN and validate versions, board/hardware and capabilities | Disconnect returns to IDLE; no resume |
 | PREPARING | Validate size and erase Secondary | Reboot leaves no pending image; restart from BEGIN |
 | RECEIVING | Accept expected DATA/duplicate retry only | Reboot/disconnect aborts V1; restart from BEGIN |
 | VERIFYING | Readback/digest and metadata checks | Reboot leaves candidate unmarked and ignored |
@@ -159,7 +166,9 @@ Any unrecoverable failure -> ERROR -> ABORTED/IDLE after explicit cleanup
 Specific failure behavior:
 
 - Secondary erase/write/readback failure: enter ERROR, do not mark pending.
-- Frame CRC or invalid sequence: NACK; bounded retry; abort after configured limit.
+- Frame CRC failure is silently discarded because command/sequence integrity is
+  unknown; invalid sequence receives an error response. Host retry and device
+  error counts are bounded.
 - Image-size/hardware incompatibility: reject before erase when possible.
 - Final digest mismatch or invalid metadata: abort candidate; MCUboot signature validation remains authoritative at Boot.
 - Power loss during download: Primary remains selected because pending state was never written.
@@ -184,7 +193,7 @@ Failure or timeout leaves the image unconfirmed and allows MCUboot revert.
 
 Phase 5 uses Python with PyUSB/libusb first because it gives the shortest path to Linux development, deterministic protocol tests and CI-host logic. The protocol specification and golden vectors are the shared contract; Python structures are not the specification.
 
-Planned commands cover discovery, HELLO, DEVICE_INFO, compatibility checks, BEGIN/erase, chunk transfer, ACK/NACK/retry/progress, END/verify, COMMIT, reboot and diagnostics. A C/C++ or Rust host can be added only when packaging, deployment or performance requirements justify it.
+Planned commands cover discovery, HELLO, DEVICE_INFO, compatibility checks, BEGIN/erase, chunk transfer, status/retry/progress, END/readback verify, COMMIT, reboot and diagnostics. A C/C++ or Rust host can be added only when packaging, deployment or performance requirements justify it.
 
 ## Version and compatibility model
 
@@ -195,12 +204,16 @@ Planned commands cover discovery, HELLO, DEVICE_INFO, compatibility checks, BEGI
 | Host-tool version | Informational/support field; not used as a substitute for protocol compatibility |
 | Application version | Reported by device and used in upgrade/downgrade policy |
 | Bootloader version | Reported for diagnostics and required-capability checks |
-| Hardware ID | Image metadata must match device family/product |
-| Board ID/revision | Exact or declared compatibility-set match |
+| Hardware ID | BEGIN declaration must match for early rejection; signed image metadata must match before G5 COMMIT policy is accepted |
+| Board ID/revision | BEGIN declaration uses exact V1 match; signed exact/compatibility-set policy remains a pre-G5 decision |
 | Image size | Nonzero and no larger than logical Secondary capacity/trailer policy |
 | Slot size | Device capability; host must reject an image that cannot fit |
 
-V1 must fail closed on incompatible protocol major, hardware/board mismatch, impossible slot size and malformed/overflowing metadata. Downgrade policy and MCUboot security counters require a separate ADR before production release.
+V1 Protocol fails closed on incompatible major, declared hardware/board
+mismatch, impossible slot size and malformed/overflowing metadata. Host
+declarations are not image trust; a signed compatibility metadata policy must
+fail closed before G5. Downgrade policy and MCUboot security counters require a
+separate ADR before production release.
 
 ## Security boundaries
 
@@ -211,7 +224,9 @@ V1 must fail closed on incompatible protocol major, hardware/board mismatch, imp
 - Frame lengths, firmware sizes and offsets have fixed compile-time maxima.
 - Release private keys never enter the repository, firmware or host tool.
 - Malformed traffic has bounded CPU/time/retry cost to limit denial of service.
-- Hardware/board compatibility is checked before destructive erase.
+- Host-declared hardware/board compatibility is checked before destructive
+  erase as an early error filter, not as image trust. A signed compatibility
+  metadata policy remains required before G5.
 - Anti-rollback is not provided by signatures alone and remains an explicit product-security gap.
 
 ## CherryUSB boundary
@@ -224,17 +239,17 @@ No CherryUSB source is added in Phase 1. Phase 4 must re-check the current upstr
 
 | Question | Result |
 | --- | --- |
-| 1. What is actually complete? | Signed Boot/App baseline, swap/revert/confirmation, builds/tests/evidence only |
-| 2. What should happen next? | Phase 2 Storage and Boot-Control contract/backend |
-| 3. What should not happen now? | USB/CAN/UART/protocol implementation or Boot recovery |
-| 4. Top three risks? | Unsafe storage boundary, premature confirmation, HC32/transport coupling |
+| 1. What is actually complete? | Signed Boot/App baseline, Secondary Storage/Boot-Control, Protocol codec/parser and host-tested Manager lifecycle through COMMIT and RESET action |
+| 2. What should happen next? | Execute only Phase 3E immutable G3 evidence and remote CI |
+| 3. What should not happen now? | USB/CAN/UART integration, Boot recovery or claiming G3 before Phase 3E evidence/remote CI |
+| 4. Top three risks? | Parser bounds/desync, duplicate side effects, unsigned compatibility metadata assumptions |
 | 5. Boot/App/Slot distinguished? | Yes |
 | 6. Full manager in Application? | Yes |
 | 7. Boot recovery separate? | Yes |
 | 8. Protocol unaware of USB/CAN/UART? | Yes by contract |
 | 9. Transport unaware of MCUboot slot? | Yes by contract |
 | 10. Storage unaware of transport? | Yes by contract |
-| 11. Portable core unaware of HC32? | Yes by contract and future CI rule |
+| 11. Portable core unaware of HC32? | Yes for current fw_update core by contract, HostTests and CI dependency rule |
 | 12. CherryUSB only a backend? | Yes |
 | 13. Second MCU portability proof? | Phase 9 requires unchanged portable core |
 | 14. Each phase has PASS/FAIL? | Yes, in `ACCEPTANCE_GATES.md` |

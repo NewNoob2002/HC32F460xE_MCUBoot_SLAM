@@ -265,7 +265,11 @@ G1-passed architecture revision.
 
 - Flash wear or unintended range access. Mitigation: fake-first bounds tests and HIL region hashes.
 
-## Phase 3 — Protocol Core with Fake Transport
+## Phase 3 — Protocol Core with Test Byte Driver
+
+Detailed execution plan: `docs/roadmap/PHASE3_PROTOCOL_CORE_PLAN.md`.
+Wire-format draft: `docs/protocol/PROTOCOL_V1.md`.
+Boundary decision: `docs/adr/ADR-003-protocol-v1-boundary.md` (Accepted).
 
 ### Objective
 
@@ -277,10 +281,10 @@ G2 has passed.
 
 ### Scope
 
-- HELLO, DEVICE_INFO, BEGIN, DATA, END/VERIFY, COMMIT, ABORT and error responses.
-- Magic, major/minor version, command, flags, sequence, payload length and CRC.
+- HELLO, DEVICE_INFO, BEGIN, DATA, END, COMMIT, ABORT and common status responses.
+- Fixed 16-byte header, 512-byte maximum payload, sequence and CRC-32.
 - Incremental parsing across arbitrary input chunks.
-- Duplicate detection and bounded retry semantics.
+- Strict contiguous DATA, alignment staging/tail padding, duplicate response replay and timeout/error budget.
 
 ### Out of Scope
 
@@ -288,27 +292,27 @@ Resume, sliding windows, encryption, authentication beyond signed images and tra
 
 ### Architecture Impact
 
-Adds portable protocol/session code above Storage and Boot Control.
+Adds a pure Protocol codec/parser and a portable Manager above Storage and Boot Control. Reset is emitted as an action after response drain; no platform reset call enters portable code.
 
 ### Files / Components
 
-Portable protocol/update directories, protocol specification, fake transport and HostTests.
+Portable protocol/update sources, Protocol V1 specification, test-local byte driver/fakes, malformed corpus and HostTests.
 
 ### API Impact
 
-Adds the first Transport contract, driven by one fake. Read/write are chunk-oriented; one read is never assumed to equal one protocol frame.
+Adds Protocol and Manager contracts with borrowed RX feed, Manager-owned TX drain, explicit monotonic time, disconnect/TX-idle notifications and lifecycle actions. It does not freeze a production Transport backend vtable before the first real backend.
 
 ### Implementation Steps
 
-1. Freeze wire-format test vectors.
-2. Implement CRC and incremental parser.
-3. Implement commands and state transitions.
-4. Connect fake transport/storage/clock/reset.
-5. Add malformed-input and timeout tests.
+1. Review/accept ADR-003 and freeze wire-format/golden vectors; run local RED without pushing a failing revision.
+2. Implement CRC, bounded codec and incremental parser.
+3. Implement Manager receive/readback lifecycle with fake Storage/Boot Control.
+4. Add duplicate/sequence/timeout/disconnect and COMMIT response-drain ordering.
+5. Add the fixed-seed malformed corpus, dependency enforcement and immutable host evidence.
 
 ### Automated Tests
 
-Split/coalesced frames, invalid lengths, CRC, sequence, duplicate, timeout, state violations and fuzz-style deterministic malformed corpus.
+Every-byte split/coalesced frames, fixed golden vectors, invalid lengths/CRC/version/flags, state/sequence/duplicate behavior, logical overflow, final tail padding, Storage/Boot-Control faults, response-drain/reset ordering and at least 10,000 deterministic malformed cases.
 
 ### HIL Tests
 
@@ -316,17 +320,19 @@ None.
 
 ### Fault Injection
 
-Fake transport disconnect, storage failures, clock expiry and reset request failure.
+Byte split/coalesce/short TX/disconnect, Nth Storage failure, readback corruption, Boot-Control failure, timeout boundaries and duplicate delivery.
 
 ### Acceptance Criteria
 
-- Parser never reads/writes outside fixed buffers.
-- Identical protocol tests pass with arbitrary chunk boundaries.
-- No protocol source includes transport-, MCUboot- or HC32-specific headers.
+- Parser never reads/writes outside fixed buffers; maximum payload/frame are 512/532 bytes.
+- Identical protocol behavior passes at every representative split point and under coalescing/backpressure.
+- Arbitrary DATA sizes are staged into aligned writes; final tails preserve exact logical size/CRC.
+- Duplicate COMMIT/DATA causes no repeated side effect; RESET is emitted only after successful response drain and TX idle.
+- Manager static state is at most 2048 bytes, uses no dynamic allocation and includes no transport-, MCUboot- or HC32-specific header.
 
 ### Evidence
 
-Protocol vectors/specification, sanitizer CTest output and malformed corpus results.
+Accepted Protocol/ADR, golden vectors, sanitizer CTest output, corpus seed/count/result, Manager size, dependency report and tracked `evidence/host/` bundle.
 
 ### Exit Gate
 
@@ -338,7 +344,9 @@ G2-passed storage revision.
 
 ### Risks
 
-- Parser complexity. Mitigation: fixed header, fixed maxima and no resume/windowing in V1.
+- Parser complexity. Mitigation: fixed header/maxima, stop-and-wait and no resume/windowing/protocol fragmentation in V1.
+- Fake-only Transport abstraction. Mitigation: freeze only the byte ingress/egress contract until the first real backend.
+- Host metadata mistaken for image trust. Mitigation: CRC is integrity only; signed compatibility metadata requires a separate decision before G5.
 
 ## Phase 4 — CherryUSB and HC32 USB DCD Loopback
 

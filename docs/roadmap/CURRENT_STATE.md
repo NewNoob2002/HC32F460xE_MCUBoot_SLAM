@@ -2,7 +2,11 @@
 
 Audit date: 2026-08-26
 
-Audited revision: `138d37ff3afe0a8655c98cade11bd7421c219918`
+Audited baseline revision: `9d29ee9843c711d7f853d7c24a7df58be8e8e1e9`
+
+Current Phase 3 scope: reviewed Phase 3A-3D changes and the Phase 3E evidence
+verification hook form the source revision for host evidence. Evidence capture
+and remote CI are in progress.
 
 This document describes the repository as implemented. Historical milestone documents are supporting evidence, not the source of truth for current code.
 
@@ -13,13 +17,17 @@ This document describes the repository as implemented. Historical milestone docu
 ```text
 CMakeLists.txt
 ├── HostTests path
-│   └── Tests/{memory_map,flash_map,boot_handover,app_confirm}
+│   ├── Tests/{memory_map,flash_map,boot_handover,app_confirm}
+│   ├── Tests/{fw_update_contract,fw_update_mcuboot_backend}
+│   └── portable dependency check
 └── Firmware path
     ├── hc32_project_options
     ├── hc32_device -> hc32_ll -> hc32_platform
     ├── tinycrypt + mcuboot_asn1
     ├── mcuboot_port_hc32 -> hc32_platform
     ├── mcuboot_bootutil -> mcuboot_port_hc32
+    ├── fw_update_core
+    ├── fw_update_mcuboot -> fw_update_core + mcuboot_bootutil
     ├── boot_firmware
     │   ├── hc32_startup_boot
     │   ├── hc32_platform / hc32_device
@@ -37,15 +45,19 @@ Sources: `CMakeLists.txt`, `Drivers/CMakeLists.txt`, `Platform/CMakeLists.txt`, 
 | Area | Current responsibility | Portability status |
 | --- | --- | --- |
 | `Boot/` | `boot_go()` invocation, safe failure loop and HC32 handover | Boot policy is portable in concept; `main.c` directly includes `hc32f460.h` |
-| `App/` | Clock init and optional immediate image confirmation | HC32-bound executable; confirmation wrapper directly uses MCUboot public API |
+| `App/` | Clock init, default optional immediate confirmation and test-only Phase 2 HIL profiles | HC32-bound executable; default confirmation wrapper directly uses MCUboot public API |
 | `components/mcuboot-2.4.0/` | Upstream validation, scratch swap, rollback and trailer state | Vendored upstream; project-specific edits are prohibited |
 | `components/mcuboot_port/` | Flash areas, MCUboot configuration, signing key bridge | HC32 implementation and generated memory map are coupled |
+| `components/fw_update/` | Portable Storage/Boot-Control contracts, Protocol V1 codec/parser, receive/verification Manager and MCUboot backends | Core is host-buildable and dependency-checked; MCUboot backend is intentionally non-portable |
 | `Platform/HC32F460/` | Clock, Flash, startup support and boot handover | Intentionally HC32-specific |
 | `Drivers/` | CMSIS/device/LL libraries and Boot/App startup objects | HC32-specific |
-| `Tests/` | Four host contract tests plus reusable HIL assets | Host tests are portable only at mocked boundaries |
+| `Tests/` | Nine strict HostTests, Golden Vector verifier, fixed-seed malformed corpus, portable dependency check and reusable HIL assets | G3 tracked evidence/remote CI remain |
 | `cmake/` | Memory map, toolchain/options, signing and artifacts | Project/HC32 build policy |
 
-There is currently no `fw_update`, Protocol, Transport, USB, UART, CAN or host-updater component. No current directory can be treated as an existing portable updater core.
+There is now a bounded portable `fw_update` Storage/Boot-Control foundation,
+Protocol V1 codec/parser and Manager lifecycle through sequence/replay, receive,
+verification, COMMIT and an emitted RESET action. Production Application glue,
+Transport, USB, UART, CAN and the host updater are not implemented.
 
 ## Flash layout
 
@@ -124,23 +136,36 @@ Repository entry points:
 - Primary validation, test upgrade, revert, confirmation and handover.
 - Confirmed Primary and test-pending Secondary image artifacts.
 - Host tests, Debug/Release builds, signing policy checks and retained rollback HIL evidence.
+- Portable Secondary-only Storage and Boot-Control C contracts with named errors.
+- MCUboot Secondary backend with logical capacity `0x30000`, backend-controlled
+  full-slot erase, aligned write/read and trailer exclusion from Host offsets.
+- MCUboot Boot-Control backend for test-pending and running-image confirmation.
+- Host contract/backend tests, portable forbidden-dependency check and retained
+  Phase 2 Storage/Pending/range-isolation/restoration HIL evidence.
+- Portable Protocol V1 framing/parser and caller-allocated Manager with bounded
+  sequence/error handling, exact duplicate replay, timeout/disconnect, aligned
+  receive/readback verification, single-effect COMMIT and TX-drain/TX-idle RESET
+  action lifecycle.
+- Fixed-seed 10,000-case malformed parser corpus under ASan/UBSan.
 
 ### Partially implemented
 
 - Application confirmation exists, but it occurs immediately after clock initialization and is not guarded by bounded product health checks.
-- Flash area APIs can access Secondary, but they are an MCUboot port rather than a safe Application updater storage contract.
+- Safe Application-facing Storage/Boot-Control contracts and the Phase 3D
+  portable Manager exist, but no production Application loop currently feeds
+  bytes, polls time, reports disconnect/TX-idle or executes the RESET action.
 - Manual debugger/probe programming can place an update into Secondary; there is no runtime receive/session path.
 - Rollback is implemented; anti-rollback/version security counters are not.
 
 ### Not implemented
 
-- FW Update Manager/session/state machine.
-- Transport or protocol contracts and implementations.
+- Production Transport C contract/implementations and Application orchestration.
 - USB Vendor Bulk, CherryUSB, HC32 USB DCD, UART, CAN or CAN FD.
-- Host updater tool, device discovery and protocol specification.
-- Download resume, capability negotiation and transfer error recovery.
-- Runtime Secondary erase/write/finalize/request-pending flow.
-- Hardware/board compatibility enforcement and downgrade policy.
+- Host updater tool and device discovery.
+- Download resume, Host retry policy and transfer recovery after reset.
+- Runtime App wiring that invokes the portable Manager against real time,
+  Transport, MCUboot backend and platform reset.
+- Signed hardware/board compatibility metadata and downgrade policy.
 - Minimal Boot recovery profile.
 
 MCUboot's upstream ability to validate or swap an image is not evidence that this repository can receive that image at runtime.
@@ -149,14 +174,16 @@ MCUboot's upstream ability to validate or swap an image is not evidence that thi
 
 | Level | Current coverage | Main gap |
 | --- | --- | --- |
-| Host unit | Memory map, Flash map bounds/alignment, handover address helper, confirmation wrapper | No updater/protocol/state-machine code exists |
-| Component integration | MCUboot Flash backend with mocked BSP Flash | No full `boot_go()` host integration or Flash power-loss model |
+| Host unit | Memory/Flash map, handover, confirmation, fw_update contracts/backends, Protocol codec/parser, 10,000-case corpus and Manager reliability/receive/verify/COMMIT/reset lifecycle with fault injection | No production App/Transport integration exists |
+| Component integration | MCUboot Flash backend with mocked BSP Flash plus Storage/Boot-Control backend fakes | No full `boot_go()` host integration or Flash power-loss model |
 | Firmware build | Debug/Release, image signing/verification, layout and key policy in CI | No size regression threshold beyond partition/link failure |
-| HIL/manual | Boot, test swap, revert, confirmation and persistence on HC32 | No reset/power loss during individual swap operations |
+| HIL/manual | Boot/swap/revert/confirmation plus Phase 2 Secondary erase/boundary readback, Pending trailer and exact restoration | No runtime transfer or reset/power loss during individual operations |
 | Fault injection | Unconfirmed test boot followed by reset/revert | No erase/write failure, corrupted trailer or interrupted swap matrix |
-| CI | Evidence checksum, strict host sanitizers, firmware builds/signing | No architecture dependency rule yet |
+| CI | Evidence checksum, nine strict local HostTests, portable dependency rule, firmware builds/signing | Phase 3A-3D changes and G3 host evidence are not yet committed/remote-verified |
 
-The largest current gap is the entire Application-side update path. The largest baseline reliability gap is systematic power-interruption testing during swap.
+The largest current delivery gap is Phase 3E immutable evidence and remote CI,
+followed by production Application/Transport integration. The largest baseline reliability gap remains systematic
+power-interruption testing during swap/update operations.
 
 ## Technical debt and risks
 
@@ -173,9 +200,13 @@ No P0 defect was identified in the protected baseline. A new P0 is any path that
 
 ### P2 Medium
 
-- `hc32_project_options` and current firmware targets propagate HC32 compile definitions broadly. Portable code needs an isolated host-buildable target when it first exists.
-- The MCUboot Flash port uses generic `-1` returns and exposes Primary/Secondary/Scratch area IDs; a public updater contract needs defined errors and Secondary-only capability.
-- No automated rule prevents future portable components from including HC32 headers.
+- `hc32_project_options` and firmware targets still propagate HC32 compile
+  definitions broadly, although `fw_update` core is independently exercised by
+  HostTests.
+- The MCUboot Flash port retains generic native error returns internally; the
+  public updater contract maps them to named errors.
+- The dependency checker is token-based and must expand with new portable
+  Protocol/Manager files and forbidden APIs.
 - Boot watchdog hooks are no-ops, which may matter when validation/swap time grows.
 - Fault-injection hardening is configured off (`MCUBOOT_FIH_PROFILE_OFF`).
 
@@ -186,4 +217,9 @@ No P0 defect was identified in the protected baseline. A new P0 is any path that
 
 ## Baseline conclusion
 
-The minimal compile/build/sign/boot/swap/rollback/confirmation project is complete and CI/HIL evidenced. The product firmware-update framework is not implemented. The next work is the architecture contract freeze described by G1; no transport should be started before it passes.
+The minimal compile/build/sign/boot/swap/rollback/confirmation baseline and the
+Phase 2 Secondary Storage/Boot-Control foundation are complete and CI/HIL
+evidenced. Phase 3A-3D portable Protocol/Manager implementation is locally
+complete but G3 remains open until Phase 3E tracked evidence and remote CI pass.
+The full runtime firmware-update framework is not implemented; no USB/UART/CAN
+work may start before G3.

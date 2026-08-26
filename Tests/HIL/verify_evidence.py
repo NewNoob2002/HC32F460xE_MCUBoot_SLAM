@@ -52,9 +52,13 @@ def verify_manifest(manifest: Path) -> list[str]:
 def main() -> int:
     manifests = [Path(arg) for arg in sys.argv[1:]]
     if not manifests:
-        manifests = sorted(Path("evidence/hil").glob("*/SHA256SUMS"))
+        manifests = sorted(
+            manifest
+            for root in (Path("evidence/hil"), Path("evidence/host"))
+            for manifest in root.glob("*/SHA256SUMS")
+        )
     if not manifests:
-        print("No HIL evidence manifests found", file=sys.stderr)
+        print("No evidence manifests found", file=sys.stderr)
         return 1
 
     errors = [error for manifest in manifests for error in verify_manifest(manifest)]
@@ -62,7 +66,7 @@ def main() -> int:
         print("\n".join(errors), file=sys.stderr)
         return 1
 
-    print(f"Verified {len(manifests)} HIL evidence bundle(s)")
+    print(f"Verified {len(manifests)} evidence bundle(s)")
     return 0
 
 

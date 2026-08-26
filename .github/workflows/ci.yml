@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Verify retained HIL evidence
+      - name: Verify retained evidence
         run: python3 Tests/HIL/verify_evidence.py
 
       - name: Install Arm toolchain
