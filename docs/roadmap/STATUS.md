@@ -8,7 +8,7 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 | --- | --- | --- | --- | --- | --- | --- |
 | Phase 0 — Verified MCUboot Baseline | PASSED | G0 | HostTests 4/4; Debug/Release/signing CI passed | rollback/confirmation passed | None | `evidence/hil/2026-08-25-339f32c/`, CI run `32922559686` |
 | Phase 1 — Architecture Audit and Contract Freeze | PASSED | G1 | Local G1 passed; remote CI passed | Not required | None | revision `1429e30`, CI run `32925552505` |
-| Phase 2 — Secondary Storage and Boot Control | READY_FOR_REVIEW | G2 | Strict HostTests 7/7; Debug/Release/signing and implementation CI passed | Storage/range-isolation/Pending/restore passed | Evidence commit and remote CI | `evidence/hil/2026-08-26-5ebeae6-phase2/`, revision `5ebeae6`, CI `32928199086` |
+| Phase 2 — Secondary Storage and Boot Control | PASSED | G2 | Strict HostTests 7/7; Debug/Release/signing and remote CI passed | Storage/range-isolation/Pending/restore passed | None | `evidence/hil/2026-08-26-5ebeae6-phase2/`, revisions `5ebeae6`/`0e1abd8`, CI `32928199086`/`32929570437` |
 | Phase 3 — Protocol Core | NOT_STARTED | G3 | Not run | Not required | G2 | None |
 | Phase 4 — CherryUSB + HC32 DCD Loopback | NOT_STARTED | G4 | Not run | Required | G3, USB hardware details | None |
 | Phase 5 — USB Upgrade E2E | NOT_STARTED | G5 | Not run | Required | G4 | None |
@@ -32,7 +32,7 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 
 ## Immediate next action
 
-Commit the Phase 2 HIL evidence and pass remote CI. Do not start Phase 3 until G2 is marked `PASSED`.
+Plan Phase 3 Protocol Core, beginning with the V1 protocol specification and failing host tests. Do not start USB, UART or CAN work.
 
 ## Latest local G1 verification
 
@@ -60,4 +60,5 @@ Date: 2026-08-26
 - Boot-Control HIL: passed with known-valid unpadded signed image, TEST swap-info `0x02` and MCUboot magic written only in the trailer.
 - Scratch SHA-256 was unchanged before/after both HIL profiles; Reserved was never accessed.
 - The final non-Reserved readback was byte-identical to the pre-HIL backup, SHA-256 `3cadc91626a565bf3ee5454d21e29a58243f58f1ae1b118279d1c70e1f6a8dcf`.
-- Evidence: `evidence/hil/2026-08-26-5ebeae6-phase2/`; evidence commit/remote CI pending.
+- Evidence: `evidence/hil/2026-08-26-5ebeae6-phase2/`; evidence revision `0e1abd8`, remote CI run `32929570437`: passed.
+- G2 status: `PASSED`.
