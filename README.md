@@ -80,3 +80,7 @@ The build and host tests validate layout, signing, handover, and confirmation co
 The 2026-08-25 rollback HIL logs, exact programmed images, manifests, and checksums are retained under evidence/hil/2026-08-25-339f32c/. Reusable path-independent command templates live under Tests/HIL/. The full pre-test Flash backup is excluded because it may contain device-specific data; its size and hash remain in the evidence manifest.
 
 See docs/build_report.md for the latest recorded verification report.
+
+## Active roadmap
+
+The completed minimal Boot/App milestone remains documented under `docs/superpowers/`. Current architecture, phases, hard gates, test strategy and status are maintained under `docs/roadmap/`; major decisions are recorded under `docs/adr/`.
