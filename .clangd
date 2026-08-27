@@ -1,8 +1,8 @@
 CompileFlags:
   CompilationDatabase: build/Debug
   Add:
+    - --target=arm-none-eabi
     - -D__PROGRAM_START=Reset_Handler
-    - -U__clang__
   Remove:
     - -fcyclomatic-complexity
     - -mcmse
@@ -18,12 +18,12 @@ Index:
 
 ---
 If:
-  PathMatch: .*\.c
+  PathMatch: .*\.(c|h)$
 CompileFlags:
   Compiler: arm-none-eabi-gcc
 
 ---
 If:
-  PathMatch: .*\.cpp
+  PathMatch: .*\.(cpp|cc|cxx|hpp|hh|hxx)$
 CompileFlags:
   Compiler: arm-none-eabi-g++
