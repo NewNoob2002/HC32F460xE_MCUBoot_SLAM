@@ -1,0 +1,456 @@
+T5BE54740 000:001.868   SEGGER J-Link V9.70 Log File
+T5BE54740 000:001.924   DLL Compiled: Aug 19 2026 12:15:25
+T5BE54740 000:001.925   Logging started @ 2026-08-26 15:41
+T5BE54740 000:001.926   Process: /opt/SEGGER/JLink_V970/JLinkExe
+T5BE54740 000:001.928 - 1.928ms 
+T5BE54740 000:001.944 JLINK_EMU_SelectByUSBSN(SerialNo = 63728710)
+T5BE54740 000:012.166 - 10.222ms returns 0x00
+T5BE54740 000:012.185 JLINK_SetWarnOutHandler(...)
+T5BE54740 000:012.187 - 0.002ms 
+T5BE54740 000:012.198 JLINK_ExecCommand("SuppressGUI = 1", ...). 
+T5BE54740 000:012.200 - 0.003ms returns 0x00
+T5BE54740 000:012.221 JLINK_OpenEx(...)
+T5BE54740 000:014.609   Firmware: J-Link OB-Mini Plus-CortexM compiled Mar  8 2099 11:15:54
+T5BE54740 000:015.183   Firmware: J-Link OB-Mini Plus-CortexM compiled Mar  8 2099 11:15:54
+T5BE54740 000:019.389   Hardware: V1.00
+T5BE54740 000:019.398   S/N: 63728710
+T5BE54740 000:019.399   OEM: SEGGER
+T5BE54740 000:019.401   Feature(s): GDB, RDI, FlashBP, FlashDL, JFlash
+T5BE54740 000:019.875   Bootloader: (FW returned invalid version)
+T5BE54740 000:020.631   TELNET listener socket opened on port 19021
+T5BE54740 000:020.664 - 8.442ms returns "O.K."
+T5BE54740 000:020.672 JLINK_SetFlashProgProgressCallback(...)
+T5BE54740 000:020.674 - 0.001ms 
+T5BE54740 000:020.675 JLINK_GetFirmwareString(...)
+T5BE54740 000:020.677 - 0.002ms 
+T5BE54740 000:020.680 JLINK_GetHardwareVersion()
+T5BE54740 000:020.681 - 0.001ms returns 10000
+T5BE54740 000:020.686 JLINK_GetHWInfoEx(...)
+T5BE54740 000:020.838 - 0.153ms returns 0
+T5BE54740 000:020.841 JLINK_GetSN()
+T5BE54740 000:020.843 - 0.002ms returns 63728710
+T5BE54740 000:020.845 JLINK_GetAvailableLicense()
+T5BE54740 000:028.376 - 7.530ms returns 0x05
+T5BE54740 000:028.389 JLINK_GetOEMString(...)
+T5BE54740 000:028.392 JLINK_EMU_GetCurrConnectionInfo()
+T5BE54740 000:028.558 - 0.166ms returns 0
+T5BE54740 000:028.562 JLINK_EMU_HasCapEx(0x00000026)
+T5BE54740 000:028.564 - 0.002ms returns 0
+T5BE54740 000:028.566 JLINK_GetEmuCaps()
+T5BE54740 000:028.568 - 0.001ms returns 0xB8EA5A33
+T5BE54740 000:028.569 JLINK_GetEmuCaps()
+T5BE54740 000:028.570 - 0.001ms returns 0xB8EA5A33
+T5BE54740 000:028.572 JLINK_GetHWStatus(...)
+T5BE54740 000:028.693 - 0.121ms returns 0
+T5BE54740 000:028.695 JLINK_EMU_HasCapEx(0x00000044)
+T5BE54740 000:028.697 - 0.002ms returns 0
+T5BE54740 000:028.705 JLINK_TIF_GetAvailable(...)
+T5BE54740 000:028.842 - 0.137ms 
+T5BE54740 000:028.857 JLINK_DEVICE_GetIndex(sDeviceName = HC32F460xE)
+T5BE54740 000:036.986 - 8.130ms returns 14308
+T5BE54740 000:036.994 JLINK_ExecCommand("device=HC32F460xE", ...). 
+T5BE54740 000:038.185   Device "HC32F460XE" selected.
+T5BE54740 000:038.981 - 1.988ms returns 0x00
+T5BE54740 000:038.985 JLINK_EnableLog(...)
+T5BE54740 000:038.987 - 0.002ms 
+T5BE54740 000:038.990 JLINK_GetEmuCaps()
+T5BE54740 000:038.992 - 0.002ms returns 0xB8EA5A33
+T5BE54740 000:038.994 JLINK_TIF_GetAvailable(...)
+T5BE54740 000:039.139 - 0.145ms 
+T5BE54740 000:039.143 JLINK_TIF_Select(JLINKARM_TIF_SWD)
+T5BE54740 000:039.652 - 0.509ms returns 0x00
+T5BE54740 000:039.656 JLINK_IsConnected()
+T5BE54740 000:039.658 - 0.002ms returns FALSE
+T5BE54740 000:039.660 JLINK_SetSpeed(4000)
+T5BE54740 000:039.735 - 0.075ms 
+T5BE54740 000:039.738 JLINK_Connect()
+T5BE54740 000:040.484   Found SW-DP with ID 0x2BA01477
+T5BE54740 000:043.777   Old FW that does not support reading DPIDR via DAP jobs
+T5BE54740 000:047.061   DPv0 detected
+T5BE54740 000:047.074   CoreSight SoC-400 or earlier
+T5BE54740 000:047.078   Scanning AP map to find all available APs
+T5BE54740 000:049.278   AP[1]: Stopped AP scan as end of AP map has been reached
+T5BE54740 000:049.282   AP[0]: AHB-AP (IDR: 0x24770011, ADDR: 0x00000000)
+T5BE54740 000:049.284   Iterating through AP map to find AHB-AP to use
+T5BE54740 000:052.964   AP[0]: Core found
+T5BE54740 000:052.974   AP[0]: AHB-AP ROM base: 0xE00FF000
+T5BE54740 000:054.902   CPUID register: 0x410FC241. Implementer code: 0x41 (ARM)
+T5BE54740 000:054.906   Found Cortex-M4 r0p1, Little endian.
+T5BE54740 000:055.182   -- Max. mem block: 0x00002220
+T5BE54740 000:055.682   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T5BE54740 000:056.056   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+T5BE54740 000:056.447   CPU_ReadMem(4 bytes @ 0xE0002000)
+T5BE54740 000:056.841   FPUnit: 6 code (BP) slots and 2 literal slots
+T5BE54740 000:056.844   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T5BE54740 000:057.226   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T5BE54740 000:057.666   CPU_ReadMem(4 bytes @ 0xE0001000)
+T5BE54740 000:058.040   CPU_WriteMem(4 bytes @ 0xE0001000)
+T5BE54740 000:058.431   CPU_ReadMem(4 bytes @ 0xE000ED88)
+T5BE54740 000:058.825   CPU_WriteMem(4 bytes @ 0xE000ED88)
+T5BE54740 000:059.230   CPU_ReadMem(4 bytes @ 0xE000ED88)
+T5BE54740 000:059.630   CPU_WriteMem(4 bytes @ 0xE000ED88)
+T5BE54740 000:060.031   CoreSight components:
+T5BE54740 000:060.034   ROMTbl[0] @ E00FF000
+T5BE54740 000:060.036   CPU_ReadMem(64 bytes @ 0xE00FF000)
+T5BE54740 000:060.985   CPU_ReadMem(32 bytes @ 0xE000EFE0)
+T5BE54740 000:061.636   [0][0]: E000E000 CID B105E00D PID 000BB00C SCS-M7
+T5BE54740 000:061.638   CPU_ReadMem(32 bytes @ 0xE0001FE0)
+T5BE54740 000:062.271   [0][1]: E0001000 CID B105E00D PID 003BB002 DWT
+T5BE54740 000:062.273   CPU_ReadMem(32 bytes @ 0xE0002FE0)
+T5BE54740 000:062.986   [0][2]: E0002000 CID B105E00D PID 002BB003 FPB
+T5BE54740 000:062.989   CPU_ReadMem(32 bytes @ 0xE0000FE0)
+T5BE54740 000:063.636   [0][3]: E0000000 CID B105E00D PID 003BB001 ITM
+T5BE54740 000:063.639   CPU_ReadMem(32 bytes @ 0xE0040FE0)
+T5BE54740 000:064.281   [0][4]: E0040000 CID B105900D PID 000BB9A1 TPIU
+T5BE54740 000:064.299 - 24.560ms returns 0x00
+T5BE54740 000:064.304 JLINK_GetIdData(pIdData)
+T5BE54740 000:064.681   pIdData->ScanLen=4
+T5BE54740 000:064.683   pIdData->NumDevices=1
+T5BE54740 000:064.685   pIdData->aId[0]=0x2BA01477
+T5BE54740 000:064.687   pIdData->aIrRead[0]=0
+T5BE54740 000:064.688   pIdData->aScanLen[0]=0
+T5BE54740 000:064.690   pIdData->aScanRead[0]=0
+T5BE54740 000:064.691 - 0.388ms 
+T5BE54740 000:064.694 JLINK_GetMemZones(...)
+T5BE54740 000:064.695 - 0.002ms returns 1
+T5BE54740 000:064.698 JLINK_HasError()
+T5BE54740 000:064.700 JLINK_CORE_GetFound()
+T5BE54740 000:064.702 - 0.002ms returns 0xE0000FF
+T5BE54740 000:064.709 JLINK_Halt()
+T5BE54740 000:068.962 - 4.252ms returns 0x00
+T5BE54740 000:068.968 JLINK_GetDeviceFamily
+T5BE54740 000:068.971 - 0.002ms returns 14
+T5BE54740 000:068.973 JLINK_CORE_GetFound()
+T5BE54740 000:068.976 - 0.003ms returns 0xE0000FF
+T5BE54740 000:068.979 JLINK_GetDebugInfo(0x01 = Unknown)
+T5BE54740 000:068.982   Value=0x00000001
+T5BE54740 000:068.986 - 0.006ms returns 0
+T5BE54740 000:068.989 JLINK_ReadRegs(NumRegs = 28)
+T5BE54740 000:069.008   CPU_ReadMem(4 bytes @ 0xE0001004)
+T5BE54740 000:069.393   
+  R0 (0)         = 0x00                 R1 (1)         = 0xF361               R2 (2)         = 0x00                 R3 (3)         = 0x1FFF8D54        
+  R4 (4)         = 0xF361               R5 (5)         = 0x1FFF8660           R6 (6)         = 0x1FFF8660           R7 (7)         = 0x1FFFBE70        
+  R8 (8)         = 0x62FC               R9 (9)         = 0x6A9C               R10 (10)       = 0x4102               R11 (11)       = 0x00              
+  R12 (12)       = 0x00                 R13 (SP) (13)  = 0x1FFFBE70           MSP (17)       = 0x1FFFBE70           PSP (18)       = 0xF5AEAC80        
+  R14 (14)       = 0x8D7                R15 (PC) (15)  = 0x8D6                XPSR (16)      = 0x61030000           APSR (21)      = 0x60030000        
+  EPSR (22)      = 0x1000000            IPSR (23)      = 0x00                 CFBP (20)      = 0x4000000            CONTROL (27)   = 0x4000000         
+  FAULTMASK (26) = 0x00                 BASEPRI (25)   = 0x00                 PRIMASK (24)   = 0x00                 CycleCnt (65)  = 0x23EED20D        
+T5BE54740 000:069.398 - 0.409ms returns 0x00
+T5BE54740 000:069.411 JLINK_ReadRegs(NumRegs = 33)
+T5BE54740 000:076.208   
+  FPS0 (33)  = 0xEAE71737           FPS1 (34)  = 0xB82B4B42           FPS2 (35)  = 0x1D911C8F           FPS3 (36)  = 0xC93175A1        
+  FPS4 (37)  = 0xEFC05173           FPS5 (38)  = 0x2F8C98F8           FPS6 (39)  = 0xFBEFCF66           FPS7 (40)  = 0xD3EC769E        
+  FPS8 (41)  = 0xF34547AB           FPS9 (42)  = 0xF5B1B8A1           FPS10 (43) = 0x3F000000           FPS11 (44) = 0x3F800000        
+  FPS12 (45) = 0x45467000           FPS13 (46) = 0x424E0000           FPS14 (47) = 0x3C0316A9           FPS15 (48) = 0x33              
+  FPS16 (49) = 0x9F9FDC82           FPS17 (50) = 0xBEF4BECB           FPS18 (51) = 0x3B3FD1B0           FPS19 (52) = 0xE65DFA6A        
+  FPS20 (53) = 0x5BB1B45F           FPS21 (54) = 0xD7F3B79A           FPS22 (55) = 0x251ABB78           FPS23 (56) = 0x2DE6FFB5        
+  FPS24 (57) = 0x27D1C5A            FPS25 (58) = 0x5B9770EE           FPS26 (59) = 0x349E1A6A           FPS27 (60) = 0xECF189E0        
+  FPS28 (61) = 0xD3B4FFB4           FPS29 (62) = 0x601593B7           FPS30 (63) = 0x37BE90CF           FPS31 (64) = 0x8AE5FCF2        
+  FPSCR (32) = 0x80000010        
+T5BE54740 000:076.213 - 6.802ms returns 0x00
+T5BE54740 000:076.224 JLINK_DEVICE_GetIndex(sDeviceName = <NULL>)
+T5BE54740 000:076.226 - 0.002ms returns 14308
+T5BE54740 000:076.240 JLINK_Reset()
+T5BE54740 000:076.247   JLINK_GetResetTypeDesc
+T5BE54740 000:076.249   - 0.002ms 
+T5BE54740 000:076.252   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+T5BE54740 000:076.256   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+T5BE54740 000:076.731   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T5BE54740 000:077.131   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+T5BE54740 000:077.552   Reset: Reset device via AIRCR.SYSRESETREQ.
+T5BE54740 000:077.554   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+T5BE54740 000:130.418   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T5BE54740 000:130.827   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T5BE54740 000:131.216   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T5BE54740 000:136.840   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T5BE54740 000:141.547   CPU_WriteMem(4 bytes @ 0xE0002000)
+T5BE54740 000:141.947   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T5BE54740 000:142.390   CPU_ReadMem(4 bytes @ 0xE0001000)
+T5BE54740 000:142.787 - 66.547ms 
+T5BE54740 000:142.793 JLINK_Halt()
+T5BE54740 000:142.795 - 0.002ms returns 0x00
+T5BE54740 000:142.803 JLINK_Erase()
+T5BE54740 000:142.951   Old firmware which does not support pausing periodic actions during flash download
+T5BE54740 000:142.956   CPU_ReadMem(4 bytes @ 0xE000ED90)
+T5BE54740 000:143.390   CPU_ReadMem(4 bytes @ 0xE000ED94)
+T5BE54740 000:143.782    -- --------------------------------------
+T5BE54740 000:143.789    -- Start of determining dirty areas
+T5BE54740 000:143.803    -- End of determining dirty areas
+T5BE54740 000:143.805    -- Start of preparing flash programming
+T5BE54740 000:143.807    -- Calculating RAM usage
+T5BE54740 000:143.817    -- RAM usage = 10292 Bytes
+T5BE54740 000:143.819    -- Preserving CPU registers
+T5BE54740 000:143.830    -- Preparing target
+T5BE54740 000:143.833    -- Preserving target RAM temporarily used for programming
+T5BE54740 000:241.793    -- Downloading RAMCode
+T5BE54740 000:273.622    -- Preparing RAMCode
+T5BE54740 000:284.307    -- End of preparing flash programming
+T5BE54740 000:284.323    -- CPU is running at 160000 kHz.
+T5BE54740 000:284.325    -- Start of erasing sectors
+T5BE54740 000:284.328    -- Erasing range 0x00000000 - 0x0001FFFF ( 16 Sectors, 128 KB)
+T5BE54740 000:567.047    -- Erasing range 0x00020000 - 0x0003FFFF ( 16 Sectors, 128 KB)
+T5BE54740 000:849.434    -- Erasing range 0x00040000 - 0x00041FFF (  1 Sector, 8 KB)
+T5BE54740 000:868.401    -- End of erasing sectors
+T5BE54740 000:868.405    -- Start of restoring
+T5BE54740 000:868.409    -- Restoring RAMCode
+T5BE54740 000:874.080    -- Restoring target memory
+T5BE54740 000:970.220    -- Restore target
+T5BE54740 000:970.236    -- Restoring CPU registers
+T5BE54740 000:970.255    -- End of restoring
+T5BE54740 000:970.264    -- Total time needed: 0.826s (Prepare: 0.140s, Compare: 0.000s, Erase: 0.584s, Program: 0.000s, Verify: 0.000s, Restore: 0.101s)
+T5BE54740 000:971.393    -- 
+Flash sectors within Range [0x00000000 - 0x00041FFF] deleted.
+T5BE54740 000:971.596 - 828.793ms returns 0
+T5BE54740 000:971.614 JLINK_Reset()
+T5BE54740 000:971.620   JLINK_GetResetTypeDesc
+T5BE54740 000:971.622   - 0.002ms 
+T5BE54740 000:971.625   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+T5BE54740 000:971.630   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+T5BE54740 000:972.042   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T5BE54740 000:972.448   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+T5BE54740 000:972.873   Reset: Reset device via AIRCR.SYSRESETREQ.
+T5BE54740 000:972.876   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+T5BE54740 001:026.076   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T5BE54740 001:026.541   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T5BE54740 001:027.391   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T5BE54740 001:033.006   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T5BE54740 001:037.651   CPU_WriteMem(4 bytes @ 0xE0002000)
+T5BE54740 001:038.056   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T5BE54740 001:038.446   CPU_ReadMem(4 bytes @ 0xE0001000)
+T5BE54740 001:038.842 - 67.228ms 
+T5BE54740 001:038.848 JLINK_Halt()
+T5BE54740 001:038.849 - 0.001ms returns 0x00
+T5BE54740 001:038.859 JLINK_ExecCommand("SetVerifyRAMDownload = 1", ...). 
+T5BE54740 001:038.863 - 0.004ms returns 0x00
+T5BE54740 001:038.884 JLINK_DownloadFile(sFile = /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-26-b90ba7b-phase4-usb/artifacts/boot_firmware.bin)
+T5BE54740 001:038.937   Data:  A0 91 FF 1F 91 20 00 00 50 21 00 00 50 21 00 00 ...
+T5BE54740 001:039.183   completely In flash
+T5BE54740 001:039.386   Old firmware which does not support pausing periodic actions during flash download
+T5BE54740 001:039.391   CPU_ReadMem(4 bytes @ 0xE000ED90)
+T5BE54740 001:039.781   CPU_ReadMem(4 bytes @ 0xE000ED94)
+T5BE54740 001:040.156    -- --------------------------------------
+T5BE54740 001:040.160    -- Flash bank @ 0x00000000: Default: L2 verify disabled because algorithm performs L1 verify
+T5BE54740 001:040.163    -- Start of determining dirty areas in flash cache
+T5BE54740 001:040.166    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00000000 if necessary
+T5BE54740 001:040.168    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00002000 if necessary
+T5BE54740 001:040.170    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00004000 if necessary
+T5BE54740 001:040.172    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00006000 if necessary
+T5BE54740 001:040.234    -- End of determining dirty areas
+T5BE54740 001:040.237    -- Start of preparing flash programming
+T5BE54740 001:040.240    -- Calculating RAM usage
+T5BE54740 001:040.249    -- RAM usage = 4148 Bytes
+T5BE54740 001:040.251    -- Preserving CPU registers
+T5BE54740 001:040.260    -- Preparing target
+T5BE54740 001:040.262    -- Preserving target RAM temporarily used for programming
+T5BE54740 001:079.819    -- Downloading RAMCode
+T5BE54740 001:111.465    -- Preparing RAMCode
+T5BE54740 001:119.409    -- End of preparing flash programming
+T5BE54740 001:119.425    -- CPU is running at 160000 kHz.
+T5BE54740 001:119.428    -- Start of comparing flash
+T5BE54740 001:119.431    -- CRC check was estimated as fastest method
+T5BE54740 001:119.434    -- Comparing range 0x0000 - 0x7FFF (4 Sectors, 32 KB), using multi-block CRC calculation
+T5BE54740 001:130.303    -- CRC does not match for sectors 0-3
+T5BE54740 001:130.314    -- End of comparing flash
+T5BE54740 001:130.316    -- Start of erasing sectors
+T5BE54740 001:130.318    -- End of erasing sectors
+T5BE54740 001:130.320    -- Start of flash programming
+T5BE54740 001:130.322    -- Programming range 0x00000000 - 0x00007FFF (  4 Sectors, 32 KB)
+T5BE54740 001:439.857    -- End of flash programming
+T5BE54740 001:439.882    -- 0x0000 - 0x7FFF (  4 Sectors, 32 KB)
+T5BE54740 001:439.886    -- Start of restoring
+T5BE54740 001:439.890    -- Restoring RAMCode
+T5BE54740 001:462.485    -- Restoring target memory
+T5BE54740 001:501.655    -- Restore target
+T5BE54740 001:501.669    -- Restoring CPU registers
+T5BE54740 001:501.681    -- End of restoring
+T5BE54740 001:501.688    -- Bank 0 @ 0x00000000: 1 range affected (32768 bytes)
+T5BE54740 001:501.693    -- Total: 0.461s (Prepare: 0.079s, Compare: 0.010s, Erase: 0.000s, Program & Verify: 0.327s, Restore: 0.044s)
+T5BE54740 001:501.696    -- Program & Verify speed: 98 KB/s
+T5BE54740 001:501.894 - 463.011ms returns 0x00
+T5BE54740 001:501.906 JLINK_ExecCommand("SetVerifyRAMDownload = 0", ...). 
+T5BE54740 001:501.909 - 0.004ms returns 0x01
+T5BE54740 001:502.306 JLINK_IsHalted()
+T5BE54740 001:502.312 - 0.006ms returns TRUE
+T5BE54740 001:502.316 JLINK_ReadMemEx_64(0x00000000, 0x6CA0 Bytes, ...)
+T5BE54740 001:502.332    -- Read from flash cache (27808 bytes @ 0x00000000)
+T5BE54740 001:502.335   Data:  A0 91 FF 1F 91 20 00 00 50 21 00 00 50 21 00 00 ...
+T5BE54740 001:502.338 - 0.021ms returns 27808 (0x6CA0)
+T5BE54740 001:502.357 JLINK_Reset()
+T5BE54740 001:502.361   JLINK_GetResetTypeDesc
+T5BE54740 001:502.363   - 0.002ms 
+T5BE54740 001:502.367   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+T5BE54740 001:502.370   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+T5BE54740 001:502.780   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T5BE54740 001:503.203   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+T5BE54740 001:503.600   Reset: Reset device via AIRCR.SYSRESETREQ.
+T5BE54740 001:503.609   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+T5BE54740 001:556.802   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T5BE54740 001:557.219   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T5BE54740 001:558.030   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T5BE54740 001:563.699   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T5BE54740 001:568.408   CPU_WriteMem(4 bytes @ 0xE0002000)
+T5BE54740 001:568.813   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T5BE54740 001:569.194   CPU_ReadMem(4 bytes @ 0xE0001000)
+T5BE54740 001:569.590 - 67.234ms 
+T5BE54740 001:569.595 JLINK_Halt()
+T5BE54740 001:569.596 - 0.001ms returns 0x00
+T5BE54740 001:569.602 JLINK_ExecCommand("SetVerifyRAMDownload = 1", ...). 
+T5BE54740 001:569.605 - 0.002ms returns 0x00
+T5BE54740 001:569.607 JLINK_DownloadFile(sFile = /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-26-b90ba7b-phase4-usb/artifacts/usb_loopback_primary_attempt3.bin)
+T5BE54740 001:569.722   Data:  3D B8 F3 96 00 00 00 00 00 02 00 00 B4 3B 00 00 ...
+T5BE54740 001:569.774   completely In flash
+T5BE54740 001:569.945   Old firmware which does not support pausing periodic actions during flash download
+T5BE54740 001:569.950   CPU_ReadMem(4 bytes @ 0xE000ED90)
+T5BE54740 001:570.389   CPU_ReadMem(4 bytes @ 0xE000ED94)
+T5BE54740 001:570.788    -- --------------------------------------
+T5BE54740 001:570.791    -- Flash bank @ 0x00000000: Default: L2 verify disabled because algorithm performs L1 verify
+T5BE54740 001:570.794    -- Start of determining dirty areas in flash cache
+T5BE54740 001:570.805    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00010000 if necessary
+T5BE54740 001:570.808    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00012000 if necessary
+T5BE54740 001:570.810    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00014000 if necessary
+T5BE54740 001:570.811    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00016000 if necessary
+T5BE54740 001:570.813    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00018000 if necessary
+T5BE54740 001:570.815    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0001A000 if necessary
+T5BE54740 001:570.816    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0001C000 if necessary
+T5BE54740 001:570.819    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0001E000 if necessary
+T5BE54740 001:570.821    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00020000 if necessary
+T5BE54740 001:570.822    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00022000 if necessary
+T5BE54740 001:570.828    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00024000 if necessary
+T5BE54740 001:570.830    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00026000 if necessary
+T5BE54740 001:570.832    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00028000 if necessary
+T5BE54740 001:570.834    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0002A000 if necessary
+T5BE54740 001:570.836    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0002C000 if necessary
+T5BE54740 001:570.837    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0002E000 if necessary
+T5BE54740 001:570.839    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00030000 if necessary
+T5BE54740 001:570.841    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00032000 if necessary
+T5BE54740 001:570.842    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00034000 if necessary
+T5BE54740 001:570.844    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00036000 if necessary
+T5BE54740 001:570.846    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00038000 if necessary
+T5BE54740 001:570.847    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0003A000 if necessary
+T5BE54740 001:570.849    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0003C000 if necessary
+T5BE54740 001:570.851    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0003E000 if necessary
+T5BE54740 001:570.853    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00040000 if necessary
+T5BE54740 001:570.886    -- End of determining dirty areas
+T5BE54740 001:570.889    -- Start of preparing flash programming
+T5BE54740 001:570.890    -- Calculating RAM usage
+T5BE54740 001:570.900    -- RAM usage = 10292 Bytes
+T5BE54740 001:570.902    -- Preserving CPU registers
+T5BE54740 001:570.910    -- Preparing target
+T5BE54740 001:570.912    -- Preserving target RAM temporarily used for programming
+T5BE54740 001:668.897    -- Downloading RAMCode
+T5BE54740 001:700.447    -- Preparing RAMCode
+T5BE54740 001:711.004    -- End of preparing flash programming
+T5BE54740 001:711.010    -- CPU is running at 160000 kHz.
+T5BE54740 001:711.013    -- Start of comparing flash
+T5BE54740 001:711.016    -- CRC check was estimated as fastest method
+T5BE54740 001:711.018    -- Comparing range 0x10000 - 0x2FFFF (16 Sectors, 128 KB), using multi-block CRC calculation
+T5BE54740 001:718.255    -- CRC does not match for sectors 0-1
+T5BE54740 001:718.259    -- Comparing range 0x30000 - 0x41FFF (9 Sectors, 72 KB), using multi-block CRC calculation
+T5BE54740 001:723.028    -- CRC does not match for sector 8
+T5BE54740 001:723.038    -- Comparing range 0x14000 - 0x33FFF (16 Sectors, 128 KB), using alternative multi-block CRC calculation
+T5BE54740 001:730.385    -- All CRCs match
+T5BE54740 001:730.408    -- Comparing range 0x34000 - 0x3FFFF (6 Sectors, 48 KB), using alternative multi-block CRC calculation
+T5BE54740 001:734.133    -- All CRCs match
+T5BE54740 001:734.138    -- End of comparing flash
+T5BE54740 001:734.140    -- Start of erasing sectors
+T5BE54740 001:734.143    -- Erasing range 0x00040000 - 0x00041FFF (  1 Sector, 8 KB)
+T5BE54740 001:753.044    -- End of erasing sectors
+T5BE54740 001:753.055    -- Start of flash programming
+T5BE54740 001:753.059    -- Programming range 0x00010000 - 0x00013FFF (  2 Sectors, 16 KB)
+T5BE54740 001:872.523    -- Programming range 0x00040000 - 0x00041FFF (  1 Sector, 8 KB)
+T5BE54740 001:912.545    -- End of flash programming
+T5BE54740 001:912.574    -- 0x10000 - 0x13FFF (  2 Sectors, 16 KB)
+T5BE54740 001:912.576    -- 0x40000 - 0x41FFF (  1 Sector, 8 KB)
+T5BE54740 001:912.579    -- Start of restoring
+T5BE54740 001:912.583    -- Restoring RAMCode
+T5BE54740 001:973.486    -- Restoring target memory
+T5BE54740 002:069.771    -- Restore target
+T5BE54740 002:069.798    -- Restoring CPU registers
+T5BE54740 002:069.813    -- End of restoring
+T5BE54740 002:069.825    -- Bank 0 @ 0x00000000: 2 ranges affected (24576 bytes)
+T5BE54740 002:069.828    -- Total: 0.498s (Prepare: 0.140s, Compare: 0.023s, Erase: 0.018s, Program & Verify: 0.215s, Restore: 0.101s)
+T5BE54740 002:069.831    -- Program & Verify speed: 111 KB/s
+T5BE54740 002:070.028 - 500.420ms returns 0x00
+T5BE54740 002:070.037 JLINK_ExecCommand("SetVerifyRAMDownload = 0", ...). 
+T5BE54740 002:070.041 - 0.003ms returns 0x01
+T5BE54740 002:070.080 JLINK_IsHalted()
+T5BE54740 002:070.530 - 0.450ms returns TRUE
+T5BE54740 002:070.534 JLINK_ReadMemEx_64(0x00010000, 0x32000 Bytes, ...)
+T5BE54740 002:070.621    -- Read from flash cache (204800 bytes @ 0x00010000)
+T5BE54740 002:070.625   Data:  3D B8 F3 96 00 00 00 00 00 02 00 00 B4 3B 00 00 ...
+T5BE54740 002:070.627 - 0.093ms returns 204800 (0x32000)
+T5BE54740 002:070.685 JLINK_SetResetDelay(0)
+T5BE54740 002:070.688 - 0.003ms 
+T5BE54740 002:070.690 JLINK_Reset()
+T5BE54740 002:070.694   JLINK_GetResetTypeDesc
+T5BE54740 002:070.696   - 0.002ms 
+T5BE54740 002:070.698   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+T5BE54740 002:070.702   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+T5BE54740 002:071.139   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T5BE54740 002:071.544   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+T5BE54740 002:071.909   Reset: Reset device via AIRCR.SYSRESETREQ.
+T5BE54740 002:071.912   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+T5BE54740 002:124.307   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T5BE54740 002:124.710   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T5BE54740 002:125.150   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T5BE54740 002:130.762   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T5BE54740 002:135.453   CPU_WriteMem(4 bytes @ 0xE0002000)
+T5BE54740 002:135.848   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T5BE54740 002:136.253   CPU_ReadMem(4 bytes @ 0xE0001000)
+T5BE54740 002:136.649 - 65.959ms 
+T5BE54740 002:136.659 JLINK_GoEx(MaxEmulInsts = 0, Flags = 0x01)
+T5BE54740 002:136.663   CPU_ReadMem(4 bytes @ 0xE0001000)
+T5BE54740 002:137.055   CPU_WriteMem(4 bytes @ 0xE0001004)
+T5BE54740 002:138.108   Memory map 'after startup completion point' is active
+T5BE54740 002:138.111 - 1.453ms 
+T5BE54740 032:138.210 JLINK_Halt()
+T5BE54740 032:142.613 - 4.403ms returns 0x00
+T5BE54740 032:142.620 JLINK_GetDeviceFamily
+T5BE54740 032:142.623 - 0.003ms returns 14
+T5BE54740 032:142.627 JLINK_CORE_GetFound()
+T5BE54740 032:142.629 - 0.003ms returns 0xE0000FF
+T5BE54740 032:142.632 JLINK_GetDebugInfo(0x01 = Unknown)
+T5BE54740 032:142.637   Value=0x00000001
+T5BE54740 032:142.640 - 0.008ms returns 0
+T5BE54740 032:142.643 JLINK_ReadRegs(NumRegs = 28)
+T5BE54740 032:142.664   CPU_ReadMem(4 bytes @ 0xE0001004)
+T5BE54740 032:143.087   
+  R0 (0)         = 0xFFFFFFFF           R1 (1)         = 0x1000               R2 (2)         = 0xE2000000           R3 (3)         = 0x1FFF8754        
+  R4 (4)         = 0xE000E100           R5 (5)         = 0xFFFFFFFF           R6 (6)         = 0x20000754           R7 (7)         = 0x1FFFBE70        
+  R8 (8)         = 0x62FC               R9 (9)         = 0x6A9C               R10 (10)       = 0x4102               R11 (11)       = 0x00              
+  R12 (12)       = 0x81                 R13 (SP) (13)  = 0x1FFF9420           MSP (17)       = 0x1FFF9420           PSP (18)       = 0xF5AEAC80        
+  R14 (14)       = 0x11F09              R15 (PC) (15)  = 0x11A34              XPSR (16)      = 0xA1000000           APSR (21)      = 0xA0000000        
+  EPSR (22)      = 0x1000000            IPSR (23)      = 0x00                 CFBP (20)      = 0x00                 CONTROL (27)   = 0x00              
+  FAULTMASK (26) = 0x00                 BASEPRI (25)   = 0x00                 PRIMASK (24)   = 0x00                 CycleCnt (65)  = 0xEC5556C         
+T5BE54740 032:143.094 - 0.450ms returns 0x00
+T5BE54740 032:143.106 JLINK_ReadRegs(NumRegs = 33)
+T5BE54740 032:149.982   
+  FPS0 (33)  = 0xEAE71737           FPS1 (34)  = 0xB82B4B42           FPS2 (35)  = 0x1D911C8F           FPS3 (36)  = 0xC93175A1        
+  FPS4 (37)  = 0xEFC05173           FPS5 (38)  = 0x2F8C98F8           FPS6 (39)  = 0xFBEFCF66           FPS7 (40)  = 0xD3EC769E        
+  FPS8 (41)  = 0xF34547AB           FPS9 (42)  = 0xF5B1B8A1           FPS10 (43) = 0x3F000000           FPS11 (44) = 0x3F800000        
+  FPS12 (45) = 0x45467000           FPS13 (46) = 0x424E0000           FPS14 (47) = 0x3C0316A9           FPS15 (48) = 0x33              
+  FPS16 (49) = 0x9F9FDC82           FPS17 (50) = 0xBEF4BECB           FPS18 (51) = 0x3B3FD1B0           FPS19 (52) = 0xE65DFA6A        
+  FPS20 (53) = 0x5BB1B45F           FPS21 (54) = 0xD7F3B79A           FPS22 (55) = 0x251ABB78           FPS23 (56) = 0x2DE6FFB5        
+  FPS24 (57) = 0x27D1C5A            FPS25 (58) = 0x5B9770EE           FPS26 (59) = 0x349E1A6A           FPS27 (60) = 0xECF189E0        
+  FPS28 (61) = 0xD3B4FFB4           FPS29 (62) = 0x601593B7           FPS30 (63) = 0x37BE90CF           FPS31 (64) = 0x8AE5FCF2        
+  FPSCR (32) = 0x00              
+T5BE54740 032:150.014 - 6.908ms returns 0x00
+T5BE54740 032:150.043 JLINK_ReadMemU32_64(0x1FFF8754, 0x2 Items)
+T5BE54740 032:150.056   CPU_ReadMem(8 bytes @ 0x1FFF8754)
+T5BE54740 032:150.491   Data:  FF FF FF FF 00 00 00 E2
+T5BE54740 032:150.495 - 0.452ms returns 2 (0x2)
+T5BE54740 032:150.496 JLINK_HasError()
+T5BE54740 032:150.502 JLINK_ReadMemU32_64(0x1FFF834C, 0x2 Items)
+T5BE54740 032:150.504   CPU_ReadMem(8 bytes @ 0x1FFF834C)
+T5BE54740 032:150.978   Data:  00 00 00 00 00 00 00 00
+T5BE54740 032:150.990 - 0.487ms returns 2 (0x2)
+T5BE54740 032:150.992 JLINK_HasError()
+T5BE54740 032:151.000 JLINK_GoEx(MaxEmulInsts = 0, Flags = 0x01)
+T5BE54740 032:151.402   CPU_ReadMem(4 bytes @ 0xE0001000)
+T5BE54740 032:152.436 - 1.436ms 
+T5BE54740 032:152.442 JLINK_IsOpen()
+T5BE54740 032:152.444 - 0.002ms returns 0x01
+T5BE54740 032:153.536 JLINK_Close()
+T5BE54740 032:164.164 - 10.627ms
+T5BE54740 032:164.171   
+T5BE54740 032:164.174   Closed

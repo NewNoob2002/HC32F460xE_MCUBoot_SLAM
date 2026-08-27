@@ -1,0 +1,33 @@
+evidence_bundle:
+  schema_version: 1
+  run_id: "2026-08-26-93c9c04-hc32f460-phase4-usb-loopback"
+  status: "preserved"
+  test_date: "2026-08-26"
+  source_revision: "93c9c048380becbda1d655537bdbc095bf743ac5"
+  ci_run: "33026124061 success"
+  target:
+    board: "HC32F460xE"
+    hardware_revision: "unknown"
+    probe: "J-Link 63728710"
+    transport: "SWD"
+    speed_khz: 4000
+    vtref_v: "3.300"
+  retained:
+    exact_programmed_artifacts: true
+    raw_probe_logs: true
+    command_files: true
+    host_usb_logs: true
+    safety_preflights: true
+    normalized_results: true
+  excluded:
+    - path: "build/HIL/phase4-usb/backup/pre_hil_00000000_00075fff.bin"
+      reason: "Full target backup may contain device-specific or sensitive data"
+      size_bytes: 483328
+      sha256: "e608d3eae3ea4a8c0010f3ee6de8fc361c9618f98733a2c769d72264c1667c98"
+    - path: "build/HIL/phase4-usb/snapshots/post_restore_00000000_00075fff.bin"
+      reason: "Exact match to excluded pre-HIL backup"
+      size_bytes: 483328
+      sha256: "e608d3eae3ea4a8c0010f3ee6de8fc361c9618f98733a2c769d72264c1667c98"
+  verification:
+    checksums: "SHA256SUMS"
+    command: "python3 Tests/HIL/verify_evidence.py evidence/hil/2026-08-26-b90ba7b-phase4-usb/SHA256SUMS"

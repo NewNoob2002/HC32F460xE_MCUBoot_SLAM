@@ -1,0 +1,10 @@
+workflow=CI
+run_id=33026124061
+event=push
+head_sha=93c9c048380becbda1d655537bdbc095bf743ac5
+status=completed
+conclusion=success
+job=build-and-test
+job_id=98367745421
+steps=retained-evidence,arm-toolchain,imgtool,strict-host-tests,debug-build,release-key-policy,release-build
+step_failures=0

@@ -1,0 +1,20 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-26T16:18:43Z"
+  operation: "flash"
+  authorization: "User ordered Phase 4 node closure, local validation, commit, push, and CI monitoring"
+  target:
+    board: "HC32F460xE target board; Cortex-M4 r0p1 identified"
+    hardware_revision: "unknown"
+    probe_or_adapter_serial: "63728710"
+    transport: "SWD"
+  artifacts:
+    boot_sha256: "6f3444e6b7750fc36096ff9899bb8ff6ebfb1d70d56a54d4a3926b7ab069e15b"
+    boot_size: 27836
+    loopback_primary_sha256: "88e05221863514c0c992b7975f04bd0672181655b247f8f503f37bcfdc332296"
+    loopback_primary_size: 204800
+    pre_hil_backup_sha256: "e608d3eae3ea4a8c0010f3ee6de8fc361c9618f98733a2c769d72264c1667c98"
+    pre_hil_backup_size: 483328
+  limits: "Bounded Boot/Primary-only write; no Secondary, Scratch, Reserved, mass erase, unlock, recover, OTP, protection, or option-byte change"
+  recovery_plan: "Restore and verify the exact 483328-byte backup after the 10000-transfer host check or any failure"
+  approved: true

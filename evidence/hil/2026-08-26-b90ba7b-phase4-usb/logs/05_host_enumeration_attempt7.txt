@@ -1,0 +1,10 @@
+$ lsusb -d fffe:ffff
+Bus 001 Device 011: ID fffe:ffff HC32 Phase 4 Lab CherryUSB Vendor Bulk Loopback
+
+$ stat -c '%n owner=%U group=%G mode=%a' /dev/bus/usb/001/011
+/dev/bus/usb/001/011 owner=gtc group=root mode=660
+
+$ getfacl -cp /dev/bus/usb/001/011
+user::rw-
+group::rw-
+other::---

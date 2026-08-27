@@ -10,7 +10,7 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 | Phase 1 — Architecture Audit and Contract Freeze | PASSED | G1 | Local G1 passed; remote CI passed | Not required | None | revision `1429e30`, CI run `32925552505` |
 | Phase 2 — Secondary Storage and Boot Control | PASSED | G2 | Strict HostTests 7/7; Debug/Release/signing and remote CI passed | Storage/range-isolation/Pending/restore passed | None | `evidence/hil/2026-08-26-5ebeae6-phase2/`, revisions `5ebeae6`/`0e1abd8`, CI `32928199086`/`32929570437` |
 | Phase 3 — Protocol Core | PASSED | G3 | HostTests 9/9; corpus 10,000; Debug/Release/signing and remote CI PASS | Not required | None | `evidence/host/2026-08-26-e7899bd-phase3/`, revisions `e7899bd`/`515d0c5`, CI `32948384485` |
-| Phase 4 — CherryUSB + HC32 DCD Loopback | NOT_STARTED | G4 | Not run | Required | Phase 4 plan approval, USB hardware details | None |
+| Phase 4 — CherryUSB + HC32 DCD Loopback | READY_FOR_REVIEW | G4 | HostTests 11/11; Debug/Release and source CI passed | Enumeration, 10,000-transfer loopback, counters and exact restore passed | 30-minute continuous run; 10 manual unplug/re-enumeration cycles | `evidence/hil/2026-08-26-b90ba7b-phase4-usb/`, revision `93c9c04`, CI `33026124061` |
 | Phase 5 — USB Upgrade E2E | NOT_STARTED | G5 | Not run | Required | G4 | None |
 | Phase 6 — Failure and Recovery | NOT_STARTED | G6 | Not run | Required | G5, power/reset fixture | None |
 | Phase 7 — UART Portability | NOT_STARTED | G7 | Not run | Required | G6 | None |
@@ -32,7 +32,9 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 
 ## Immediate next action
 
-Plan and review Phase 4 CherryUSB + HC32 DCD loopback; do not begin implementation before explicit approval.
+Review the Phase 4 evidence, then run the remaining 30-minute continuous test
+and at least 10 manual unplug/re-enumeration cycles. Do not begin Phase 5 before
+G4 is explicitly accepted as `PASSED`.
 
 ## Latest local G1 verification
 
@@ -184,3 +186,27 @@ Date: 2026-08-26
 - Phase 3 status: `PASSED`. G3 status: `PASSED`. HIL: not required.
 - Phase 4 remains `NOT_STARTED`; no USB/CherryUSB/HC32 DCD implementation was
   started by this gate-close change.
+
+## Latest Phase 4 node closure
+
+Date: 2026-08-26
+
+- Source revision `93c9c048380becbda1d655537bdbc095bf743ac5` adds the
+  bounded CherryUSB Vendor Bulk loopback, HC32 USB DCD and host loopback tool.
+- Strict Werror + ASan/UBSan HostTests: 11/11 passed with the repository CI
+  setting `ASAN_OPTIONS=detect_leaks=0`.
+- Debug and Release full builds plus `verify_app_image` and
+  `verify_usb_loopback_image`: passed.
+- GitHub Actions source run `33026124061`: passed.
+- The target enumerated as `fffe:ffff`; host permissions were `0660` with
+  user/group read-write access.
+- The host completed 10,000 transfers over lengths
+  `0,1,63,64,65,512,1024` with zero failures in 6.786 seconds.
+- Target counters after the run were init `0`, stage `0x400`, errors `0` and
+  packets `0x2710`.
+- The exact pre-HIL image was restored and matched byte-for-byte at SHA-256
+  `e608d3eae3ea4a8c0010f3ee6de8fc361c9618f98733a2c769d72264c1667c98`;
+  `fffe:ffff` no longer enumerated after restoration.
+- Evidence: `evidence/hil/2026-08-26-b90ba7b-phase4-usb/`.
+- Phase 4/G4 status: `READY_FOR_REVIEW`, not `PASSED`. Remaining manual gates:
+  30-minute continuous operation and at least 10 unplug/re-enumeration cycles.

@@ -1,0 +1,419 @@
+T73CC1740 000:001.689   SEGGER J-Link V9.70 Log File
+T73CC1740 000:001.747   DLL Compiled: Aug 19 2026 12:15:25
+T73CC1740 000:001.750   Logging started @ 2026-08-27 00:06
+T73CC1740 000:001.752   Process: /opt/SEGGER/JLink_V970/JLinkExe
+T73CC1740 000:001.754 - 1.754ms 
+T73CC1740 000:001.770 JLINK_EMU_SelectByUSBSN(SerialNo = 63728710)
+T73CC1740 000:012.397 - 10.626ms returns 0x00
+T73CC1740 000:012.417 JLINK_SetWarnOutHandler(...)
+T73CC1740 000:012.419 - 0.003ms 
+T73CC1740 000:012.430 JLINK_ExecCommand("SuppressGUI = 1", ...). 
+T73CC1740 000:012.434 - 0.004ms returns 0x00
+T73CC1740 000:012.451 JLINK_OpenEx(...)
+T73CC1740 000:014.834   Firmware: J-Link OB-Mini Plus-CortexM compiled Mar  8 2099 11:15:54
+T73CC1740 000:015.413   Firmware: J-Link OB-Mini Plus-CortexM compiled Mar  8 2099 11:15:54
+T73CC1740 000:019.468   Hardware: V1.00
+T73CC1740 000:019.476   S/N: 63728710
+T73CC1740 000:019.479   OEM: SEGGER
+T73CC1740 000:019.483   Feature(s): GDB, RDI, FlashBP, FlashDL, JFlash
+T73CC1740 000:019.959   Bootloader: (FW returned invalid version)
+T73CC1740 000:020.703   TELNET listener socket opened on port 19021
+T73CC1740 000:020.744 - 8.293ms returns "O.K."
+T73CC1740 000:020.753 JLINK_SetFlashProgProgressCallback(...)
+T73CC1740 000:020.755 - 0.002ms 
+T73CC1740 000:020.758 JLINK_GetFirmwareString(...)
+T73CC1740 000:020.759 - 0.001ms 
+T73CC1740 000:020.763 JLINK_GetHardwareVersion()
+T73CC1740 000:020.766 - 0.003ms returns 10000
+T73CC1740 000:020.771 JLINK_GetHWInfoEx(...)
+T73CC1740 000:020.943 - 0.172ms returns 0
+T73CC1740 000:020.948 JLINK_GetSN()
+T73CC1740 000:020.950 - 0.002ms returns 63728710
+T73CC1740 000:020.953 JLINK_GetAvailableLicense()
+T73CC1740 000:028.330 - 7.377ms returns 0x05
+T73CC1740 000:028.339 JLINK_GetOEMString(...)
+T73CC1740 000:028.345 JLINK_EMU_GetCurrConnectionInfo()
+T73CC1740 000:028.523 - 0.178ms returns 0
+T73CC1740 000:028.527 JLINK_EMU_HasCapEx(0x00000026)
+T73CC1740 000:028.530 - 0.002ms returns 0
+T73CC1740 000:028.532 JLINK_GetEmuCaps()
+T73CC1740 000:028.534 - 0.002ms returns 0xB8EA5A33
+T73CC1740 000:028.536 JLINK_GetEmuCaps()
+T73CC1740 000:028.538 - 0.002ms returns 0xB8EA5A33
+T73CC1740 000:028.541 JLINK_GetHWStatus(...)
+T73CC1740 000:028.683 - 0.142ms returns 0
+T73CC1740 000:028.687 JLINK_EMU_HasCapEx(0x00000044)
+T73CC1740 000:028.689 - 0.002ms returns 0
+T73CC1740 000:028.698 JLINK_TIF_GetAvailable(...)
+T73CC1740 000:028.867 - 0.169ms 
+T73CC1740 000:028.878 JLINK_DEVICE_GetIndex(sDeviceName = HC32F460xE)
+T73CC1740 000:036.773 - 7.895ms returns 14308
+T73CC1740 000:036.782 JLINK_ExecCommand("device=HC32F460xE", ...). 
+T73CC1740 000:037.845   Device "HC32F460XE" selected.
+T73CC1740 000:038.649 - 1.868ms returns 0x00
+T73CC1740 000:038.654 JLINK_EnableLog(...)
+T73CC1740 000:038.656 - 0.002ms 
+T73CC1740 000:038.659 JLINK_GetEmuCaps()
+T73CC1740 000:038.662 - 0.002ms returns 0xB8EA5A33
+T73CC1740 000:038.665 JLINK_TIF_GetAvailable(...)
+T73CC1740 000:038.804 - 0.139ms 
+T73CC1740 000:038.809 JLINK_TIF_Select(JLINKARM_TIF_SWD)
+T73CC1740 000:039.263 - 0.454ms returns 0x00
+T73CC1740 000:039.269 JLINK_IsConnected()
+T73CC1740 000:039.271 - 0.003ms returns FALSE
+T73CC1740 000:039.273 JLINK_SetSpeed(4000)
+T73CC1740 000:039.360 - 0.087ms 
+T73CC1740 000:039.364 JLINK_Connect()
+T73CC1740 000:040.114   Found SW-DP with ID 0x2BA01477
+T73CC1740 000:043.443   Old FW that does not support reading DPIDR via DAP jobs
+T73CC1740 000:046.869   DPv0 detected
+T73CC1740 000:046.874   CoreSight SoC-400 or earlier
+T73CC1740 000:046.877   Scanning AP map to find all available APs
+T73CC1740 000:049.076   AP[1]: Stopped AP scan as end of AP map has been reached
+T73CC1740 000:049.081   AP[0]: AHB-AP (IDR: 0x24770011, ADDR: 0x00000000)
+T73CC1740 000:049.084   Iterating through AP map to find AHB-AP to use
+T73CC1740 000:052.710   AP[0]: Core found
+T73CC1740 000:052.724   AP[0]: AHB-AP ROM base: 0xE00FF000
+T73CC1740 000:054.553   CPUID register: 0x410FC241. Implementer code: 0x41 (ARM)
+T73CC1740 000:054.558   Found Cortex-M4 r0p1, Little endian.
+T73CC1740 000:054.866   -- Max. mem block: 0x00002220
+T73CC1740 000:055.348   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T73CC1740 000:055.766   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+T73CC1740 000:056.203   CPU_ReadMem(4 bytes @ 0xE0002000)
+T73CC1740 000:056.600   FPUnit: 6 code (BP) slots and 2 literal slots
+T73CC1740 000:056.604   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T73CC1740 000:056.972   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T73CC1740 000:057.361   CPU_ReadMem(4 bytes @ 0xE0001000)
+T73CC1740 000:057.756   CPU_WriteMem(4 bytes @ 0xE0001000)
+T73CC1740 000:058.196   CPU_ReadMem(4 bytes @ 0xE000ED88)
+T73CC1740 000:058.631   CPU_WriteMem(4 bytes @ 0xE000ED88)
+T73CC1740 000:059.026   CPU_ReadMem(4 bytes @ 0xE000ED88)
+T73CC1740 000:059.396   CPU_WriteMem(4 bytes @ 0xE000ED88)
+T73CC1740 000:059.792   CoreSight components:
+T73CC1740 000:059.797   ROMTbl[0] @ E00FF000
+T73CC1740 000:059.799   CPU_ReadMem(64 bytes @ 0xE00FF000)
+T73CC1740 000:060.768   CPU_ReadMem(32 bytes @ 0xE000EFE0)
+T73CC1740 000:061.447   [0][0]: E000E000 CID B105E00D PID 000BB00C SCS-M7
+T73CC1740 000:061.452   CPU_ReadMem(32 bytes @ 0xE0001FE0)
+T73CC1740 000:062.118   [0][1]: E0001000 CID B105E00D PID 003BB002 DWT
+T73CC1740 000:062.122   CPU_ReadMem(32 bytes @ 0xE0002FE0)
+T73CC1740 000:062.787   [0][2]: E0002000 CID B105E00D PID 002BB003 FPB
+T73CC1740 000:062.791   CPU_ReadMem(32 bytes @ 0xE0000FE0)
+T73CC1740 000:063.452   [0][3]: E0000000 CID B105E00D PID 003BB001 ITM
+T73CC1740 000:063.457   CPU_ReadMem(32 bytes @ 0xE0040FE0)
+T73CC1740 000:064.117   [0][4]: E0040000 CID B105900D PID 000BB9A1 TPIU
+T73CC1740 000:064.134 - 24.770ms returns 0x00
+T73CC1740 000:064.150 JLINK_GetIdData(pIdData)
+T73CC1740 000:064.502   pIdData->ScanLen=4
+T73CC1740 000:064.506   pIdData->NumDevices=1
+T73CC1740 000:064.508   pIdData->aId[0]=0x2BA01477
+T73CC1740 000:064.512   pIdData->aIrRead[0]=0
+T73CC1740 000:064.514   pIdData->aScanLen[0]=0
+T73CC1740 000:064.516   pIdData->aScanRead[0]=0
+T73CC1740 000:064.519 - 0.370ms 
+T73CC1740 000:064.523 JLINK_GetMemZones(...)
+T73CC1740 000:064.525 - 0.003ms returns 1
+T73CC1740 000:064.529 JLINK_HasError()
+T73CC1740 000:064.533 JLINK_CORE_GetFound()
+T73CC1740 000:064.535 - 0.003ms returns 0xE0000FF
+T73CC1740 000:064.544 JLINK_Halt()
+T73CC1740 000:068.809 - 4.264ms returns 0x00
+T73CC1740 000:068.821 JLINK_GetDeviceFamily
+T73CC1740 000:068.823 - 0.002ms returns 14
+T73CC1740 000:068.826 JLINK_CORE_GetFound()
+T73CC1740 000:068.829 - 0.003ms returns 0xE0000FF
+T73CC1740 000:068.832 JLINK_GetDebugInfo(0x01 = Unknown)
+T73CC1740 000:068.835   Value=0x00000001
+T73CC1740 000:068.838 - 0.006ms returns 0
+T73CC1740 000:068.840 JLINK_ReadRegs(NumRegs = 28)
+T73CC1740 000:068.854   CPU_ReadMem(4 bytes @ 0xE0001004)
+T73CC1740 000:069.247   
+  R0 (0)         = 0x00                 R1 (1)         = 0xF0                 R2 (2)         = 0x400                R3 (3)         = 0x1FFF8754        
+  R4 (4)         = 0xE000E100           R5 (5)         = 0xFFFFFFFF           R6 (6)         = 0x20000754           R7 (7)         = 0x1FFFBE84        
+  R8 (8)         = 0x62FC               R9 (9)         = 0x6A9C               R10 (10)       = 0x4102               R11 (11)       = 0x00              
+  R12 (12)       = 0x1FF                R13 (SP) (13)  = 0x1FFF9420           MSP (17)       = 0x1FFF9420           PSP (18)       = 0xF5AEAC80        
+  R14 (14)       = 0x1206F              R15 (PC) (15)  = 0x11A34              XPSR (16)      = 0x21000000           APSR (21)      = 0x20000000        
+  EPSR (22)      = 0x1000000            IPSR (23)      = 0x00                 CFBP (20)      = 0x00                 CONTROL (27)   = 0x00              
+  FAULTMASK (26) = 0x00                 BASEPRI (25)   = 0x00                 PRIMASK (24)   = 0x00                 CycleCnt (65)  = 0x3BE8DF77        
+T73CC1740 000:069.252 - 0.412ms returns 0x00
+T73CC1740 000:069.260 JLINK_ReadRegs(NumRegs = 33)
+T73CC1740 000:076.080   
+  FPS0 (33)  = 0xEAE71737           FPS1 (34)  = 0xB82B4B42           FPS2 (35)  = 0x1D911C8F           FPS3 (36)  = 0xC93175A1        
+  FPS4 (37)  = 0xEFC05173           FPS5 (38)  = 0x2F8C98F8           FPS6 (39)  = 0xFBEFCF66           FPS7 (40)  = 0xD3EC769E        
+  FPS8 (41)  = 0xF34547AB           FPS9 (42)  = 0xF5B1B8A1           FPS10 (43) = 0x3F000000           FPS11 (44) = 0x3F800000        
+  FPS12 (45) = 0x45467000           FPS13 (46) = 0x424E0000           FPS14 (47) = 0x3C0316A9           FPS15 (48) = 0x33              
+  FPS16 (49) = 0x9F9FDC82           FPS17 (50) = 0xBEF4BECB           FPS18 (51) = 0x3B3FD1B0           FPS19 (52) = 0xE65DFA6A        
+  FPS20 (53) = 0x5BB1B45F           FPS21 (54) = 0xD7F3B79A           FPS22 (55) = 0x251ABB78           FPS23 (56) = 0x2DE6FFB5        
+  FPS24 (57) = 0x27D1C5A            FPS25 (58) = 0x5B9770EE           FPS26 (59) = 0x349E1A6A           FPS27 (60) = 0xECF189E0        
+  FPS28 (61) = 0xD3B4FFB4           FPS29 (62) = 0x601593B7           FPS30 (63) = 0x37BE90CF           FPS31 (64) = 0x8AE5FCF2        
+  FPSCR (32) = 0x00              
+T73CC1740 000:076.114 - 6.854ms returns 0x00
+T73CC1740 000:076.141 JLINK_DEVICE_GetIndex(sDeviceName = <NULL>)
+T73CC1740 000:076.146 - 0.006ms returns 14308
+T73CC1740 000:076.152 JLINK_Reset()
+T73CC1740 000:076.164   JLINK_GetResetTypeDesc
+T73CC1740 000:076.169   - 0.005ms 
+T73CC1740 000:076.175   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+T73CC1740 000:076.183   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+T73CC1740 000:076.601   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T73CC1740 000:077.013   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+T73CC1740 000:077.383   Reset: Reset device via AIRCR.SYSRESETREQ.
+T73CC1740 000:077.387   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+T73CC1740 000:130.427   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T73CC1740 000:130.888   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T73CC1740 000:131.293   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T73CC1740 000:136.922   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T73CC1740 000:141.581   CPU_WriteMem(4 bytes @ 0xE0002000)
+T73CC1740 000:142.017   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T73CC1740 000:142.403   CPU_ReadMem(4 bytes @ 0xE0001000)
+T73CC1740 000:142.799 - 66.648ms 
+T73CC1740 000:142.805 JLINK_Halt()
+T73CC1740 000:142.807 - 0.002ms returns 0x00
+T73CC1740 000:142.812 JLINK_Erase()
+T73CC1740 000:142.966   Old firmware which does not support pausing periodic actions during flash download
+T73CC1740 000:142.971   CPU_ReadMem(4 bytes @ 0xE000ED90)
+T73CC1740 000:143.384   CPU_ReadMem(4 bytes @ 0xE000ED94)
+T73CC1740 000:143.765    -- --------------------------------------
+T73CC1740 000:143.772    -- Start of determining dirty areas
+T73CC1740 000:143.787    -- End of determining dirty areas
+T73CC1740 000:143.791    -- Start of preparing flash programming
+T73CC1740 000:143.794    -- Calculating RAM usage
+T73CC1740 000:143.805    -- RAM usage = 10292 Bytes
+T73CC1740 000:143.809    -- Preserving CPU registers
+T73CC1740 000:143.820    -- Preparing target
+T73CC1740 000:143.824    -- Preserving target RAM temporarily used for programming
+T73CC1740 000:241.731    -- Downloading RAMCode
+T73CC1740 000:273.249    -- Preparing RAMCode
+T73CC1740 000:283.740    -- End of preparing flash programming
+T73CC1740 000:283.754    -- CPU is running at 160000 kHz.
+T73CC1740 000:283.757    -- Start of erasing sectors
+T73CC1740 000:283.762    -- Erasing range 0x00000000 - 0x0001FFFF ( 16 Sectors, 128 KB)
+T73CC1740 000:566.442    -- Erasing range 0x00020000 - 0x0003FFFF ( 16 Sectors, 128 KB)
+T73CC1740 000:849.193    -- Erasing range 0x00040000 - 0x0005FFFF ( 16 Sectors, 128 KB)
+T73CC1740 001:132.107    -- Erasing range 0x00060000 - 0x00075FFF ( 11 Sectors, 88 KB)
+T73CC1740 001:326.931    -- End of erasing sectors
+T73CC1740 001:326.947    -- Start of restoring
+T73CC1740 001:326.950    -- Restoring RAMCode
+T73CC1740 001:332.661    -- Restoring target memory
+T73CC1740 001:428.824    -- Restore target
+T73CC1740 001:428.855    -- Restoring CPU registers
+T73CC1740 001:428.875    -- End of restoring
+T73CC1740 001:428.888    -- Total time needed: 1.285s (Prepare: 0.139s, Compare: 0.000s, Erase: 1.043s, Program: 0.000s, Verify: 0.000s, Restore: 0.101s)
+T73CC1740 001:429.999    -- 
+Flash sectors within Range [0x00000000 - 0x00075FFF] deleted.
+T73CC1740 001:430.178 - 1287.366ms returns 0
+T73CC1740 001:430.197 JLINK_Reset()
+T73CC1740 001:430.205   JLINK_GetResetTypeDesc
+T73CC1740 001:430.208   - 0.003ms 
+T73CC1740 001:430.211   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+T73CC1740 001:430.216   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+T73CC1740 001:430.629   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T73CC1740 001:431.033   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+T73CC1740 001:431.403   Reset: Reset device via AIRCR.SYSRESETREQ.
+T73CC1740 001:431.407   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+T73CC1740 001:484.291   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T73CC1740 001:484.688   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T73CC1740 001:485.532   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T73CC1740 001:491.157   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T73CC1740 001:495.924   CPU_WriteMem(4 bytes @ 0xE0002000)
+T73CC1740 001:496.369   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T73CC1740 001:496.757   CPU_ReadMem(4 bytes @ 0xE0001000)
+T73CC1740 001:497.153 - 66.956ms 
+T73CC1740 001:497.159 JLINK_Halt()
+T73CC1740 001:497.162 - 0.003ms returns 0x00
+T73CC1740 001:497.552 JLINK_ExecCommand("SetVerifyRAMDownload = 1", ...). 
+T73CC1740 001:497.557 - 0.005ms returns 0x00
+T73CC1740 001:497.562 JLINK_DownloadFile(sFile = /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase4-usb/backup/pre_hil_00000000_00075fff.bin)
+T73CC1740 001:497.766   Data:  F0 BE FF 1F FD 3C 00 00 21 29 00 00 29 29 00 00 ...
+T73CC1740 001:498.071   completely In flash
+T73CC1740 001:498.089   Data:  FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF ...
+T73CC1740 001:498.150   completely In flash
+T73CC1740 001:498.328   Old firmware which does not support pausing periodic actions during flash download
+T73CC1740 001:498.334   CPU_ReadMem(4 bytes @ 0xE000ED90)
+T73CC1740 001:498.727   CPU_ReadMem(4 bytes @ 0xE000ED94)
+T73CC1740 001:499.140    -- --------------------------------------
+T73CC1740 001:499.154    -- Flash bank @ 0x00000000: Default: L2 verify disabled because algorithm performs L1 verify
+T73CC1740 001:499.158    -- Start of determining dirty areas in flash cache
+T73CC1740 001:499.162    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00000000 if necessary
+T73CC1740 001:499.164    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00002000 if necessary
+T73CC1740 001:499.168    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00004000 if necessary
+T73CC1740 001:499.170    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00006000 if necessary
+T73CC1740 001:499.173    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00008000 if necessary
+T73CC1740 001:499.176    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0000A000 if necessary
+T73CC1740 001:499.180    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0000C000 if necessary
+T73CC1740 001:499.183    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0000E000 if necessary
+T73CC1740 001:499.186    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00010000 if necessary
+T73CC1740 001:499.189    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00012000 if necessary
+T73CC1740 001:499.196    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00014000 if necessary
+T73CC1740 001:499.199    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00016000 if necessary
+T73CC1740 001:499.202    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00018000 if necessary
+T73CC1740 001:499.206    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0001A000 if necessary
+T73CC1740 001:499.208    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0001C000 if necessary
+T73CC1740 001:499.211    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0001E000 if necessary
+T73CC1740 001:499.221    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00020000 if necessary
+T73CC1740 001:499.225    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00022000 if necessary
+T73CC1740 001:499.231    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00024000 if necessary
+T73CC1740 001:499.235    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00026000 if necessary
+T73CC1740 001:499.239    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00028000 if necessary
+T73CC1740 001:499.242    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0002A000 if necessary
+T73CC1740 001:499.244    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0002C000 if necessary
+T73CC1740 001:499.248    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0002E000 if necessary
+T73CC1740 001:499.251    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00030000 if necessary
+T73CC1740 001:499.254    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00032000 if necessary
+T73CC1740 001:499.257    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00034000 if necessary
+T73CC1740 001:499.260    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00036000 if necessary
+T73CC1740 001:499.264    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00038000 if necessary
+T73CC1740 001:499.267    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0003A000 if necessary
+T73CC1740 001:499.269    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0003C000 if necessary
+T73CC1740 001:499.272    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0003E000 if necessary
+T73CC1740 001:499.275    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00040000 if necessary
+T73CC1740 001:499.278    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00042000 if necessary
+T73CC1740 001:499.281    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00044000 if necessary
+T73CC1740 001:499.284    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00046000 if necessary
+T73CC1740 001:499.287    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00048000 if necessary
+T73CC1740 001:499.290    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0004A000 if necessary
+T73CC1740 001:499.293    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0004C000 if necessary
+T73CC1740 001:499.296    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0004E000 if necessary
+T73CC1740 001:499.300    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00050000 if necessary
+T73CC1740 001:499.303    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00052000 if necessary
+T73CC1740 001:499.305    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00054000 if necessary
+T73CC1740 001:499.308    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00056000 if necessary
+T73CC1740 001:499.311    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00058000 if necessary
+T73CC1740 001:499.314    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0005A000 if necessary
+T73CC1740 001:499.317    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0005C000 if necessary
+T73CC1740 001:499.319    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0005E000 if necessary
+T73CC1740 001:499.322    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00060000 if necessary
+T73CC1740 001:499.326    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00062000 if necessary
+T73CC1740 001:499.330    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00064000 if necessary
+T73CC1740 001:499.333    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00066000 if necessary
+T73CC1740 001:499.337    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00068000 if necessary
+T73CC1740 001:499.339    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0006A000 if necessary
+T73CC1740 001:499.343    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0006C000 if necessary
+T73CC1740 001:499.346    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0006E000 if necessary
+T73CC1740 001:499.349    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00070000 if necessary
+T73CC1740 001:499.352    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00072000 if necessary
+T73CC1740 001:499.355    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00074000 if necessary
+T73CC1740 001:499.365    -- End of determining dirty areas
+T73CC1740 001:499.370    -- Start of preparing flash programming
+T73CC1740 001:499.374    -- Calculating RAM usage
+T73CC1740 001:499.384    -- RAM usage = 10292 Bytes
+T73CC1740 001:499.389    -- Preserving CPU registers
+T73CC1740 001:499.400    -- Preparing target
+T73CC1740 001:499.405    -- Preserving target RAM temporarily used for programming
+T73CC1740 001:597.373    -- Downloading RAMCode
+T73CC1740 001:628.923    -- Preparing RAMCode
+T73CC1740 001:636.905    -- End of preparing flash programming
+T73CC1740 001:636.919    -- CPU is running at 160000 kHz.
+T73CC1740 001:636.923    -- Start of comparing flash
+T73CC1740 001:636.926    -- CRC check was estimated as fastest method
+T73CC1740 001:636.930    -- Comparing range 0x0000 - 0x1FFFF (16 Sectors, 128 KB), using multi-block CRC calculation
+T73CC1740 001:674.258    -- CRC does not match for sectors 0-3
+T73CC1740 001:674.284    -- Comparing range 0x20000 - 0x3FFFF (16 Sectors, 128 KB), using multi-block CRC calculation
+T73CC1740 001:711.484    -- All CRCs match
+T73CC1740 001:711.497    -- Comparing range 0x40000 - 0x5FFFF (16 Sectors, 128 KB), using multi-block CRC calculation
+T73CC1740 001:749.525    -- All CRCs match
+T73CC1740 001:749.555    -- Comparing range 0x60000 - 0x75FFF (11 Sectors, 88 KB), using multi-block CRC calculation
+T73CC1740 001:775.958    -- All CRCs match
+T73CC1740 001:775.969    -- Comparing range 0x8000 - 0x27FFF (16 Sectors, 128 KB), using alternative multi-block CRC calculation
+T73CC1740 001:813.984    -- All CRCs match
+T73CC1740 001:813.995    -- Comparing range 0x28000 - 0x47FFF (16 Sectors, 128 KB), using alternative multi-block CRC calculation
+T73CC1740 001:852.004    -- All CRCs match
+T73CC1740 001:852.015    -- Comparing range 0x48000 - 0x67FFF (16 Sectors, 128 KB), using alternative multi-block CRC calculation
+T73CC1740 001:889.645    -- All CRCs match
+T73CC1740 001:889.658    -- Comparing range 0x68000 - 0x75FFF (7 Sectors, 56 KB), using alternative multi-block CRC calculation
+T73CC1740 001:907.117    -- All CRCs match
+T73CC1740 001:907.150    -- End of comparing flash
+T73CC1740 001:907.157    -- Start of erasing sectors
+T73CC1740 001:907.166    -- Erasing range 0x00006000 - 0x00007FFF (  1 Sector, 8 KB)
+T73CC1740 001:926.139    -- End of erasing sectors
+T73CC1740 001:926.146    -- Start of flash programming
+T73CC1740 001:926.150    -- Programming range 0x00000000 - 0x00007FFF (  4 Sectors, 32 KB)
+T73CC1740 002:165.529    -- End of flash programming
+T73CC1740 002:165.547    -- 0x0000 - 0x7FFF (  4 Sectors, 32 KB)
+T73CC1740 002:165.551    -- Start of restoring
+T73CC1740 002:165.555    -- Restoring RAMCode
+T73CC1740 002:237.278    -- Restoring target memory
+T73CC1740 002:333.435    -- Restore target
+T73CC1740 002:333.460    -- Restoring CPU registers
+T73CC1740 002:333.480    -- End of restoring
+T73CC1740 002:333.512    -- Bank 0 @ 0x00000000: 1 range affected (32768 bytes)
+T73CC1740 002:333.522    -- Total: 0.834s (Prepare: 0.137s, Compare: 0.270s, Erase: 0.018s, Program & Verify: 0.306s, Restore: 0.101s)
+T73CC1740 002:333.530    -- Program & Verify speed: 104 KB/s
+T73CC1740 002:333.730 - 836.167ms returns 0x00
+T73CC1740 002:333.746 JLINK_ExecCommand("SetVerifyRAMDownload = 0", ...). 
+T73CC1740 002:333.753 - 0.007ms returns 0x01
+T73CC1740 002:333.833 JLINK_IsHalted()
+T73CC1740 002:334.273 - 0.439ms returns TRUE
+T73CC1740 002:334.280 JLINK_ReadMemEx_64(0x00000000, 0x76000 Bytes, ...)
+T73CC1740 002:334.555    -- Read from flash cache (483328 bytes @ 0x00000000)
+T73CC1740 002:334.561   Data:  F0 BE FF 1F FD 3C 00 00 21 29 00 00 29 29 00 00 ...
+T73CC1740 002:334.564 - 0.284ms returns 483328 (0x76000)
+T73CC1740 002:334.687 JLINK_SetResetDelay(0)
+T73CC1740 002:334.691 - 0.003ms 
+T73CC1740 002:334.693 JLINK_Reset()
+T73CC1740 002:334.698   JLINK_GetResetTypeDesc
+T73CC1740 002:334.700   - 0.002ms 
+T73CC1740 002:334.704   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+T73CC1740 002:334.708   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+T73CC1740 002:335.144   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T73CC1740 002:335.542   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+T73CC1740 002:335.897   Reset: Reset device via AIRCR.SYSRESETREQ.
+T73CC1740 002:335.901   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+T73CC1740 002:388.763   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T73CC1740 002:389.213   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T73CC1740 002:389.617   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T73CC1740 002:395.214   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T73CC1740 002:399.916   CPU_WriteMem(4 bytes @ 0xE0002000)
+T73CC1740 002:400.325   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T73CC1740 002:400.729   CPU_ReadMem(4 bytes @ 0xE0001000)
+T73CC1740 002:401.120 - 66.427ms 
+T73CC1740 002:401.141 JLINK_GoEx(MaxEmulInsts = 0, Flags = 0x01)
+T73CC1740 002:401.152   CPU_ReadMem(4 bytes @ 0xE0001000)
+T73CC1740 002:401.543   CPU_WriteMem(4 bytes @ 0xE0001004)
+T73CC1740 002:402.599   Memory map 'after startup completion point' is active
+T73CC1740 002:402.609 - 1.468ms 
+T73CC1740 005:402.974 JLINK_Halt()
+T73CC1740 005:407.342 - 4.368ms returns 0x00
+T73CC1740 005:407.356 JLINK_GetDeviceFamily
+T73CC1740 005:407.358 - 0.002ms returns 14
+T73CC1740 005:407.361 JLINK_CORE_GetFound()
+T73CC1740 005:407.363 - 0.002ms returns 0xE0000FF
+T73CC1740 005:407.366 JLINK_GetDebugInfo(0x01 = Unknown)
+T73CC1740 005:407.368   Value=0x00000001
+T73CC1740 005:407.371 - 0.006ms returns 0
+T73CC1740 005:407.373 JLINK_ReadRegs(NumRegs = 28)
+T73CC1740 005:407.386   CPU_ReadMem(4 bytes @ 0xE0001004)
+T73CC1740 005:407.779   
+  R0 (0)         = 0x00                 R1 (1)         = 0xBB3                R2 (2)         = 0x00                 R3 (3)         = 0x1FFF8D54        
+  R4 (4)         = 0xBB3                R5 (5)         = 0x1FFF8660           R6 (6)         = 0x1FFF8660           R7 (7)         = 0x1FFFBEB8        
+  R8 (8)         = 0x62FC               R9 (9)         = 0x6A9C               R10 (10)       = 0x4102               R11 (11)       = 0x00              
+  R12 (12)       = 0x00                 R13 (SP) (13)  = 0x1FFFBEA0           MSP (17)       = 0x1FFFBEA0           PSP (18)       = 0xF5AEAC80        
+  R14 (14)       = 0x266F               R15 (PC) (15)  = 0x3932               XPSR (16)      = 0x41030000           APSR (21)      = 0x40030000        
+  EPSR (22)      = 0x1000000            IPSR (23)      = 0x00                 CFBP (20)      = 0x4000000            CONTROL (27)   = 0x4000000         
+  FAULTMASK (26) = 0x00                 BASEPRI (25)   = 0x00                 PRIMASK (24)   = 0x00                 CycleCnt (65)  = 0x23B6BC7B        
+T73CC1740 005:407.783 - 0.410ms returns 0x00
+T73CC1740 005:407.791 JLINK_ReadRegs(NumRegs = 33)
+T73CC1740 005:414.616   
+  FPS0 (33)  = 0xEAE71737           FPS1 (34)  = 0xB82B4B42           FPS2 (35)  = 0x1D911C8F           FPS3 (36)  = 0xC93175A1        
+  FPS4 (37)  = 0xEFC05173           FPS5 (38)  = 0x2F8C98F8           FPS6 (39)  = 0xFBEFCF66           FPS7 (40)  = 0xD3EC769E        
+  FPS8 (41)  = 0xF34547AB           FPS9 (42)  = 0xF5B1B8A1           FPS10 (43) = 0x3F000000           FPS11 (44) = 0x3F800000        
+  FPS12 (45) = 0x45467000           FPS13 (46) = 0x424E0000           FPS14 (47) = 0x3C0316A9           FPS15 (48) = 0x33              
+  FPS16 (49) = 0x9F9FDC82           FPS17 (50) = 0xBEF4BECB           FPS18 (51) = 0x3B3FD1B0           FPS19 (52) = 0xE65DFA6A        
+  FPS20 (53) = 0x5BB1B45F           FPS21 (54) = 0xD7F3B79A           FPS22 (55) = 0x251ABB78           FPS23 (56) = 0x2DE6FFB5        
+  FPS24 (57) = 0x27D1C5A            FPS25 (58) = 0x5B9770EE           FPS26 (59) = 0x349E1A6A           FPS27 (60) = 0xECF189E0        
+  FPS28 (61) = 0xD3B4FFB4           FPS29 (62) = 0x601593B7           FPS30 (63) = 0x37BE90CF           FPS31 (64) = 0x8AE5FCF2        
+  FPSCR (32) = 0x80000010        
+T73CC1740 005:414.638 - 6.846ms returns 0x00
+T73CC1740 005:415.088 JLINK_ReadMemEx_64(0x00000000, 0x76000 Bytes, ...)
+T73CC1740 005:415.291    -- Read from flash cache (483328 bytes @ 0x00000000)
+T73CC1740 005:415.298   Data:  F0 BE FF 1F FD 3C 00 00 21 29 00 00 29 29 00 00 ...
+T73CC1740 005:415.302 - 0.214ms returns 483328 (0x76000)
+T73CC1740 005:415.419 JLINK_GoEx(MaxEmulInsts = 0, Flags = 0x01)
+T73CC1740 005:415.828   CPU_ReadMem(4 bytes @ 0xE0001000)
+T73CC1740 005:416.949 - 1.531ms 
+T73CC1740 005:416.962 JLINK_IsOpen()
+T73CC1740 005:416.965 - 0.003ms returns 0x01
+T73CC1740 005:426.271 JLINK_Close()
+T73CC1740 005:437.014 - 10.744ms
+T73CC1740 005:437.026   
+T73CC1740 005:437.028   Closed

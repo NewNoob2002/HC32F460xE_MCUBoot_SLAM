@@ -1,0 +1,456 @@
+TA053740 000:001.916   SEGGER J-Link V9.70 Log File
+TA053740 000:001.972   DLL Compiled: Aug 19 2026 12:15:25
+TA053740 000:001.973   Logging started @ 2026-08-26 15:38
+TA053740 000:001.975   Process: /opt/SEGGER/JLink_V970/JLinkExe
+TA053740 000:001.976 - 1.976ms 
+TA053740 000:001.995 JLINK_EMU_SelectByUSBSN(SerialNo = 63728710)
+TA053740 000:012.236 - 10.241ms returns 0x00
+TA053740 000:012.252 JLINK_SetWarnOutHandler(...)
+TA053740 000:012.253 - 0.002ms 
+TA053740 000:012.263 JLINK_ExecCommand("SuppressGUI = 1", ...). 
+TA053740 000:012.265 - 0.002ms returns 0x00
+TA053740 000:012.282 JLINK_OpenEx(...)
+TA053740 000:014.686   Firmware: J-Link OB-Mini Plus-CortexM compiled Mar  8 2099 11:15:54
+TA053740 000:015.259   Firmware: J-Link OB-Mini Plus-CortexM compiled Mar  8 2099 11:15:54
+TA053740 000:019.353   Hardware: V1.00
+TA053740 000:019.358   S/N: 63728710
+TA053740 000:019.360   OEM: SEGGER
+TA053740 000:019.362   Feature(s): GDB, RDI, FlashBP, FlashDL, JFlash
+TA053740 000:019.863   Bootloader: (FW returned invalid version)
+TA053740 000:020.654   TELNET listener socket opened on port 19021
+TA053740 000:020.681 - 8.399ms returns "O.K."
+TA053740 000:020.690 JLINK_SetFlashProgProgressCallback(...)
+TA053740 000:020.692 - 0.002ms 
+TA053740 000:020.694 JLINK_GetFirmwareString(...)
+TA053740 000:020.695 - 0.001ms 
+TA053740 000:020.699 JLINK_GetHardwareVersion()
+TA053740 000:020.700 - 0.001ms returns 10000
+TA053740 000:020.705 JLINK_GetHWInfoEx(...)
+TA053740 000:020.863 - 0.159ms returns 0
+TA053740 000:020.868 JLINK_GetSN()
+TA053740 000:020.869 - 0.002ms returns 63728710
+TA053740 000:020.871 JLINK_GetAvailableLicense()
+TA053740 000:028.707 - 7.836ms returns 0x05
+TA053740 000:028.717 JLINK_GetOEMString(...)
+TA053740 000:028.722 JLINK_EMU_GetCurrConnectionInfo()
+TA053740 000:028.883 - 0.161ms returns 0
+TA053740 000:028.886 JLINK_EMU_HasCapEx(0x00000026)
+TA053740 000:028.888 - 0.002ms returns 0
+TA053740 000:028.895 JLINK_GetEmuCaps()
+TA053740 000:028.896 - 0.001ms returns 0xB8EA5A33
+TA053740 000:028.897 JLINK_GetEmuCaps()
+TA053740 000:028.898 - 0.001ms returns 0xB8EA5A33
+TA053740 000:028.901 JLINK_GetHWStatus(...)
+TA053740 000:029.017 - 0.116ms returns 0
+TA053740 000:029.020 JLINK_EMU_HasCapEx(0x00000044)
+TA053740 000:029.021 - 0.001ms returns 0
+TA053740 000:029.029 JLINK_TIF_GetAvailable(...)
+TA053740 000:029.164 - 0.134ms 
+TA053740 000:029.181 JLINK_DEVICE_GetIndex(sDeviceName = HC32F460xE)
+TA053740 000:037.390 - 8.209ms returns 14308
+TA053740 000:037.402 JLINK_ExecCommand("device=HC32F460xE", ...). 
+TA053740 000:038.601   Device "HC32F460XE" selected.
+TA053740 000:039.407 - 2.004ms returns 0x00
+TA053740 000:039.412 JLINK_EnableLog(...)
+TA053740 000:039.414 - 0.001ms 
+TA053740 000:039.418 JLINK_GetEmuCaps()
+TA053740 000:039.419 - 0.002ms returns 0xB8EA5A33
+TA053740 000:039.421 JLINK_TIF_GetAvailable(...)
+TA053740 000:039.582 - 0.161ms 
+TA053740 000:039.586 JLINK_TIF_Select(JLINKARM_TIF_SWD)
+TA053740 000:040.052 - 0.466ms returns 0x00
+TA053740 000:040.058 JLINK_IsConnected()
+TA053740 000:040.059 - 0.001ms returns FALSE
+TA053740 000:040.062 JLINK_SetSpeed(4000)
+TA053740 000:040.154 - 0.092ms 
+TA053740 000:040.157 JLINK_Connect()
+TA053740 000:040.922   Found SW-DP with ID 0x2BA01477
+TA053740 000:044.329   Old FW that does not support reading DPIDR via DAP jobs
+TA053740 000:047.680   DPv0 detected
+TA053740 000:047.683   CoreSight SoC-400 or earlier
+TA053740 000:047.686   Scanning AP map to find all available APs
+TA053740 000:049.805   AP[1]: Stopped AP scan as end of AP map has been reached
+TA053740 000:049.808   AP[0]: AHB-AP (IDR: 0x24770011, ADDR: 0x00000000)
+TA053740 000:049.811   Iterating through AP map to find AHB-AP to use
+TA053740 000:053.604   AP[0]: Core found
+TA053740 000:053.607   AP[0]: AHB-AP ROM base: 0xE00FF000
+TA053740 000:055.492   CPUID register: 0x410FC241. Implementer code: 0x41 (ARM)
+TA053740 000:055.502   Found Cortex-M4 r0p1, Little endian.
+TA053740 000:055.789   -- Max. mem block: 0x00002220
+TA053740 000:056.318   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TA053740 000:056.788   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+TA053740 000:057.221   CPU_ReadMem(4 bytes @ 0xE0002000)
+TA053740 000:057.611   FPUnit: 6 code (BP) slots and 2 literal slots
+TA053740 000:057.614   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+TA053740 000:057.993   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TA053740 000:058.390   CPU_ReadMem(4 bytes @ 0xE0001000)
+TA053740 000:058.779   CPU_WriteMem(4 bytes @ 0xE0001000)
+TA053740 000:059.196   CPU_ReadMem(4 bytes @ 0xE000ED88)
+TA053740 000:059.568   CPU_WriteMem(4 bytes @ 0xE000ED88)
+TA053740 000:059.983   CPU_ReadMem(4 bytes @ 0xE000ED88)
+TA053740 000:060.357   CPU_WriteMem(4 bytes @ 0xE000ED88)
+TA053740 000:060.806   CoreSight components:
+TA053740 000:060.809   ROMTbl[0] @ E00FF000
+TA053740 000:060.811   CPU_ReadMem(64 bytes @ 0xE00FF000)
+TA053740 000:061.779   CPU_ReadMem(32 bytes @ 0xE000EFE0)
+TA053740 000:062.429   [0][0]: E000E000 CID B105E00D PID 000BB00C SCS-M7
+TA053740 000:062.432   CPU_ReadMem(32 bytes @ 0xE0001FE0)
+TA053740 000:063.101   [0][1]: E0001000 CID B105E00D PID 003BB002 DWT
+TA053740 000:063.103   CPU_ReadMem(32 bytes @ 0xE0002FE0)
+TA053740 000:063.748   [0][2]: E0002000 CID B105E00D PID 002BB003 FPB
+TA053740 000:063.751   CPU_ReadMem(32 bytes @ 0xE0000FE0)
+TA053740 000:064.408   [0][3]: E0000000 CID B105E00D PID 003BB001 ITM
+TA053740 000:064.411   CPU_ReadMem(32 bytes @ 0xE0040FE0)
+TA053740 000:065.064   [0][4]: E0040000 CID B105900D PID 000BB9A1 TPIU
+TA053740 000:065.079 - 24.922ms returns 0x00
+TA053740 000:065.084 JLINK_GetIdData(pIdData)
+TA053740 000:065.463   pIdData->ScanLen=4
+TA053740 000:065.466   pIdData->NumDevices=1
+TA053740 000:065.467   pIdData->aId[0]=0x2BA01477
+TA053740 000:065.469   pIdData->aIrRead[0]=0
+TA053740 000:065.471   pIdData->aScanLen[0]=0
+TA053740 000:065.472   pIdData->aScanRead[0]=0
+TA053740 000:065.474 - 0.390ms 
+TA053740 000:065.476 JLINK_GetMemZones(...)
+TA053740 000:065.477 - 0.001ms returns 1
+TA053740 000:065.481 JLINK_HasError()
+TA053740 000:065.483 JLINK_CORE_GetFound()
+TA053740 000:065.485 - 0.002ms returns 0xE0000FF
+TA053740 000:065.493 JLINK_Halt()
+TA053740 000:069.727 - 4.235ms returns 0x00
+TA053740 000:069.731 JLINK_GetDeviceFamily
+TA053740 000:069.733 - 0.002ms returns 14
+TA053740 000:069.735 JLINK_CORE_GetFound()
+TA053740 000:069.737 - 0.002ms returns 0xE0000FF
+TA053740 000:069.740 JLINK_GetDebugInfo(0x01 = Unknown)
+TA053740 000:069.742   Value=0x00000001
+TA053740 000:069.743 - 0.004ms returns 0
+TA053740 000:069.746 JLINK_ReadRegs(NumRegs = 28)
+TA053740 000:069.756   CPU_ReadMem(4 bytes @ 0xE0001004)
+TA053740 000:070.149   
+  R0 (0)         = 0x1FFF8D0C           R1 (1)         = 0x1D28D              R2 (2)         = 0x00                 R3 (3)         = 0x00              
+  R4 (4)         = 0x1FFF8D0C           R5 (5)         = 0x1D28D              R6 (6)         = 0x1FFF8660           R7 (7)         = 0x1FFFBE80        
+  R8 (8)         = 0x62FC               R9 (9)         = 0x6A9C               R10 (10)       = 0x4102               R11 (11)       = 0x00              
+  R12 (12)       = 0x01                 R13 (SP) (13)  = 0x1FFFBE80           MSP (17)       = 0x1FFFBE80           PSP (18)       = 0xF5AEAC80        
+  R14 (14)       = 0x33D5               R15 (PC) (15)  = 0x32EE               XPSR (16)      = 0x81030000           APSR (21)      = 0x80030000        
+  EPSR (22)      = 0x1000000            IPSR (23)      = 0x00                 CFBP (20)      = 0x4000000            CONTROL (27)   = 0x4000000         
+  FAULTMASK (26) = 0x00                 BASEPRI (25)   = 0x00                 PRIMASK (24)   = 0x00                 CycleCnt (65)  = 0x23E51634        
+TA053740 000:070.152 - 0.406ms returns 0x00
+TA053740 000:070.165 JLINK_ReadRegs(NumRegs = 33)
+TA053740 000:077.016   
+  FPS0 (33)  = 0xEAE71737           FPS1 (34)  = 0xB82B4B42           FPS2 (35)  = 0x1D911C8F           FPS3 (36)  = 0xC93175A1        
+  FPS4 (37)  = 0xEFC05173           FPS5 (38)  = 0x2F8C98F8           FPS6 (39)  = 0xFBEFCF66           FPS7 (40)  = 0xD3EC769E        
+  FPS8 (41)  = 0xF34547AB           FPS9 (42)  = 0xF5B1B8A1           FPS10 (43) = 0x3F000000           FPS11 (44) = 0x3F800000        
+  FPS12 (45) = 0x45467000           FPS13 (46) = 0x424E0000           FPS14 (47) = 0x3C0316A9           FPS15 (48) = 0x33              
+  FPS16 (49) = 0x9F9FDC82           FPS17 (50) = 0xBEF4BECB           FPS18 (51) = 0x3B3FD1B0           FPS19 (52) = 0xE65DFA6A        
+  FPS20 (53) = 0x5BB1B45F           FPS21 (54) = 0xD7F3B79A           FPS22 (55) = 0x251ABB78           FPS23 (56) = 0x2DE6FFB5        
+  FPS24 (57) = 0x27D1C5A            FPS25 (58) = 0x5B9770EE           FPS26 (59) = 0x349E1A6A           FPS27 (60) = 0xECF189E0        
+  FPS28 (61) = 0xD3B4FFB4           FPS29 (62) = 0x601593B7           FPS30 (63) = 0x37BE90CF           FPS31 (64) = 0x8AE5FCF2        
+  FPSCR (32) = 0x80000010        
+TA053740 000:077.027 - 6.862ms returns 0x00
+TA053740 000:077.039 JLINK_DEVICE_GetIndex(sDeviceName = <NULL>)
+TA053740 000:077.041 - 0.002ms returns 14308
+TA053740 000:077.044 JLINK_Reset()
+TA053740 000:077.050   JLINK_GetResetTypeDesc
+TA053740 000:077.052   - 0.001ms 
+TA053740 000:077.054   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+TA053740 000:077.057   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+TA053740 000:077.469   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TA053740 000:077.872   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+TA053740 000:078.240   Reset: Reset device via AIRCR.SYSRESETREQ.
+TA053740 000:078.243   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+TA053740 000:130.817   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TA053740 000:131.237   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TA053740 000:131.627   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TA053740 000:137.234   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TA053740 000:141.864   CPU_WriteMem(4 bytes @ 0xE0002000)
+TA053740 000:142.269   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+TA053740 000:142.668   CPU_ReadMem(4 bytes @ 0xE0001000)
+TA053740 000:143.063 - 66.019ms 
+TA053740 000:143.067 JLINK_Halt()
+TA053740 000:143.069 - 0.002ms returns 0x00
+TA053740 000:143.073 JLINK_Erase()
+TA053740 000:143.238   Old firmware which does not support pausing periodic actions during flash download
+TA053740 000:143.252   CPU_ReadMem(4 bytes @ 0xE000ED90)
+TA053740 000:143.639   CPU_ReadMem(4 bytes @ 0xE000ED94)
+TA053740 000:144.016    -- --------------------------------------
+TA053740 000:144.023    -- Start of determining dirty areas
+TA053740 000:144.035    -- End of determining dirty areas
+TA053740 000:144.038    -- Start of preparing flash programming
+TA053740 000:144.040    -- Calculating RAM usage
+TA053740 000:144.048    -- RAM usage = 10292 Bytes
+TA053740 000:144.050    -- Preserving CPU registers
+TA053740 000:144.061    -- Preparing target
+TA053740 000:144.063    -- Preserving target RAM temporarily used for programming
+TA053740 000:242.055    -- Downloading RAMCode
+TA053740 000:273.772    -- Preparing RAMCode
+TA053740 000:284.479    -- End of preparing flash programming
+TA053740 000:284.491    -- CPU is running at 160000 kHz.
+TA053740 000:284.493    -- Start of erasing sectors
+TA053740 000:284.496    -- Erasing range 0x00000000 - 0x0001FFFF ( 16 Sectors, 128 KB)
+TA053740 000:567.201    -- Erasing range 0x00020000 - 0x0003FFFF ( 16 Sectors, 128 KB)
+TA053740 000:849.508    -- Erasing range 0x00040000 - 0x00041FFF (  1 Sector, 8 KB)
+TA053740 000:868.552    -- End of erasing sectors
+TA053740 000:868.566    -- Start of restoring
+TA053740 000:868.569    -- Restoring RAMCode
+TA053740 000:874.312    -- Restoring target memory
+TA053740 000:970.538    -- Restore target
+TA053740 000:970.564    -- Restoring CPU registers
+TA053740 000:970.584    -- End of restoring
+TA053740 000:970.593    -- Total time needed: 0.826s (Prepare: 0.140s, Compare: 0.000s, Erase: 0.584s, Program: 0.000s, Verify: 0.000s, Restore: 0.102s)
+TA053740 000:971.764    -- 
+Flash sectors within Range [0x00000000 - 0x00041FFF] deleted.
+TA053740 000:971.987 - 828.914ms returns 0
+TA053740 000:972.005 JLINK_Reset()
+TA053740 000:972.011   JLINK_GetResetTypeDesc
+TA053740 000:972.013   - 0.002ms 
+TA053740 000:972.024   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+TA053740 000:972.029   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+TA053740 000:972.479   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TA053740 000:972.871   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+TA053740 000:973.244   Reset: Reset device via AIRCR.SYSRESETREQ.
+TA053740 000:973.247   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+TA053740 001:026.465   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TA053740 001:026.852   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TA053740 001:027.637   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TA053740 001:033.244   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TA053740 001:037.930   CPU_WriteMem(4 bytes @ 0xE0002000)
+TA053740 001:038.361   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+TA053740 001:038.777   CPU_ReadMem(4 bytes @ 0xE0001000)
+TA053740 001:039.168 - 67.163ms 
+TA053740 001:039.173 JLINK_Halt()
+TA053740 001:039.175 - 0.001ms returns 0x00
+TA053740 001:039.182 JLINK_ExecCommand("SetVerifyRAMDownload = 1", ...). 
+TA053740 001:039.186 - 0.003ms returns 0x00
+TA053740 001:039.190 JLINK_DownloadFile(sFile = /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-26-b90ba7b-phase4-usb/artifacts/boot_firmware.bin)
+TA053740 001:039.228   Data:  A0 91 FF 1F 91 20 00 00 50 21 00 00 50 21 00 00 ...
+TA053740 001:039.479   completely In flash
+TA053740 001:039.648   Old firmware which does not support pausing periodic actions during flash download
+TA053740 001:039.652   CPU_ReadMem(4 bytes @ 0xE000ED90)
+TA053740 001:040.037   CPU_ReadMem(4 bytes @ 0xE000ED94)
+TA053740 001:040.469    -- --------------------------------------
+TA053740 001:040.473    -- Flash bank @ 0x00000000: Default: L2 verify disabled because algorithm performs L1 verify
+TA053740 001:040.475    -- Start of determining dirty areas in flash cache
+TA053740 001:040.478    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00000000 if necessary
+TA053740 001:040.480    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00002000 if necessary
+TA053740 001:040.482    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00004000 if necessary
+TA053740 001:040.484    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00006000 if necessary
+TA053740 001:040.545    -- End of determining dirty areas
+TA053740 001:040.548    -- Start of preparing flash programming
+TA053740 001:040.551    -- Calculating RAM usage
+TA053740 001:040.563    -- RAM usage = 4148 Bytes
+TA053740 001:040.565    -- Preserving CPU registers
+TA053740 001:040.573    -- Preparing target
+TA053740 001:040.575    -- Preserving target RAM temporarily used for programming
+TA053740 001:080.077    -- Downloading RAMCode
+TA053740 001:111.661    -- Preparing RAMCode
+TA053740 001:119.638    -- End of preparing flash programming
+TA053740 001:119.650    -- CPU is running at 160000 kHz.
+TA053740 001:119.655    -- Start of comparing flash
+TA053740 001:119.660    -- CRC check was estimated as fastest method
+TA053740 001:119.667    -- Comparing range 0x0000 - 0x7FFF (4 Sectors, 32 KB), using multi-block CRC calculation
+TA053740 001:130.367    -- CRC does not match for sectors 0-3
+TA053740 001:130.382    -- End of comparing flash
+TA053740 001:130.385    -- Start of erasing sectors
+TA053740 001:130.387    -- End of erasing sectors
+TA053740 001:130.389    -- Start of flash programming
+TA053740 001:130.392    -- Programming range 0x00000000 - 0x00007FFF (  4 Sectors, 32 KB)
+TA053740 001:439.508    -- End of flash programming
+TA053740 001:439.530    -- 0x0000 - 0x7FFF (  4 Sectors, 32 KB)
+TA053740 001:439.535    -- Start of restoring
+TA053740 001:439.539    -- Restoring RAMCode
+TA053740 001:462.574    -- Restoring target memory
+TA053740 001:501.798    -- Restore target
+TA053740 001:501.838    -- Restoring CPU registers
+TA053740 001:501.862    -- End of restoring
+TA053740 001:501.898    -- Bank 0 @ 0x00000000: 1 range affected (32768 bytes)
+TA053740 001:501.906    -- Total: 0.461s (Prepare: 0.079s, Compare: 0.010s, Erase: 0.000s, Program & Verify: 0.327s, Restore: 0.044s)
+TA053740 001:501.977    -- Program & Verify speed: 98 KB/s
+TA053740 001:502.231 - 463.040ms returns 0x00
+TA053740 001:502.254 JLINK_ExecCommand("SetVerifyRAMDownload = 0", ...). 
+TA053740 001:502.261 - 0.007ms returns 0x01
+TA053740 001:502.678 JLINK_IsHalted()
+TA053740 001:502.683 - 0.005ms returns TRUE
+TA053740 001:502.687 JLINK_ReadMemEx_64(0x00000000, 0x6CA0 Bytes, ...)
+TA053740 001:502.702    -- Read from flash cache (27808 bytes @ 0x00000000)
+TA053740 001:502.706   Data:  A0 91 FF 1F 91 20 00 00 50 21 00 00 50 21 00 00 ...
+TA053740 001:502.709 - 0.021ms returns 27808 (0x6CA0)
+TA053740 001:502.727 JLINK_Reset()
+TA053740 001:502.733   JLINK_GetResetTypeDesc
+TA053740 001:502.735   - 0.003ms 
+TA053740 001:502.738   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+TA053740 001:502.742   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+TA053740 001:503.157   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TA053740 001:503.585   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+TA053740 001:503.976   Reset: Reset device via AIRCR.SYSRESETREQ.
+TA053740 001:503.981   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+TA053740 001:556.379   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TA053740 001:556.796   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TA053740 001:557.627   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TA053740 001:563.289   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TA053740 001:567.987   CPU_WriteMem(4 bytes @ 0xE0002000)
+TA053740 001:568.387   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+TA053740 001:568.776   CPU_ReadMem(4 bytes @ 0xE0001000)
+TA053740 001:569.170 - 66.443ms 
+TA053740 001:569.174 JLINK_Halt()
+TA053740 001:569.175 - 0.001ms returns 0x00
+TA053740 001:569.181 JLINK_ExecCommand("SetVerifyRAMDownload = 1", ...). 
+TA053740 001:569.184 - 0.003ms returns 0x00
+TA053740 001:569.185 JLINK_DownloadFile(sFile = /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-26-b90ba7b-phase4-usb/artifacts/usb_loopback_primary_attempt2.bin)
+TA053740 001:569.313   Data:  3D B8 F3 96 00 00 00 00 00 02 00 00 A8 3B 00 00 ...
+TA053740 001:569.366   completely In flash
+TA053740 001:569.557   Old firmware which does not support pausing periodic actions during flash download
+TA053740 001:569.562   CPU_ReadMem(4 bytes @ 0xE000ED90)
+TA053740 001:569.942   CPU_ReadMem(4 bytes @ 0xE000ED94)
+TA053740 001:570.350    -- --------------------------------------
+TA053740 001:570.353    -- Flash bank @ 0x00000000: Default: L2 verify disabled because algorithm performs L1 verify
+TA053740 001:570.355    -- Start of determining dirty areas in flash cache
+TA053740 001:570.366    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00010000 if necessary
+TA053740 001:570.368    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00012000 if necessary
+TA053740 001:570.370    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00014000 if necessary
+TA053740 001:570.372    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00016000 if necessary
+TA053740 001:570.374    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00018000 if necessary
+TA053740 001:570.375    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0001A000 if necessary
+TA053740 001:570.377    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0001C000 if necessary
+TA053740 001:570.379    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0001E000 if necessary
+TA053740 001:570.381    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00020000 if necessary
+TA053740 001:570.382    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00022000 if necessary
+TA053740 001:570.384    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00024000 if necessary
+TA053740 001:570.386    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00026000 if necessary
+TA053740 001:570.387    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00028000 if necessary
+TA053740 001:570.395    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0002A000 if necessary
+TA053740 001:570.397    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0002C000 if necessary
+TA053740 001:570.399    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0002E000 if necessary
+TA053740 001:570.400    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00030000 if necessary
+TA053740 001:570.402    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00032000 if necessary
+TA053740 001:570.404    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00034000 if necessary
+TA053740 001:570.405    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00036000 if necessary
+TA053740 001:570.407    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00038000 if necessary
+TA053740 001:570.409    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0003A000 if necessary
+TA053740 001:570.411    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0003C000 if necessary
+TA053740 001:570.413    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0003E000 if necessary
+TA053740 001:570.415    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00040000 if necessary
+TA053740 001:570.448    -- End of determining dirty areas
+TA053740 001:570.450    -- Start of preparing flash programming
+TA053740 001:570.453    -- Calculating RAM usage
+TA053740 001:570.462    -- RAM usage = 10292 Bytes
+TA053740 001:570.464    -- Preserving CPU registers
+TA053740 001:570.473    -- Preparing target
+TA053740 001:570.475    -- Preserving target RAM temporarily used for programming
+TA053740 001:668.554    -- Downloading RAMCode
+TA053740 001:700.328    -- Preparing RAMCode
+TA053740 001:710.982    -- End of preparing flash programming
+TA053740 001:710.988    -- CPU is running at 160000 kHz.
+TA053740 001:710.991    -- Start of comparing flash
+TA053740 001:710.994    -- CRC check was estimated as fastest method
+TA053740 001:710.997    -- Comparing range 0x10000 - 0x2FFFF (16 Sectors, 128 KB), using multi-block CRC calculation
+TA053740 001:718.110    -- CRC does not match for sectors 0-1
+TA053740 001:718.119    -- Comparing range 0x30000 - 0x41FFF (9 Sectors, 72 KB), using multi-block CRC calculation
+TA053740 001:722.863    -- CRC does not match for sector 8
+TA053740 001:722.866    -- Comparing range 0x14000 - 0x33FFF (16 Sectors, 128 KB), using alternative multi-block CRC calculation
+TA053740 001:730.063    -- All CRCs match
+TA053740 001:730.073    -- Comparing range 0x34000 - 0x3FFFF (6 Sectors, 48 KB), using alternative multi-block CRC calculation
+TA053740 001:733.773    -- All CRCs match
+TA053740 001:733.782    -- End of comparing flash
+TA053740 001:733.785    -- Start of erasing sectors
+TA053740 001:733.788    -- Erasing range 0x00040000 - 0x00041FFF (  1 Sector, 8 KB)
+TA053740 001:752.677    -- End of erasing sectors
+TA053740 001:752.680    -- Start of flash programming
+TA053740 001:752.683    -- Programming range 0x00010000 - 0x00013FFF (  2 Sectors, 16 KB)
+TA053740 001:872.414    -- Programming range 0x00040000 - 0x00041FFF (  1 Sector, 8 KB)
+TA053740 001:912.366    -- End of flash programming
+TA053740 001:912.375    -- 0x10000 - 0x13FFF (  2 Sectors, 16 KB)
+TA053740 001:912.378    -- 0x40000 - 0x41FFF (  1 Sector, 8 KB)
+TA053740 001:912.383    -- Start of restoring
+TA053740 001:912.387    -- Restoring RAMCode
+TA053740 001:972.942    -- Restoring target memory
+TA053740 002:069.203    -- Restore target
+TA053740 002:069.230    -- Restoring CPU registers
+TA053740 002:069.246    -- End of restoring
+TA053740 002:069.261    -- Bank 0 @ 0x00000000: 2 ranges affected (24576 bytes)
+TA053740 002:069.265    -- Total: 0.498s (Prepare: 0.140s, Compare: 0.022s, Erase: 0.018s, Program & Verify: 0.215s, Restore: 0.101s)
+TA053740 002:069.278    -- Program & Verify speed: 111 KB/s
+TA053740 002:069.481 - 500.295ms returns 0x00
+TA053740 002:069.504 JLINK_ExecCommand("SetVerifyRAMDownload = 0", ...). 
+TA053740 002:069.509 - 0.005ms returns 0x01
+TA053740 002:069.551 JLINK_IsHalted()
+TA053740 002:069.957 - 0.406ms returns TRUE
+TA053740 002:069.961 JLINK_ReadMemEx_64(0x00010000, 0x32000 Bytes, ...)
+TA053740 002:070.047    -- Read from flash cache (204800 bytes @ 0x00010000)
+TA053740 002:070.052   Data:  3D B8 F3 96 00 00 00 00 00 02 00 00 A8 3B 00 00 ...
+TA053740 002:070.053 - 0.092ms returns 204800 (0x32000)
+TA053740 002:070.113 JLINK_SetResetDelay(0)
+TA053740 002:070.115 - 0.003ms 
+TA053740 002:070.117 JLINK_Reset()
+TA053740 002:070.122   JLINK_GetResetTypeDesc
+TA053740 002:070.124   - 0.002ms 
+TA053740 002:070.127   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+TA053740 002:070.130   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+TA053740 002:070.536   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TA053740 002:070.941   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+TA053740 002:071.323   Reset: Reset device via AIRCR.SYSRESETREQ.
+TA053740 002:071.327   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+TA053740 002:124.057   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TA053740 002:124.491   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TA053740 002:124.881   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TA053740 002:130.515   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TA053740 002:135.177   CPU_WriteMem(4 bytes @ 0xE0002000)
+TA053740 002:135.608   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+TA053740 002:135.990   CPU_ReadMem(4 bytes @ 0xE0001000)
+TA053740 002:136.366 - 66.249ms 
+TA053740 002:136.386 JLINK_GoEx(MaxEmulInsts = 0, Flags = 0x01)
+TA053740 002:136.393   CPU_ReadMem(4 bytes @ 0xE0001000)
+TA053740 002:136.786   CPU_WriteMem(4 bytes @ 0xE0001004)
+TA053740 002:137.825   Memory map 'after startup completion point' is active
+TA053740 002:137.829 - 1.442ms 
+TA053740 032:137.908 JLINK_Halt()
+TA053740 032:142.226 - 4.318ms returns 0x00
+TA053740 032:142.237 JLINK_GetDeviceFamily
+TA053740 032:142.241 - 0.004ms returns 14
+TA053740 032:142.246 JLINK_CORE_GetFound()
+TA053740 032:142.250 - 0.004ms returns 0xE0000FF
+TA053740 032:142.255 JLINK_GetDebugInfo(0x01 = Unknown)
+TA053740 032:142.261   Value=0x00000001
+TA053740 032:142.266 - 0.010ms returns 0
+TA053740 032:142.270 JLINK_ReadRegs(NumRegs = 28)
+TA053740 032:142.293   CPU_ReadMem(4 bytes @ 0xE0001004)
+TA053740 032:142.752   
+  R0 (0)         = 0xFFFFFFFF           R1 (1)         = 0x1000               R2 (2)         = 0x1FFF8758           R3 (3)         = 0x1FFF8754        
+  R4 (4)         = 0xE000E100           R5 (5)         = 0xFFFFFFFF           R6 (6)         = 0x20000754           R7 (7)         = 0x1FFFBE80        
+  R8 (8)         = 0x62FC               R9 (9)         = 0x6A9C               R10 (10)       = 0x4102               R11 (11)       = 0x00              
+  R12 (12)       = 0x81                 R13 (SP) (13)  = 0x1FFF9420           MSP (17)       = 0x1FFF9420           PSP (18)       = 0xF5AEAC80        
+  R14 (14)       = 0x12575              R15 (PC) (15)  = 0x11A34              XPSR (16)      = 0xA1000000           APSR (21)      = 0xA0000000        
+  EPSR (22)      = 0x1000000            IPSR (23)      = 0x00                 CFBP (20)      = 0x00                 CONTROL (27)   = 0x00              
+  FAULTMASK (26) = 0x00                 BASEPRI (25)   = 0x00                 PRIMASK (24)   = 0x00                 CycleCnt (65)  = 0xEC5AF9C         
+TA053740 032:142.759 - 0.489ms returns 0x00
+TA053740 032:142.773 JLINK_ReadRegs(NumRegs = 33)
+TA053740 032:149.582   
+  FPS0 (33)  = 0xEAE71737           FPS1 (34)  = 0xB82B4B42           FPS2 (35)  = 0x1D911C8F           FPS3 (36)  = 0xC93175A1        
+  FPS4 (37)  = 0xEFC05173           FPS5 (38)  = 0x2F8C98F8           FPS6 (39)  = 0xFBEFCF66           FPS7 (40)  = 0xD3EC769E        
+  FPS8 (41)  = 0xF34547AB           FPS9 (42)  = 0xF5B1B8A1           FPS10 (43) = 0x3F000000           FPS11 (44) = 0x3F800000        
+  FPS12 (45) = 0x45467000           FPS13 (46) = 0x424E0000           FPS14 (47) = 0x3C0316A9           FPS15 (48) = 0x33              
+  FPS16 (49) = 0x9F9FDC82           FPS17 (50) = 0xBEF4BECB           FPS18 (51) = 0x3B3FD1B0           FPS19 (52) = 0xE65DFA6A        
+  FPS20 (53) = 0x5BB1B45F           FPS21 (54) = 0xD7F3B79A           FPS22 (55) = 0x251ABB78           FPS23 (56) = 0x2DE6FFB5        
+  FPS24 (57) = 0x27D1C5A            FPS25 (58) = 0x5B9770EE           FPS26 (59) = 0x349E1A6A           FPS27 (60) = 0xECF189E0        
+  FPS28 (61) = 0xD3B4FFB4           FPS29 (62) = 0x601593B7           FPS30 (63) = 0x37BE90CF           FPS31 (64) = 0x8AE5FCF2        
+  FPSCR (32) = 0x00              
+TA053740 032:149.601 - 6.827ms returns 0x00
+TA053740 032:149.618 JLINK_ReadMemU32_64(0x1FFF8754, 0x2 Items)
+TA053740 032:149.628   CPU_ReadMem(8 bytes @ 0x1FFF8754)
+TA053740 032:150.073   Data:  FF FF FF FF F8 FF 00 E1
+TA053740 032:150.076 - 0.459ms returns 2 (0x2)
+TA053740 032:150.078 JLINK_HasError()
+TA053740 032:150.085 JLINK_ReadMemU32_64(0x1FFF834C, 0x2 Items)
+TA053740 032:150.087   CPU_ReadMem(8 bytes @ 0x1FFF834C)
+TA053740 032:150.513   Data:  00 00 00 00 00 00 00 00
+TA053740 032:150.517 - 0.431ms returns 2 (0x2)
+TA053740 032:150.518 JLINK_HasError()
+TA053740 032:150.522 JLINK_GoEx(MaxEmulInsts = 0, Flags = 0x01)
+TA053740 032:150.911   CPU_ReadMem(4 bytes @ 0xE0001000)
+TA053740 032:152.021 - 1.499ms 
+TA053740 032:152.027 JLINK_IsOpen()
+TA053740 032:152.029 - 0.001ms returns 0x01
+TA053740 032:156.665 JLINK_Close()
+TA053740 032:167.420 - 10.755ms
+TA053740 032:167.423   
+TA053740 032:167.424   Closed

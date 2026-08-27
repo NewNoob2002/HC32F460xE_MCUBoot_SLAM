@@ -1,0 +1,18 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-26T15:56:00Z"
+  operation: "flash"
+  authorization: "User explicitly confirmed the Phase 4 plan and ordered sequential execution"
+  target:
+    board: "HC32F460xE target board; Cortex-M4 r0p1 identified"
+    hardware_revision: "unknown"
+    probe_or_adapter_serial: "63728710"
+    transport: "SWD"
+  artifacts:
+    boot_sha256: "867e537a23eddd4d0a82268cf2fc4fb2dd41961c210bdf30d8a8cde20e563f51"
+    loopback_primary_sha256: "6f745a2f6142f172279125f08844b104a8a4c5020a81c49c783596e880432909"
+    pre_hil_backup_sha256: "e608d3eae3ea4a8c0010f3ee6de8fc361c9618f98733a2c769d72264c1667c98"
+    pre_hil_backup_size: 483328
+  limits: "Same bounded Boot/Primary-only write; no Secondary, Scratch, Reserved, mass erase, unlock, recover, OTP, protection, or option-byte change"
+  recovery_plan: "Attempt 2 was restored byte-identically before this retry; restore and verify the same exact backup after host checks"
+  approved: true

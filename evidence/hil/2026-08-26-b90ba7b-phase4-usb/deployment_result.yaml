@@ -1,0 +1,18 @@
+deployment_result:
+  schema_version: 1
+  source_revision: "93c9c048380becbda1d655537bdbc095bf743ac5"
+  safety_preflight: "safety_preflight_hil_attempt7.yaml"
+  tool: {id: "J-Link Commander", version: "9.70"}
+  temporary_artifacts:
+    - path: "artifacts/boot_firmware_attempt5.bin"
+      destination: "0x00000000"
+      sha256: "6f3444e6b7750fc36096ff9899bb8ff6ebfb1d70d56a54d4a3926b7ab069e15b"
+    - path: "artifacts/usb_loopback_primary_attempt5.bin"
+      destination: "0x00010000"
+      sha256: "88e05221863514c0c992b7975f04bd0672181655b247f8f503f37bcfdc332296"
+  test_write_bounds: "Boot 0x00000000-0x0000FFFF and Primary 0x00010000-0x00041FFF"
+  secondary_accessed_by_test: false
+  scratch_accessed_by_test: false
+  reserved_accessed: false
+  final_state: "Exact pre-HIL 0x00000000-0x00075FFF contents restored; target reset and running"
+  final_verification: "Post-restore SHA-256 and byte compare equal pre-HIL backup; fffe:ffff no longer enumerated"

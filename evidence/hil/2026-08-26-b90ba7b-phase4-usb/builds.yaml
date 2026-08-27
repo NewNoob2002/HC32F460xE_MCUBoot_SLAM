@@ -1,0 +1,35 @@
+builds:
+  schema_version: 1
+  source_revision: "93c9c048380becbda1d655537bdbc095bf743ac5"
+  local_validation: "passed"
+  source_ci: "GitHub Actions run 33026124061 passed"
+  host_tests:
+    passed: 11
+    failed: 0
+    sanitizer: "ASan/UBSan with ASAN_OPTIONS=detect_leaks=0"
+  debug:
+    full_build: "passed"
+    verify_app_image: "passed"
+    verify_usb_loopback_image: "passed"
+    boot_elf: {text: 27352, data: 100, bss: 2432}
+    app_elf: {text: 12488, data: 92, bss: 372}
+    usb_loopback_elf: {text: 15536, data: 16, bss: 3096}
+  release:
+    full_build: "passed"
+    verify_app_image: "passed"
+    verify_usb_loopback_image: "passed"
+    boot_elf: {text: 24812, data: 100, bss: 2432}
+    app_elf: {text: 11912, data: 92, bss: 372}
+    usb_loopback_elf: {text: 13008, data: 16, bss: 3096}
+  exact_hil_artifacts:
+    boot_firmware:
+      size_bytes: 27836
+      sha256: "6f3444e6b7750fc36096ff9899bb8ff6ebfb1d70d56a54d4a3926b7ab069e15b"
+    usb_loopback_primary:
+      size_bytes: 204800
+      sha256: "88e05221863514c0c992b7975f04bd0672181655b247f8f503f37bcfdc332296"
+  result_symbols:
+    g_usb_loopback_init_result: "0x1FFF8754"
+    g_usb_loopback_stage: "0x1FFF8758"
+    g_usb_loopback_errors: "0x1FFF834C"
+    g_usb_loopback_packets: "0x1FFF8350"

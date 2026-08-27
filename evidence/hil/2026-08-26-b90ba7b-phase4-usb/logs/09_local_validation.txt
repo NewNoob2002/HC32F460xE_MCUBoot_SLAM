@@ -1,0 +1,16 @@
+source_revision=93c9c048380becbda1d655537bdbc095bf743ac5
+
+strict_host_tests=PASS 11/11
+sanitizer=ASan/UBSan
+asan_options=detect_leaks=0
+debug_full_build=PASS
+debug_verify_app_image=PASS
+debug_verify_usb_loopback_image=PASS
+release_full_build=PASS
+release_verify_app_image=PASS
+release_verify_usb_loopback_image=PASS
+retained_evidence_before_phase4=PASS 3 bundles
+python_compile_check=PASS
+git_diff_check=PASS
+
+note=LeakSanitizer cannot operate under the local ptrace environment; the same 11 tests passed with the repository CI setting detect_leaks=0.

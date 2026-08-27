@@ -1,0 +1,15 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-26T15:29:54Z"
+  operation: "debug-halt-read-resume"
+  authorization: "User confirmed the Phase 4 plan, including HIL when hardware is available"
+  target:
+    board: "HC32F460xE target board"
+    hardware_revision: "unknown; read-only identification"
+    probe_or_adapter_serial: "20781318"
+    transport: "SWD"
+  source_revision: "b90ba7b705decc93899a0830e8ac514dfbb37c9e+dirty:b4206d91c310b849ee8f88adb0e7fef22725ac934c7523ba94da4d0f0868bc29"
+  artifact_or_stimulus: "No Flash write; read CPUID and Boot ICG words only"
+  limits: "J-Link HC32F460xE, SWD 4000 kHz; no erase, flash write, option-byte, OTP, protection, mass erase, unlock, recover, or Reserved access"
+  recovery_plan: "Resume the core before disconnecting; exit without target writes if identity or VTref differs from prior evidence"
+  approved: true

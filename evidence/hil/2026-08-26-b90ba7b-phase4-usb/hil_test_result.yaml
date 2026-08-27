@@ -1,0 +1,70 @@
+test_result:
+  schema_version: 1
+  source_revision: "93c9c048380becbda1d655537bdbc095bf743ac5"
+  ci_run: "33026124061 success"
+  level: "hil"
+  target: "HC32F460xE via J-Link 63728710"
+  date: "2026-08-26"
+  scope_passed: true
+  phase_status: "READY_FOR_REVIEW"
+  gate_passed: false
+  attempts: 7
+  counts:
+    transfers: 10000
+    failed_transfers: 0
+    packet_count: 10000
+    target_errors: 0
+  classified_observations:
+    - attempts: "1-4"
+      classification: "product bring-up diagnostics"
+      result: "not accepted"
+      recovery: "Exact pre-HIL backup restored and verified after each attempt"
+    - attempt: 5
+      classification: "target initialization passed; host gate incomplete"
+      result: "init=0, stage=0x400, errors=0, packets=0; UPLL stable and USB clock source PLLXP"
+      recovery: "Exact pre-HIL backup restored and verified"
+    - attempt: 6
+      classification: "host permission gate"
+      result: "udev access was not yet accepted for the enumerated device"
+      recovery: "Exact pre-HIL backup restored and verified"
+    - attempt: 7
+      classification: "accepted"
+      result: "Enumeration, permissions and 10,000-transfer loopback passed"
+  enumeration:
+    passed: true
+    vid_pid: "fffe:ffff"
+    bus_device: "001/011"
+    product: "HC32 Phase 4 Lab CherryUSB Vendor Bulk Loopback"
+    device_node: "/dev/bus/usb/001/011"
+    owner: "gtc"
+    group: "root"
+    mode: "0660"
+  loopback:
+    passed: true
+    command: "python3 Tools/host/usb_loopback.py run --iterations 10000 --lengths 0,1,63,64,65,512,1024"
+    elapsed_s: 6.786
+    rate_per_s: 1473.5
+    lengths: {0: 1429, 1: 1429, 63: 1429, 64: 1429, 65: 1428, 512: 1428, 1024: 1428}
+  target_counters:
+    init_result: 0
+    stage: "0x400"
+    errors: 0
+    packets: "0x2710"
+  restoration:
+    passed: true
+    pre_hil_sha256: "e608d3eae3ea4a8c0010f3ee6de8fc361c9618f98733a2c769d72264c1667c98"
+    post_restore_sha256: "e608d3eae3ea4a8c0010f3ee6de8fc361c9618f98733a2c769d72264c1667c98"
+    byte_compare: "identical"
+    loopback_vid_pid_after_restore: "not enumerated"
+  remaining_gate_items:
+    - "30-minute continuous USB loopback run"
+    - "At least 10 manual unplug/re-enumeration cycles"
+  logs:
+    - "logs/02_flash_loopback_attempt7.txt"
+    - "logs/03_read_counters_attempt7.txt"
+    - "logs/04_restore_after_attempt7.txt"
+    - "logs/05_host_enumeration_attempt7.txt"
+    - "logs/06_host_loopback_attempt7.txt"
+    - "logs/07_restore_verification_attempt7.txt"
+    - "logs/08_ci_source_run.txt"
+    - "logs/09_local_validation.txt"

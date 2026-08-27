@@ -1,0 +1,456 @@
+T7F784740 000:001.760   SEGGER J-Link V9.70 Log File
+T7F784740 000:001.820   DLL Compiled: Aug 19 2026 12:15:25
+T7F784740 000:001.821   Logging started @ 2026-08-26 15:52
+T7F784740 000:001.822   Process: /opt/SEGGER/JLink_V970/JLinkExe
+T7F784740 000:001.824 - 1.823ms 
+T7F784740 000:001.841 JLINK_EMU_SelectByUSBSN(SerialNo = 63728710)
+T7F784740 000:012.137 - 10.296ms returns 0x00
+T7F784740 000:012.154 JLINK_SetWarnOutHandler(...)
+T7F784740 000:012.155 - 0.002ms 
+T7F784740 000:012.166 JLINK_ExecCommand("SuppressGUI = 1", ...). 
+T7F784740 000:012.168 - 0.002ms returns 0x00
+T7F784740 000:012.184 JLINK_OpenEx(...)
+T7F784740 000:014.531   Firmware: J-Link OB-Mini Plus-CortexM compiled Mar  8 2099 11:15:54
+T7F784740 000:015.157   Firmware: J-Link OB-Mini Plus-CortexM compiled Mar  8 2099 11:15:54
+T7F784740 000:019.243   Hardware: V1.00
+T7F784740 000:019.246   S/N: 63728710
+T7F784740 000:019.248   OEM: SEGGER
+T7F784740 000:019.250   Feature(s): GDB, RDI, FlashBP, FlashDL, JFlash
+T7F784740 000:019.728   Bootloader: (FW returned invalid version)
+T7F784740 000:020.470   TELNET listener socket opened on port 19021
+T7F784740 000:020.496 - 8.311ms returns "O.K."
+T7F784740 000:020.503 JLINK_SetFlashProgProgressCallback(...)
+T7F784740 000:020.504 - 0.001ms 
+T7F784740 000:020.506 JLINK_GetFirmwareString(...)
+T7F784740 000:020.507 - 0.001ms 
+T7F784740 000:020.510 JLINK_GetHardwareVersion()
+T7F784740 000:020.512 - 0.002ms returns 10000
+T7F784740 000:020.515 JLINK_GetHWInfoEx(...)
+T7F784740 000:020.719 - 0.204ms returns 0
+T7F784740 000:020.723 JLINK_GetSN()
+T7F784740 000:020.725 - 0.002ms returns 63728710
+T7F784740 000:020.728 JLINK_GetAvailableLicense()
+T7F784740 000:028.115 - 7.386ms returns 0x05
+T7F784740 000:028.124 JLINK_GetOEMString(...)
+T7F784740 000:028.128 JLINK_EMU_GetCurrConnectionInfo()
+T7F784740 000:028.300 - 0.172ms returns 0
+T7F784740 000:028.304 JLINK_EMU_HasCapEx(0x00000026)
+T7F784740 000:028.305 - 0.001ms returns 0
+T7F784740 000:028.307 JLINK_GetEmuCaps()
+T7F784740 000:028.308 - 0.001ms returns 0xB8EA5A33
+T7F784740 000:028.310 JLINK_GetEmuCaps()
+T7F784740 000:028.311 - 0.001ms returns 0xB8EA5A33
+T7F784740 000:028.313 JLINK_GetHWStatus(...)
+T7F784740 000:028.439 - 0.126ms returns 0
+T7F784740 000:028.442 JLINK_EMU_HasCapEx(0x00000044)
+T7F784740 000:028.443 - 0.001ms returns 0
+T7F784740 000:028.452 JLINK_TIF_GetAvailable(...)
+T7F784740 000:028.645 - 0.194ms 
+T7F784740 000:028.656 JLINK_DEVICE_GetIndex(sDeviceName = HC32F460xE)
+T7F784740 000:036.626 - 7.971ms returns 14308
+T7F784740 000:036.635 JLINK_ExecCommand("device=HC32F460xE", ...). 
+T7F784740 000:037.709   Device "HC32F460XE" selected.
+T7F784740 000:038.588 - 1.953ms returns 0x00
+T7F784740 000:038.593 JLINK_EnableLog(...)
+T7F784740 000:038.594 - 0.002ms 
+T7F784740 000:038.605 JLINK_GetEmuCaps()
+T7F784740 000:038.607 - 0.002ms returns 0xB8EA5A33
+T7F784740 000:038.609 JLINK_TIF_GetAvailable(...)
+T7F784740 000:038.763 - 0.154ms 
+T7F784740 000:038.767 JLINK_TIF_Select(JLINKARM_TIF_SWD)
+T7F784740 000:039.234 - 0.467ms returns 0x00
+T7F784740 000:039.239 JLINK_IsConnected()
+T7F784740 000:039.241 - 0.002ms returns FALSE
+T7F784740 000:039.243 JLINK_SetSpeed(4000)
+T7F784740 000:039.322 - 0.079ms 
+T7F784740 000:039.326 JLINK_Connect()
+T7F784740 000:040.105   Found SW-DP with ID 0x2BA01477
+T7F784740 000:043.385   Old FW that does not support reading DPIDR via DAP jobs
+T7F784740 000:046.841   DPv0 detected
+T7F784740 000:046.843   CoreSight SoC-400 or earlier
+T7F784740 000:046.846   Scanning AP map to find all available APs
+T7F784740 000:049.045   AP[1]: Stopped AP scan as end of AP map has been reached
+T7F784740 000:049.048   AP[0]: AHB-AP (IDR: 0x24770011, ADDR: 0x00000000)
+T7F784740 000:049.050   Iterating through AP map to find AHB-AP to use
+T7F784740 000:052.784   AP[0]: Core found
+T7F784740 000:052.788   AP[0]: AHB-AP ROM base: 0xE00FF000
+T7F784740 000:054.646   CPUID register: 0x410FC241. Implementer code: 0x41 (ARM)
+T7F784740 000:054.650   Found Cortex-M4 r0p1, Little endian.
+T7F784740 000:054.925   -- Max. mem block: 0x00002220
+T7F784740 000:055.422   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T7F784740 000:055.806   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+T7F784740 000:056.203   CPU_ReadMem(4 bytes @ 0xE0002000)
+T7F784740 000:056.660   FPUnit: 6 code (BP) slots and 2 literal slots
+T7F784740 000:056.662   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T7F784740 000:057.039   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T7F784740 000:057.444   CPU_ReadMem(4 bytes @ 0xE0001000)
+T7F784740 000:057.820   CPU_WriteMem(4 bytes @ 0xE0001000)
+T7F784740 000:058.209   CPU_ReadMem(4 bytes @ 0xE000ED88)
+T7F784740 000:058.649   CPU_WriteMem(4 bytes @ 0xE000ED88)
+T7F784740 000:059.054   CPU_ReadMem(4 bytes @ 0xE000ED88)
+T7F784740 000:059.439   CPU_WriteMem(4 bytes @ 0xE000ED88)
+T7F784740 000:059.838   CoreSight components:
+T7F784740 000:059.841   ROMTbl[0] @ E00FF000
+T7F784740 000:059.843   CPU_ReadMem(64 bytes @ 0xE00FF000)
+T7F784740 000:060.801   CPU_ReadMem(32 bytes @ 0xE000EFE0)
+T7F784740 000:061.471   [0][0]: E000E000 CID B105E00D PID 000BB00C SCS-M7
+T7F784740 000:061.480   CPU_ReadMem(32 bytes @ 0xE0001FE0)
+T7F784740 000:062.150   [0][1]: E0001000 CID B105E00D PID 003BB002 DWT
+T7F784740 000:062.153   CPU_ReadMem(32 bytes @ 0xE0002FE0)
+T7F784740 000:062.819   [0][2]: E0002000 CID B105E00D PID 002BB003 FPB
+T7F784740 000:062.821   CPU_ReadMem(32 bytes @ 0xE0000FE0)
+T7F784740 000:063.509   [0][3]: E0000000 CID B105E00D PID 003BB001 ITM
+T7F784740 000:063.518   CPU_ReadMem(32 bytes @ 0xE0040FE0)
+T7F784740 000:064.224   [0][4]: E0040000 CID B105900D PID 000BB9A1 TPIU
+T7F784740 000:064.240 - 24.914ms returns 0x00
+T7F784740 000:064.245 JLINK_GetIdData(pIdData)
+T7F784740 000:064.645   pIdData->ScanLen=4
+T7F784740 000:064.648   pIdData->NumDevices=1
+T7F784740 000:064.650   pIdData->aId[0]=0x2BA01477
+T7F784740 000:064.652   pIdData->aIrRead[0]=0
+T7F784740 000:064.654   pIdData->aScanLen[0]=0
+T7F784740 000:064.655   pIdData->aScanRead[0]=0
+T7F784740 000:064.657 - 0.411ms 
+T7F784740 000:064.659 JLINK_GetMemZones(...)
+T7F784740 000:064.660 - 0.001ms returns 1
+T7F784740 000:064.664 JLINK_HasError()
+T7F784740 000:064.669 JLINK_CORE_GetFound()
+T7F784740 000:064.670 - 0.001ms returns 0xE0000FF
+T7F784740 000:064.679 JLINK_Halt()
+T7F784740 000:068.931 - 4.252ms returns 0x00
+T7F784740 000:068.935 JLINK_GetDeviceFamily
+T7F784740 000:068.936 - 0.001ms returns 14
+T7F784740 000:068.938 JLINK_CORE_GetFound()
+T7F784740 000:068.939 - 0.002ms returns 0xE0000FF
+T7F784740 000:068.941 JLINK_GetDebugInfo(0x01 = Unknown)
+T7F784740 000:068.943   Value=0x00000001
+T7F784740 000:068.945 - 0.004ms returns 0
+T7F784740 000:068.947 JLINK_ReadRegs(NumRegs = 28)
+T7F784740 000:068.957   CPU_ReadMem(4 bytes @ 0xE0001004)
+T7F784740 000:069.351   
+  R0 (0)         = 0x1FFF8D0C           R1 (1)         = 0x611FB              R2 (2)         = 0x00                 R3 (3)         = 0x01              
+  R4 (4)         = 0x611FB              R5 (5)         = 0x1FFF8660           R6 (6)         = 0x1FFF8660           R7 (7)         = 0x1FFFBE98        
+  R8 (8)         = 0x62FC               R9 (9)         = 0x6A9C               R10 (10)       = 0x4102               R11 (11)       = 0x00              
+  R12 (12)       = 0x01                 R13 (SP) (13)  = 0x1FFFBE98           MSP (17)       = 0x1FFFBE98           PSP (18)       = 0xF5AEAC80        
+  R14 (14)       = 0x33D5               R15 (PC) (15)  = 0x32DC               XPSR (16)      = 0x21030000           APSR (21)      = 0x20030000        
+  EPSR (22)      = 0x1000000            IPSR (23)      = 0x00                 CFBP (20)      = 0x4000000            CONTROL (27)   = 0x4000000         
+  FAULTMASK (26) = 0x00                 BASEPRI (25)   = 0x00                 PRIMASK (24)   = 0x00                 CycleCnt (65)  = 0x23F6CA13        
+T7F784740 000:069.354 - 0.407ms returns 0x00
+T7F784740 000:069.360 JLINK_ReadRegs(NumRegs = 33)
+T7F784740 000:076.188   
+  FPS0 (33)  = 0xEAE71737           FPS1 (34)  = 0xB82B4B42           FPS2 (35)  = 0x1D911C8F           FPS3 (36)  = 0xC93175A1        
+  FPS4 (37)  = 0xEFC05173           FPS5 (38)  = 0x2F8C98F8           FPS6 (39)  = 0xFBEFCF66           FPS7 (40)  = 0xD3EC769E        
+  FPS8 (41)  = 0xF34547AB           FPS9 (42)  = 0xF5B1B8A1           FPS10 (43) = 0x3F000000           FPS11 (44) = 0x3F800000        
+  FPS12 (45) = 0x45467000           FPS13 (46) = 0x424E0000           FPS14 (47) = 0x3C0316A9           FPS15 (48) = 0x33              
+  FPS16 (49) = 0x9F9FDC82           FPS17 (50) = 0xBEF4BECB           FPS18 (51) = 0x3B3FD1B0           FPS19 (52) = 0xE65DFA6A        
+  FPS20 (53) = 0x5BB1B45F           FPS21 (54) = 0xD7F3B79A           FPS22 (55) = 0x251ABB78           FPS23 (56) = 0x2DE6FFB5        
+  FPS24 (57) = 0x27D1C5A            FPS25 (58) = 0x5B9770EE           FPS26 (59) = 0x349E1A6A           FPS27 (60) = 0xECF189E0        
+  FPS28 (61) = 0xD3B4FFB4           FPS29 (62) = 0x601593B7           FPS30 (63) = 0x37BE90CF           FPS31 (64) = 0x8AE5FCF2        
+  FPSCR (32) = 0x80000010        
+T7F784740 000:076.201 - 6.842ms returns 0x00
+T7F784740 000:076.217 JLINK_DEVICE_GetIndex(sDeviceName = <NULL>)
+T7F784740 000:076.220 - 0.004ms returns 14308
+T7F784740 000:076.225 JLINK_Reset()
+T7F784740 000:076.234   JLINK_GetResetTypeDesc
+T7F784740 000:076.238   - 0.004ms 
+T7F784740 000:076.242   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+T7F784740 000:076.247   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+T7F784740 000:076.650   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T7F784740 000:077.051   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+T7F784740 000:077.422   Reset: Reset device via AIRCR.SYSRESETREQ.
+T7F784740 000:077.425   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+T7F784740 000:130.372   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T7F784740 000:130.791   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T7F784740 000:131.183   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T7F784740 000:136.805   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T7F784740 000:141.495   CPU_WriteMem(4 bytes @ 0xE0002000)
+T7F784740 000:141.904   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T7F784740 000:142.304   CPU_ReadMem(4 bytes @ 0xE0001000)
+T7F784740 000:142.701 - 66.477ms 
+T7F784740 000:142.708 JLINK_Halt()
+T7F784740 000:142.712 - 0.004ms returns 0x00
+T7F784740 000:142.720 JLINK_Erase()
+T7F784740 000:142.915   Old firmware which does not support pausing periodic actions during flash download
+T7F784740 000:142.920   CPU_ReadMem(4 bytes @ 0xE000ED90)
+T7F784740 000:143.293   CPU_ReadMem(4 bytes @ 0xE000ED94)
+T7F784740 000:143.679    -- --------------------------------------
+T7F784740 000:143.690    -- Start of determining dirty areas
+T7F784740 000:143.705    -- End of determining dirty areas
+T7F784740 000:143.708    -- Start of preparing flash programming
+T7F784740 000:143.712    -- Calculating RAM usage
+T7F784740 000:143.723    -- RAM usage = 10292 Bytes
+T7F784740 000:143.726    -- Preserving CPU registers
+T7F784740 000:143.736    -- Preparing target
+T7F784740 000:143.738    -- Preserving target RAM temporarily used for programming
+T7F784740 000:241.870    -- Downloading RAMCode
+T7F784740 000:273.474    -- Preparing RAMCode
+T7F784740 000:284.176    -- End of preparing flash programming
+T7F784740 000:284.182    -- CPU is running at 160000 kHz.
+T7F784740 000:284.184    -- Start of erasing sectors
+T7F784740 000:284.187    -- Erasing range 0x00000000 - 0x0001FFFF ( 16 Sectors, 128 KB)
+T7F784740 000:566.748    -- Erasing range 0x00020000 - 0x0003FFFF ( 16 Sectors, 128 KB)
+T7F784740 000:849.195    -- Erasing range 0x00040000 - 0x00041FFF (  1 Sector, 8 KB)
+T7F784740 000:867.785    -- End of erasing sectors
+T7F784740 000:867.796    -- Start of restoring
+T7F784740 000:867.798    -- Restoring RAMCode
+T7F784740 000:873.528    -- Restoring target memory
+T7F784740 000:969.741    -- Restore target
+T7F784740 000:969.768    -- Restoring CPU registers
+T7F784740 000:969.788    -- End of restoring
+T7F784740 000:969.798    -- Total time needed: 0.826s (Prepare: 0.140s, Compare: 0.000s, Erase: 0.583s, Program: 0.000s, Verify: 0.000s, Restore: 0.101s)
+T7F784740 000:971.008    -- 
+Flash sectors within Range [0x00000000 - 0x00041FFF] deleted.
+T7F784740 000:971.207 - 828.488ms returns 0
+T7F784740 000:971.225 JLINK_Reset()
+T7F784740 000:971.231   JLINK_GetResetTypeDesc
+T7F784740 000:971.233   - 0.002ms 
+T7F784740 000:971.237   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+T7F784740 000:971.241   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+T7F784740 000:971.701   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T7F784740 000:972.122   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+T7F784740 000:972.501   Reset: Reset device via AIRCR.SYSRESETREQ.
+T7F784740 000:972.507   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+T7F784740 001:024.903   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T7F784740 001:025.318   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T7F784740 001:026.112   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T7F784740 001:031.757   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T7F784740 001:036.473   CPU_WriteMem(4 bytes @ 0xE0002000)
+T7F784740 001:036.914   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T7F784740 001:037.335   CPU_ReadMem(4 bytes @ 0xE0001000)
+T7F784740 001:037.782 - 66.556ms 
+T7F784740 001:037.791 JLINK_Halt()
+T7F784740 001:037.793 - 0.003ms returns 0x00
+T7F784740 001:037.803 JLINK_ExecCommand("SetVerifyRAMDownload = 1", ...). 
+T7F784740 001:037.810 - 0.006ms returns 0x00
+T7F784740 001:037.817 JLINK_DownloadFile(sFile = /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-26-b90ba7b-phase4-usb/artifacts/boot_firmware.bin)
+T7F784740 001:037.872   Data:  A0 91 FF 1F 91 20 00 00 50 21 00 00 50 21 00 00 ...
+T7F784740 001:038.259   completely In flash
+T7F784740 001:038.473   Old firmware which does not support pausing periodic actions during flash download
+T7F784740 001:038.484   CPU_ReadMem(4 bytes @ 0xE000ED90)
+T7F784740 001:038.865   CPU_ReadMem(4 bytes @ 0xE000ED94)
+T7F784740 001:039.251    -- --------------------------------------
+T7F784740 001:039.255    -- Flash bank @ 0x00000000: Default: L2 verify disabled because algorithm performs L1 verify
+T7F784740 001:039.257    -- Start of determining dirty areas in flash cache
+T7F784740 001:039.260    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00000000 if necessary
+T7F784740 001:039.263    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00002000 if necessary
+T7F784740 001:039.265    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00004000 if necessary
+T7F784740 001:039.267    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00006000 if necessary
+T7F784740 001:039.329    -- End of determining dirty areas
+T7F784740 001:039.331    -- Start of preparing flash programming
+T7F784740 001:039.333    -- Calculating RAM usage
+T7F784740 001:039.342    -- RAM usage = 4148 Bytes
+T7F784740 001:039.345    -- Preserving CPU registers
+T7F784740 001:039.352    -- Preparing target
+T7F784740 001:039.354    -- Preserving target RAM temporarily used for programming
+T7F784740 001:078.905    -- Downloading RAMCode
+T7F784740 001:110.496    -- Preparing RAMCode
+T7F784740 001:118.520    -- End of preparing flash programming
+T7F784740 001:118.530    -- CPU is running at 160000 kHz.
+T7F784740 001:118.535    -- Start of comparing flash
+T7F784740 001:118.540    -- CRC check was estimated as fastest method
+T7F784740 001:118.545    -- Comparing range 0x0000 - 0x7FFF (4 Sectors, 32 KB), using multi-block CRC calculation
+T7F784740 001:129.531    -- CRC does not match for sectors 0-3
+T7F784740 001:129.540    -- End of comparing flash
+T7F784740 001:129.542    -- Start of erasing sectors
+T7F784740 001:129.545    -- End of erasing sectors
+T7F784740 001:129.547    -- Start of flash programming
+T7F784740 001:129.549    -- Programming range 0x00000000 - 0x00007FFF (  4 Sectors, 32 KB)
+T7F784740 001:438.611    -- End of flash programming
+T7F784740 001:438.636    -- 0x0000 - 0x7FFF (  4 Sectors, 32 KB)
+T7F784740 001:438.640    -- Start of restoring
+T7F784740 001:438.644    -- Restoring RAMCode
+T7F784740 001:461.352    -- Restoring target memory
+T7F784740 001:500.578    -- Restore target
+T7F784740 001:500.611    -- Restoring CPU registers
+T7F784740 001:500.630    -- End of restoring
+T7F784740 001:500.646    -- Bank 0 @ 0x00000000: 1 range affected (32768 bytes)
+T7F784740 001:500.654    -- Total: 0.461s (Prepare: 0.079s, Compare: 0.011s, Erase: 0.000s, Program & Verify: 0.326s, Restore: 0.044s)
+T7F784740 001:500.659    -- Program & Verify speed: 98 KB/s
+T7F784740 001:500.876 - 463.058ms returns 0x00
+T7F784740 001:500.891 JLINK_ExecCommand("SetVerifyRAMDownload = 0", ...). 
+T7F784740 001:500.897 - 0.006ms returns 0x01
+T7F784740 001:501.321 JLINK_IsHalted()
+T7F784740 001:501.330 - 0.009ms returns TRUE
+T7F784740 001:501.336 JLINK_ReadMemEx_64(0x00000000, 0x6CA0 Bytes, ...)
+T7F784740 001:501.363    -- Read from flash cache (27808 bytes @ 0x00000000)
+T7F784740 001:501.369   Data:  A0 91 FF 1F 91 20 00 00 50 21 00 00 50 21 00 00 ...
+T7F784740 001:501.373 - 0.036ms returns 27808 (0x6CA0)
+T7F784740 001:501.402 JLINK_Reset()
+T7F784740 001:501.410   JLINK_GetResetTypeDesc
+T7F784740 001:501.414   - 0.003ms 
+T7F784740 001:501.418   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+T7F784740 001:501.423   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+T7F784740 001:501.847   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T7F784740 001:502.274   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+T7F784740 001:502.716   Reset: Reset device via AIRCR.SYSRESETREQ.
+T7F784740 001:502.721   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+T7F784740 001:555.857   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T7F784740 001:556.244   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T7F784740 001:557.043   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T7F784740 001:562.666   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T7F784740 001:567.374   CPU_WriteMem(4 bytes @ 0xE0002000)
+T7F784740 001:567.775   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T7F784740 001:568.164   CPU_ReadMem(4 bytes @ 0xE0001000)
+T7F784740 001:568.556 - 67.153ms 
+T7F784740 001:568.560 JLINK_Halt()
+T7F784740 001:568.562 - 0.002ms returns 0x00
+T7F784740 001:568.568 JLINK_ExecCommand("SetVerifyRAMDownload = 1", ...). 
+T7F784740 001:568.571 - 0.003ms returns 0x00
+T7F784740 001:568.573 JLINK_DownloadFile(sFile = /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-26-b90ba7b-phase4-usb/artifacts/usb_loopback_primary_attempt4.bin)
+T7F784740 001:568.707   Data:  3D B8 F3 96 00 00 00 00 00 02 00 00 E8 3C 00 00 ...
+T7F784740 001:568.823   completely In flash
+T7F784740 001:569.046   Old firmware which does not support pausing periodic actions during flash download
+T7F784740 001:569.060   CPU_ReadMem(4 bytes @ 0xE000ED90)
+T7F784740 001:569.476   CPU_ReadMem(4 bytes @ 0xE000ED94)
+T7F784740 001:569.901    -- --------------------------------------
+T7F784740 001:569.911    -- Flash bank @ 0x00000000: Default: L2 verify disabled because algorithm performs L1 verify
+T7F784740 001:569.917    -- Start of determining dirty areas in flash cache
+T7F784740 001:569.938    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00010000 if necessary
+T7F784740 001:569.944    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00012000 if necessary
+T7F784740 001:569.948    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00014000 if necessary
+T7F784740 001:569.952    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00016000 if necessary
+T7F784740 001:569.955    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00018000 if necessary
+T7F784740 001:569.959    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0001A000 if necessary
+T7F784740 001:569.964    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0001C000 if necessary
+T7F784740 001:569.967    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0001E000 if necessary
+T7F784740 001:569.970    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00020000 if necessary
+T7F784740 001:569.975    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00022000 if necessary
+T7F784740 001:569.987    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00024000 if necessary
+T7F784740 001:569.990    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00026000 if necessary
+T7F784740 001:569.994    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00028000 if necessary
+T7F784740 001:569.999    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0002A000 if necessary
+T7F784740 001:570.003    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0002C000 if necessary
+T7F784740 001:570.006    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0002E000 if necessary
+T7F784740 001:570.011    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00030000 if necessary
+T7F784740 001:570.014    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00032000 if necessary
+T7F784740 001:570.018    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00034000 if necessary
+T7F784740 001:570.023    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00036000 if necessary
+T7F784740 001:570.026    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00038000 if necessary
+T7F784740 001:570.030    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0003A000 if necessary
+T7F784740 001:570.037    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0003C000 if necessary
+T7F784740 001:570.040    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0003E000 if necessary
+T7F784740 001:570.044    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00040000 if necessary
+T7F784740 001:570.111    -- End of determining dirty areas
+T7F784740 001:570.115    -- Start of preparing flash programming
+T7F784740 001:570.119    -- Calculating RAM usage
+T7F784740 001:570.132    -- RAM usage = 10292 Bytes
+T7F784740 001:570.135    -- Preserving CPU registers
+T7F784740 001:570.152    -- Preparing target
+T7F784740 001:570.156    -- Preserving target RAM temporarily used for programming
+T7F784740 001:668.223    -- Downloading RAMCode
+T7F784740 001:699.741    -- Preparing RAMCode
+T7F784740 001:710.251    -- End of preparing flash programming
+T7F784740 001:710.257    -- CPU is running at 160000 kHz.
+T7F784740 001:710.260    -- Start of comparing flash
+T7F784740 001:710.263    -- CRC check was estimated as fastest method
+T7F784740 001:710.266    -- Comparing range 0x10000 - 0x2FFFF (16 Sectors, 128 KB), using multi-block CRC calculation
+T7F784740 001:717.385    -- CRC does not match for sectors 0-1
+T7F784740 001:717.389    -- Comparing range 0x30000 - 0x41FFF (9 Sectors, 72 KB), using multi-block CRC calculation
+T7F784740 001:722.122    -- CRC does not match for sector 8
+T7F784740 001:722.125    -- Comparing range 0x14000 - 0x33FFF (16 Sectors, 128 KB), using alternative multi-block CRC calculation
+T7F784740 001:729.760    -- All CRCs match
+T7F784740 001:729.779    -- Comparing range 0x34000 - 0x3FFFF (6 Sectors, 48 KB), using alternative multi-block CRC calculation
+T7F784740 001:733.456    -- All CRCs match
+T7F784740 001:733.459    -- End of comparing flash
+T7F784740 001:733.462    -- Start of erasing sectors
+T7F784740 001:733.464    -- Erasing range 0x00040000 - 0x00041FFF (  1 Sector, 8 KB)
+T7F784740 001:752.254    -- End of erasing sectors
+T7F784740 001:752.257    -- Start of flash programming
+T7F784740 001:752.259    -- Programming range 0x00010000 - 0x00013FFF (  2 Sectors, 16 KB)
+T7F784740 001:871.844    -- Programming range 0x00040000 - 0x00041FFF (  1 Sector, 8 KB)
+T7F784740 001:911.825    -- End of flash programming
+T7F784740 001:911.833    -- 0x10000 - 0x13FFF (  2 Sectors, 16 KB)
+T7F784740 001:911.837    -- 0x40000 - 0x41FFF (  1 Sector, 8 KB)
+T7F784740 001:911.841    -- Start of restoring
+T7F784740 001:911.845    -- Restoring RAMCode
+T7F784740 001:972.866    -- Restoring target memory
+T7F784740 002:069.066    -- Restore target
+T7F784740 002:069.090    -- Restoring CPU registers
+T7F784740 002:069.110    -- End of restoring
+T7F784740 002:069.126    -- Bank 0 @ 0x00000000: 2 ranges affected (24576 bytes)
+T7F784740 002:069.133    -- Total: 0.499s (Prepare: 0.140s, Compare: 0.023s, Erase: 0.018s, Program & Verify: 0.215s, Restore: 0.101s)
+T7F784740 002:069.138    -- Program & Verify speed: 111 KB/s
+T7F784740 002:069.359 - 500.785ms returns 0x00
+T7F784740 002:069.394 JLINK_ExecCommand("SetVerifyRAMDownload = 0", ...). 
+T7F784740 002:069.402 - 0.008ms returns 0x01
+T7F784740 002:069.447 JLINK_IsHalted()
+T7F784740 002:069.867 - 0.420ms returns TRUE
+T7F784740 002:069.873 JLINK_ReadMemEx_64(0x00010000, 0x32000 Bytes, ...)
+T7F784740 002:069.958    -- Read from flash cache (204800 bytes @ 0x00010000)
+T7F784740 002:069.962   Data:  3D B8 F3 96 00 00 00 00 00 02 00 00 E8 3C 00 00 ...
+T7F784740 002:069.963 - 0.090ms returns 204800 (0x32000)
+T7F784740 002:070.022 JLINK_SetResetDelay(0)
+T7F784740 002:070.025 - 0.002ms 
+T7F784740 002:070.026 JLINK_Reset()
+T7F784740 002:070.031   JLINK_GetResetTypeDesc
+T7F784740 002:070.032   - 0.002ms 
+T7F784740 002:070.035   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+T7F784740 002:070.037   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+T7F784740 002:070.447   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T7F784740 002:070.862   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+T7F784740 002:071.231   Reset: Reset device via AIRCR.SYSRESETREQ.
+T7F784740 002:071.236   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+T7F784740 002:124.342   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T7F784740 002:124.756   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T7F784740 002:125.167   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T7F784740 002:130.803   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T7F784740 002:135.523   CPU_WriteMem(4 bytes @ 0xE0002000)
+T7F784740 002:135.945   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T7F784740 002:136.385   CPU_ReadMem(4 bytes @ 0xE0001000)
+T7F784740 002:136.802 - 66.775ms 
+T7F784740 002:136.818 JLINK_GoEx(MaxEmulInsts = 0, Flags = 0x01)
+T7F784740 002:136.825   CPU_ReadMem(4 bytes @ 0xE0001000)
+T7F784740 002:137.226   CPU_WriteMem(4 bytes @ 0xE0001004)
+T7F784740 002:138.332   Memory map 'after startup completion point' is active
+T7F784740 002:138.345 - 1.526ms 
+T7F784740 012:138.444 JLINK_Halt()
+T7F784740 012:142.814 - 4.370ms returns 0x00
+T7F784740 012:142.819 JLINK_GetDeviceFamily
+T7F784740 012:142.821 - 0.001ms returns 14
+T7F784740 012:142.823 JLINK_CORE_GetFound()
+T7F784740 012:142.826 - 0.002ms returns 0xE0000FF
+T7F784740 012:142.828 JLINK_GetDebugInfo(0x01 = Unknown)
+T7F784740 012:142.831   Value=0x00000001
+T7F784740 012:142.833 - 0.005ms returns 0
+T7F784740 012:142.834 JLINK_ReadRegs(NumRegs = 28)
+T7F784740 012:142.849   CPU_ReadMem(4 bytes @ 0xE0001004)
+T7F784740 012:143.252   
+  R0 (0)         = 0x00                 R1 (1)         = 0x1000               R2 (2)         = 0x40054000           R3 (3)         = 0x01              
+  R4 (4)         = 0x8C795              R5 (5)         = 0x1FFF8034           R6 (6)         = 0x20000754           R7 (7)         = 0x1FFFBE98        
+  R8 (8)         = 0x62FC               R9 (9)         = 0x6A9C               R10 (10)       = 0x4102               R11 (11)       = 0x00              
+  R12 (12)       = 0x81                 R13 (SP) (13)  = 0x1FFF93C0           MSP (17)       = 0x1FFF93C0           PSP (18)       = 0xF5AEAC80        
+  R14 (14)       = 0x11F07              R15 (PC) (15)  = 0x1268E              XPSR (16)      = 0x61000000           APSR (21)      = 0x60000000        
+  EPSR (22)      = 0x1000000            IPSR (23)      = 0x00                 CFBP (20)      = 0x00                 CONTROL (27)   = 0x00              
+  FAULTMASK (26) = 0x00                 BASEPRI (25)   = 0x00                 PRIMASK (24)   = 0x00                 CycleCnt (65)  = 0x4EC35C3         
+T7F784740 012:143.256 - 0.422ms returns 0x00
+T7F784740 012:143.265 JLINK_ReadRegs(NumRegs = 33)
+T7F784740 012:150.090   
+  FPS0 (33)  = 0xEAE71737           FPS1 (34)  = 0xB82B4B42           FPS2 (35)  = 0x1D911C8F           FPS3 (36)  = 0xC93175A1        
+  FPS4 (37)  = 0xEFC05173           FPS5 (38)  = 0x2F8C98F8           FPS6 (39)  = 0xFBEFCF66           FPS7 (40)  = 0xD3EC769E        
+  FPS8 (41)  = 0xF34547AB           FPS9 (42)  = 0xF5B1B8A1           FPS10 (43) = 0x3F000000           FPS11 (44) = 0x3F800000        
+  FPS12 (45) = 0x45467000           FPS13 (46) = 0x424E0000           FPS14 (47) = 0x3C0316A9           FPS15 (48) = 0x33              
+  FPS16 (49) = 0x9F9FDC82           FPS17 (50) = 0xBEF4BECB           FPS18 (51) = 0x3B3FD1B0           FPS19 (52) = 0xE65DFA6A        
+  FPS20 (53) = 0x5BB1B45F           FPS21 (54) = 0xD7F3B79A           FPS22 (55) = 0x251ABB78           FPS23 (56) = 0x2DE6FFB5        
+  FPS24 (57) = 0x27D1C5A            FPS25 (58) = 0x5B9770EE           FPS26 (59) = 0x349E1A6A           FPS27 (60) = 0xECF189E0        
+  FPS28 (61) = 0xD3B4FFB4           FPS29 (62) = 0x601593B7           FPS30 (63) = 0x37BE90CF           FPS31 (64) = 0x8AE5FCF2        
+  FPSCR (32) = 0x00              
+T7F784740 012:150.103 - 6.838ms returns 0x00
+T7F784740 012:150.133 JLINK_ReadMemU32_64(0x1FFF8754, 0x2 Items)
+T7F784740 012:150.145   CPU_ReadMem(8 bytes @ 0x1FFF8754)
+T7F784740 012:150.584   Data:  00 00 00 00 00 01 00 00
+T7F784740 012:150.588 - 0.454ms returns 2 (0x2)
+T7F784740 012:150.589 JLINK_HasError()
+T7F784740 012:150.595 JLINK_ReadMemU32_64(0x1FFF834C, 0x2 Items)
+T7F784740 012:150.597   CPU_ReadMem(8 bytes @ 0x1FFF834C)
+T7F784740 012:151.012   Data:  00 00 00 00 00 00 00 00
+T7F784740 012:151.015 - 0.420ms returns 2 (0x2)
+T7F784740 012:151.016 JLINK_HasError()
+T7F784740 012:151.021 JLINK_GoEx(MaxEmulInsts = 0, Flags = 0x01)
+T7F784740 012:151.459   CPU_ReadMem(4 bytes @ 0xE0001000)
+T7F784740 012:152.480 - 1.459ms 
+T7F784740 012:152.486 JLINK_IsOpen()
+T7F784740 012:152.487 - 0.002ms returns 0x01
+T7F784740 012:157.912 JLINK_Close()
+T7F784740 012:174.820 - 16.907ms
+T7F784740 012:174.828   
+T7F784740 012:174.830   Closed

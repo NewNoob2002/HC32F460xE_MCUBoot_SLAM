@@ -4,9 +4,11 @@ Audit date: 2026-08-26
 
 Audited baseline revision: `9d29ee9843c711d7f853d7c24a7df58be8e8e1e9`
 
-Phase 3/G3 passed on 2026-08-26. Source revision `e7899bd`, immutable Host
-Evidence revision `515d0c5` and GitHub Actions CI run `32948384485` form the
-accepted gate record. Phase 4 remains NOT_STARTED.
+Phase 3/G3 passed on 2026-08-26. Phase 4 source revision `93c9c04` and GitHub
+Actions CI run `33026124061` passed local/remote build and test checks. Retained
+HIL evidence records USB enumeration, 10,000 loopback transfers, target counters
+and exact restoration. Phase 4/G4 is `READY_FOR_REVIEW`, not `PASSED`; the
+30-minute run and 10 manual unplug/re-enumeration cycles remain.
 
 This document describes the repository as implemented. Historical milestone documents are supporting evidence, not the source of truth for current code.
 
@@ -51,13 +53,14 @@ Sources: `CMakeLists.txt`, `Drivers/CMakeLists.txt`, `Platform/CMakeLists.txt`, 
 | `components/fw_update/` | Portable Storage/Boot-Control contracts, Protocol V1 codec/parser, receive/verification Manager and MCUboot backends | Core is host-buildable and dependency-checked; MCUboot backend is intentionally non-portable |
 | `Platform/HC32F460/` | Clock, Flash, startup support and boot handover | Intentionally HC32-specific |
 | `Drivers/` | CMSIS/device/LL libraries and Boot/App startup objects | HC32-specific |
-| `Tests/` | Nine strict HostTests, Golden Vector verifier, fixed-seed malformed corpus, portable dependency check and reusable HIL assets | Phase 4 USB stack/HIL coverage remains |
+| `Tests/` | Eleven strict HostTests, Golden Vector verifier, fixed-seed malformed corpus, USB boundary check and reusable HIL assets | Long-duration and repeated USB re-enumeration coverage remains |
 | `cmake/` | Memory map, toolchain/options, signing and artifacts | Project/HC32 build policy |
 
 There is now a bounded portable `fw_update` Storage/Boot-Control foundation,
 Protocol V1 codec/parser and Manager lifecycle through sequence/replay, receive,
 verification, COMMIT and an emitted RESET action. Production Application glue,
-Transport, USB, UART, CAN and the host updater are not implemented.
+The Phase 4 diagnostic USB Vendor Bulk loopback is implemented. Production
+updater transport binding, UART, CAN and the host updater are not implemented.
 
 ## Flash layout
 
@@ -147,6 +150,10 @@ Repository entry points:
   receive/readback verification, single-effect COMMIT and TX-drain/TX-idle RESET
   action lifecycle.
 - Fixed-seed 10,000-case malformed parser corpus under ASan/UBSan.
+- CherryUSB device core subset, HC32F460 USB DCD, bounded Vendor Bulk loopback
+  firmware and a libusb host loopback tool.
+- Retained HC32 HIL evidence for USB enumeration, 10,000 mixed-length transfers,
+  target counters and exact post-test restoration.
 
 ### Partially implemented
 
@@ -160,8 +167,8 @@ Repository entry points:
 ### Not implemented
 
 - Production Transport C contract/implementations and Application orchestration.
-- USB Vendor Bulk, CherryUSB, HC32 USB DCD, UART, CAN or CAN FD.
-- Host updater tool and device discovery.
+- Production USB updater transport binding, UART, CAN or CAN FD.
+- Host firmware updater and production device discovery.
 - Download resume, Host retry policy and transfer recovery after reset.
 - Runtime App wiring that invokes the portable Manager against real time,
   Transport, MCUboot backend and platform reset.
@@ -174,12 +181,12 @@ MCUboot's upstream ability to validate or swap an image is not evidence that thi
 
 | Level | Current coverage | Main gap |
 | --- | --- | --- |
-| Host unit | Memory/Flash map, handover, confirmation, fw_update contracts/backends, Protocol codec/parser, 10,000-case corpus and Manager reliability/receive/verify/COMMIT/reset lifecycle with fault injection | No production App/Transport integration exists |
+| Host unit | Memory/Flash map, handover, confirmation, fw_update contracts/backends, Protocol codec/parser, 10,000-case corpus, Manager lifecycle and USB boundary checks | No production App/updater transport integration exists |
 | Component integration | MCUboot Flash backend with mocked BSP Flash plus Storage/Boot-Control backend fakes | No full `boot_go()` host integration or Flash power-loss model |
 | Firmware build | Debug/Release, image signing/verification, layout and key policy in CI | No size regression threshold beyond partition/link failure |
-| HIL/manual | Boot/swap/revert/confirmation plus Phase 2 Secondary erase/boundary readback, Pending trailer and exact restoration | No runtime transfer or reset/power loss during individual operations |
+| HIL/manual | Boot/swap/revert/confirmation, Phase 2 Storage/Boot-Control, and Phase 4 USB enumeration plus 10,000 mixed-length loopbacks with exact restoration | 30-minute USB run, 10 unplug/re-enumeration cycles and reset/power-loss matrices remain |
 | Fault injection | Unconfirmed test boot followed by reset/revert | No erase/write failure, corrupted trailer or interrupted swap matrix |
-| CI | Evidence checksum, nine strict HostTests, portable dependency rule, firmware builds/signing; G3 evidence revision passed CI `32948384485` | No USB stack or runtime update E2E CI/HIL yet |
+| CI | Evidence checksums, eleven strict HostTests, USB boundary rule and Debug/Release builds/signing; Phase 4 source passed CI `33026124061` | No physical USB or runtime update E2E in hosted CI |
 
 The largest current delivery gap is production Application/Transport integration.
 The largest baseline reliability gap remains systematic
@@ -217,9 +224,9 @@ No P0 defect was identified in the protected baseline. A new P0 is any path that
 
 ## Baseline conclusion
 
-The minimal compile/build/sign/boot/swap/rollback/confirmation baseline and the
-Phase 2 Secondary Storage/Boot-Control foundation are complete and CI/HIL
-evidenced. Phase 3 portable Protocol/Manager implementation and tracked Host
-Evidence passed G3. The full runtime firmware-update framework is not implemented;
-the next permitted activity is Phase 4 planning/review, not concurrent USB/UART/
-CAN implementation.
+The baseline, Phase 2 Storage/Boot-Control foundation and Phase 3 portable
+Protocol/Manager are CI/HIL evidenced. Phase 4 now has a bounded CherryUSB/HC32
+USB loopback implementation with successful 10,000-transfer HIL and exact
+restoration. G4 remains `READY_FOR_REVIEW` until the 30-minute continuous run
+and 10 manual unplug/re-enumeration cycles pass. The production runtime updater
+path is not implemented.

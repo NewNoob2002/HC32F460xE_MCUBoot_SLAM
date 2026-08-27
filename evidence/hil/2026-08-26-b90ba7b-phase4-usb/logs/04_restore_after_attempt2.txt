@@ -1,0 +1,419 @@
+T55AEA740 000:001.888   SEGGER J-Link V9.70 Log File
+T55AEA740 000:001.946   DLL Compiled: Aug 19 2026 12:15:25
+T55AEA740 000:001.948   Logging started @ 2026-08-26 15:40
+T55AEA740 000:001.949   Process: /opt/SEGGER/JLink_V970/JLinkExe
+T55AEA740 000:001.951 - 1.950ms 
+T55AEA740 000:001.966 JLINK_EMU_SelectByUSBSN(SerialNo = 63728710)
+T55AEA740 000:012.119 - 10.152ms returns 0x00
+T55AEA740 000:012.136 JLINK_SetWarnOutHandler(...)
+T55AEA740 000:012.138 - 0.003ms 
+T55AEA740 000:012.149 JLINK_ExecCommand("SuppressGUI = 1", ...). 
+T55AEA740 000:012.151 - 0.002ms returns 0x00
+T55AEA740 000:012.167 JLINK_OpenEx(...)
+T55AEA740 000:014.495   Firmware: J-Link OB-Mini Plus-CortexM compiled Mar  8 2099 11:15:54
+T55AEA740 000:015.059   Firmware: J-Link OB-Mini Plus-CortexM compiled Mar  8 2099 11:15:54
+T55AEA740 000:019.188   Hardware: V1.00
+T55AEA740 000:019.191   S/N: 63728710
+T55AEA740 000:019.194   OEM: SEGGER
+T55AEA740 000:019.195   Feature(s): GDB, RDI, FlashBP, FlashDL, JFlash
+T55AEA740 000:019.659   Bootloader: (FW returned invalid version)
+T55AEA740 000:020.416   TELNET listener socket opened on port 19021
+T55AEA740 000:020.441 - 8.274ms returns "O.K."
+T55AEA740 000:020.448 JLINK_SetFlashProgProgressCallback(...)
+T55AEA740 000:020.450 - 0.001ms 
+T55AEA740 000:020.451 JLINK_GetFirmwareString(...)
+T55AEA740 000:020.452 - 0.001ms 
+T55AEA740 000:020.456 JLINK_GetHardwareVersion()
+T55AEA740 000:020.457 - 0.002ms returns 10000
+T55AEA740 000:020.461 JLINK_GetHWInfoEx(...)
+T55AEA740 000:020.613 - 0.152ms returns 0
+T55AEA740 000:020.617 JLINK_GetSN()
+T55AEA740 000:020.618 - 0.001ms returns 63728710
+T55AEA740 000:020.621 JLINK_GetAvailableLicense()
+T55AEA740 000:028.235 - 7.614ms returns 0x05
+T55AEA740 000:028.247 JLINK_GetOEMString(...)
+T55AEA740 000:028.250 JLINK_EMU_GetCurrConnectionInfo()
+T55AEA740 000:028.421 - 0.171ms returns 0
+T55AEA740 000:028.424 JLINK_EMU_HasCapEx(0x00000026)
+T55AEA740 000:028.426 - 0.002ms returns 0
+T55AEA740 000:028.428 JLINK_GetEmuCaps()
+T55AEA740 000:028.429 - 0.001ms returns 0xB8EA5A33
+T55AEA740 000:028.430 JLINK_GetEmuCaps()
+T55AEA740 000:028.432 - 0.001ms returns 0xB8EA5A33
+T55AEA740 000:028.433 JLINK_GetHWStatus(...)
+T55AEA740 000:028.574 - 0.141ms returns 0
+T55AEA740 000:028.577 JLINK_EMU_HasCapEx(0x00000044)
+T55AEA740 000:028.578 - 0.001ms returns 0
+T55AEA740 000:028.585 JLINK_TIF_GetAvailable(...)
+T55AEA740 000:028.733 - 0.148ms 
+T55AEA740 000:028.743 JLINK_DEVICE_GetIndex(sDeviceName = HC32F460xE)
+T55AEA740 000:036.800 - 8.057ms returns 14308
+T55AEA740 000:036.809 JLINK_ExecCommand("device=HC32F460xE", ...). 
+T55AEA740 000:037.909   Device "HC32F460XE" selected.
+T55AEA740 000:038.716 - 1.906ms returns 0x00
+T55AEA740 000:038.721 JLINK_EnableLog(...)
+T55AEA740 000:038.722 - 0.002ms 
+T55AEA740 000:038.725 JLINK_GetEmuCaps()
+T55AEA740 000:038.728 - 0.002ms returns 0xB8EA5A33
+T55AEA740 000:038.729 JLINK_TIF_GetAvailable(...)
+T55AEA740 000:038.882 - 0.153ms 
+T55AEA740 000:038.885 JLINK_TIF_Select(JLINKARM_TIF_SWD)
+T55AEA740 000:039.368 - 0.483ms returns 0x00
+T55AEA740 000:039.374 JLINK_IsConnected()
+T55AEA740 000:039.376 - 0.002ms returns FALSE
+T55AEA740 000:039.378 JLINK_SetSpeed(4000)
+T55AEA740 000:039.455 - 0.078ms 
+T55AEA740 000:039.458 JLINK_Connect()
+T55AEA740 000:040.194   Found SW-DP with ID 0x2BA01477
+T55AEA740 000:043.498   Old FW that does not support reading DPIDR via DAP jobs
+T55AEA740 000:046.841   DPv0 detected
+T55AEA740 000:046.850   CoreSight SoC-400 or earlier
+T55AEA740 000:046.854   Scanning AP map to find all available APs
+T55AEA740 000:049.035   AP[1]: Stopped AP scan as end of AP map has been reached
+T55AEA740 000:049.038   AP[0]: AHB-AP (IDR: 0x24770011, ADDR: 0x00000000)
+T55AEA740 000:049.041   Iterating through AP map to find AHB-AP to use
+T55AEA740 000:052.659   AP[0]: Core found
+T55AEA740 000:052.667   AP[0]: AHB-AP ROM base: 0xE00FF000
+T55AEA740 000:054.504   CPUID register: 0x410FC241. Implementer code: 0x41 (ARM)
+T55AEA740 000:054.509   Found Cortex-M4 r0p1, Little endian.
+T55AEA740 000:054.777   -- Max. mem block: 0x00002220
+T55AEA740 000:055.271   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T55AEA740 000:055.654   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+T55AEA740 000:056.103   CPU_ReadMem(4 bytes @ 0xE0002000)
+T55AEA740 000:056.493   FPUnit: 6 code (BP) slots and 2 literal slots
+T55AEA740 000:056.496   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T55AEA740 000:056.878   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T55AEA740 000:057.273   CPU_ReadMem(4 bytes @ 0xE0001000)
+T55AEA740 000:057.647   CPU_WriteMem(4 bytes @ 0xE0001000)
+T55AEA740 000:058.102   CPU_ReadMem(4 bytes @ 0xE000ED88)
+T55AEA740 000:058.492   CPU_WriteMem(4 bytes @ 0xE000ED88)
+T55AEA740 000:058.882   CPU_ReadMem(4 bytes @ 0xE000ED88)
+T55AEA740 000:059.291   CPU_WriteMem(4 bytes @ 0xE000ED88)
+T55AEA740 000:059.678   CoreSight components:
+T55AEA740 000:059.682   ROMTbl[0] @ E00FF000
+T55AEA740 000:059.684   CPU_ReadMem(64 bytes @ 0xE00FF000)
+T55AEA740 000:060.638   CPU_ReadMem(32 bytes @ 0xE000EFE0)
+T55AEA740 000:061.284   [0][0]: E000E000 CID B105E00D PID 000BB00C SCS-M7
+T55AEA740 000:061.287   CPU_ReadMem(32 bytes @ 0xE0001FE0)
+T55AEA740 000:061.940   [0][1]: E0001000 CID B105E00D PID 003BB002 DWT
+T55AEA740 000:061.942   CPU_ReadMem(32 bytes @ 0xE0002FE0)
+T55AEA740 000:062.598   [0][2]: E0002000 CID B105E00D PID 002BB003 FPB
+T55AEA740 000:062.600   CPU_ReadMem(32 bytes @ 0xE0000FE0)
+T55AEA740 000:063.243   [0][3]: E0000000 CID B105E00D PID 003BB001 ITM
+T55AEA740 000:063.246   CPU_ReadMem(32 bytes @ 0xE0040FE0)
+T55AEA740 000:063.894   [0][4]: E0040000 CID B105900D PID 000BB9A1 TPIU
+T55AEA740 000:063.906 - 24.448ms returns 0x00
+T55AEA740 000:063.911 JLINK_GetIdData(pIdData)
+T55AEA740 000:064.283   pIdData->ScanLen=4
+T55AEA740 000:064.286   pIdData->NumDevices=1
+T55AEA740 000:064.288   pIdData->aId[0]=0x2BA01477
+T55AEA740 000:064.290   pIdData->aIrRead[0]=0
+T55AEA740 000:064.291   pIdData->aScanLen[0]=0
+T55AEA740 000:064.293   pIdData->aScanRead[0]=0
+T55AEA740 000:064.295 - 0.383ms 
+T55AEA740 000:064.297 JLINK_GetMemZones(...)
+T55AEA740 000:064.298 - 0.001ms returns 1
+T55AEA740 000:064.302 JLINK_HasError()
+T55AEA740 000:064.304 JLINK_CORE_GetFound()
+T55AEA740 000:064.306 - 0.001ms returns 0xE0000FF
+T55AEA740 000:064.325 JLINK_Halt()
+T55AEA740 000:068.570 - 4.244ms returns 0x00
+T55AEA740 000:068.590 JLINK_GetDeviceFamily
+T55AEA740 000:068.594 - 0.004ms returns 14
+T55AEA740 000:068.597 JLINK_CORE_GetFound()
+T55AEA740 000:068.599 - 0.002ms returns 0xE0000FF
+T55AEA740 000:068.603 JLINK_GetDebugInfo(0x01 = Unknown)
+T55AEA740 000:068.607   Value=0x00000001
+T55AEA740 000:068.611 - 0.007ms returns 0
+T55AEA740 000:068.614 JLINK_ReadRegs(NumRegs = 28)
+T55AEA740 000:068.635   CPU_ReadMem(4 bytes @ 0xE0001004)
+T55AEA740 000:069.107   
+  R0 (0)         = 0xFFFFFFFF           R1 (1)         = 0x1000               R2 (2)         = 0x1FFF8758           R3 (3)         = 0x1FFF8754        
+  R4 (4)         = 0xE000E100           R5 (5)         = 0xFFFFFFFF           R6 (6)         = 0x20000754           R7 (7)         = 0x1FFFBE80        
+  R8 (8)         = 0x62FC               R9 (9)         = 0x6A9C               R10 (10)       = 0x4102               R11 (11)       = 0x00              
+  R12 (12)       = 0x81                 R13 (SP) (13)  = 0x1FFF9420           MSP (17)       = 0x1FFF9420           PSP (18)       = 0xF5AEAC80        
+  R14 (14)       = 0x12575              R15 (PC) (15)  = 0x11A34              XPSR (16)      = 0xA1000000           APSR (21)      = 0xA0000000        
+  EPSR (22)      = 0x1000000            IPSR (23)      = 0x00                 CFBP (20)      = 0x00                 CONTROL (27)   = 0x00              
+  FAULTMASK (26) = 0x00                 BASEPRI (25)   = 0x00                 PRIMASK (24)   = 0x00                 CycleCnt (65)  = 0xEC7A67B         
+T55AEA740 000:069.113 - 0.499ms returns 0x00
+T55AEA740 000:069.127 JLINK_ReadRegs(NumRegs = 33)
+T55AEA740 000:075.931   
+  FPS0 (33)  = 0xEAE71737           FPS1 (34)  = 0xB82B4B42           FPS2 (35)  = 0x1D911C8F           FPS3 (36)  = 0xC93175A1        
+  FPS4 (37)  = 0xEFC05173           FPS5 (38)  = 0x2F8C98F8           FPS6 (39)  = 0xFBEFCF66           FPS7 (40)  = 0xD3EC769E        
+  FPS8 (41)  = 0xF34547AB           FPS9 (42)  = 0xF5B1B8A1           FPS10 (43) = 0x3F000000           FPS11 (44) = 0x3F800000        
+  FPS12 (45) = 0x45467000           FPS13 (46) = 0x424E0000           FPS14 (47) = 0x3C0316A9           FPS15 (48) = 0x33              
+  FPS16 (49) = 0x9F9FDC82           FPS17 (50) = 0xBEF4BECB           FPS18 (51) = 0x3B3FD1B0           FPS19 (52) = 0xE65DFA6A        
+  FPS20 (53) = 0x5BB1B45F           FPS21 (54) = 0xD7F3B79A           FPS22 (55) = 0x251ABB78           FPS23 (56) = 0x2DE6FFB5        
+  FPS24 (57) = 0x27D1C5A            FPS25 (58) = 0x5B9770EE           FPS26 (59) = 0x349E1A6A           FPS27 (60) = 0xECF189E0        
+  FPS28 (61) = 0xD3B4FFB4           FPS29 (62) = 0x601593B7           FPS30 (63) = 0x37BE90CF           FPS31 (64) = 0x8AE5FCF2        
+  FPSCR (32) = 0x00              
+T55AEA740 000:075.939 - 6.811ms returns 0x00
+T55AEA740 000:075.949 JLINK_DEVICE_GetIndex(sDeviceName = <NULL>)
+T55AEA740 000:075.950 - 0.001ms returns 14308
+T55AEA740 000:075.952 JLINK_Reset()
+T55AEA740 000:075.959   JLINK_GetResetTypeDesc
+T55AEA740 000:075.961   - 0.002ms 
+T55AEA740 000:075.963   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+T55AEA740 000:075.966   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+T55AEA740 000:076.363   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T55AEA740 000:076.759   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+T55AEA740 000:077.139   Reset: Reset device via AIRCR.SYSRESETREQ.
+T55AEA740 000:077.142   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+T55AEA740 000:129.883   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T55AEA740 000:130.320   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T55AEA740 000:130.732   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T55AEA740 000:136.366   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T55AEA740 000:141.025   CPU_WriteMem(4 bytes @ 0xE0002000)
+T55AEA740 000:141.441   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T55AEA740 000:141.827   CPU_ReadMem(4 bytes @ 0xE0001000)
+T55AEA740 000:142.206 - 66.254ms 
+T55AEA740 000:142.212 JLINK_Halt()
+T55AEA740 000:142.215 - 0.002ms returns 0x00
+T55AEA740 000:142.222 JLINK_Erase()
+T55AEA740 000:142.372   Old firmware which does not support pausing periodic actions during flash download
+T55AEA740 000:142.377   CPU_ReadMem(4 bytes @ 0xE000ED90)
+T55AEA740 000:142.752   CPU_ReadMem(4 bytes @ 0xE000ED94)
+T55AEA740 000:143.127    -- --------------------------------------
+T55AEA740 000:143.135    -- Start of determining dirty areas
+T55AEA740 000:143.152    -- End of determining dirty areas
+T55AEA740 000:143.155    -- Start of preparing flash programming
+T55AEA740 000:143.157    -- Calculating RAM usage
+T55AEA740 000:143.168    -- RAM usage = 10292 Bytes
+T55AEA740 000:143.170    -- Preserving CPU registers
+T55AEA740 000:143.181    -- Preparing target
+T55AEA740 000:143.184    -- Preserving target RAM temporarily used for programming
+T55AEA740 000:241.297    -- Downloading RAMCode
+T55AEA740 000:272.885    -- Preparing RAMCode
+T55AEA740 000:283.387    -- End of preparing flash programming
+T55AEA740 000:283.392    -- CPU is running at 160000 kHz.
+T55AEA740 000:283.394    -- Start of erasing sectors
+T55AEA740 000:283.397    -- Erasing range 0x00000000 - 0x0001FFFF ( 16 Sectors, 128 KB)
+T55AEA740 000:565.802    -- Erasing range 0x00020000 - 0x0003FFFF ( 16 Sectors, 128 KB)
+T55AEA740 000:848.373    -- Erasing range 0x00040000 - 0x0005FFFF ( 16 Sectors, 128 KB)
+T55AEA740 001:130.622    -- Erasing range 0x00060000 - 0x00075FFF ( 11 Sectors, 88 KB)
+T55AEA740 001:325.256    -- End of erasing sectors
+T55AEA740 001:325.272    -- Start of restoring
+T55AEA740 001:325.274    -- Restoring RAMCode
+T55AEA740 001:330.940    -- Restoring target memory
+T55AEA740 001:427.179    -- Restore target
+T55AEA740 001:427.212    -- Restoring CPU registers
+T55AEA740 001:427.232    -- End of restoring
+T55AEA740 001:427.243    -- Total time needed: 1.284s (Prepare: 0.140s, Compare: 0.000s, Erase: 1.041s, Program: 0.000s, Verify: 0.000s, Restore: 0.101s)
+T55AEA740 001:428.805    -- 
+Flash sectors within Range [0x00000000 - 0x00075FFF] deleted.
+T55AEA740 001:429.011 - 1286.788ms returns 0
+T55AEA740 001:429.031 JLINK_Reset()
+T55AEA740 001:429.038   JLINK_GetResetTypeDesc
+T55AEA740 001:429.040   - 0.001ms 
+T55AEA740 001:429.042   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+T55AEA740 001:429.047   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+T55AEA740 001:429.511   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T55AEA740 001:429.922   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+T55AEA740 001:430.307   Reset: Reset device via AIRCR.SYSRESETREQ.
+T55AEA740 001:430.312   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+T55AEA740 001:483.660   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T55AEA740 001:484.104   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T55AEA740 001:484.877   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T55AEA740 001:490.518   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T55AEA740 001:495.163   CPU_WriteMem(4 bytes @ 0xE0002000)
+T55AEA740 001:495.616   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T55AEA740 001:495.990   CPU_ReadMem(4 bytes @ 0xE0001000)
+T55AEA740 001:496.426 - 67.395ms 
+T55AEA740 001:496.430 JLINK_Halt()
+T55AEA740 001:496.432 - 0.002ms returns 0x00
+T55AEA740 001:496.440 JLINK_ExecCommand("SetVerifyRAMDownload = 1", ...). 
+T55AEA740 001:496.444 - 0.004ms returns 0x00
+T55AEA740 001:496.833 JLINK_DownloadFile(sFile = /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase4-usb/backup/pre_hil_00000000_00075fff.bin)
+T55AEA740 001:497.043   Data:  F0 BE FF 1F FD 3C 00 00 21 29 00 00 29 29 00 00 ...
+T55AEA740 001:497.357   completely In flash
+T55AEA740 001:497.371   Data:  FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF ...
+T55AEA740 001:497.427   completely In flash
+T55AEA740 001:497.612   Old firmware which does not support pausing periodic actions during flash download
+T55AEA740 001:497.616   CPU_ReadMem(4 bytes @ 0xE000ED90)
+T55AEA740 001:497.990   CPU_ReadMem(4 bytes @ 0xE000ED94)
+T55AEA740 001:498.422    -- --------------------------------------
+T55AEA740 001:498.425    -- Flash bank @ 0x00000000: Default: L2 verify disabled because algorithm performs L1 verify
+T55AEA740 001:498.428    -- Start of determining dirty areas in flash cache
+T55AEA740 001:498.431    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00000000 if necessary
+T55AEA740 001:498.433    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00002000 if necessary
+T55AEA740 001:498.434    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00004000 if necessary
+T55AEA740 001:498.436    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00006000 if necessary
+T55AEA740 001:498.438    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00008000 if necessary
+T55AEA740 001:498.440    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0000A000 if necessary
+T55AEA740 001:498.442    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0000C000 if necessary
+T55AEA740 001:498.444    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0000E000 if necessary
+T55AEA740 001:498.446    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00010000 if necessary
+T55AEA740 001:498.447    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00012000 if necessary
+T55AEA740 001:498.450    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00014000 if necessary
+T55AEA740 001:498.453    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00016000 if necessary
+T55AEA740 001:498.455    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00018000 if necessary
+T55AEA740 001:498.456    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0001A000 if necessary
+T55AEA740 001:498.458    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0001C000 if necessary
+T55AEA740 001:498.460    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0001E000 if necessary
+T55AEA740 001:498.466    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00020000 if necessary
+T55AEA740 001:498.468    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00022000 if necessary
+T55AEA740 001:498.470    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00024000 if necessary
+T55AEA740 001:498.472    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00026000 if necessary
+T55AEA740 001:498.474    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00028000 if necessary
+T55AEA740 001:498.475    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0002A000 if necessary
+T55AEA740 001:498.477    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0002C000 if necessary
+T55AEA740 001:498.479    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0002E000 if necessary
+T55AEA740 001:498.480    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00030000 if necessary
+T55AEA740 001:498.482    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00032000 if necessary
+T55AEA740 001:498.484    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00034000 if necessary
+T55AEA740 001:498.485    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00036000 if necessary
+T55AEA740 001:498.487    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00038000 if necessary
+T55AEA740 001:498.489    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0003A000 if necessary
+T55AEA740 001:498.490    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0003C000 if necessary
+T55AEA740 001:498.492    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0003E000 if necessary
+T55AEA740 001:498.494    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00040000 if necessary
+T55AEA740 001:498.495    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00042000 if necessary
+T55AEA740 001:498.497    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00044000 if necessary
+T55AEA740 001:498.499    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00046000 if necessary
+T55AEA740 001:498.501    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00048000 if necessary
+T55AEA740 001:498.503    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0004A000 if necessary
+T55AEA740 001:498.504    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0004C000 if necessary
+T55AEA740 001:498.506    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0004E000 if necessary
+T55AEA740 001:498.508    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00050000 if necessary
+T55AEA740 001:498.510    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00052000 if necessary
+T55AEA740 001:498.511    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00054000 if necessary
+T55AEA740 001:498.513    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00056000 if necessary
+T55AEA740 001:498.515    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00058000 if necessary
+T55AEA740 001:498.516    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0005A000 if necessary
+T55AEA740 001:498.518    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0005C000 if necessary
+T55AEA740 001:498.520    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0005E000 if necessary
+T55AEA740 001:498.522    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00060000 if necessary
+T55AEA740 001:498.523    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00062000 if necessary
+T55AEA740 001:498.526    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00064000 if necessary
+T55AEA740 001:498.529    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00066000 if necessary
+T55AEA740 001:498.531    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00068000 if necessary
+T55AEA740 001:498.532    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0006A000 if necessary
+T55AEA740 001:498.534    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0006C000 if necessary
+T55AEA740 001:498.536    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0006E000 if necessary
+T55AEA740 001:498.537    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00070000 if necessary
+T55AEA740 001:498.539    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00072000 if necessary
+T55AEA740 001:498.542    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00074000 if necessary
+T55AEA740 001:498.549    -- End of determining dirty areas
+T55AEA740 001:498.551    -- Start of preparing flash programming
+T55AEA740 001:498.553    -- Calculating RAM usage
+T55AEA740 001:498.562    -- RAM usage = 10292 Bytes
+T55AEA740 001:498.564    -- Preserving CPU registers
+T55AEA740 001:498.573    -- Preparing target
+T55AEA740 001:498.575    -- Preserving target RAM temporarily used for programming
+T55AEA740 001:596.680    -- Downloading RAMCode
+T55AEA740 001:628.546    -- Preparing RAMCode
+T55AEA740 001:636.592    -- End of preparing flash programming
+T55AEA740 001:636.617    -- CPU is running at 160000 kHz.
+T55AEA740 001:636.620    -- Start of comparing flash
+T55AEA740 001:636.623    -- CRC check was estimated as fastest method
+T55AEA740 001:636.627    -- Comparing range 0x0000 - 0x1FFFF (16 Sectors, 128 KB), using multi-block CRC calculation
+T55AEA740 001:673.910    -- CRC does not match for sectors 0-3
+T55AEA740 001:673.926    -- Comparing range 0x20000 - 0x3FFFF (16 Sectors, 128 KB), using multi-block CRC calculation
+T55AEA740 001:711.292    -- All CRCs match
+T55AEA740 001:711.307    -- Comparing range 0x40000 - 0x5FFFF (16 Sectors, 128 KB), using multi-block CRC calculation
+T55AEA740 001:748.730    -- All CRCs match
+T55AEA740 001:748.753    -- Comparing range 0x60000 - 0x75FFF (11 Sectors, 88 KB), using multi-block CRC calculation
+T55AEA740 001:775.070    -- All CRCs match
+T55AEA740 001:775.082    -- Comparing range 0x8000 - 0x27FFF (16 Sectors, 128 KB), using alternative multi-block CRC calculation
+T55AEA740 001:812.348    -- All CRCs match
+T55AEA740 001:812.353    -- Comparing range 0x28000 - 0x47FFF (16 Sectors, 128 KB), using alternative multi-block CRC calculation
+T55AEA740 001:849.740    -- All CRCs match
+T55AEA740 001:849.765    -- Comparing range 0x48000 - 0x67FFF (16 Sectors, 128 KB), using alternative multi-block CRC calculation
+T55AEA740 001:887.272    -- All CRCs match
+T55AEA740 001:887.282    -- Comparing range 0x68000 - 0x75FFF (7 Sectors, 56 KB), using alternative multi-block CRC calculation
+T55AEA740 001:904.711    -- All CRCs match
+T55AEA740 001:904.732    -- End of comparing flash
+T55AEA740 001:904.738    -- Start of erasing sectors
+T55AEA740 001:904.744    -- Erasing range 0x00006000 - 0x00007FFF (  1 Sector, 8 KB)
+T55AEA740 001:923.825    -- End of erasing sectors
+T55AEA740 001:923.838    -- Start of flash programming
+T55AEA740 001:923.843    -- Programming range 0x00000000 - 0x00007FFF (  4 Sectors, 32 KB)
+T55AEA740 002:163.506    -- End of flash programming
+T55AEA740 002:163.539    -- 0x0000 - 0x7FFF (  4 Sectors, 32 KB)
+T55AEA740 002:163.544    -- Start of restoring
+T55AEA740 002:163.549    -- Restoring RAMCode
+T55AEA740 002:235.257    -- Restoring target memory
+T55AEA740 002:331.504    -- Restore target
+T55AEA740 002:331.524    -- Restoring CPU registers
+T55AEA740 002:331.543    -- End of restoring
+T55AEA740 002:331.571    -- Bank 0 @ 0x00000000: 1 range affected (32768 bytes)
+T55AEA740 002:331.578    -- Total: 0.833s (Prepare: 0.138s, Compare: 0.268s, Erase: 0.019s, Program & Verify: 0.306s, Restore: 0.101s)
+T55AEA740 002:331.584    -- Program & Verify speed: 104 KB/s
+T55AEA740 002:331.773 - 834.939ms returns 0x00
+T55AEA740 002:331.785 JLINK_ExecCommand("SetVerifyRAMDownload = 0", ...). 
+T55AEA740 002:331.791 - 0.006ms returns 0x01
+T55AEA740 002:331.885 JLINK_IsHalted()
+T55AEA740 002:332.300 - 0.415ms returns TRUE
+T55AEA740 002:332.304 JLINK_ReadMemEx_64(0x00000000, 0x76000 Bytes, ...)
+T55AEA740 002:332.589    -- Read from flash cache (483328 bytes @ 0x00000000)
+T55AEA740 002:332.593   Data:  F0 BE FF 1F FD 3C 00 00 21 29 00 00 29 29 00 00 ...
+T55AEA740 002:332.595 - 0.291ms returns 483328 (0x76000)
+T55AEA740 002:332.719 JLINK_SetResetDelay(0)
+T55AEA740 002:332.724 - 0.004ms 
+T55AEA740 002:332.726 JLINK_Reset()
+T55AEA740 002:332.732   JLINK_GetResetTypeDesc
+T55AEA740 002:332.734   - 0.002ms 
+T55AEA740 002:332.737   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+T55AEA740 002:332.740   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+T55AEA740 002:333.155   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T55AEA740 002:333.550   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+T55AEA740 002:333.918   Reset: Reset device via AIRCR.SYSRESETREQ.
+T55AEA740 002:333.922   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+T55AEA740 002:386.987   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T55AEA740 002:387.405   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T55AEA740 002:387.800   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+T55AEA740 002:393.412   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+T55AEA740 002:398.109   CPU_WriteMem(4 bytes @ 0xE0002000)
+T55AEA740 002:398.504   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+T55AEA740 002:398.905   CPU_ReadMem(4 bytes @ 0xE0001000)
+T55AEA740 002:399.285 - 66.559ms 
+T55AEA740 002:399.295 JLINK_GoEx(MaxEmulInsts = 0, Flags = 0x01)
+T55AEA740 002:399.299   CPU_ReadMem(4 bytes @ 0xE0001000)
+T55AEA740 002:399.737   CPU_WriteMem(4 bytes @ 0xE0001004)
+T55AEA740 002:400.789   Memory map 'after startup completion point' is active
+T55AEA740 002:400.791 - 1.496ms 
+T55AEA740 005:400.868 JLINK_Halt()
+T55AEA740 005:405.227 - 4.359ms returns 0x00
+T55AEA740 005:405.236 JLINK_GetDeviceFamily
+T55AEA740 005:405.239 - 0.003ms returns 14
+T55AEA740 005:405.242 JLINK_CORE_GetFound()
+T55AEA740 005:405.245 - 0.002ms returns 0xE0000FF
+T55AEA740 005:405.248 JLINK_GetDebugInfo(0x01 = Unknown)
+T55AEA740 005:405.252   Value=0x00000001
+T55AEA740 005:405.256 - 0.009ms returns 0
+T55AEA740 005:405.259 JLINK_ReadRegs(NumRegs = 28)
+T55AEA740 005:405.280   CPU_ReadMem(4 bytes @ 0xE0001004)
+T55AEA740 005:405.694   
+  R0 (0)         = 0x00                 R1 (1)         = 0xBB3                R2 (2)         = 0x00                 R3 (3)         = 0x3E3             
+  R4 (4)         = 0xBB3                R5 (5)         = 0x1FFF8660           R6 (6)         = 0x1FFF8660           R7 (7)         = 0x1FFFBE70        
+  R8 (8)         = 0x62FC               R9 (9)         = 0x6A9C               R10 (10)       = 0x4102               R11 (11)       = 0x00              
+  R12 (12)       = 0x00                 R13 (SP) (13)  = 0x1FFFBE70           MSP (17)       = 0x1FFFBE70           PSP (18)       = 0xF5AEAC80        
+  R14 (14)       = 0x961                R15 (PC) (15)  = 0x3AAC               XPSR (16)      = 0x61030000           APSR (21)      = 0x60030000        
+  EPSR (22)      = 0x1000000            IPSR (23)      = 0x00                 CFBP (20)      = 0x4000000            CONTROL (27)   = 0x4000000         
+  FAULTMASK (26) = 0x00                 BASEPRI (25)   = 0x00                 PRIMASK (24)   = 0x00                 CycleCnt (65)  = 0x23B5DC7E        
+T55AEA740 005:405.700 - 0.440ms returns 0x00
+T55AEA740 005:405.712 JLINK_ReadRegs(NumRegs = 33)
+T55AEA740 005:412.571   
+  FPS0 (33)  = 0xEAE71737           FPS1 (34)  = 0xB82B4B42           FPS2 (35)  = 0x1D911C8F           FPS3 (36)  = 0xC93175A1        
+  FPS4 (37)  = 0xEFC05173           FPS5 (38)  = 0x2F8C98F8           FPS6 (39)  = 0xFBEFCF66           FPS7 (40)  = 0xD3EC769E        
+  FPS8 (41)  = 0xF34547AB           FPS9 (42)  = 0xF5B1B8A1           FPS10 (43) = 0x3F000000           FPS11 (44) = 0x3F800000        
+  FPS12 (45) = 0x45467000           FPS13 (46) = 0x424E0000           FPS14 (47) = 0x3C0316A9           FPS15 (48) = 0x33              
+  FPS16 (49) = 0x9F9FDC82           FPS17 (50) = 0xBEF4BECB           FPS18 (51) = 0x3B3FD1B0           FPS19 (52) = 0xE65DFA6A        
+  FPS20 (53) = 0x5BB1B45F           FPS21 (54) = 0xD7F3B79A           FPS22 (55) = 0x251ABB78           FPS23 (56) = 0x2DE6FFB5        
+  FPS24 (57) = 0x27D1C5A            FPS25 (58) = 0x5B9770EE           FPS26 (59) = 0x349E1A6A           FPS27 (60) = 0xECF189E0        
+  FPS28 (61) = 0xD3B4FFB4           FPS29 (62) = 0x601593B7           FPS30 (63) = 0x37BE90CF           FPS31 (64) = 0x8AE5FCF2        
+  FPSCR (32) = 0x80000010        
+T55AEA740 005:412.589 - 6.876ms returns 0x00
+T55AEA740 005:412.655 JLINK_ReadMemEx_64(0x00000000, 0x76000 Bytes, ...)
+T55AEA740 005:413.032    -- Read from flash cache (483328 bytes @ 0x00000000)
+T55AEA740 005:413.045   Data:  F0 BE FF 1F FD 3C 00 00 21 29 00 00 29 29 00 00 ...
+T55AEA740 005:413.047 - 0.393ms returns 483328 (0x76000)
+T55AEA740 005:413.193 JLINK_GoEx(MaxEmulInsts = 0, Flags = 0x01)
+T55AEA740 005:413.631   CPU_ReadMem(4 bytes @ 0xE0001000)
+T55AEA740 005:414.678 - 1.485ms 
+T55AEA740 005:414.685 JLINK_IsOpen()
+T55AEA740 005:414.686 - 0.001ms returns 0x01
+T55AEA740 005:422.485 JLINK_Close()
+T55AEA740 005:433.107 - 10.621ms
+T55AEA740 005:433.113   
+T55AEA740 005:433.114   Closed

@@ -1,0 +1,419 @@
+TBB442740 000:001.785   SEGGER J-Link V9.70 Log File
+TBB442740 000:001.843   DLL Compiled: Aug 19 2026 12:15:25
+TBB442740 000:001.844   Logging started @ 2026-08-26 15:45
+TBB442740 000:001.846   Process: /opt/SEGGER/JLink_V970/JLinkExe
+TBB442740 000:001.848 - 1.848ms 
+TBB442740 000:001.864 JLINK_EMU_SelectByUSBSN(SerialNo = 63728710)
+TBB442740 000:012.228 - 10.364ms returns 0x00
+TBB442740 000:012.245 JLINK_SetWarnOutHandler(...)
+TBB442740 000:012.247 - 0.002ms 
+TBB442740 000:012.258 JLINK_ExecCommand("SuppressGUI = 1", ...). 
+TBB442740 000:012.260 - 0.002ms returns 0x00
+TBB442740 000:012.277 JLINK_OpenEx(...)
+TBB442740 000:014.722   Firmware: J-Link OB-Mini Plus-CortexM compiled Mar  8 2099 11:15:54
+TBB442740 000:015.277   Firmware: J-Link OB-Mini Plus-CortexM compiled Mar  8 2099 11:15:54
+TBB442740 000:019.471   Hardware: V1.00
+TBB442740 000:019.474   S/N: 63728710
+TBB442740 000:019.476   OEM: SEGGER
+TBB442740 000:019.478   Feature(s): GDB, RDI, FlashBP, FlashDL, JFlash
+TBB442740 000:019.913   Bootloader: (FW returned invalid version)
+TBB442740 000:020.762   TELNET listener socket opened on port 19021
+TBB442740 000:020.823 - 8.546ms returns "O.K."
+TBB442740 000:020.838 JLINK_SetFlashProgProgressCallback(...)
+TBB442740 000:020.842 - 0.004ms 
+TBB442740 000:020.845 JLINK_GetFirmwareString(...)
+TBB442740 000:020.849 - 0.004ms 
+TBB442740 000:020.855 JLINK_GetHardwareVersion()
+TBB442740 000:020.858 - 0.003ms returns 10000
+TBB442740 000:020.865 JLINK_GetHWInfoEx(...)
+TBB442740 000:021.012 - 0.147ms returns 0
+TBB442740 000:021.016 JLINK_GetSN()
+TBB442740 000:021.018 - 0.002ms returns 63728710
+TBB442740 000:021.021 JLINK_GetAvailableLicense()
+TBB442740 000:028.530 - 7.509ms returns 0x05
+TBB442740 000:028.537 JLINK_GetOEMString(...)
+TBB442740 000:028.544 JLINK_EMU_GetCurrConnectionInfo()
+TBB442740 000:028.711 - 0.168ms returns 0
+TBB442740 000:028.715 JLINK_EMU_HasCapEx(0x00000026)
+TBB442740 000:028.716 - 0.002ms returns 0
+TBB442740 000:028.718 JLINK_GetEmuCaps()
+TBB442740 000:028.719 - 0.001ms returns 0xB8EA5A33
+TBB442740 000:028.721 JLINK_GetEmuCaps()
+TBB442740 000:028.722 - 0.001ms returns 0xB8EA5A33
+TBB442740 000:028.723 JLINK_GetHWStatus(...)
+TBB442740 000:028.861 - 0.137ms returns 0
+TBB442740 000:028.863 JLINK_EMU_HasCapEx(0x00000044)
+TBB442740 000:028.865 - 0.001ms returns 0
+TBB442740 000:028.873 JLINK_TIF_GetAvailable(...)
+TBB442740 000:029.001 - 0.128ms 
+TBB442740 000:029.012 JLINK_DEVICE_GetIndex(sDeviceName = HC32F460xE)
+TBB442740 000:037.153 - 8.142ms returns 14308
+TBB442740 000:037.161 JLINK_ExecCommand("device=HC32F460xE", ...). 
+TBB442740 000:038.172   Device "HC32F460XE" selected.
+TBB442740 000:039.162 - 2.001ms returns 0x00
+TBB442740 000:039.167 JLINK_EnableLog(...)
+TBB442740 000:039.169 - 0.001ms 
+TBB442740 000:039.180 JLINK_GetEmuCaps()
+TBB442740 000:039.182 - 0.002ms returns 0xB8EA5A33
+TBB442740 000:039.184 JLINK_TIF_GetAvailable(...)
+TBB442740 000:039.337 - 0.153ms 
+TBB442740 000:039.340 JLINK_TIF_Select(JLINKARM_TIF_SWD)
+TBB442740 000:039.805 - 0.465ms returns 0x00
+TBB442740 000:039.810 JLINK_IsConnected()
+TBB442740 000:039.812 - 0.002ms returns FALSE
+TBB442740 000:039.814 JLINK_SetSpeed(4000)
+TBB442740 000:039.886 - 0.072ms 
+TBB442740 000:039.889 JLINK_Connect()
+TBB442740 000:040.717   Found SW-DP with ID 0x2BA01477
+TBB442740 000:044.046   Old FW that does not support reading DPIDR via DAP jobs
+TBB442740 000:047.337   DPv0 detected
+TBB442740 000:047.340   CoreSight SoC-400 or earlier
+TBB442740 000:047.343   Scanning AP map to find all available APs
+TBB442740 000:049.611   AP[1]: Stopped AP scan as end of AP map has been reached
+TBB442740 000:049.615   AP[0]: AHB-AP (IDR: 0x24770011, ADDR: 0x00000000)
+TBB442740 000:049.618   Iterating through AP map to find AHB-AP to use
+TBB442740 000:053.304   AP[0]: Core found
+TBB442740 000:053.308   AP[0]: AHB-AP ROM base: 0xE00FF000
+TBB442740 000:055.127   CPUID register: 0x410FC241. Implementer code: 0x41 (ARM)
+TBB442740 000:055.131   Found Cortex-M4 r0p1, Little endian.
+TBB442740 000:055.398   -- Max. mem block: 0x00002220
+TBB442740 000:055.878   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TBB442740 000:056.274   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+TBB442740 000:056.690   CPU_ReadMem(4 bytes @ 0xE0002000)
+TBB442740 000:057.118   FPUnit: 6 code (BP) slots and 2 literal slots
+TBB442740 000:057.121   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+TBB442740 000:057.501   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TBB442740 000:057.896   CPU_ReadMem(4 bytes @ 0xE0001000)
+TBB442740 000:058.271   CPU_WriteMem(4 bytes @ 0xE0001000)
+TBB442740 000:058.661   CPU_ReadMem(4 bytes @ 0xE000ED88)
+TBB442740 000:059.046   CPU_WriteMem(4 bytes @ 0xE000ED88)
+TBB442740 000:059.477   CPU_ReadMem(4 bytes @ 0xE000ED88)
+TBB442740 000:059.866   CPU_WriteMem(4 bytes @ 0xE000ED88)
+TBB442740 000:060.272   CoreSight components:
+TBB442740 000:060.275   ROMTbl[0] @ E00FF000
+TBB442740 000:060.277   CPU_ReadMem(64 bytes @ 0xE00FF000)
+TBB442740 000:061.236   CPU_ReadMem(32 bytes @ 0xE000EFE0)
+TBB442740 000:061.892   [0][0]: E000E000 CID B105E00D PID 000BB00C SCS-M7
+TBB442740 000:061.894   CPU_ReadMem(32 bytes @ 0xE0001FE0)
+TBB442740 000:062.543   [0][1]: E0001000 CID B105E00D PID 003BB002 DWT
+TBB442740 000:062.545   CPU_ReadMem(32 bytes @ 0xE0002FE0)
+TBB442740 000:063.201   [0][2]: E0002000 CID B105E00D PID 002BB003 FPB
+TBB442740 000:063.210   CPU_ReadMem(32 bytes @ 0xE0000FE0)
+TBB442740 000:063.868   [0][3]: E0000000 CID B105E00D PID 003BB001 ITM
+TBB442740 000:063.872   CPU_ReadMem(32 bytes @ 0xE0040FE0)
+TBB442740 000:064.522   [0][4]: E0040000 CID B105900D PID 000BB9A1 TPIU
+TBB442740 000:064.539 - 24.649ms returns 0x00
+TBB442740 000:064.545 JLINK_GetIdData(pIdData)
+TBB442740 000:064.906   pIdData->ScanLen=4
+TBB442740 000:064.909   pIdData->NumDevices=1
+TBB442740 000:064.911   pIdData->aId[0]=0x2BA01477
+TBB442740 000:064.913   pIdData->aIrRead[0]=0
+TBB442740 000:064.915   pIdData->aScanLen[0]=0
+TBB442740 000:064.916   pIdData->aScanRead[0]=0
+TBB442740 000:064.918 - 0.373ms 
+TBB442740 000:064.921 JLINK_GetMemZones(...)
+TBB442740 000:064.922 - 0.001ms returns 1
+TBB442740 000:064.938 JLINK_HasError()
+TBB442740 000:064.941 JLINK_CORE_GetFound()
+TBB442740 000:064.943 - 0.002ms returns 0xE0000FF
+TBB442740 000:064.952 JLINK_Halt()
+TBB442740 000:069.249 - 4.296ms returns 0x00
+TBB442740 000:069.254 JLINK_GetDeviceFamily
+TBB442740 000:069.257 - 0.002ms returns 14
+TBB442740 000:069.259 JLINK_CORE_GetFound()
+TBB442740 000:069.262 - 0.003ms returns 0xE0000FF
+TBB442740 000:069.266 JLINK_GetDebugInfo(0x01 = Unknown)
+TBB442740 000:069.269   Value=0x00000001
+TBB442740 000:069.272 - 0.006ms returns 0
+TBB442740 000:069.276 JLINK_ReadRegs(NumRegs = 28)
+TBB442740 000:069.295   CPU_ReadMem(4 bytes @ 0xE0001004)
+TBB442740 000:069.695   
+  R0 (0)         = 0xFFFFFFFF           R1 (1)         = 0x1000               R2 (2)         = 0xE2000000           R3 (3)         = 0x1FFF8754        
+  R4 (4)         = 0xE000E100           R5 (5)         = 0xFFFFFFFF           R6 (6)         = 0x20000754           R7 (7)         = 0x1FFFBE70        
+  R8 (8)         = 0x62FC               R9 (9)         = 0x6A9C               R10 (10)       = 0x4102               R11 (11)       = 0x00              
+  R12 (12)       = 0x81                 R13 (SP) (13)  = 0x1FFF9420           MSP (17)       = 0x1FFF9420           PSP (18)       = 0xF5AEAC80        
+  R14 (14)       = 0x11F09              R15 (PC) (15)  = 0x11A34              XPSR (16)      = 0xA1000000           APSR (21)      = 0xA0000000        
+  EPSR (22)      = 0x1000000            IPSR (23)      = 0x00                 CFBP (20)      = 0x00                 CONTROL (27)   = 0x00              
+  FAULTMASK (26) = 0x00                 BASEPRI (25)   = 0x00                 PRIMASK (24)   = 0x00                 CycleCnt (65)  = 0xEC87C6E         
+TBB442740 000:069.701 - 0.425ms returns 0x00
+TBB442740 000:069.713 JLINK_ReadRegs(NumRegs = 33)
+TBB442740 000:076.514   
+  FPS0 (33)  = 0xEAE71737           FPS1 (34)  = 0xB82B4B42           FPS2 (35)  = 0x1D911C8F           FPS3 (36)  = 0xC93175A1        
+  FPS4 (37)  = 0xEFC05173           FPS5 (38)  = 0x2F8C98F8           FPS6 (39)  = 0xFBEFCF66           FPS7 (40)  = 0xD3EC769E        
+  FPS8 (41)  = 0xF34547AB           FPS9 (42)  = 0xF5B1B8A1           FPS10 (43) = 0x3F000000           FPS11 (44) = 0x3F800000        
+  FPS12 (45) = 0x45467000           FPS13 (46) = 0x424E0000           FPS14 (47) = 0x3C0316A9           FPS15 (48) = 0x33              
+  FPS16 (49) = 0x9F9FDC82           FPS17 (50) = 0xBEF4BECB           FPS18 (51) = 0x3B3FD1B0           FPS19 (52) = 0xE65DFA6A        
+  FPS20 (53) = 0x5BB1B45F           FPS21 (54) = 0xD7F3B79A           FPS22 (55) = 0x251ABB78           FPS23 (56) = 0x2DE6FFB5        
+  FPS24 (57) = 0x27D1C5A            FPS25 (58) = 0x5B9770EE           FPS26 (59) = 0x349E1A6A           FPS27 (60) = 0xECF189E0        
+  FPS28 (61) = 0xD3B4FFB4           FPS29 (62) = 0x601593B7           FPS30 (63) = 0x37BE90CF           FPS31 (64) = 0x8AE5FCF2        
+  FPSCR (32) = 0x00              
+TBB442740 000:076.527 - 6.814ms returns 0x00
+TBB442740 000:076.544 JLINK_DEVICE_GetIndex(sDeviceName = <NULL>)
+TBB442740 000:076.546 - 0.003ms returns 14308
+TBB442740 000:076.550 JLINK_Reset()
+TBB442740 000:076.560   JLINK_GetResetTypeDesc
+TBB442740 000:076.564   - 0.004ms 
+TBB442740 000:076.568   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+TBB442740 000:076.573   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+TBB442740 000:077.009   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TBB442740 000:077.406   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+TBB442740 000:077.777   Reset: Reset device via AIRCR.SYSRESETREQ.
+TBB442740 000:077.780   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+TBB442740 000:130.793   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TBB442740 000:131.227   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TBB442740 000:131.631   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TBB442740 000:137.246   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TBB442740 000:141.894   CPU_WriteMem(4 bytes @ 0xE0002000)
+TBB442740 000:142.285   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+TBB442740 000:142.675   CPU_ReadMem(4 bytes @ 0xE0001000)
+TBB442740 000:143.074 - 66.523ms 
+TBB442740 000:143.081 JLINK_Halt()
+TBB442740 000:143.082 - 0.002ms returns 0x00
+TBB442740 000:143.090 JLINK_Erase()
+TBB442740 000:143.252   Old firmware which does not support pausing periodic actions during flash download
+TBB442740 000:143.256   CPU_ReadMem(4 bytes @ 0xE000ED90)
+TBB442740 000:143.645   CPU_ReadMem(4 bytes @ 0xE000ED94)
+TBB442740 000:144.022    -- --------------------------------------
+TBB442740 000:144.031    -- Start of determining dirty areas
+TBB442740 000:144.046    -- End of determining dirty areas
+TBB442740 000:144.049    -- Start of preparing flash programming
+TBB442740 000:144.051    -- Calculating RAM usage
+TBB442740 000:144.060    -- RAM usage = 10292 Bytes
+TBB442740 000:144.062    -- Preserving CPU registers
+TBB442740 000:144.072    -- Preparing target
+TBB442740 000:144.074    -- Preserving target RAM temporarily used for programming
+TBB442740 000:242.001    -- Downloading RAMCode
+TBB442740 000:273.783    -- Preparing RAMCode
+TBB442740 000:284.556    -- End of preparing flash programming
+TBB442740 000:284.581    -- CPU is running at 160000 kHz.
+TBB442740 000:284.585    -- Start of erasing sectors
+TBB442740 000:284.589    -- Erasing range 0x00000000 - 0x0001FFFF ( 16 Sectors, 128 KB)
+TBB442740 000:567.205    -- Erasing range 0x00020000 - 0x0003FFFF ( 16 Sectors, 128 KB)
+TBB442740 000:849.631    -- Erasing range 0x00040000 - 0x0005FFFF ( 16 Sectors, 128 KB)
+TBB442740 001:132.009    -- Erasing range 0x00060000 - 0x00075FFF ( 11 Sectors, 88 KB)
+TBB442740 001:326.627    -- End of erasing sectors
+TBB442740 001:326.646    -- Start of restoring
+TBB442740 001:326.649    -- Restoring RAMCode
+TBB442740 001:332.309    -- Restoring target memory
+TBB442740 001:428.551    -- Restore target
+TBB442740 001:428.590    -- Restoring CPU registers
+TBB442740 001:428.618    -- End of restoring
+TBB442740 001:428.634    -- Total time needed: 1.284s (Prepare: 0.140s, Compare: 0.000s, Erase: 1.042s, Program: 0.000s, Verify: 0.000s, Restore: 0.101s)
+TBB442740 001:430.226    -- 
+Flash sectors within Range [0x00000000 - 0x00075FFF] deleted.
+TBB442740 001:430.488 - 1287.398ms returns 0
+TBB442740 001:430.873 JLINK_Reset()
+TBB442740 001:430.882   JLINK_GetResetTypeDesc
+TBB442740 001:430.883   - 0.002ms 
+TBB442740 001:430.886   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+TBB442740 001:430.891   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+TBB442740 001:431.291   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TBB442740 001:431.713   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+TBB442740 001:432.083   Reset: Reset device via AIRCR.SYSRESETREQ.
+TBB442740 001:432.085   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+TBB442740 001:484.514   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TBB442740 001:484.932   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TBB442740 001:485.722   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TBB442740 001:491.331   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TBB442740 001:496.005   CPU_WriteMem(4 bytes @ 0xE0002000)
+TBB442740 001:496.401   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+TBB442740 001:496.791   CPU_ReadMem(4 bytes @ 0xE0001000)
+TBB442740 001:497.183 - 66.310ms 
+TBB442740 001:497.189 JLINK_Halt()
+TBB442740 001:497.192 - 0.003ms returns 0x00
+TBB442740 001:497.204 JLINK_ExecCommand("SetVerifyRAMDownload = 1", ...). 
+TBB442740 001:497.207 - 0.004ms returns 0x00
+TBB442740 001:497.230 JLINK_DownloadFile(sFile = /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase4-usb/backup/pre_hil_00000000_00075fff.bin)
+TBB442740 001:497.476   Data:  F0 BE FF 1F FD 3C 00 00 21 29 00 00 29 29 00 00 ...
+TBB442740 001:497.823   completely In flash
+TBB442740 001:497.840   Data:  FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF ...
+TBB442740 001:497.895   completely In flash
+TBB442740 001:498.081   Old firmware which does not support pausing periodic actions during flash download
+TBB442740 001:498.086   CPU_ReadMem(4 bytes @ 0xE000ED90)
+TBB442740 001:498.496   CPU_ReadMem(4 bytes @ 0xE000ED94)
+TBB442740 001:498.872    -- --------------------------------------
+TBB442740 001:498.876    -- Flash bank @ 0x00000000: Default: L2 verify disabled because algorithm performs L1 verify
+TBB442740 001:498.879    -- Start of determining dirty areas in flash cache
+TBB442740 001:498.882    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00000000 if necessary
+TBB442740 001:498.884    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00002000 if necessary
+TBB442740 001:498.886    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00004000 if necessary
+TBB442740 001:498.888    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00006000 if necessary
+TBB442740 001:498.890    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00008000 if necessary
+TBB442740 001:498.892    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0000A000 if necessary
+TBB442740 001:498.894    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0000C000 if necessary
+TBB442740 001:498.896    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0000E000 if necessary
+TBB442740 001:498.897    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00010000 if necessary
+TBB442740 001:498.899    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00012000 if necessary
+TBB442740 001:498.902    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00014000 if necessary
+TBB442740 001:498.905    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00016000 if necessary
+TBB442740 001:498.907    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00018000 if necessary
+TBB442740 001:498.908    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0001A000 if necessary
+TBB442740 001:498.910    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0001C000 if necessary
+TBB442740 001:498.912    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0001E000 if necessary
+TBB442740 001:498.922    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00020000 if necessary
+TBB442740 001:498.924    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00022000 if necessary
+TBB442740 001:498.925    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00024000 if necessary
+TBB442740 001:498.927    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00026000 if necessary
+TBB442740 001:498.929    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00028000 if necessary
+TBB442740 001:498.931    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0002A000 if necessary
+TBB442740 001:498.933    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0002C000 if necessary
+TBB442740 001:498.935    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0002E000 if necessary
+TBB442740 001:498.937    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00030000 if necessary
+TBB442740 001:498.938    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00032000 if necessary
+TBB442740 001:498.940    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00034000 if necessary
+TBB442740 001:498.942    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00036000 if necessary
+TBB442740 001:498.944    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00038000 if necessary
+TBB442740 001:498.946    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0003A000 if necessary
+TBB442740 001:498.948    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0003C000 if necessary
+TBB442740 001:498.950    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0003E000 if necessary
+TBB442740 001:498.951    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00040000 if necessary
+TBB442740 001:498.953    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00042000 if necessary
+TBB442740 001:498.955    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00044000 if necessary
+TBB442740 001:498.957    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00046000 if necessary
+TBB442740 001:498.959    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00048000 if necessary
+TBB442740 001:498.961    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0004A000 if necessary
+TBB442740 001:498.962    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0004C000 if necessary
+TBB442740 001:498.964    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0004E000 if necessary
+TBB442740 001:498.966    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00050000 if necessary
+TBB442740 001:498.968    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00052000 if necessary
+TBB442740 001:498.970    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00054000 if necessary
+TBB442740 001:498.972    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00056000 if necessary
+TBB442740 001:498.974    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00058000 if necessary
+TBB442740 001:498.975    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0005A000 if necessary
+TBB442740 001:498.977    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0005C000 if necessary
+TBB442740 001:498.979    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0005E000 if necessary
+TBB442740 001:498.981    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00060000 if necessary
+TBB442740 001:498.983    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00062000 if necessary
+TBB442740 001:498.986    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00064000 if necessary
+TBB442740 001:498.988    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00066000 if necessary
+TBB442740 001:498.989    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00068000 if necessary
+TBB442740 001:498.991    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0006A000 if necessary
+TBB442740 001:498.994    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0006C000 if necessary
+TBB442740 001:498.995    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0006E000 if necessary
+TBB442740 001:498.997    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00070000 if necessary
+TBB442740 001:498.999    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00072000 if necessary
+TBB442740 001:499.000    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00074000 if necessary
+TBB442740 001:499.008    -- End of determining dirty areas
+TBB442740 001:499.010    -- Start of preparing flash programming
+TBB442740 001:499.012    -- Calculating RAM usage
+TBB442740 001:499.021    -- RAM usage = 10292 Bytes
+TBB442740 001:499.023    -- Preserving CPU registers
+TBB442740 001:499.033    -- Preparing target
+TBB442740 001:499.035    -- Preserving target RAM temporarily used for programming
+TBB442740 001:597.141    -- Downloading RAMCode
+TBB442740 001:628.749    -- Preparing RAMCode
+TBB442740 001:636.668    -- End of preparing flash programming
+TBB442740 001:636.674    -- CPU is running at 160000 kHz.
+TBB442740 001:636.677    -- Start of comparing flash
+TBB442740 001:636.680    -- CRC check was estimated as fastest method
+TBB442740 001:636.683    -- Comparing range 0x0000 - 0x1FFFF (16 Sectors, 128 KB), using multi-block CRC calculation
+TBB442740 001:674.271    -- CRC does not match for sectors 0-3
+TBB442740 001:674.281    -- Comparing range 0x20000 - 0x3FFFF (16 Sectors, 128 KB), using multi-block CRC calculation
+TBB442740 001:711.489    -- All CRCs match
+TBB442740 001:711.499    -- Comparing range 0x40000 - 0x5FFFF (16 Sectors, 128 KB), using multi-block CRC calculation
+TBB442740 001:749.372    -- All CRCs match
+TBB442740 001:749.387    -- Comparing range 0x60000 - 0x75FFF (11 Sectors, 88 KB), using multi-block CRC calculation
+TBB442740 001:775.906    -- All CRCs match
+TBB442740 001:775.928    -- Comparing range 0x8000 - 0x27FFF (16 Sectors, 128 KB), using alternative multi-block CRC calculation
+TBB442740 001:813.145    -- All CRCs match
+TBB442740 001:813.154    -- Comparing range 0x28000 - 0x47FFF (16 Sectors, 128 KB), using alternative multi-block CRC calculation
+TBB442740 001:850.517    -- All CRCs match
+TBB442740 001:850.521    -- Comparing range 0x48000 - 0x67FFF (16 Sectors, 128 KB), using alternative multi-block CRC calculation
+TBB442740 001:887.726    -- All CRCs match
+TBB442740 001:887.737    -- Comparing range 0x68000 - 0x75FFF (7 Sectors, 56 KB), using alternative multi-block CRC calculation
+TBB442740 001:905.128    -- All CRCs match
+TBB442740 001:905.131    -- End of comparing flash
+TBB442740 001:905.134    -- Start of erasing sectors
+TBB442740 001:905.136    -- Erasing range 0x00006000 - 0x00007FFF (  1 Sector, 8 KB)
+TBB442740 001:923.989    -- End of erasing sectors
+TBB442740 001:923.998    -- Start of flash programming
+TBB442740 001:924.001    -- Programming range 0x00000000 - 0x00007FFF (  4 Sectors, 32 KB)
+TBB442740 002:163.613    -- End of flash programming
+TBB442740 002:163.651    -- 0x0000 - 0x7FFF (  4 Sectors, 32 KB)
+TBB442740 002:163.656    -- Start of restoring
+TBB442740 002:163.673    -- Restoring RAMCode
+TBB442740 002:235.007    -- Restoring target memory
+TBB442740 002:331.341    -- Restore target
+TBB442740 002:331.378    -- Restoring CPU registers
+TBB442740 002:331.397    -- End of restoring
+TBB442740 002:331.427    -- Bank 0 @ 0x00000000: 1 range affected (32768 bytes)
+TBB442740 002:331.432    -- Total: 0.832s (Prepare: 0.137s, Compare: 0.268s, Erase: 0.018s, Program & Verify: 0.306s, Restore: 0.101s)
+TBB442740 002:331.436    -- Program & Verify speed: 104 KB/s
+TBB442740 002:331.634 - 834.404ms returns 0x00
+TBB442740 002:331.649 JLINK_ExecCommand("SetVerifyRAMDownload = 0", ...). 
+TBB442740 002:331.654 - 0.005ms returns 0x01
+TBB442740 002:331.733 JLINK_IsHalted()
+TBB442740 002:332.142 - 0.410ms returns TRUE
+TBB442740 002:332.147 JLINK_ReadMemEx_64(0x00000000, 0x76000 Bytes, ...)
+TBB442740 002:332.434    -- Read from flash cache (483328 bytes @ 0x00000000)
+TBB442740 002:332.438   Data:  F0 BE FF 1F FD 3C 00 00 21 29 00 00 29 29 00 00 ...
+TBB442740 002:332.440 - 0.294ms returns 483328 (0x76000)
+TBB442740 002:332.565 JLINK_SetResetDelay(0)
+TBB442740 002:332.569 - 0.005ms 
+TBB442740 002:332.571 JLINK_Reset()
+TBB442740 002:332.576   JLINK_GetResetTypeDesc
+TBB442740 002:332.578   - 0.002ms 
+TBB442740 002:332.580   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+TBB442740 002:332.585   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+TBB442740 002:332.996   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TBB442740 002:333.473   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+TBB442740 002:333.832   Reset: Reset device via AIRCR.SYSRESETREQ.
+TBB442740 002:333.835   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+TBB442740 002:386.988   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TBB442740 002:387.399   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TBB442740 002:387.819   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TBB442740 002:393.424   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TBB442740 002:398.093   CPU_WriteMem(4 bytes @ 0xE0002000)
+TBB442740 002:398.494   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+TBB442740 002:398.884   CPU_ReadMem(4 bytes @ 0xE0001000)
+TBB442740 002:399.266 - 66.695ms 
+TBB442740 002:399.287 JLINK_GoEx(MaxEmulInsts = 0, Flags = 0x01)
+TBB442740 002:399.293   CPU_ReadMem(4 bytes @ 0xE0001000)
+TBB442740 002:399.672   CPU_WriteMem(4 bytes @ 0xE0001004)
+TBB442740 002:400.719   Memory map 'after startup completion point' is active
+TBB442740 002:400.722 - 1.435ms 
+TBB442740 005:400.813 JLINK_Halt()
+TBB442740 005:405.163 - 4.348ms returns 0x00
+TBB442740 005:405.183 JLINK_GetDeviceFamily
+TBB442740 005:405.187 - 0.003ms returns 14
+TBB442740 005:405.190 JLINK_CORE_GetFound()
+TBB442740 005:405.193 - 0.003ms returns 0xE0000FF
+TBB442740 005:405.196 JLINK_GetDebugInfo(0x01 = Unknown)
+TBB442740 005:405.200   Value=0x00000001
+TBB442740 005:405.203 - 0.007ms returns 0
+TBB442740 005:405.206 JLINK_ReadRegs(NumRegs = 28)
+TBB442740 005:405.228   CPU_ReadMem(4 bytes @ 0xE0001004)
+TBB442740 005:405.621   
+  R0 (0)         = 0xBB3                R1 (1)         = 0xBB3                R2 (2)         = 0x00                 R3 (3)         = 0x01              
+  R4 (4)         = 0xBB3                R5 (5)         = 0x1FFF8660           R6 (6)         = 0x1FFF8660           R7 (7)         = 0x1FFFBEB8        
+  R8 (8)         = 0x62FC               R9 (9)         = 0x6A9C               R10 (10)       = 0x4102               R11 (11)       = 0x00              
+  R12 (12)       = 0x00                 R13 (SP) (13)  = 0x1FFFBEA0           MSP (17)       = 0x1FFFBEA0           PSP (18)       = 0xF5AEAC80        
+  R14 (14)       = 0x2659               R15 (PC) (15)  = 0x3534               XPSR (16)      = 0x81030000           APSR (21)      = 0x80030000        
+  EPSR (22)      = 0x1000000            IPSR (23)      = 0x00                 CFBP (20)      = 0x4000000            CONTROL (27)   = 0x4000000         
+  FAULTMASK (26) = 0x00                 BASEPRI (25)   = 0x00                 PRIMASK (24)   = 0x00                 CycleCnt (65)  = 0x23B5FAF1        
+TBB442740 005:405.627 - 0.421ms returns 0x00
+TBB442740 005:405.641 JLINK_ReadRegs(NumRegs = 33)
+TBB442740 005:412.478   
+  FPS0 (33)  = 0xEAE71737           FPS1 (34)  = 0xB82B4B42           FPS2 (35)  = 0x1D911C8F           FPS3 (36)  = 0xC93175A1        
+  FPS4 (37)  = 0xEFC05173           FPS5 (38)  = 0x2F8C98F8           FPS6 (39)  = 0xFBEFCF66           FPS7 (40)  = 0xD3EC769E        
+  FPS8 (41)  = 0xF34547AB           FPS9 (42)  = 0xF5B1B8A1           FPS10 (43) = 0x3F000000           FPS11 (44) = 0x3F800000        
+  FPS12 (45) = 0x45467000           FPS13 (46) = 0x424E0000           FPS14 (47) = 0x3C0316A9           FPS15 (48) = 0x33              
+  FPS16 (49) = 0x9F9FDC82           FPS17 (50) = 0xBEF4BECB           FPS18 (51) = 0x3B3FD1B0           FPS19 (52) = 0xE65DFA6A        
+  FPS20 (53) = 0x5BB1B45F           FPS21 (54) = 0xD7F3B79A           FPS22 (55) = 0x251ABB78           FPS23 (56) = 0x2DE6FFB5        
+  FPS24 (57) = 0x27D1C5A            FPS25 (58) = 0x5B9770EE           FPS26 (59) = 0x349E1A6A           FPS27 (60) = 0xECF189E0        
+  FPS28 (61) = 0xD3B4FFB4           FPS29 (62) = 0x601593B7           FPS30 (63) = 0x37BE90CF           FPS31 (64) = 0x8AE5FCF2        
+  FPSCR (32) = 0x80000010        
+TBB442740 005:412.492 - 6.850ms returns 0x00
+TBB442740 005:412.568 JLINK_ReadMemEx_64(0x00000000, 0x76000 Bytes, ...)
+TBB442740 005:412.786    -- Read from flash cache (483328 bytes @ 0x00000000)
+TBB442740 005:412.800   Data:  F0 BE FF 1F FD 3C 00 00 21 29 00 00 29 29 00 00 ...
+TBB442740 005:412.802 - 0.234ms returns 483328 (0x76000)
+TBB442740 005:412.939 JLINK_GoEx(MaxEmulInsts = 0, Flags = 0x01)
+TBB442740 005:413.363   CPU_ReadMem(4 bytes @ 0xE0001000)
+TBB442740 005:414.472 - 1.532ms 
+TBB442740 005:414.481 JLINK_IsOpen()
+TBB442740 005:414.483 - 0.002ms returns 0x01
+TBB442740 005:424.514 JLINK_Close()
+TBB442740 005:435.357 - 10.843ms
+TBB442740 005:435.368   
+TBB442740 005:435.369   Closed

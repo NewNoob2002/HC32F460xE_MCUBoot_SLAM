@@ -1,0 +1,476 @@
+TFA53F740 000:001.387   SEGGER J-Link V9.70 Log File
+TFA53F740 000:001.431   DLL Compiled: Aug 19 2026 12:15:25
+TFA53F740 000:001.432   Logging started @ 2026-08-26 16:00
+TFA53F740 000:001.433   Process: /opt/SEGGER/JLink_V970/JLinkExe
+TFA53F740 000:001.434 - 1.434ms 
+TFA53F740 000:001.451 JLINK_EMU_SelectByUSBSN(SerialNo = 63728710)
+TFA53F740 000:009.729 - 8.277ms returns 0x00
+TFA53F740 000:009.742 JLINK_SetWarnOutHandler(...)
+TFA53F740 000:009.743 - 0.001ms 
+TFA53F740 000:009.753 JLINK_ExecCommand("SuppressGUI = 1", ...). 
+TFA53F740 000:009.754 - 0.002ms returns 0x00
+TFA53F740 000:009.794 JLINK_OpenEx(...)
+TFA53F740 000:011.876   Firmware: J-Link OB-Mini Plus-CortexM compiled Mar  8 2099 11:15:54
+TFA53F740 000:012.461   Firmware: J-Link OB-Mini Plus-CortexM compiled Mar  8 2099 11:15:54
+TFA53F740 000:016.556   Hardware: V1.00
+TFA53F740 000:016.559   S/N: 63728710
+TFA53F740 000:016.561   OEM: SEGGER
+TFA53F740 000:016.562   Feature(s): GDB, RDI, FlashBP, FlashDL, JFlash
+TFA53F740 000:017.072   Bootloader: (FW returned invalid version)
+TFA53F740 000:017.851   TELNET listener socket opened on port 19021
+TFA53F740 000:017.883 - 8.090ms returns "O.K."
+TFA53F740 000:017.888 JLINK_SetFlashProgProgressCallback(...)
+TFA53F740 000:017.889 - 0.001ms 
+TFA53F740 000:017.891 JLINK_GetFirmwareString(...)
+TFA53F740 000:017.892 - 0.001ms 
+TFA53F740 000:017.895 JLINK_GetHardwareVersion()
+TFA53F740 000:017.896 - 0.001ms returns 10000
+TFA53F740 000:017.899 JLINK_GetHWInfoEx(...)
+TFA53F740 000:018.041 - 0.142ms returns 0
+TFA53F740 000:018.044 JLINK_GetSN()
+TFA53F740 000:018.046 - 0.002ms returns 63728710
+TFA53F740 000:018.048 JLINK_GetAvailableLicense()
+TFA53F740 000:025.062 - 7.014ms returns 0x05
+TFA53F740 000:025.074 JLINK_GetOEMString(...)
+TFA53F740 000:025.077 JLINK_EMU_GetCurrConnectionInfo()
+TFA53F740 000:025.240 - 0.163ms returns 0
+TFA53F740 000:025.244 JLINK_EMU_HasCapEx(0x00000026)
+TFA53F740 000:025.245 - 0.001ms returns 0
+TFA53F740 000:025.247 JLINK_GetEmuCaps()
+TFA53F740 000:025.248 - 0.001ms returns 0xB8EA5A33
+TFA53F740 000:025.250 JLINK_GetEmuCaps()
+TFA53F740 000:025.251 - 0.001ms returns 0xB8EA5A33
+TFA53F740 000:025.252 JLINK_GetHWStatus(...)
+TFA53F740 000:025.396 - 0.143ms returns 0
+TFA53F740 000:025.398 JLINK_EMU_HasCapEx(0x00000044)
+TFA53F740 000:025.399 - 0.001ms returns 0
+TFA53F740 000:025.407 JLINK_TIF_GetAvailable(...)
+TFA53F740 000:025.536 - 0.129ms 
+TFA53F740 000:025.548 JLINK_DEVICE_GetIndex(sDeviceName = HC32F460xE)
+TFA53F740 000:031.750 - 6.202ms returns 14308
+TFA53F740 000:031.756 JLINK_ExecCommand("device=HC32F460xE", ...). 
+TFA53F740 000:032.588   Device "HC32F460XE" selected.
+TFA53F740 000:033.280 - 1.523ms returns 0x00
+TFA53F740 000:033.283 JLINK_EnableLog(...)
+TFA53F740 000:033.284 - 0.001ms 
+TFA53F740 000:033.287 JLINK_GetEmuCaps()
+TFA53F740 000:033.288 - 0.001ms returns 0xB8EA5A33
+TFA53F740 000:033.289 JLINK_TIF_GetAvailable(...)
+TFA53F740 000:033.428 - 0.139ms 
+TFA53F740 000:033.431 JLINK_TIF_Select(JLINKARM_TIF_SWD)
+TFA53F740 000:033.879 - 0.448ms returns 0x00
+TFA53F740 000:033.883 JLINK_IsConnected()
+TFA53F740 000:033.884 - 0.001ms returns FALSE
+TFA53F740 000:033.886 JLINK_SetSpeed(4000)
+TFA53F740 000:033.952 - 0.066ms 
+TFA53F740 000:033.955 JLINK_Connect()
+TFA53F740 000:034.788   Found SW-DP with ID 0x2BA01477
+TFA53F740 000:038.126   Old FW that does not support reading DPIDR via DAP jobs
+TFA53F740 000:041.462   DPv0 detected
+TFA53F740 000:041.465   CoreSight SoC-400 or earlier
+TFA53F740 000:041.468   Scanning AP map to find all available APs
+TFA53F740 000:043.647   AP[1]: Stopped AP scan as end of AP map has been reached
+TFA53F740 000:043.650   AP[0]: AHB-AP (IDR: 0x24770011, ADDR: 0x00000000)
+TFA53F740 000:043.652   Iterating through AP map to find AHB-AP to use
+TFA53F740 000:047.352   AP[0]: Core found
+TFA53F740 000:047.355   AP[0]: AHB-AP ROM base: 0xE00FF000
+TFA53F740 000:049.252   CPUID register: 0x410FC241. Implementer code: 0x41 (ARM)
+TFA53F740 000:049.255   Found Cortex-M4 r0p1, Little endian.
+TFA53F740 000:049.541   -- Max. mem block: 0x00002220
+TFA53F740 000:050.038   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TFA53F740 000:050.417   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+TFA53F740 000:050.818   CPU_ReadMem(4 bytes @ 0xE0002000)
+TFA53F740 000:051.213   FPUnit: 6 code (BP) slots and 2 literal slots
+TFA53F740 000:051.216   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+TFA53F740 000:051.605   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TFA53F740 000:052.040   CPU_ReadMem(4 bytes @ 0xE0001000)
+TFA53F740 000:052.419   CPU_WriteMem(4 bytes @ 0xE0001000)
+TFA53F740 000:052.805   CPU_ReadMem(4 bytes @ 0xE000ED88)
+TFA53F740 000:053.195   CPU_WriteMem(4 bytes @ 0xE000ED88)
+TFA53F740 000:053.585   CPU_ReadMem(4 bytes @ 0xE000ED88)
+TFA53F740 000:053.965   CPU_WriteMem(4 bytes @ 0xE000ED88)
+TFA53F740 000:054.367   CoreSight components:
+TFA53F740 000:054.369   ROMTbl[0] @ E00FF000
+TFA53F740 000:054.371   CPU_ReadMem(64 bytes @ 0xE00FF000)
+TFA53F740 000:055.326   CPU_ReadMem(32 bytes @ 0xE000EFE0)
+TFA53F740 000:055.976   [0][0]: E000E000 CID B105E00D PID 000BB00C SCS-M7
+TFA53F740 000:055.978   CPU_ReadMem(32 bytes @ 0xE0001FE0)
+TFA53F740 000:056.646   [0][1]: E0001000 CID B105E00D PID 003BB002 DWT
+TFA53F740 000:056.648   CPU_ReadMem(32 bytes @ 0xE0002FE0)
+TFA53F740 000:057.357   [0][2]: E0002000 CID B105E00D PID 002BB003 FPB
+TFA53F740 000:057.359   CPU_ReadMem(32 bytes @ 0xE0000FE0)
+TFA53F740 000:058.010   [0][3]: E0000000 CID B105E00D PID 003BB001 ITM
+TFA53F740 000:058.012   CPU_ReadMem(32 bytes @ 0xE0040FE0)
+TFA53F740 000:058.656   [0][4]: E0040000 CID B105900D PID 000BB9A1 TPIU
+TFA53F740 000:058.667 - 24.712ms returns 0x00
+TFA53F740 000:058.672 JLINK_GetIdData(pIdData)
+TFA53F740 000:059.055   pIdData->ScanLen=4
+TFA53F740 000:059.057   pIdData->NumDevices=1
+TFA53F740 000:059.058   pIdData->aId[0]=0x2BA01477
+TFA53F740 000:059.060   pIdData->aIrRead[0]=0
+TFA53F740 000:059.061   pIdData->aScanLen[0]=0
+TFA53F740 000:059.063   pIdData->aScanRead[0]=0
+TFA53F740 000:059.064 - 0.392ms 
+TFA53F740 000:059.066 JLINK_GetMemZones(...)
+TFA53F740 000:059.067 - 0.001ms returns 1
+TFA53F740 000:059.071 JLINK_HasError()
+TFA53F740 000:059.074 JLINK_CORE_GetFound()
+TFA53F740 000:059.075 - 0.001ms returns 0xE0000FF
+TFA53F740 000:059.083 JLINK_Halt()
+TFA53F740 000:063.339 - 4.256ms returns 0x00
+TFA53F740 000:063.343 JLINK_GetDeviceFamily
+TFA53F740 000:063.345 - 0.001ms returns 14
+TFA53F740 000:063.346 JLINK_CORE_GetFound()
+TFA53F740 000:063.347 - 0.001ms returns 0xE0000FF
+TFA53F740 000:063.348 JLINK_GetDebugInfo(0x01 = Unknown)
+TFA53F740 000:063.350   Value=0x00000001
+TFA53F740 000:063.351 - 0.003ms returns 0
+TFA53F740 000:063.353 JLINK_ReadRegs(NumRegs = 28)
+TFA53F740 000:063.361   CPU_ReadMem(4 bytes @ 0xE0001004)
+TFA53F740 000:063.765   
+  R0 (0)         = 0x00                 R1 (1)         = 0x2A791              R2 (2)         = 0x00                 R3 (3)         = 0x1FFF8D54        
+  R4 (4)         = 0x2A791              R5 (5)         = 0x1FFF8660           R6 (6)         = 0x1FFF8660           R7 (7)         = 0x1FFFBE6C        
+  R8 (8)         = 0x62FC               R9 (9)         = 0x6A9C               R10 (10)       = 0x4102               R11 (11)       = 0x00              
+  R12 (12)       = 0x01                 R13 (SP) (13)  = 0x1FFFBE6C           MSP (17)       = 0x1FFFBE6C           PSP (18)       = 0xF5AEAC80        
+  R14 (14)       = 0x8D7                R15 (PC) (15)  = 0x392E               XPSR (16)      = 0x61030000           APSR (21)      = 0x60030000        
+  EPSR (22)      = 0x1000000            IPSR (23)      = 0x00                 CFBP (20)      = 0x4000000            CONTROL (27)   = 0x4000000         
+  FAULTMASK (26) = 0x00                 BASEPRI (25)   = 0x00                 PRIMASK (24)   = 0x00                 CycleCnt (65)  = 0x23F23E58        
+TFA53F740 000:063.768 - 0.415ms returns 0x00
+TFA53F740 000:063.773 JLINK_ReadRegs(NumRegs = 33)
+TFA53F740 000:070.547   
+  FPS0 (33)  = 0xEAE71737           FPS1 (34)  = 0xB82B4B42           FPS2 (35)  = 0x1D911C8F           FPS3 (36)  = 0xC93175A1        
+  FPS4 (37)  = 0xEFC05173           FPS5 (38)  = 0x2F8C98F8           FPS6 (39)  = 0xFBEFCF66           FPS7 (40)  = 0xD3EC769E        
+  FPS8 (41)  = 0xF34547AB           FPS9 (42)  = 0xF5B1B8A1           FPS10 (43) = 0x3F000000           FPS11 (44) = 0x3F800000        
+  FPS12 (45) = 0x45467000           FPS13 (46) = 0x424E0000           FPS14 (47) = 0x3C0316A9           FPS15 (48) = 0x33              
+  FPS16 (49) = 0x9F9FDC82           FPS17 (50) = 0xBEF4BECB           FPS18 (51) = 0x3B3FD1B0           FPS19 (52) = 0xE65DFA6A        
+  FPS20 (53) = 0x5BB1B45F           FPS21 (54) = 0xD7F3B79A           FPS22 (55) = 0x251ABB78           FPS23 (56) = 0x2DE6FFB5        
+  FPS24 (57) = 0x27D1C5A            FPS25 (58) = 0x5B9770EE           FPS26 (59) = 0x349E1A6A           FPS27 (60) = 0xECF189E0        
+  FPS28 (61) = 0xD3B4FFB4           FPS29 (62) = 0x601593B7           FPS30 (63) = 0x37BE90CF           FPS31 (64) = 0x8AE5FCF2        
+  FPSCR (32) = 0x80000010        
+TFA53F740 000:070.550 - 6.777ms returns 0x00
+TFA53F740 000:070.558 JLINK_DEVICE_GetIndex(sDeviceName = <NULL>)
+TFA53F740 000:070.559 - 0.001ms returns 14308
+TFA53F740 000:070.561 JLINK_Reset()
+TFA53F740 000:070.567   JLINK_GetResetTypeDesc
+TFA53F740 000:070.568   - 0.001ms 
+TFA53F740 000:070.570   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+TFA53F740 000:070.572   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+TFA53F740 000:070.980   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TFA53F740 000:071.381   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+TFA53F740 000:071.762   Reset: Reset device via AIRCR.SYSRESETREQ.
+TFA53F740 000:071.764   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+TFA53F740 000:124.762   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TFA53F740 000:125.156   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TFA53F740 000:125.548   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TFA53F740 000:131.137   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TFA53F740 000:135.832   CPU_WriteMem(4 bytes @ 0xE0002000)
+TFA53F740 000:136.231   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+TFA53F740 000:136.652   CPU_ReadMem(4 bytes @ 0xE0001000)
+TFA53F740 000:137.074 - 66.513ms 
+TFA53F740 000:137.077 JLINK_Halt()
+TFA53F740 000:137.078 - 0.001ms returns 0x00
+TFA53F740 000:137.082 JLINK_Erase()
+TFA53F740 000:137.229   Old firmware which does not support pausing periodic actions during flash download
+TFA53F740 000:137.232   CPU_ReadMem(4 bytes @ 0xE000ED90)
+TFA53F740 000:137.631   CPU_ReadMem(4 bytes @ 0xE000ED94)
+TFA53F740 000:138.008    -- --------------------------------------
+TFA53F740 000:138.014    -- Start of determining dirty areas
+TFA53F740 000:138.024    -- End of determining dirty areas
+TFA53F740 000:138.026    -- Start of preparing flash programming
+TFA53F740 000:138.028    -- Calculating RAM usage
+TFA53F740 000:138.038    -- RAM usage = 10292 Bytes
+TFA53F740 000:138.039    -- Preserving CPU registers
+TFA53F740 000:138.045    -- Preparing target
+TFA53F740 000:138.047    -- Preserving target RAM temporarily used for programming
+TFA53F740 000:236.026    -- Downloading RAMCode
+TFA53F740 000:267.470    -- Preparing RAMCode
+TFA53F740 000:277.922    -- End of preparing flash programming
+TFA53F740 000:277.933    -- CPU is running at 160000 kHz.
+TFA53F740 000:277.936    -- Start of erasing sectors
+TFA53F740 000:277.938    -- Erasing range 0x00000000 - 0x0001FFFF ( 16 Sectors, 128 KB)
+TFA53F740 000:560.306    -- Erasing range 0x00020000 - 0x0003FFFF ( 16 Sectors, 128 KB)
+TFA53F740 000:842.801    -- Erasing range 0x00040000 - 0x00041FFF (  1 Sector, 8 KB)
+TFA53F740 000:861.794    -- End of erasing sectors
+TFA53F740 000:861.797    -- Start of restoring
+TFA53F740 000:861.799    -- Restoring RAMCode
+TFA53F740 000:867.463    -- Restoring target memory
+TFA53F740 000:963.643    -- Restore target
+TFA53F740 000:963.660    -- Restoring CPU registers
+TFA53F740 000:963.679    -- End of restoring
+TFA53F740 000:963.691    -- Total time needed: 0.825s (Prepare: 0.139s, Compare: 0.000s, Erase: 0.583s, Program: 0.000s, Verify: 0.000s, Restore: 0.101s)
+TFA53F740 000:965.028    -- 
+Flash sectors within Range [0x00000000 - 0x00041FFF] deleted.
+TFA53F740 000:965.198 - 828.116ms returns 0
+TFA53F740 000:965.214 JLINK_Reset()
+TFA53F740 000:965.219   JLINK_GetResetTypeDesc
+TFA53F740 000:965.221   - 0.002ms 
+TFA53F740 000:965.223   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+TFA53F740 000:965.226   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+TFA53F740 000:965.650   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TFA53F740 000:966.112   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+TFA53F740 000:966.467   Reset: Reset device via AIRCR.SYSRESETREQ.
+TFA53F740 000:966.469   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+TFA53F740 001:019.434   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TFA53F740 001:019.813   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TFA53F740 001:020.597   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TFA53F740 001:026.201   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TFA53F740 001:030.850   CPU_WriteMem(4 bytes @ 0xE0002000)
+TFA53F740 001:031.277   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+TFA53F740 001:031.662   CPU_ReadMem(4 bytes @ 0xE0001000)
+TFA53F740 001:032.092 - 66.878ms 
+TFA53F740 001:032.095 JLINK_Halt()
+TFA53F740 001:032.096 - 0.001ms returns 0x00
+TFA53F740 001:032.454 JLINK_ExecCommand("SetVerifyRAMDownload = 1", ...). 
+TFA53F740 001:032.457 - 0.004ms returns 0x00
+TFA53F740 001:032.461 JLINK_DownloadFile(sFile = /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-26-b90ba7b-phase4-usb/artifacts/boot_firmware_attempt5.bin)
+TFA53F740 001:032.495   Data:  A0 91 FF 1F 91 20 00 00 50 21 00 00 50 21 00 00 ...
+TFA53F740 001:032.670   completely In flash
+TFA53F740 001:032.869   Old firmware which does not support pausing periodic actions during flash download
+TFA53F740 001:032.873   CPU_ReadMem(4 bytes @ 0xE000ED90)
+TFA53F740 001:033.277   CPU_ReadMem(4 bytes @ 0xE000ED94)
+TFA53F740 001:033.678    -- --------------------------------------
+TFA53F740 001:033.681    -- Flash bank @ 0x00000000: Default: L2 verify disabled because algorithm performs L1 verify
+TFA53F740 001:033.683    -- Start of determining dirty areas in flash cache
+TFA53F740 001:033.685    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00000000 if necessary
+TFA53F740 001:033.687    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00002000 if necessary
+TFA53F740 001:033.688    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00004000 if necessary
+TFA53F740 001:033.690    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00006000 if necessary
+TFA53F740 001:033.738    -- End of determining dirty areas
+TFA53F740 001:033.740    -- Start of preparing flash programming
+TFA53F740 001:033.742    -- Calculating RAM usage
+TFA53F740 001:033.750    -- RAM usage = 4148 Bytes
+TFA53F740 001:033.752    -- Preserving CPU registers
+TFA53F740 001:033.759    -- Preparing target
+TFA53F740 001:033.761    -- Preserving target RAM temporarily used for programming
+TFA53F740 001:073.195    -- Downloading RAMCode
+TFA53F740 001:104.707    -- Preparing RAMCode
+TFA53F740 001:112.640    -- End of preparing flash programming
+TFA53F740 001:112.646    -- CPU is running at 160000 kHz.
+TFA53F740 001:112.648    -- Start of comparing flash
+TFA53F740 001:112.650    -- CRC check was estimated as fastest method
+TFA53F740 001:112.652    -- Comparing range 0x0000 - 0x7FFF (4 Sectors, 32 KB), using multi-block CRC calculation
+TFA53F740 001:123.542    -- CRC does not match for sectors 0-3
+TFA53F740 001:123.547    -- End of comparing flash
+TFA53F740 001:123.549    -- Start of erasing sectors
+TFA53F740 001:123.551    -- End of erasing sectors
+TFA53F740 001:123.552    -- Start of flash programming
+TFA53F740 001:123.554    -- Programming range 0x00000000 - 0x00007FFF (  4 Sectors, 32 KB)
+TFA53F740 001:432.594    -- End of flash programming
+TFA53F740 001:432.609    -- 0x0000 - 0x7FFF (  4 Sectors, 32 KB)
+TFA53F740 001:432.611    -- Start of restoring
+TFA53F740 001:432.615    -- Restoring RAMCode
+TFA53F740 001:455.734    -- Restoring target memory
+TFA53F740 001:494.890    -- Restore target
+TFA53F740 001:494.907    -- Restoring CPU registers
+TFA53F740 001:494.923    -- End of restoring
+TFA53F740 001:494.935    -- Bank 0 @ 0x00000000: 1 range affected (32768 bytes)
+TFA53F740 001:494.942    -- Total: 0.461s (Prepare: 0.078s, Compare: 0.010s, Erase: 0.000s, Program & Verify: 0.327s, Restore: 0.044s)
+TFA53F740 001:494.947    -- Program & Verify speed: 98 KB/s
+TFA53F740 001:495.116 - 462.654ms returns 0x00
+TFA53F740 001:495.127 JLINK_ExecCommand("SetVerifyRAMDownload = 0", ...). 
+TFA53F740 001:495.132 - 0.005ms returns 0x01
+TFA53F740 001:495.170 JLINK_IsHalted()
+TFA53F740 001:495.176 - 0.005ms returns TRUE
+TFA53F740 001:495.181 JLINK_ReadMemEx_64(0x00000000, 0x6CBC Bytes, ...)
+TFA53F740 001:495.211    -- Read from flash cache (27836 bytes @ 0x00000000)
+TFA53F740 001:495.220   Data:  A0 91 FF 1F 91 20 00 00 50 21 00 00 50 21 00 00 ...
+TFA53F740 001:495.225 - 0.043ms returns 27836 (0x6CBC)
+TFA53F740 001:495.254 JLINK_Reset()
+TFA53F740 001:495.262   JLINK_GetResetTypeDesc
+TFA53F740 001:495.266   - 0.004ms 
+TFA53F740 001:495.271   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+TFA53F740 001:495.275   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+TFA53F740 001:495.691   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TFA53F740 001:496.131   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+TFA53F740 001:496.491   Reset: Reset device via AIRCR.SYSRESETREQ.
+TFA53F740 001:496.494   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+TFA53F740 001:549.216   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TFA53F740 001:549.604   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TFA53F740 001:550.399   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TFA53F740 001:556.006   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TFA53F740 001:560.698   CPU_WriteMem(4 bytes @ 0xE0002000)
+TFA53F740 001:561.136   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+TFA53F740 001:561.526   CPU_ReadMem(4 bytes @ 0xE0001000)
+TFA53F740 001:561.924 - 66.670ms 
+TFA53F740 001:561.928 JLINK_Halt()
+TFA53F740 001:561.929 - 0.001ms returns 0x00
+TFA53F740 001:561.937 JLINK_ExecCommand("SetVerifyRAMDownload = 1", ...). 
+TFA53F740 001:561.940 - 0.003ms returns 0x00
+TFA53F740 001:561.941 JLINK_DownloadFile(sFile = /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-26-b90ba7b-phase4-usb/artifacts/usb_loopback_primary_attempt5.bin)
+TFA53F740 001:562.035   Data:  3D B8 F3 96 00 00 00 00 00 02 00 00 C0 3C 00 00 ...
+TFA53F740 001:562.078   completely In flash
+TFA53F740 001:562.235   Old firmware which does not support pausing periodic actions during flash download
+TFA53F740 001:562.240   CPU_ReadMem(4 bytes @ 0xE000ED90)
+TFA53F740 001:562.624   CPU_ReadMem(4 bytes @ 0xE000ED94)
+TFA53F740 001:563.066    -- --------------------------------------
+TFA53F740 001:563.069    -- Flash bank @ 0x00000000: Default: L2 verify disabled because algorithm performs L1 verify
+TFA53F740 001:563.071    -- Start of determining dirty areas in flash cache
+TFA53F740 001:563.080    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00010000 if necessary
+TFA53F740 001:563.082    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00012000 if necessary
+TFA53F740 001:563.084    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00014000 if necessary
+TFA53F740 001:563.085    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00016000 if necessary
+TFA53F740 001:563.086    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00018000 if necessary
+TFA53F740 001:563.088    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0001A000 if necessary
+TFA53F740 001:563.089    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0001C000 if necessary
+TFA53F740 001:563.091    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0001E000 if necessary
+TFA53F740 001:563.093    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00020000 if necessary
+TFA53F740 001:563.094    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00022000 if necessary
+TFA53F740 001:563.099    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00024000 if necessary
+TFA53F740 001:563.101    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00026000 if necessary
+TFA53F740 001:563.103    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00028000 if necessary
+TFA53F740 001:563.104    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0002A000 if necessary
+TFA53F740 001:563.105    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0002C000 if necessary
+TFA53F740 001:563.107    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0002E000 if necessary
+TFA53F740 001:563.108    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00030000 if necessary
+TFA53F740 001:563.110    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00032000 if necessary
+TFA53F740 001:563.112    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00034000 if necessary
+TFA53F740 001:563.113    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00036000 if necessary
+TFA53F740 001:563.114    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00038000 if necessary
+TFA53F740 001:563.116    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0003A000 if necessary
+TFA53F740 001:563.117    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0003C000 if necessary
+TFA53F740 001:563.118    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x0003E000 if necessary
+TFA53F740 001:563.120    -- Filling invalid ranges in sector buffer (flash cache) for sector @ 0x00040000 if necessary
+TFA53F740 001:563.146    -- End of determining dirty areas
+TFA53F740 001:563.148    -- Start of preparing flash programming
+TFA53F740 001:563.150    -- Calculating RAM usage
+TFA53F740 001:563.159    -- RAM usage = 10292 Bytes
+TFA53F740 001:563.160    -- Preserving CPU registers
+TFA53F740 001:563.169    -- Preparing target
+TFA53F740 001:563.172    -- Preserving target RAM temporarily used for programming
+TFA53F740 001:661.209    -- Downloading RAMCode
+TFA53F740 001:692.735    -- Preparing RAMCode
+TFA53F740 001:703.301    -- End of preparing flash programming
+TFA53F740 001:703.307    -- CPU is running at 160000 kHz.
+TFA53F740 001:703.309    -- Start of comparing flash
+TFA53F740 001:703.311    -- CRC check was estimated as fastest method
+TFA53F740 001:703.314    -- Comparing range 0x10000 - 0x2FFFF (16 Sectors, 128 KB), using multi-block CRC calculation
+TFA53F740 001:710.444    -- CRC does not match for sectors 0-1
+TFA53F740 001:710.458    -- Comparing range 0x30000 - 0x41FFF (9 Sectors, 72 KB), using multi-block CRC calculation
+TFA53F740 001:715.210    -- CRC does not match for sector 8
+TFA53F740 001:715.217    -- Comparing range 0x14000 - 0x33FFF (16 Sectors, 128 KB), using alternative multi-block CRC calculation
+TFA53F740 001:722.417    -- All CRCs match
+TFA53F740 001:722.423    -- Comparing range 0x34000 - 0x3FFFF (6 Sectors, 48 KB), using alternative multi-block CRC calculation
+TFA53F740 001:726.027    -- All CRCs match
+TFA53F740 001:726.030    -- End of comparing flash
+TFA53F740 001:726.032    -- Start of erasing sectors
+TFA53F740 001:726.035    -- Erasing range 0x00040000 - 0x00041FFF (  1 Sector, 8 KB)
+TFA53F740 001:744.900    -- End of erasing sectors
+TFA53F740 001:744.908    -- Start of flash programming
+TFA53F740 001:744.910    -- Programming range 0x00010000 - 0x00013FFF (  2 Sectors, 16 KB)
+TFA53F740 001:864.325    -- Programming range 0x00040000 - 0x00041FFF (  1 Sector, 8 KB)
+TFA53F740 001:904.270    -- End of flash programming
+TFA53F740 001:904.286    -- 0x10000 - 0x13FFF (  2 Sectors, 16 KB)
+TFA53F740 001:904.290    -- 0x40000 - 0x41FFF (  1 Sector, 8 KB)
+TFA53F740 001:904.293    -- Start of restoring
+TFA53F740 001:904.296    -- Restoring RAMCode
+TFA53F740 001:965.226    -- Restoring target memory
+TFA53F740 002:061.430    -- Restore target
+TFA53F740 002:061.440    -- Restoring CPU registers
+TFA53F740 002:061.455    -- End of restoring
+TFA53F740 002:061.467    -- Bank 0 @ 0x00000000: 2 ranges affected (24576 bytes)
+TFA53F740 002:061.502    -- Total: 0.498s (Prepare: 0.140s, Compare: 0.022s, Erase: 0.018s, Program & Verify: 0.215s, Restore: 0.101s)
+TFA53F740 002:061.524    -- Program & Verify speed: 111 KB/s
+TFA53F740 002:061.739 - 499.798ms returns 0x00
+TFA53F740 002:061.767 JLINK_ExecCommand("SetVerifyRAMDownload = 0", ...). 
+TFA53F740 002:061.774 - 0.008ms returns 0x01
+TFA53F740 002:061.829 JLINK_IsHalted()
+TFA53F740 002:062.231 - 0.402ms returns TRUE
+TFA53F740 002:062.235 JLINK_ReadMemEx_64(0x00010000, 0x32000 Bytes, ...)
+TFA53F740 002:062.304    -- Read from flash cache (204800 bytes @ 0x00010000)
+TFA53F740 002:062.307   Data:  3D B8 F3 96 00 00 00 00 00 02 00 00 C0 3C 00 00 ...
+TFA53F740 002:062.309 - 0.074ms returns 204800 (0x32000)
+TFA53F740 002:062.357 JLINK_SetResetDelay(0)
+TFA53F740 002:062.358 - 0.001ms 
+TFA53F740 002:062.360 JLINK_Reset()
+TFA53F740 002:062.363   JLINK_GetResetTypeDesc
+TFA53F740 002:062.364   - 0.001ms 
+TFA53F740 002:062.367   Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+TFA53F740 002:062.370   CPU_WriteMem(4 bytes @ 0xE000EDF0)
+TFA53F740 002:062.811   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TFA53F740 002:063.215   Reset: Halt core after reset via DEMCR.VC_CORERESET.
+TFA53F740 002:063.570   Reset: Reset device via AIRCR.SYSRESETREQ.
+TFA53F740 002:063.573   CPU_WriteMem(4 bytes @ 0xE000ED0C)
+TFA53F740 002:115.945   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TFA53F740 002:116.327   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TFA53F740 002:116.713   CPU_WriteMem(4 bytes @ 0xE000EDFC)
+TFA53F740 002:122.345   CPU_ReadMem(4 bytes @ 0xE000EDF0)
+TFA53F740 002:127.056   CPU_WriteMem(4 bytes @ 0xE0002000)
+TFA53F740 002:127.468   CPU_ReadMem(4 bytes @ 0xE000EDFC)
+TFA53F740 002:127.853   CPU_ReadMem(4 bytes @ 0xE0001000)
+TFA53F740 002:128.241 - 65.881ms 
+TFA53F740 002:128.249 JLINK_GoEx(MaxEmulInsts = 0, Flags = 0x01)
+TFA53F740 002:128.252   CPU_ReadMem(4 bytes @ 0xE0001000)
+TFA53F740 002:128.637   CPU_WriteMem(4 bytes @ 0xE0001004)
+TFA53F740 002:129.708   Memory map 'after startup completion point' is active
+TFA53F740 002:129.711 - 1.462ms 
+TFA53F740 007:129.784 JLINK_Halt()
+TFA53F740 007:134.082 - 4.299ms returns 0x00
+TFA53F740 007:134.090 JLINK_GetDeviceFamily
+TFA53F740 007:134.091 - 0.001ms returns 14
+TFA53F740 007:134.093 JLINK_CORE_GetFound()
+TFA53F740 007:134.094 - 0.001ms returns 0xE0000FF
+TFA53F740 007:134.097 JLINK_GetDebugInfo(0x01 = Unknown)
+TFA53F740 007:134.098   Value=0x00000001
+TFA53F740 007:134.100 - 0.004ms returns 0
+TFA53F740 007:134.101 JLINK_ReadRegs(NumRegs = 28)
+TFA53F740 007:134.112   CPU_ReadMem(4 bytes @ 0xE0001004)
+TFA53F740 007:134.521   
+  R0 (0)         = 0x00                 R1 (1)         = 0xF0                 R2 (2)         = 0x400                R3 (3)         = 0x1FFF8754        
+  R4 (4)         = 0xE000E100           R5 (5)         = 0xFFFFFFFF           R6 (6)         = 0x20000754           R7 (7)         = 0x1FFFBE6C        
+  R8 (8)         = 0x62FC               R9 (9)         = 0x6A9C               R10 (10)       = 0x4102               R11 (11)       = 0x00              
+  R12 (12)       = 0x1FF                R13 (SP) (13)  = 0x1FFF9420           MSP (17)       = 0x1FFF9420           PSP (18)       = 0xF5AEAC80        
+  R14 (14)       = 0x1206F              R15 (PC) (15)  = 0x11A34              XPSR (16)      = 0x21000000           APSR (21)      = 0x20000000        
+  EPSR (22)      = 0x1000000            IPSR (23)      = 0x00                 CFBP (20)      = 0x00                 CONTROL (27)   = 0x00              
+  FAULTMASK (26) = 0x00                 BASEPRI (25)   = 0x00                 PRIMASK (24)   = 0x00                 CycleCnt (65)  = 0x3B920C86        
+TFA53F740 007:134.529 - 0.428ms returns 0x00
+TFA53F740 007:134.537 JLINK_ReadRegs(NumRegs = 33)
+TFA53F740 007:141.314   
+  FPS0 (33)  = 0xEAE71737           FPS1 (34)  = 0xB82B4B42           FPS2 (35)  = 0x1D911C8F           FPS3 (36)  = 0xC93175A1        
+  FPS4 (37)  = 0xEFC05173           FPS5 (38)  = 0x2F8C98F8           FPS6 (39)  = 0xFBEFCF66           FPS7 (40)  = 0xD3EC769E        
+  FPS8 (41)  = 0xF34547AB           FPS9 (42)  = 0xF5B1B8A1           FPS10 (43) = 0x3F000000           FPS11 (44) = 0x3F800000        
+  FPS12 (45) = 0x45467000           FPS13 (46) = 0x424E0000           FPS14 (47) = 0x3C0316A9           FPS15 (48) = 0x33              
+  FPS16 (49) = 0x9F9FDC82           FPS17 (50) = 0xBEF4BECB           FPS18 (51) = 0x3B3FD1B0           FPS19 (52) = 0xE65DFA6A        
+  FPS20 (53) = 0x5BB1B45F           FPS21 (54) = 0xD7F3B79A           FPS22 (55) = 0x251ABB78           FPS23 (56) = 0x2DE6FFB5        
+  FPS24 (57) = 0x27D1C5A            FPS25 (58) = 0x5B9770EE           FPS26 (59) = 0x349E1A6A           FPS27 (60) = 0xECF189E0        
+  FPS28 (61) = 0xD3B4FFB4           FPS29 (62) = 0x601593B7           FPS30 (63) = 0x37BE90CF           FPS31 (64) = 0x8AE5FCF2        
+  FPSCR (32) = 0x00              
+TFA53F740 007:141.322 - 6.786ms returns 0x00
+TFA53F740 007:141.338 JLINK_ReadMemU32_64(0x1FFF8754, 0x2 Items)
+TFA53F740 007:141.347   CPU_ReadMem(8 bytes @ 0x1FFF8754)
+TFA53F740 007:141.794   Data:  00 00 00 00 00 04 00 00
+TFA53F740 007:141.796 - 0.459ms returns 2 (0x2)
+TFA53F740 007:141.798 JLINK_HasError()
+TFA53F740 007:141.803 JLINK_ReadMemU32_64(0x1FFF834C, 0x2 Items)
+TFA53F740 007:141.805   CPU_ReadMem(8 bytes @ 0x1FFF834C)
+TFA53F740 007:142.262   Data:  00 00 00 00 00 00 00 00
+TFA53F740 007:142.264 - 0.461ms returns 2 (0x2)
+TFA53F740 007:142.265 JLINK_HasError()
+TFA53F740 007:142.270 JLINK_ReadMemU8_64(0x40054024, 0x1 Items)
+TFA53F740 007:142.273   CPU_ReadMem(1 bytes @ 0x40054024)
+TFA53F740 007:142.656   Data:  B0
+TFA53F740 007:142.658 - 0.388ms returns 1 (0x1)
+TFA53F740 007:142.659 JLINK_HasError()
+TFA53F740 007:142.663 JLINK_ReadMemU8_64(0x4005402E, 0x1 Items)
+TFA53F740 007:142.664   CPU_ReadMem(1 bytes @ 0x4005402E)
+TFA53F740 007:143.031   Data:  00
+TFA53F740 007:143.033 - 0.371ms returns 1 (0x1)
+TFA53F740 007:143.034 JLINK_HasError()
+TFA53F740 007:143.037 JLINK_ReadMemU8_64(0x4005403C, 0x1 Items)
+TFA53F740 007:143.038   CPU_ReadMem(1 bytes @ 0x4005403C)
+TFA53F740 007:143.406   Data:  69
+TFA53F740 007:143.408 - 0.371ms returns 1 (0x1)
+TFA53F740 007:143.409 JLINK_HasError()
+TFA53F740 007:143.412 JLINK_ReadMemU32_64(0x40054104, 0x1 Items)
+TFA53F740 007:143.413   CPU_ReadMem(4 bytes @ 0x40054104)
+TFA53F740 007:143.807   Data:  01 77 50 95
+TFA53F740 007:143.809 - 0.397ms returns 1 (0x1)
+TFA53F740 007:143.810 JLINK_HasError()
+TFA53F740 007:143.814 JLINK_GoEx(MaxEmulInsts = 0, Flags = 0x01)
+TFA53F740 007:144.244   CPU_ReadMem(4 bytes @ 0xE0001000)
+TFA53F740 007:145.314 - 1.500ms 
+TFA53F740 007:145.330 JLINK_IsOpen()
+TFA53F740 007:145.332 - 0.001ms returns 0x01
+TFA53F740 007:148.797 JLINK_Close()
+TFA53F740 007:161.571 - 12.773ms
+TFA53F740 007:161.576   
+TFA53F740 007:161.577   Closed

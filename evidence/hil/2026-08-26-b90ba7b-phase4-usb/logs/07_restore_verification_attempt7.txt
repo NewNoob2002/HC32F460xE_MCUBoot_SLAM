@@ -1,0 +1,10 @@
+$ sha256sum build/HIL/phase4-usb/backup/pre_hil_00000000_00075fff.bin build/HIL/phase4-usb/snapshots/post_restore_00000000_00075fff.bin
+e608d3eae3ea4a8c0010f3ee6de8fc361c9618f98733a2c769d72264c1667c98  build/HIL/phase4-usb/backup/pre_hil_00000000_00075fff.bin
+e608d3eae3ea4a8c0010f3ee6de8fc361c9618f98733a2c769d72264c1667c98  build/HIL/phase4-usb/snapshots/post_restore_00000000_00075fff.bin
+
+$ cmp build/HIL/phase4-usb/backup/pre_hil_00000000_00075fff.bin build/HIL/phase4-usb/snapshots/post_restore_00000000_00075fff.bin
+exit_status=0
+
+$ lsusb -d fffe:ffff
+exit_status=1
+stdout=<empty>
