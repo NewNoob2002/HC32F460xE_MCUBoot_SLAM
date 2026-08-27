@@ -87,3 +87,11 @@ add_test(
     NAME fw_update_architecture
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Architecture/check_portable_dependencies.py
 )
+add_test(
+    NAME usb_evaluation_boundary
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Architecture/check_usb_boundary.py
+)
+add_test(
+    NAME usb_loopback_host_self_test
+    COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/Tools/host/usb_loopback.py self-test
+)

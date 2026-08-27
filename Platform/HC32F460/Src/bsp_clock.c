@@ -1,9 +1,11 @@
 #include "bsp_clock.h"
+#include "bsp_write_protection.h"
 #include "hc32_ll.h"
 void bsp_clock_init(void) {
     stc_clock_xtal_init_t stcXtalInit;
     stc_clock_pll_init_t stcMpllInit;
 
+    bsp_write_protection_unlock();
     GPIO_AnalogCmd(GPIO_PORT_H, (GPIO_PIN_00 | GPIO_PIN_01), ENABLE);
     (void)CLK_XtalStructInit(&stcXtalInit);
     (void)CLK_PLLStructInit(&stcMpllInit);
@@ -54,4 +56,5 @@ void bsp_clock_init(void) {
     EFM_CacheCmd(ENABLE);
 
     SystemCoreClockUpdate();
+    bsp_write_protection_restore();
 }

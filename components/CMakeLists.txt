@@ -4,6 +4,7 @@ set(MCUBOOT_ASN1_ROOT ${MCUBOOT_ROOT}/ext/mbedtls-asn1)
 set(BOOTUTIL_ROOT ${MCUBOOT_ROOT}/boot/bootutil)
 
 add_subdirectory(mcuboot_port)
+add_subdirectory(cherryusb)
 
 add_library(tinycrypt STATIC
     ${TINYCRYPT_ROOT}/source/sha256.c

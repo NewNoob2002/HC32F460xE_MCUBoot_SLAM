@@ -29,3 +29,24 @@ target_link_options(app_firmware PRIVATE
 )
 add_firmware_artifacts(app_firmware)
 add_mcuboot_signed_artifacts(app_firmware)
+
+add_executable(usb_vendor_bulk_loopback
+    Core/Src/usb_vendor_bulk.c
+    Core/Src/usb_vendor_bulk_main.c
+    ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Src/usb_dc_hc32f460.c
+    ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Src/syscalls.c
+    $<TARGET_OBJECTS:hc32_startup_app>
+)
+set_target_properties(usb_vendor_bulk_loopback PROPERTIES SUFFIX .elf)
+target_include_directories(usb_vendor_bulk_loopback PRIVATE Core/Inc)
+target_link_libraries(usb_vendor_bulk_loopback PRIVATE
+    cherryusb_device
+    hc32_platform
+    hc32_device
+)
+target_link_options(usb_vendor_bulk_loopback PRIVATE
+    -T${PROJECT_SOURCE_DIR}/Linker/app.ld
+    -Wl,-Map,${CMAKE_CURRENT_BINARY_DIR}/usb_vendor_bulk_loopback.map
+)
+add_firmware_artifacts(usb_vendor_bulk_loopback)
+add_mcuboot_signed_artifacts(usb_vendor_bulk_loopback usb_loopback)

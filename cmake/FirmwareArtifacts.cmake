@@ -11,12 +11,16 @@ function(add_firmware_artifacts target)
 endfunction()
 
 function(add_mcuboot_signed_artifacts target)
+    set(artifact_name "app")
+    if(ARGC GREATER 1)
+        set(artifact_name "${ARGV1}")
+    endif()
     set(artifact_dir "${CMAKE_BINARY_DIR}/artifacts")
     set(raw_image "${CMAKE_CURRENT_BINARY_DIR}/${target}.bin")
-    set(signed_image "${artifact_dir}/app_signed.bin")
-    set(primary_image "${artifact_dir}/app_primary.bin")
-    set(update_image "${artifact_dir}/app_update.bin")
-    set(verify_stamp "${artifact_dir}/verify_app_image.stamp")
+    set(signed_image "${artifact_dir}/${artifact_name}_signed.bin")
+    set(primary_image "${artifact_dir}/${artifact_name}_primary.bin")
+    set(update_image "${artifact_dir}/${artifact_name}_update.bin")
+    set(verify_stamp "${artifact_dir}/verify_${artifact_name}_image.stamp")
     set(sign_args
         sign
         --align "${FLASH_WRITE_ALIGN}"
@@ -50,9 +54,9 @@ function(add_mcuboot_signed_artifacts target)
         VERBATIM
     )
 
-    add_custom_target(app_signed DEPENDS "${signed_image}")
-    add_custom_target(app_primary DEPENDS "${primary_image}")
-    add_custom_target(app_update DEPENDS "${update_image}")
+    add_custom_target(${artifact_name}_signed DEPENDS "${signed_image}")
+    add_custom_target(${artifact_name}_primary DEPENDS "${primary_image}")
+    add_custom_target(${artifact_name}_update DEPENDS "${update_image}")
 
     add_custom_command(OUTPUT "${verify_stamp}"
         COMMAND "${MCUBOOT_PYTHON}" "${MCUBOOT_IMGTOOL}" verify
@@ -71,5 +75,5 @@ function(add_mcuboot_signed_artifacts target)
                 "${MCUBOOT_ACTIVE_SIGNING_KEY}" "${MCUBOOT_IMGTOOL}"
         VERBATIM
     )
-    add_custom_target(verify_app_image DEPENDS "${verify_stamp}")
+    add_custom_target(verify_${artifact_name}_image DEPENDS "${verify_stamp}")
 endfunction()
