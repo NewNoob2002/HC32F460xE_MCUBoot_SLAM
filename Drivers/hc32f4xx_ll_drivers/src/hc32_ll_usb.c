@@ -27,6 +27,7 @@
  ******************************************************************************/
 #include "hc32_ll_usb.h"
 #include "usb_bsp.h"
+#include <string.h>
 
 /**
  * @addtogroup LL_Driver
@@ -127,20 +128,20 @@ void usb_coresoftrst(LL_USB_TypeDef *USBx)
  */
 void usb_wrpkt(LL_USB_TypeDef *USBx, uint8_t *src, uint8_t ch_ep_num, uint16_t len, uint8_t u8DmaEn)
 {
-    __IO uint32_t u32pAddr;
     __IO uint32_t *fifo;
-    uint32_t u32Count32b;
-    uint32_t u32Tmp;
+    uint32_t word;
     if (u8DmaEn == 0U) {
-        u32Count32b = (len + 3UL);
-        u32Count32b = u32Count32b >> 2U;
         fifo = USBx->DFIFO[ch_ep_num];
-        u32Tmp = 0UL;
-        while (u32Tmp < u32Count32b) {
-            WRITE_REG32(*fifo, *((uint32_t *)src));
-            u32pAddr = (uint32_t)src;
-            src = (uint8_t *)(u32pAddr + 4U);
-            u32Tmp++;
+        while (len >= sizeof(word)) {
+            (void)memcpy(&word, src, sizeof(word));
+            WRITE_REG32(*fifo, word);
+            src += sizeof(word);
+            len -= sizeof(word);
+        }
+        if (len != 0U) {
+            word = 0UL;
+            (void)memcpy(&word, src, len);
+            WRITE_REG32(*fifo, word);
         }
     }
 }
@@ -154,20 +155,18 @@ void usb_wrpkt(LL_USB_TypeDef *USBx, uint8_t *src, uint8_t ch_ep_num, uint16_t l
  */
 void usb_rdpkt(LL_USB_TypeDef *USBx, uint8_t *dest, uint16_t len)
 {
-    uint32_t u32Tmp;
-    __IO uint32_t u32Count32b;
-    __IO uint32_t u32pAddr;
-
     __IO uint32_t *fifo = USBx->DFIFO[0];
-    u32Count32b = (len + 3UL);
-    u32Count32b = u32Count32b >> 2U;
-    u32pAddr = 0UL;
-    u32Tmp = 0UL;
-    while (u32Tmp < u32Count32b) {
-        *(uint32_t *)dest = READ_REG32(*fifo);
-        u32pAddr = (uint32_t)dest;
-        dest = (uint8_t *)(u32pAddr + 4U);
-        u32Tmp++;
+    uint32_t word;
+
+    while (len >= sizeof(word)) {
+        word = READ_REG32(*fifo);
+        (void)memcpy(dest, &word, sizeof(word));
+        dest += sizeof(word);
+        len -= sizeof(word);
+    }
+    if (len != 0U) {
+        word = READ_REG32(*fifo);
+        (void)memcpy(dest, &word, len);
     }
 }
 
