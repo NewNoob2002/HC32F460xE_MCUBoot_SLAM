@@ -1,14 +1,14 @@
 # Current Repository State
 
-Audit date: 2026-08-26
+Audit date: 2026-08-27
 
 Audited baseline revision: `9d29ee9843c711d7f853d7c24a7df58be8e8e1e9`
 
-Phase 3/G3 passed on 2026-08-26. Phase 4 source revision `93c9c04` and GitHub
-Actions CI run `33026124061` passed local/remote build and test checks. Retained
-HIL evidence records USB enumeration, 10,000 loopback transfers, target counters
-and exact restoration. Phase 4/G4 is `READY_FOR_REVIEW`, not `PASSED`; the
-30-minute run and 10 manual unplug/re-enumeration cycles remain.
+Phase 4/G4 passed on 2026-08-27 at source revision `fd703cd`, evidence commit
+`2b63850` and GitHub Actions run `33043244338`. Retained HIL evidence records
+enumeration, endpoint stall recovery, 10,000 baseline transfers, ten manual
+unplug/re-enumeration recoveries, 2,960,145 transfers over 1800.001 seconds,
+zero firmware errors and exact restoration of the original all-FF image.
 
 This document describes the repository as implemented. Historical milestone documents are supporting evidence, not the source of truth for current code.
 
@@ -184,9 +184,9 @@ MCUboot's upstream ability to validate or swap an image is not evidence that thi
 | Host unit | Memory/Flash map, handover, confirmation, fw_update contracts/backends, Protocol codec/parser, 10,000-case corpus, Manager lifecycle and USB boundary checks | No production App/updater transport integration exists |
 | Component integration | MCUboot Flash backend with mocked BSP Flash plus Storage/Boot-Control backend fakes | No full `boot_go()` host integration or Flash power-loss model |
 | Firmware build | Debug/Release, image signing/verification, layout and key policy in CI | No size regression threshold beyond partition/link failure |
-| HIL/manual | Boot/swap/revert/confirmation, Phase 2 Storage/Boot-Control, and Phase 4 USB enumeration plus 10,000 mixed-length loopbacks with exact restoration | 30-minute USB run, 10 unplug/re-enumeration cycles and reset/power-loss matrices remain |
+| HIL/manual | Boot/swap/revert/confirmation, Phase 2 Storage/Boot-Control, and Phase 4 USB enumeration, stall recovery, 10,000 baseline, 10 unplug/re-enumeration recoveries, 30-minute run and exact restoration | Runtime USB upgrade E2E and reset/power-loss matrices remain |
 | Fault injection | Unconfirmed test boot followed by reset/revert | No erase/write failure, corrupted trailer or interrupted swap matrix |
-| CI | Evidence checksums, eleven strict HostTests, USB boundary rule and Debug/Release builds/signing; Phase 4 source passed CI `33026124061` | No physical USB or runtime update E2E in hosted CI |
+| CI | Evidence checksums, eleven strict HostTests, USB boundary rule and Debug/Release builds/signing; Phase 4 evidence passed CI `33043244338` | No physical USB or runtime update E2E in hosted CI |
 
 The largest current delivery gap is production Application/Transport integration.
 The largest baseline reliability gap remains systematic
@@ -224,9 +224,9 @@ No P0 defect was identified in the protected baseline. A new P0 is any path that
 
 ## Baseline conclusion
 
-The baseline, Phase 2 Storage/Boot-Control foundation and Phase 3 portable
-Protocol/Manager are CI/HIL evidenced. Phase 4 now has a bounded CherryUSB/HC32
-USB loopback implementation with successful 10,000-transfer HIL and exact
-restoration. G4 remains `READY_FOR_REVIEW` until the 30-minute continuous run
-and 10 manual unplug/re-enumeration cycles pass. The production runtime updater
-path is not implemented.
+The baseline, Phase 2 Storage/Boot-Control foundation, Phase 3 portable
+Protocol/Manager and Phase 4 CherryUSB/HC32 loopback are CI/HIL evidenced. G4
+is `PASSED`. Phase 5 is next: add only the minimum USB Transport glue, reuse
+Manager/Storage, use static buffers, expose host `info`/`install`/`wait`, prove
+fake E2E first, then v1 -> v2 -> confirm -> persistence HIL. UART/CAN, a
+transport registry and download recovery remain out of scope.

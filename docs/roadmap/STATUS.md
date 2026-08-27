@@ -1,6 +1,6 @@
 # Roadmap Status
 
-Last updated: 2026-08-26
+Last updated: 2026-08-27
 
 Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIEW`, `PASSED`.
 
@@ -10,8 +10,8 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 | Phase 1 — Architecture Audit and Contract Freeze | PASSED | G1 | Local G1 passed; remote CI passed | Not required | None | revision `1429e30`, CI run `32925552505` |
 | Phase 2 — Secondary Storage and Boot Control | PASSED | G2 | Strict HostTests 7/7; Debug/Release/signing and remote CI passed | Storage/range-isolation/Pending/restore passed | None | `evidence/hil/2026-08-26-5ebeae6-phase2/`, revisions `5ebeae6`/`0e1abd8`, CI `32928199086`/`32929570437` |
 | Phase 3 — Protocol Core | PASSED | G3 | HostTests 9/9; corpus 10,000; Debug/Release/signing and remote CI PASS | Not required | None | `evidence/host/2026-08-26-e7899bd-phase3/`, revisions `e7899bd`/`515d0c5`, CI `32948384485` |
-| Phase 4 — CherryUSB + HC32 DCD Loopback | READY_FOR_REVIEW | G4 | HostTests 11/11; Debug/Release and source CI passed | Enumeration, 10,000-transfer loopback, counters and exact restore passed | 30-minute continuous run; 10 manual unplug/re-enumeration cycles | `evidence/hil/2026-08-26-b90ba7b-phase4-usb/`, revision `93c9c04`, CI `33026124061` |
-| Phase 5 — USB Upgrade E2E | NOT_STARTED | G5 | Not run | Required | G4 | None |
+| Phase 4 — CherryUSB + HC32 DCD Loopback | PASSED | G4 | HostTests 11/11; Debug/Release image verification; CI passed | Enumeration, stall recovery, 10,000-transfer baseline, 10 unplug/re-enumeration recoveries, 30-minute run, counters and exact restore passed | None | `evidence/hil/2026-08-27-fd703cd-phase4-g4/`, revision `fd703cd`, evidence commit `2b63850`, CI `33043244338` |
+| Phase 5 — USB Upgrade E2E | NOT_STARTED | G5 | Not run | Required | None | None |
 | Phase 6 — Failure and Recovery | NOT_STARTED | G6 | Not run | Required | G5, power/reset fixture | None |
 | Phase 7 — UART Portability | NOT_STARTED | G7 | Not run | Required | G6 | None |
 | Phase 8 — CAN/CAN FD Portability | NOT_STARTED | G8 | Not run | Required | G7 | None |
@@ -32,9 +32,10 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 
 ## Immediate next action
 
-Review the Phase 4 evidence, then run the remaining 30-minute continuous test
-and at least 10 manual unplug/re-enumeration cycles. Do not begin Phase 5 before
-G4 is explicitly accepted as `PASSED`.
+Begin Phase 5 with the minimum USB Transport glue over the existing
+Manager/Storage contracts and static buffers. Implement host `info`, `install`
+and `wait`; prove fake E2E first, then run v1 -> v2 -> confirm -> persistence
+HIL. Do not add UART/CAN, a transport registry or download recovery yet.
 
 ## Latest local G1 verification
 
@@ -187,26 +188,23 @@ Date: 2026-08-26
 - Phase 4 remains `NOT_STARTED`; no USB/CherryUSB/HC32 DCD implementation was
   started by this gate-close change.
 
-## Latest Phase 4 node closure
+## Latest Phase 4 G4 closure
 
-Date: 2026-08-26
+Date: 2026-08-27
 
-- Source revision `93c9c048380becbda1d655537bdbc095bf743ac5` adds the
-  bounded CherryUSB Vendor Bulk loopback, HC32 USB DCD and host loopback tool.
-- Strict Werror + ASan/UBSan HostTests: 11/11 passed with the repository CI
-  setting `ASAN_OPTIONS=detect_leaks=0`.
-- Debug and Release full builds plus `verify_app_image` and
-  `verify_usb_loopback_image`: passed.
-- GitHub Actions source run `33026124061`: passed.
-- The target enumerated as `fffe:ffff`; host permissions were `0660` with
-  user/group read-write access.
-- The host completed 10,000 transfers over lengths
-  `0,1,63,64,65,512,1024` with zero failures in 6.786 seconds.
-- Target counters after the run were init `0`, stage `0x400`, errors `0` and
-  packets `0x2710`.
-- The exact pre-HIL image was restored and matched byte-for-byte at SHA-256
-  `e608d3eae3ea4a8c0010f3ee6de8fc361c9618f98733a2c769d72264c1667c98`;
-  `fffe:ffff` no longer enumerated after restoration.
-- Evidence: `evidence/hil/2026-08-26-b90ba7b-phase4-usb/`.
-- Phase 4/G4 status: `READY_FOR_REVIEW`, not `PASSED`. Remaining manual gates:
-  30-minute continuous operation and at least 10 unplug/re-enumeration cycles.
+- Clean source revision `fd703cde5a312f05d74926f0c055fca6053d6bbb`;
+  evidence commit `2b63850e19640f4691e152a446be850aa9993cfd`.
+- Strict Werror + ASan/UBSan HostTests: 11/11 passed. Debug and Release full
+  builds plus `verify_app_image` and `verify_usb_loopback_image`: passed.
+- Descriptors and endpoint stall/clear-stall recovery passed; the 10,000
+  mixed-length baseline completed in 6.028 seconds.
+- Ten intentional transfer-time unplug/re-enumeration rounds each completed
+  100/100 recovery transfers. Firmware errors stayed zero and packet counts
+  increased monotonically.
+- Continuous loopback completed 2,960,145 transfers in 1800.001 seconds. Final
+  firmware counters were errors `0`, packets `3,496,742`.
+- The original 483328-byte all-FF image was restored byte-for-byte at SHA256
+  `410a0acccbb0a231d35508a9e545953b7490406986557750c531bd56edf39b1b`.
+- Evidence verification and GitHub Actions run `33043244338`: passed.
+- Evidence: `evidence/hil/2026-08-27-fd703cd-phase4-g4/`.
+- Phase 4/G4 status: `PASSED`. Phase 5 may begin within its frozen scope.
