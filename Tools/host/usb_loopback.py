@@ -15,6 +15,10 @@ OUT_EP = 0x02
 IN_EP = 0x81
 OUT_MPS = 64
 OUT_RECEIVE_SIZE = 1024
+LIBUSB_ERROR_PIPE = -9
+USB_REQUEST_SET_FEATURE = 3
+USB_FEATURE_ENDPOINT_HALT = 0
+USB_REQUEST_TYPE_STANDARD_ENDPOINT_OUT = 0x02
 
 
 def parse_lengths(value):
@@ -68,6 +72,13 @@ class UsbDevice:
         self.usb.libusb_claim_interface.argtypes = [ctypes.c_void_p, ctypes.c_int]
         self.usb.libusb_release_interface.argtypes = [ctypes.c_void_p, ctypes.c_int]
         self.usb.libusb_close.argtypes = [ctypes.c_void_p]
+        self.usb.libusb_clear_halt.argtypes = [ctypes.c_void_p, ctypes.c_ubyte]
+        self.usb.libusb_clear_halt.restype = ctypes.c_int
+        self.usb.libusb_control_transfer.argtypes = [
+            ctypes.c_void_p, ctypes.c_ubyte, ctypes.c_ubyte, ctypes.c_uint16,
+            ctypes.c_uint16, ctypes.POINTER(ctypes.c_ubyte), ctypes.c_uint16, ctypes.c_uint
+        ]
+        self.usb.libusb_control_transfer.restype = ctypes.c_int
         self.usb.libusb_bulk_transfer.argtypes = [
             ctypes.c_void_p,
             ctypes.c_ubyte,
@@ -76,6 +87,19 @@ class UsbDevice:
             ctypes.POINTER(ctypes.c_int),
             ctypes.c_uint,
         ]
+
+    def set_halt(self, endpoint):
+        result = self.usb.libusb_control_transfer(
+            self.handle, USB_REQUEST_TYPE_STANDARD_ENDPOINT_OUT, USB_REQUEST_SET_FEATURE,
+            USB_FEATURE_ENDPOINT_HALT, endpoint, None, 0, self.timeout_ms
+        )
+        if result != 0:
+            raise RuntimeError(f"cannot halt endpoint 0x{endpoint:02x}: libusb error {result}")
+
+    def clear_halt(self, endpoint):
+        result = self.usb.libusb_clear_halt(self.handle, endpoint)
+        if result != 0:
+            raise RuntimeError(f"cannot clear endpoint 0x{endpoint:02x}: libusb error {result}")
 
     def close(self):
         if self.handle:
@@ -159,6 +183,23 @@ def run_loopback(args):
     print("lengths " + " ".join(f"{length}:{counts[length]}" for length in args.lengths))
 
 
+def stall_recovery(args):
+    expected = payload(0, 65)
+    with UsbDevice(args.vid, args.pid, args.timeout_ms) as device:
+        device.set_halt(OUT_EP)
+        try:
+            device.transfer(expected)
+        except RuntimeError as error:
+            if f"result={LIBUSB_ERROR_PIPE}" not in str(error):
+                raise
+        else:
+            raise RuntimeError("halted OUT endpoint accepted a transfer")
+        device.clear_halt(OUT_EP)
+        if device.transfer(expected) != expected:
+            raise RuntimeError("loopback mismatch after clearing OUT endpoint halt")
+    print("PASS endpoint halt and clear-halt recovery")
+
+
 def self_test(_args):
     assert parse_lengths("0,1,0x40,1024") == (0, 1, 64, 1024)
     assert payload(255, 3) == b"\xff\x00\x01"
@@ -181,6 +222,9 @@ def main():
     run.add_argument("--seconds", type=float, default=0)
     run.add_argument("--lengths", type=parse_lengths, default=DEFAULT_LENGTHS)
     run.set_defaults(action=run_loopback)
+
+    stall = commands.add_parser("stall-recovery")
+    stall.set_defaults(action=stall_recovery)
 
     check = commands.add_parser("self-test")
     check.set_defaults(action=self_test)
