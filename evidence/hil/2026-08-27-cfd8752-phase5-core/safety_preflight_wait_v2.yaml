@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-27T08:32:43Z"
+  operation: "usb-protocol-read"
+  authorization: "User authorized Phase 5 HIL; v2 install and COMMIT completed"
+  target:
+    board: "HC32F460 Phase 5 Lab"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "expected USB serial HC32F460-PHASE5-0001; J-Link 20781318"
+    transport: "USB Vendor Bulk fffe:ffff"
+  artifact_or_stimulus: "wait for application version 2.0.0 using HELLO/DEVICE_INFO only"
+  limits: "30 s total timeout, 250 ms poll, 2 s/request; no install, reset, power control, debugger attach or Flash/storage write"
+  recovery_plan: "Stop on timeout/protocol error and preserve install plus udev logs before any further action"
+  approved: true

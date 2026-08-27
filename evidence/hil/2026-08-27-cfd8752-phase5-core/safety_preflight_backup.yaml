@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-27T08:23:17Z"
+  operation: "debug-halt/readback"
+  authorization: "User authorized flashing updater firmware and starting Phase 5 HIL on 2026-08-27"
+  target:
+    board: "HC32F460xE; Cortex-M4"
+    hardware_revision: "unknown"
+    probe_or_adapter_serial: "J-Link 20781318"
+    transport: "SWD 4000 kHz"
+  artifact_or_stimulus: "Read exactly 0x00000000-0x00075FFF into backup/pre_flash_00000000_00075fff.bin"
+  limits: "Expected VTref about 3.35 V; halt only for bounded readback; never read Reserved 0x00076000-0x0007FFFF; no erase/write/reset/unlock/recover/OTP/option-byte/protection change"
+  recovery_plan: "Resume the pre-existing target execution state with go; stop immediately on target identity, VTref or readback failure"
+  approved: true

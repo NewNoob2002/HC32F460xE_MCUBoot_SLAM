@@ -1,0 +1,38 @@
+build_output:
+  schema_version: 1
+  created_at_utc: "2026-08-27T08:30:38Z"
+  project: "HC32F460xE_MCUBoot_SLAM"
+  target: "HC32F460xE"
+  mcu: "HC32F460"
+  operating_system: "bare-metal"
+  configuration: "Release v1.0.0 and Release v2.0.0"
+  source_revision: "cfd87525f86ba22465784dba13c38e5de5d76759"
+  source_dirty: true
+  source_note: "HIL ran before cfd8752 was committed; runtime C/Rust/CMake inputs are byte-equivalent, while later changes were documentation, CI and repository guidance only"
+  toolchain: {id: "GNU Tools for STM32", version: "arm-none-eabi-gcc 14.3.1", target: "arm-none-eabi"}
+  artifacts:
+    host_updater: "artifacts/host/hc32-updater"
+    boot_bin: "artifacts/v1/boot_firmware.bin"
+    v1_primary: "artifacts/v1/updater_primary.bin"
+    v1_signed: "artifacts/v1/updater_signed.bin"
+    v2_bin: "artifacts/v2/usb_fw_updater.bin"
+    v2_elf: "artifacts/v2/usb_fw_updater.elf"
+    v2_signed: "artifacts/v2/updater_signed.bin"
+    v2_primary: "artifacts/v2/updater_primary.bin"
+    v2_update: "artifacts/v2/updater_update.bin"
+  checksums:
+    artifacts/host/hc32-updater: "7f5f55e80bbd3317f0cc02b0fd1bb7f0c102c1ad0631c60a77308b217d5a046a"
+    artifacts/v1/boot_firmware.bin: "9ee9eeaa8817e131a742b69764e79fcc4d87338656942117a7fb451c726630cf"
+    artifacts/v1/updater_primary.bin: "7777ec9b50cb29a2a7f5c03cc8328f9b7b0927c56e79d380fb55a2af83d9f8e5"
+    artifacts/v1/updater_signed.bin: "cfae4a578e63488252a44b36f027130393102c9de198792916fb057ac02f3cb5"
+    artifacts/v2/usb_fw_updater.bin: "ae19e5f9e9e869c925188450f60fe7e523afbc65b7e2b2bbc863158ca3da69f2"
+    artifacts/v2/usb_fw_updater.elf: "daeebaec1f01f475a9e098b1661115326bed1cc9c07454694762d033d5c6afc9"
+    artifacts/v2/updater_signed.bin: "d3fd6f44d2440ca3f6b0cf3d5b326e98185b3f6cdb050bfdc71eae4e0507f59a"
+    artifacts/v2/updater_primary.bin: "b4c68cbb2910c7ddc384cfe3fb0290f54c0a3b748836130166d30b37ac296cd8"
+    artifacts/v2/updater_update.bin: "fad663663d3c4ef0096448e16181f38111471d7b023e71070d15126f8bced8dd"
+  sizes:
+    v1_boot: 22108
+    v1_primary: 204800
+    v1_signed: 25472
+    v2_signed: 25470
+    v2_primary: 204800

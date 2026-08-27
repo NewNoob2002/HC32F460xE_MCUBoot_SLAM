@@ -1,0 +1,45 @@
+test_result:
+  schema_version: 1
+  source_revision: "cfd87525f86ba22465784dba13c38e5de5d76759"
+  source_dirty_at_run: true
+  source_note: "Runtime C/Rust/CMake inputs match cfd8752; the run predates the commit and is retained as core HIL evidence, not clean-revision G5 evidence"
+  artifact_checksums:
+    host_updater: "7f5f55e80bbd3317f0cc02b0fd1bb7f0c102c1ad0631c60a77308b217d5a046a"
+    v2_signed_image: "d3fd6f44d2440ca3f6b0cf3d5b326e98185b3f6cdb050bfdc71eae4e0507f59a"
+    pre_hil_backup: "410a0acccbb0a231d35508a9e545953b7490406986557750c531bd56edf39b1b"
+  safety_preflight: "safety_preflight_install_v2.yaml"
+  level: "hil"
+  target: "HC32F460xE, J-Link 20781318, USB HC32F460-PHASE5-0001"
+  command: "info v1; install v2 signed image; wait v2; confirmation/trailer read; one J-Link reset; wait v2; post-reset read"
+  timing: {started_at_utc: "2026-08-27T08:23:17Z", duration_ms: 982000, timeout_ms: 0}
+  attempts: 1
+  passed: true
+  counts: {total: 10, passed: 10, failed: 0, skipped: 0}
+  classified_failures: []
+  logs:
+    - "logs/02_info_v1.txt"
+    - "logs/03_udev_monitor.txt"
+    - "logs/04_install_v2.txt"
+    - "logs/05_wait_v2.txt"
+    - "logs/06_confirmation_read.txt"
+    - "logs/07_persistence_udev_monitor.txt"
+    - "logs/08_persistence_reset.txt"
+    - "logs/09_persistence_wait_v2.txt"
+    - "logs/10_post_persistence_read.txt"
+    - "logs/11_final_info.txt"
+  requirements:
+    - "Phase 5C physical info"
+    - "Phase 5D v1 to v2 test upgrade"
+    - "Application confirmation after essential initialization"
+    - "v2 persistence after an independent reset"
+  observations:
+    - "v1 info: application 1.0.0, bootloader 1.0.0, hardware 0x00004600, board 1, revision 2"
+    - "v2 transfer 25470/25470, readback verify and COMMIT passed"
+    - "USB remove/add captured after COMMIT and after persistence reset"
+    - "v2 confirm result 0, init result 0, USB error count 0, last Manager result 0"
+    - "Primary header is v2.0.0; Secondary header is v1.0.0"
+    - "Primary trailer copy_done=1, image_ok=1 and magic valid; Secondary trailer erased"
+    - "All four pre/post-reset header and trailer snapshots compare byte-identically"
+    - "Postflight info still reports application 2.0.0 with the expected device identity and geometry"
+  final_state: "confirmed and persisted updater application 2.0.0 running"
+  recovery: "All-0xFF 0x76000-byte backup retained; restore not exercised"

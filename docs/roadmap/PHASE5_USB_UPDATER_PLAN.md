@@ -1,10 +1,12 @@
 # Phase 5 USB Updater Plan
 
-Status: Phase 5B/5C complete locally; Phase 5D core HIL passed once; repeatable immutable evidence pending; G5 not passed
+Status: Phase 5B/5C complete; Phase 5D core HIL passed once and archived; clean-revision repeat pending; G5 not passed
 
 Date: 2026-08-27
 
 Baseline: `ebad62c3b5bcf53c07fcbe01ca0b867a40c8e003` (G4 PASSED)
+
+Phase 5 core source node: `cfd87525f86ba22465784dba13c38e5de5d76759`
 
 ## Frozen decisions
 
@@ -77,9 +79,11 @@ a second device-state-machine implementation in Rust.
 - Physical `info` passed, then one complete v1.0.0 -> v2.0.0 -> confirmation ->
   independent reset -> persistence cycle passed. USB remove/add events, zero
   confirmation/init/error results and byte-identical pre/post-reset headers and
-  trailers were captured under `build/HIL/phase5-20260827-ebad62c/`.
-- The target remains on confirmed v2.0.0. The next gate work is a repeatable run
-  from a clean revision and promotion to immutable evidence; G5 is not passed.
+  trailers are archived under
+  `evidence/hil/2026-08-27-cfd8752-phase5-core/`.
+- The target remains on confirmed v2.0.0. Runtime sources match revision
+  `cfd8752`, but the run occurred before the dirty worktree was committed. The
+  next gate work is a repeat from a clean revision; G5 is not passed.
 - Slint and release packages remain intentionally absent until Phase 5D proves
   v1 -> v2 -> confirmation -> reset persistence.
 

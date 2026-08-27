@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-27T08:23:17Z"
+  operation: "flash"
+  authorization: "User authorized flashing updater firmware and starting Phase 5 HIL on 2026-08-27"
+  target:
+    board: "HC32F460xE; Cortex-M4 r0p1"
+    hardware_revision: "unknown"
+    probe_or_adapter_serial: "J-Link 20781318"
+    transport: "SWD 4000 kHz"
+  artifact_or_stimulus: "Boot SHA256 9ee9eeaa8817e131a742b69764e79fcc4d87338656942117a7fb451c726630cf at 0x00000000; updater Primary v1.0.0+0 SHA256 7777ec9b50cb29a2a7f5c03cc8328f9b7b0927c56e79d380fb55a2af83d9f8e5 at 0x00010000"
+  limits: "Live VTref 3.348 V; loadbin may erase/write only sectors required by Boot and Primary 0x00010000-0x00041FFF; verify both artifacts; never access Secondary 0x00042000-0x00073FFF, Scratch 0x00074000-0x00075FFF or Reserved 0x00076000-0x0007FFFF; no mass erase, unlock, recover, OTP, option-byte or protection change"
+  recovery_plan: "Restore backup/pre_flash_00000000_00075fff.bin (483328 bytes, SHA256 410a0acccbb0a231d35508a9e545953b7490406986557750c531bd56edf39b1b) to 0x00000000, read back exactly 0x76000 bytes, require byte-for-byte cmp and matching SHA256"
+  approved: true

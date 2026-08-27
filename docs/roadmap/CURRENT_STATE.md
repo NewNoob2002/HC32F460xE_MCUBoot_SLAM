@@ -252,8 +252,9 @@ is `PASSED`. Phase 5B and Phase 5C implementation are locally complete under
 regression; the minimal Rust `info`/`install`/`wait` client and shared protocol
 core pass fake E2E against the C Manager, and blocking nusb plus production
 Application USB glue build successfully. One physical v1 -> v2 -> confirmation
--> independent reset -> persistence cycle now passes with working evidence. A
-clean-revision repeat and immutable evidence remain before one Slint window and
-Windows/Linux packages.
+-> independent reset -> persistence cycle now passes and is archived under
+`evidence/hil/2026-08-27-cfd8752-phase5-core/`. The run's runtime inputs match
+revision `cfd8752`, but a clean-revision repeat remains before one Slint window
+and Windows/Linux packages.
 Tokio, plugins, a transport registry, UART/CAN and download recovery remain out
 of scope.

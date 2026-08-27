@@ -11,7 +11,7 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 | Phase 2 — Secondary Storage and Boot Control | PASSED | G2 | Strict HostTests 7/7; Debug/Release/signing and remote CI passed | Storage/range-isolation/Pending/restore passed | None | `evidence/hil/2026-08-26-5ebeae6-phase2/`, revisions `5ebeae6`/`0e1abd8`, CI `32928199086`/`32929570437` |
 | Phase 3 — Protocol Core | PASSED | G3 | HostTests 9/9; corpus 10,000; Debug/Release/signing and remote CI PASS | Not required | None | `evidence/host/2026-08-26-e7899bd-phase3/`, revisions `e7899bd`/`515d0c5`, CI `32948384485` |
 | Phase 4 — CherryUSB + HC32 DCD Loopback | PASSED | G4 | HostTests 11/11; Debug/Release image verification; CI passed | Enumeration, stall recovery, 10,000-transfer baseline, 10 unplug/re-enumeration recoveries, 30-minute run, counters and exact restore passed | None | `evidence/hil/2026-08-27-fd703cd-phase4-g4/`, revision `fd703cd`, evidence commit `2b63850`, CI `33043244338` |
-| Phase 5 — USB Upgrade E2E | IN_PROGRESS | G5 | Rust 11/11; strict HostTests 12/12; Debug/Release App/loopback/updater verification passed locally | One v1→v2→confirm→reset→persist cycle passed; repeat/immutable evidence pending | Clean-revision repeat and evidence promotion; production VID/PID, WinUSB binding and signing inputs required before packaging | `docs/roadmap/PHASE5_USB_UPDATER_PLAN.md` |
+| Phase 5 — USB Upgrade E2E | IN_PROGRESS | G5 | Rust 11/11; strict HostTests 12/12; Debug/Release App/loopback/updater verification passed locally | One v1→v2→confirm→reset→persist cycle passed and archived; clean-revision repeat pending | Clean-revision repeat; production VID/PID, WinUSB binding and signing inputs required before packaging | `evidence/hil/2026-08-27-cfd8752-phase5-core/`, `docs/roadmap/PHASE5_USB_UPDATER_PLAN.md` |
 | Phase 6 — Failure and Recovery | NOT_STARTED | G6 | Not run | Required | G5, power/reset fixture | None |
 | Phase 7 — UART Portability | NOT_STARTED | G7 | Not run | Required | G6 | None |
 | Phase 8 — CAN/CAN FD Portability | NOT_STARTED | G8 | Not run | Required | G7 | None |
@@ -32,10 +32,9 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 
 ## Immediate next action
 
-Prepare a clean Phase 5 revision, repeat the v1 -> v2 -> confirmation ->
-persistence cycle from a recorded baseline, and promote the working HIL logs to
-an immutable evidence bundle. Keep the target on confirmed v2 until that run is
-approved. Slint and packaging remain deferred until the repeat/evidence gate.
+Repeat the v1 -> v2 -> confirmation -> persistence cycle from the clean Phase 5
+revision and retain its gate evidence. Keep the target on confirmed v2 until
+that run is approved. Slint and packaging remain deferred until the repeat gate.
 
 ## Phase 5A planning start
 
@@ -136,9 +135,10 @@ Date: 2026-08-27
 - After one separately preflighted J-Link reset, `wait 2.0.0` passed again.
   Primary/Secondary headers and trailers were byte-identical before and after
   reset. The target remains on confirmed v2.0.0.
-- Working evidence: `build/HIL/phase5-20260827-ebad62c/`. This run used a dirty
-  Phase 5 worktree; repeatability, clean revision and immutable evidence remain
-  required. G5 is not passed.
+- Immutable core-HIL archive: `evidence/hil/2026-08-27-cfd8752-phase5-core/`.
+  Runtime C/Rust/CMake inputs match revision `cfd8752`, but the run itself used
+  the pre-commit dirty worktree. A clean-revision repeat remains required; G5
+  is not passed.
 
 ## Latest local G1 verification
 

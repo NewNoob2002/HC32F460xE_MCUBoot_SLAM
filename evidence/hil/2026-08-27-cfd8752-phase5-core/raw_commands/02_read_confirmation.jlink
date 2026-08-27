@@ -1,0 +1,13 @@
+device HC32F460xE
+si SWD
+speed 4000
+connect
+halt
+mem32 0x1FFF90D0, 3
+mem32 0x1FFF83A8, 2
+savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase5-20260827-ebad62c/snapshots/pre_reset_primary_header.bin, 0x00010000, 0x00000200
+savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase5-20260827-ebad62c/snapshots/pre_reset_secondary_header.bin, 0x00042000, 0x00000200
+savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase5-20260827-ebad62c/snapshots/pre_reset_primary_trailer.bin, 0x00041F00, 0x00000100
+savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase5-20260827-ebad62c/snapshots/pre_reset_secondary_trailer.bin, 0x00073F00, 0x00000100
+g
+exit

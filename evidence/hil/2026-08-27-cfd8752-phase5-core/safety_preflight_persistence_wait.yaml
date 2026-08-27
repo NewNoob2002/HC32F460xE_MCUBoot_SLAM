@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-27T08:38:06Z"
+  operation: "usb-protocol-read"
+  authorization: "User authorized Phase 5 HIL; persistence reset completed"
+  target:
+    board: "HC32F460 Phase 5 Lab"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "expected USB HC32F460-PHASE5-0001; J-Link 20781318"
+    transport: "USB Vendor Bulk fffe:ffff"
+  artifact_or_stimulus: "wait for application 2.0.0 after independent persistence reset"
+  limits: "30 s total timeout, 250 ms poll, 2 s/request; HELLO/DEVICE_INFO only; no install, reset, debugger attach, power control or Flash/storage write"
+  recovery_plan: "Stop on timeout/protocol error and preserve reset plus USB monitor logs before any further action"
+  approved: true

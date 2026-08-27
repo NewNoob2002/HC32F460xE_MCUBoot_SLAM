@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-27T08:26:31Z"
+  operation: "usb-protocol-read"
+  authorization: "User authorized flashing updater firmware and starting Phase 5 HIL on 2026-08-27"
+  target:
+    board: "HC32F460 Phase 5 Lab"
+    hardware_revision: "expected protocol revision 2; to be verified by DEVICE_INFO"
+    probe_or_adapter_serial: "USB serial HC32F460-PHASE5-0001; J-Link 20781318"
+    transport: "USB Vendor Bulk fffe:ffff, interface 0, OUT 0x02, IN 0x81, 64-byte MPS"
+  artifact_or_stimulus: "Tools/updater/target/release/hc32-updater SHA256 7f5f55e80bbd3317f0cc02b0fd1bb7f0c102c1ad0631c60a77308b217d5a046a; info sends HELLO then DEVICE_INFO"
+  limits: "One info invocation; exactly one matching device; 2 s/request and at most 3 exact retries; no BEGIN/DATA/END/COMMIT/ABORT, reset, power control, debugger attach or Flash/storage write"
+  recovery_plan: "Close USB handle and stop on timeout/protocol error; do not reset or alter target state"
+  approved: true

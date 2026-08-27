@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-27T08:30:38Z"
+  operation: "storage-write/reset/boot-swap"
+  authorization: "User authorized flashing updater firmware and starting Phase 5 HIL on 2026-08-27"
+  target:
+    board: "HC32F460 Phase 5 Lab; protocol hardware 0x00004600 board 1 revision 2"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "USB HC32F460-PHASE5-0001; J-Link 20781318"
+    transport: "USB Vendor Bulk fffe:ffff interface 0, then MCUboot scratch swap"
+  artifact_or_stimulus: "v2.0.0+0 updater_signed.bin, 25470 bytes, SHA256 d3fd6f44d2440ca3f6b0cf3d5b326e98185b3f6cdb050bfdc71eae4e0507f59a"
+  limits: "One install attempt; host image is below 196608-byte logical capacity; 2 s/request, at most 3 exact retries; Manager may erase/write Secondary 0x00042000-0x00073FFF and write its trailer; COMMIT may reset and MCUboot may modify Primary 0x00010000-0x00041FFF, Secondary and Scratch 0x00074000-0x00075FFF; never access Reserved 0x00076000-0x0007FFFF; no debugger write during upgrade, no retry after a captured failure"
+  recovery_plan: "Capture logs and target state before retry/reset. Restore backup/pre_flash_00000000_00075fff.bin (483328 bytes, SHA256 410a0acccbb0a231d35508a9e545953b7490406986557750c531bd56edf39b1b) only through a separately recorded restore preflight; verify exact 0x76000-byte readback"
+  approved: true

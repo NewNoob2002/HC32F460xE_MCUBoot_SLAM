@@ -1,0 +1,14 @@
+evidence_manifest:
+  schema_version: 1
+  run_id: "2026-08-27-cfd8752-hc32f460-phase5-core"
+  source_revision: "cfd87525f86ba22465784dba13c38e5de5d76759"
+  source_tree: "bdf9e1878c91a4bf294ca541c7e07cb14932ceab"
+  source_dirty_at_run: true
+  source_equivalence: "runtime C/Rust/CMake inputs match cfd8752; later pre-commit edits were documentation, CI and repository guidance"
+  target: "HC32F460xE"
+  probe_serial: "20781318"
+  usb_serial: "HC32F460-PHASE5-0001"
+  result: "PASSED_CORE_HIL"
+  final_target_state: "confirmed and persisted updater 2.0.0"
+  gate_status: "G5 remains open pending a clean-revision repeat, Slint and release-package evidence"
+  checksum_verification: "python3 Tests/HIL/verify_evidence.py evidence/hil/2026-08-27-cfd8752-phase5-core/SHA256SUMS"

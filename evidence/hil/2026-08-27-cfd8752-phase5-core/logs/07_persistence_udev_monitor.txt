@@ -1,0 +1,85 @@
+Script started on 2026-08-27 16:37:03+08:00 [COMMAND="rtk timeout 60 udevadm monitor --kernel --property --subsystem-match=usb" TERM="xterm-256color" TTY="/dev/pts/7" COLUMNS="80" LINES="24"]
+monitor will print the received events for:
+KERNEL - the kernel uevent
+
+KERNEL[21978.718661] remove   /devices/pci0000:00/0000:00:08.1/0000:65:00.3/usb1/1-2/1-2.1/1-2.1:1.0 (usb)
+ACTION=remove
+DEVPATH=/devices/pci0000:00/0000:00:08.1/0000:65:00.3/usb1/1-2/1-2.1/1-2.1:1.0
+SUBSYSTEM=usb
+DEVTYPE=usb_interface
+PRODUCT=fffe/ffff/1
+TYPE=0/0/0
+INTERFACE=255/0/0
+MODALIAS=usb:vFFFEpFFFFd0001dc00dsc00dp00icFFisc00ip00in00
+SEQNUM=15368
+
+KERNEL[21978.719086] unbind   /devices/pci0000:00/0000:00:08.1/0000:65:00.3/usb1/1-2/1-2.1 (usb)
+ACTION=unbind
+DEVPATH=/devices/pci0000:00/0000:00:08.1/0000:65:00.3/usb1/1-2/1-2.1
+SUBSYSTEM=usb
+DEVNAME=/dev/bus/usb/001/037
+DEVTYPE=usb_device
+PRODUCT=fffe/ffff/1
+TYPE=0/0/0
+BUSNUM=001
+DEVNUM=037
+SEQNUM=15369
+MAJOR=189
+MINOR=36
+
+KERNEL[21978.719135] remove   /devices/pci0000:00/0000:00:08.1/0000:65:00.3/usb1/1-2/1-2.1 (usb)
+ACTION=remove
+DEVPATH=/devices/pci0000:00/0000:00:08.1/0000:65:00.3/usb1/1-2/1-2.1
+SUBSYSTEM=usb
+DEVNAME=/dev/bus/usb/001/037
+DEVTYPE=usb_device
+PRODUCT=fffe/ffff/1
+TYPE=0/0/0
+BUSNUM=001
+DEVNUM=037
+SEQNUM=15370
+MAJOR=189
+MINOR=36
+
+KERNEL[21979.304493] add      /devices/pci0000:00/0000:00:08.1/0000:65:00.3/usb1/1-2/1-2.1 (usb)
+ACTION=add
+DEVPATH=/devices/pci0000:00/0000:00:08.1/0000:65:00.3/usb1/1-2/1-2.1
+SUBSYSTEM=usb
+DEVNAME=/dev/bus/usb/001/038
+DEVTYPE=usb_device
+PRODUCT=fffe/ffff/1
+TYPE=0/0/0
+BUSNUM=001
+DEVNUM=038
+SEQNUM=15371
+MAJOR=189
+MINOR=37
+
+KERNEL[21979.311443] add      /devices/pci0000:00/0000:00:08.1/0000:65:00.3/usb1/1-2/1-2.1/1-2.1:1.0 (usb)
+ACTION=add
+DEVPATH=/devices/pci0000:00/0000:00:08.1/0000:65:00.3/usb1/1-2/1-2.1/1-2.1:1.0
+SUBSYSTEM=usb
+DEVTYPE=usb_interface
+PRODUCT=fffe/ffff/1
+TYPE=0/0/0
+INTERFACE=255/0/0
+MODALIAS=usb:vFFFEpFFFFd0001dc00dsc00dp00icFFisc00ip00in00
+SEQNUM=15372
+
+KERNEL[21979.311495] bind     /devices/pci0000:00/0000:00:08.1/0000:65:00.3/usb1/1-2/1-2.1 (usb)
+ACTION=bind
+DEVPATH=/devices/pci0000:00/0000:00:08.1/0000:65:00.3/usb1/1-2/1-2.1
+SUBSYSTEM=usb
+DEVNAME=/dev/bus/usb/001/038
+DEVTYPE=usb_device
+DRIVER=usb
+PRODUCT=fffe/ffff/1
+TYPE=0/0/0
+BUSNUM=001
+DEVNUM=038
+SEQNUM=15373
+MAJOR=189
+MINOR=37
+
+
+Script done on 2026-08-27 16:38:03+08:00 [COMMAND_EXIT_CODE="124"]

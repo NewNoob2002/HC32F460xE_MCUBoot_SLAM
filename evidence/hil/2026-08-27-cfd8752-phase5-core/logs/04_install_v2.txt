@@ -1,0 +1,58 @@
+Script started on 2026-08-27 16:32:24+08:00 [COMMAND="rtk Tools/updater/target/release/hc32-updater install build/HIL/phase5-20260827-ebad62c/v2/artifacts/updater_signed.bin" <not executed on terminal>]
+device application=1.0.0
+transfer 508/25470
+transfer 1016/25470
+transfer 1524/25470
+transfer 2032/25470
+transfer 2540/25470
+transfer 3048/25470
+transfer 3556/25470
+transfer 4064/25470
+transfer 4572/25470
+transfer 5080/25470
+transfer 5588/25470
+transfer 6096/25470
+transfer 6604/25470
+transfer 7112/25470
+transfer 7620/25470
+transfer 8128/25470
+transfer 8636/25470
+transfer 9144/25470
+transfer 9652/25470
+transfer 10160/25470
+transfer 10668/25470
+transfer 11176/25470
+transfer 11684/25470
+transfer 12192/25470
+transfer 12700/25470
+transfer 13208/25470
+transfer 13716/25470
+transfer 14224/25470
+transfer 14732/25470
+transfer 15240/25470
+transfer 15748/25470
+transfer 16256/25470
+transfer 16764/25470
+transfer 17272/25470
+transfer 17780/25470
+transfer 18288/25470
+transfer 18796/25470
+transfer 19304/25470
+transfer 19812/25470
+transfer 20320/25470
+transfer 20828/25470
+transfer 21336/25470
+transfer 21844/25470
+transfer 22352/25470
+transfer 22860/25470
+transfer 23368/25470
+transfer 23876/25470
+transfer 24384/25470
+transfer 24892/25470
+transfer 25400/25470
+transfer 25470/25470
+verify
+commit
+wait re-enumeration
+
+Script done on 2026-08-27 16:32:25+08:00 [COMMAND_EXIT_CODE="0"]
