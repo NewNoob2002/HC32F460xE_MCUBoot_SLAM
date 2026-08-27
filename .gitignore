@@ -2,6 +2,7 @@ Platform/project/Objects/
 Platform/project/*.bin
 build/
 .venv/
+Tools/updater/target/
 __pycache__/
 .codegraph/
 /debug_artifacts/

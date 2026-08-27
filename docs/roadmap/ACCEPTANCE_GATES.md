@@ -234,40 +234,75 @@ Enumeration/descriptor mismatch, data mismatch, endpoint hang/stall, core Cherry
 
 ### Preconditions
 
-G4 passed; compatible signed v1/v2 images and safe rollback route exist.
+G4 passed; `docs/roadmap/PHASE5_USB_UPDATER_PLAN.md` is accepted; compatible
+signed v1/v2 images and safe rollback route exist. Production package checks
+also require frozen non-test VID/PID, automatic Windows WinUSB binding and
+external signing credentials.
 
 ### Test commands
 
 ```sh
-python3 Tools/host/fw_update.py info
-python3 Tools/host/fw_update.py install <SIGNED_V2_IMAGE> --test --reboot
-python3 Tools/host/fw_update.py wait --version 2.0.0 --confirmed
+cargo fmt --manifest-path Tools/updater/Cargo.toml -- --check
+cargo clippy --manifest-path Tools/updater/Cargo.toml --locked --all-targets --features fake-e2e -- -D warnings
+cargo test --manifest-path Tools/updater/Cargo.toml --locked
+cargo build --manifest-path Tools/updater/Cargo.toml --release --locked
+cmake --preset HostTests --fresh
+cmake --build build/HostTests --parallel
+ASAN_OPTIONS=detect_leaks=0 ctest --test-dir build/HostTests -R 'rust_updater|fw_protocol|fw_update_manager|usb_loopback_host_self_test' --output-on-failure
+Tools/updater/target/release/hc32-updater info
+Tools/updater/target/release/hc32-updater install <SIGNED_V2_IMAGE>
+Tools/updater/target/release/hc32-updater wait --version 2.0.0
+# Reset the confirmed target once more without writing Flash, then repeat wait.
+Tools/updater/target/release/hc32-updater wait --version 2.0.0
 python3 Tests/HIL/verify_evidence.py
 ```
 
+Windows package verification must include `.msi` signature verification and
+clean-VM install/USB access/uninstall. Linux verification must inspect and
+install the package, prove non-root USB access through its udev rule, then remove
+both application files and the rule. Exact packaging commands become normative
+when Phase 5F selects the smallest supported native toolchain.
+
 ### Automated tests
 
-Host CLI unit tests, fake E2E session, golden protocol traces and compatibility rejections.
+Rust format/clippy/tests, one shared client core against Golden Vectors, fake E2E
+through the production C Manager with fake backends, compatibility/error
+rejections, existing firmware/dependency regressions and package inspection.
 
 ### Manual / HIL tests
 
-Discover v1, transfer v2 over USB, mark test, swap, boot v2, health-confirm and verify persistence.
+Use the Rust CLI to discover v1, transfer v2 over blocking nusb, mark test, swap,
+boot v2, health-confirm and verify persistence after another reset. Only after
+that passes, repeat one install from the Slint single-window GUI using the same
+core and verify clean Windows/Linux packages. The Python loopback remains a G4
+regression tool and is not used as the updater.
 
 ### Expected results
 
-No debugger writes Secondary; final Primary is confirmed v2 and device reports matching versions/identity.
+No debugger writes Secondary; fake and USB runs produce compatible protocol
+traces; final Primary is confirmed v2 and reports matching versions/identity
+after another reset; signed Windows and Linux packages work on clean supported
+systems.
 
 ### Required artifacts
 
-Host transcript, USB/target logs, v1/v2 hashes, slot state, version/identity output and immutable evidence index.
+Fake/host transcript, USB/target logs, v1/v2 hashes, confirmation and post-reset
+slot state, version/identity output, GUI trace, package hashes/contents/signature,
+udev rule, clean-VM results and immutable evidence index.
 
 ### PASS criteria
 
-Complete E2E path passes repeatedly with exact evidence and no layering bypass.
+Complete E2E path passes repeatedly with exact evidence and no layering bypass;
+fake/CLI/GUI share one Rust core; Phase 4 regression remains green; Windows
+installer is signed and needs no manual driver binding; Linux package installs
+the matching udev rule.
 
 ### FAIL criteria
 
-Manual Flash injection, wrong final version/state, missing confirmation, protocol/backend bypass or incomplete evidence.
+Manual Secondary Flash injection, wrong final version/state, missing persistence
+reset, protocol fork/bypass, Python updater reuse, unbounded wait/retry, Phase 4
+regression, test VID/PID in a public package, manual Windows driver setup,
+unsigned installer, missing/mismatched udev rule or incomplete evidence.
 
 ## G6 — Reliability Gate
 
@@ -319,8 +354,8 @@ G6 passed; UART pins/baud/fixture are frozen.
 
 ```sh
 ASAN_OPTIONS=detect_leaks=0 ctest --test-dir build/HostTests -R 'fw_protocol|fw_update_manager|uart_transport' --output-on-failure
-python3 Tools/host/fw_update.py --transport uart info
-python3 Tools/host/fw_update.py --transport uart install <SIGNED_IMAGE> --test --reboot
+Tools/updater/target/release/hc32-updater --transport uart info
+Tools/updater/target/release/hc32-updater --transport uart install <SIGNED_IMAGE>
 python3 Tests/Architecture/check_portable_dependencies.py
 ```
 
@@ -358,8 +393,8 @@ G7 passed; arbitration IDs, bitrate, CAN FD data bitrate and fixture ownership a
 
 ```sh
 ASAN_OPTIONS=detect_leaks=0 ctest --test-dir build/HostTests -R 'fw_protocol|can_transport|can_fragment' --output-on-failure
-python3 Tools/host/fw_update.py --transport can info
-python3 Tools/host/fw_update.py --transport can install <SIGNED_IMAGE> --test --reboot
+Tools/updater/target/release/hc32-updater --transport can info
+Tools/updater/target/release/hc32-updater --transport can install <SIGNED_IMAGE>
 python3 Tests/CAN/run_fault_matrix.py
 ```
 

@@ -11,7 +11,7 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 | Phase 2 — Secondary Storage and Boot Control | PASSED | G2 | Strict HostTests 7/7; Debug/Release/signing and remote CI passed | Storage/range-isolation/Pending/restore passed | None | `evidence/hil/2026-08-26-5ebeae6-phase2/`, revisions `5ebeae6`/`0e1abd8`, CI `32928199086`/`32929570437` |
 | Phase 3 — Protocol Core | PASSED | G3 | HostTests 9/9; corpus 10,000; Debug/Release/signing and remote CI PASS | Not required | None | `evidence/host/2026-08-26-e7899bd-phase3/`, revisions `e7899bd`/`515d0c5`, CI `32948384485` |
 | Phase 4 — CherryUSB + HC32 DCD Loopback | PASSED | G4 | HostTests 11/11; Debug/Release image verification; CI passed | Enumeration, stall recovery, 10,000-transfer baseline, 10 unplug/re-enumeration recoveries, 30-minute run, counters and exact restore passed | None | `evidence/hil/2026-08-27-fd703cd-phase4-g4/`, revision `fd703cd`, evidence commit `2b63850`, CI `33043244338` |
-| Phase 5 — USB Upgrade E2E | NOT_STARTED | G5 | Not run | Required | None | None |
+| Phase 5 — USB Upgrade E2E | IN_PROGRESS | G5 | Rust 11/11; strict HostTests 12/12; Debug/Release App/loopback/updater verification passed locally | One v1→v2→confirm→reset→persist cycle passed; repeat/immutable evidence pending | Clean-revision repeat and evidence promotion; production VID/PID, WinUSB binding and signing inputs required before packaging | `docs/roadmap/PHASE5_USB_UPDATER_PLAN.md` |
 | Phase 6 — Failure and Recovery | NOT_STARTED | G6 | Not run | Required | G5, power/reset fixture | None |
 | Phase 7 — UART Portability | NOT_STARTED | G7 | Not run | Required | G6 | None |
 | Phase 8 — CAN/CAN FD Portability | NOT_STARTED | G8 | Not run | Required | G7 | None |
@@ -32,10 +32,113 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 
 ## Immediate next action
 
-Begin Phase 5 with the minimum USB Transport glue over the existing
-Manager/Storage contracts and static buffers. Implement host `info`, `install`
-and `wait`; prove fake E2E first, then run v1 -> v2 -> confirm -> persistence
-HIL. Do not add UART/CAN, a transport registry or download recovery yet.
+Prepare a clean Phase 5 revision, repeat the v1 -> v2 -> confirmation ->
+persistence cycle from a recorded baseline, and promote the working HIL logs to
+an immutable evidence bundle. Keep the target on confirmed v2 until that run is
+approved. Slint and packaging remain deferred until the repeat/evidence gate.
+
+## Phase 5A planning start
+
+Date: 2026-08-27
+
+- Detailed plan: `docs/roadmap/PHASE5_USB_UPDATER_PLAN.md`.
+- Python `Tools/host/usb_loopback.py` is frozen as a Phase 4 regression tool.
+- Host direction changed from planned Python/PyUSB to one Rust client core with
+  `info`, `install` and `wait`.
+- Reviewed nusb planning reference: v0.2.3 blocking device/interface/Bulk APIs;
+  Tokio is excluded.
+- Execution order is fake E2E, real USB HIL, v1 -> v2 -> confirmation ->
+  persistence, Slint single window, then Windows/Linux packages.
+- CLI and GUI are sibling frontends over `FirmwareImage`, `ProtocolV1Client` and
+  `UpgradeWorkflow`; nusb is only the USB adapter and re-enumeration policy stays
+  in the workflow.
+- Production code, Rust scaffold, GUI, package and hardware state changed: no.
+- Phase 5/G5 status: `IN_PROGRESS` / not passed.
+
+## Latest Phase 5B local result
+
+Date: 2026-08-27
+
+- Added one dependency-free `hc32-updater` Cargo package with the shared
+  `FirmwareImage`, `ProtocolV1Client`, workflow progress events and the
+  `info`/`install`/`wait` CLI surface. USB commands intentionally remain gated
+  until Phase 5C supplies nusb.
+- All 19 existing Protocol V1 Golden Vectors decode and re-encode byte-identically
+  in Rust. MCUboot header/version parsing, bounded retry, non-retry disconnect,
+  capacity rejection and CLI argument bounds are covered.
+- The fake E2E test drives the production C Manager in a child process with fake
+  Storage/Boot Control. A 777-byte image completes HELLO -> DEVICE_INFO -> BEGIN
+  -> DATA -> END -> COMMIT -> RESET; stored bytes/padding are exact and pending
+  is requested once.
+- Rust tests: 8/8 passed; `cargo fmt` and clippy with warnings denied passed.
+- Strict Werror + ASan/UBSan HostTests: 12/12 passed, including the Rust/C fake
+  E2E, portable dependency checks and unchanged Phase 4 Python loopback self-test.
+- Debug and Release firmware builds plus App and USB loopback signed-image
+  verification passed. No production firmware source or hardware state changed.
+- Phase 5B is locally complete. Phase 5C/G5 HIL and immutable evidence remain
+  incomplete; G5 is not passed.
+
+## Latest Phase 5C local result
+
+Date: 2026-08-27
+
+- Added the blocking nusb adapter for exactly-one-device discovery, interface 0
+  claim and bounded Bulk OUT/IN transfers on the experimental `fffe:ffff`
+  identity. The workflow, not nusb, owns re-enumeration polling.
+- Added the production `usb_fw_updater` target. USB callbacks only publish
+  events; the Application poll loop feeds the existing Manager, drains partial
+  TX, reports TX-idle/disconnect/timeouts and calls platform reset only after
+  the Manager emits RESET. The Phase 4 loopback target/tool are unchanged.
+- Rust format and clippy passed; Rust tests are 11/11, including the real C
+  Manager fake E2E and nusb frame assembly checks.
+- Strict Werror + ASan/UBSan HostTests are 12/12. Retained evidence validation
+  is 5/5. `git diff --check` passed.
+- Debug and Release full builds passed. App, USB loopback and updater signed
+  images all verified; updater size is 34,680 bytes Debug and 30,616 bytes
+  Release. Strict conversion/shadow warnings are enforced on the new updater
+  sources without treating vendored CherryUSB/legacy DCD warnings as new code.
+- No physical USB command, target Flash write or upgrade HIL was run. Phase 5C
+  is complete only at the local implementation/build level; G5 is not passed.
+
+## Latest Phase 5C read-only HIL preflight
+
+Date: 2026-08-27
+
+- Authorized scope was one `info` invocation only: HELLO and DEVICE_INFO, with
+  no install, reset, debugger attachment, power control or Flash/storage write.
+- Passive USB enumeration found J-Link serial `000020781318` and CMSIS-DAP
+  serial `5844333732`; no `fffe:ffff` updater device was present.
+- The release updater binary SHA-256 was
+  `7f5f55e80bbd3317f0cc02b0fd1bb7f0c102c1ad0631c60a77308b217d5a046a`.
+- `hc32-updater info` exited once with `FAIL: USB device not found`. No Protocol
+  frame was sent and no target state changed. Classified as
+  `hil.hardware.unavailable.usb-device-not-enumerated`, not a product failure.
+- Temporary preflight, result and raw log are under `/tmp/hc32-phase5-info-*`.
+  Physical `info` remains pending; G5 is not passed.
+
+## Latest Phase 5D core HIL result
+
+Date: 2026-08-27
+
+- Verified the pre-flash range `0x00000000-0x00075FFF` was the expected
+  483,328-byte all-`0xff` image, SHA-256
+  `410a0acccbb0a231d35508a9e545953b7490406986557750c531bd56edf39b1b`.
+- Programmed and verified Boot at `0x00000000` and confirmed v1 updater Primary
+  at `0x00010000` with J-Link `20781318`; VTref remained 3.348-3.354 V.
+- Physical `info` passed for Application/Bootloader `1.0.0`, hardware
+  `0x00004600`, board `1`, revision `2`, capacity `196608`, write alignment `4`
+  and erase alignment `8192`.
+- Installed the 25,470-byte signed v2.0.0 image through the Rust USB updater.
+  Transfer, device readback verification, COMMIT and USB re-enumeration passed.
+- v2 `wait` passed. Confirmation result, initialization result, USB error count
+  and final Manager result were all zero. Primary contained v2, Secondary v1;
+  Primary trailer had `copy_done=1`, `image_ok=1` and valid magic.
+- After one separately preflighted J-Link reset, `wait 2.0.0` passed again.
+  Primary/Secondary headers and trailers were byte-identical before and after
+  reset. The target remains on confirmed v2.0.0.
+- Working evidence: `build/HIL/phase5-20260827-ebad62c/`. This run used a dirty
+  Phase 5 worktree; repeatability, clean revision and immutable evidence remain
+  required. G5 is not passed.
 
 ## Latest local G1 verification
 

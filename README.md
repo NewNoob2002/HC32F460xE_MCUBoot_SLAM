@@ -83,4 +83,4 @@ See docs/build_report.md for the latest recorded verification report.
 
 ## Active roadmap
 
-The completed minimal Boot/App milestone remains documented under `docs/superpowers/`. Current architecture, phases, hard gates, test strategy and status are maintained under `docs/roadmap/`; major decisions are recorded under `docs/adr/`.
+The completed minimal Boot/App milestone remains documented under `docs/superpowers/`. Current architecture, phases, hard gates, test strategy and status are maintained under `docs/roadmap/`; Phase 5 execution is detailed in `docs/roadmap/PHASE5_USB_UPDATER_PLAN.md`; major decisions are recorded under `docs/adr/`.

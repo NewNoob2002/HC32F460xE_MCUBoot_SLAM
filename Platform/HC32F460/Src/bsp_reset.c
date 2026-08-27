@@ -8,3 +8,7 @@ uint32_t bsp_reset_capture(void) {
 bool bsp_reset_was_software(uint32_t flags) {
     return (flags & RMU_FLAG_SW) != 0U;
 }
+void bsp_system_reset(void) {
+    NVIC_SystemReset();
+    for (;;) {}
+}

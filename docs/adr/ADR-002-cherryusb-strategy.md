@@ -1,6 +1,6 @@
 # ADR-002: CherryUSB Strategy
 
-Status: Accepted for Phase 4 evaluation; dependency not yet imported
+Status: Accepted and implemented for Phase 4; G4 PASSED
 
 Date: 2026-08-26
 
@@ -18,12 +18,14 @@ Sources reviewed:
 - https://github.com/cherry-embedded/CherryUSB/blob/master/docs/en/quick_start/transplant.rst
 - https://github.com/cherry-embedded/CherryUSB/tree/master/port
 
-Upstream may change before Phase 4, so these values are audit evidence, not authorization to import `master`.
+The reviewed release was subsequently pinned for Phase 4; `master` remains
+unauthorized.
 
 ## Decision
 
-- CherryUSB is the preferred Device Stack candidate for Phase 4, not a current dependency.
-- Phase 4 must re-check the latest upstream release, API, license and supported ports, then pin one reviewed tag and full commit SHA.
+- CherryUSB is the selected Device Stack backend below the project transport boundary.
+- Phase 4 re-checked and pinned release `v1.6.1` at full commit
+  `c9625ffa773ad10b8824d1b5361bca2ccc1f3d1e`.
 - Import a reproducible source snapshot under `components/` with its upstream license and a small `UPSTREAM.md` containing repository URL, tag, commit and import date. A submodule is not the default because normal CI/fresh-clone use should not depend on recursive checkout.
 - Do not track an upstream moving branch.
 - Do not modify CherryUSB core for HC32. HC32 clock/pin/IRQ/controller code lives in an HC32-specific platform/backend directory and implements the documented DCD boundary.
@@ -70,6 +72,18 @@ Positive:
 
 Costs and open work:
 
-- An HC32F460 DCD likely must be implemented and maintained.
-- Phase 4 must validate endpoint, IRQ, cache/DMA and reset behavior against current upstream APIs.
-- USB VID/PID ownership and production descriptor values remain an open product decision before G4.
+- The project-owned HC32F460 DCD must be maintained against the pinned boundary.
+- G4 validated endpoint, IRQ and reset behavior through enumeration, stall
+  recovery, 10,000 mixed transfers, ten re-enumeration recoveries and a
+  30-minute run.
+- USB VID/PID ownership and production descriptor values remain a Phase 5
+  packaging decision; G4 intentionally used `fffe:ffff` test values.
+
+## Phase 4 outcome
+
+The unchanged required CherryUSB subset is retained under `components/cherryusb/`
+with its license and `UPSTREAM.md`. HC32 DCD/platform code remains outside the
+upstream tree. G4 passed on 2026-08-27 at source revision `fd703cd`, with retained
+evidence under `evidence/hil/2026-08-27-fd703cd-phase4-g4/`. Phase 5 may bind the
+Vendor Bulk backend to the existing Manager, but direct USB-to-Storage or
+USB-to-MCUboot calls remain prohibited.

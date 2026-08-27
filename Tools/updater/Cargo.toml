@@ -1,0 +1,11 @@
+[package]
+name = "hc32-updater"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+
+[features]
+fake-e2e = []
+
+[dependencies]
+nusb = "=0.2.3"

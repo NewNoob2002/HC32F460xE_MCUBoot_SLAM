@@ -32,11 +32,17 @@ jobs:
             gcc-arm-none-eabi libnewlib-arm-none-eabi ninja-build python3-venv
           cmake --version
           arm-none-eabi-gcc --version
+          cargo --version
 
       - name: Prepare imgtool
         run: |
           python3 -m venv .venv
           .venv/bin/pip install --disable-pip-version-check -r components/mcuboot-2.4.0/scripts/requirements.txt
+
+      - name: Check Rust updater
+        run: |
+          cargo fmt --manifest-path Tools/updater/Cargo.toml -- --check
+          cargo clippy --manifest-path Tools/updater/Cargo.toml --locked --all-targets --features fake-e2e -- -D warnings
 
       - name: Run strict host tests
         run: |
@@ -52,7 +58,8 @@ jobs:
           cmake --build build/Debug --parallel
           cmake --build build/Debug --target verify_app_image
           cmake --build build/Debug --target verify_usb_loopback_image
-          arm-none-eabi-size build/Debug/Boot/boot_firmware.elf build/Debug/App/app_firmware.elf
+          cmake --build build/Debug --target verify_updater_image
+          arm-none-eabi-size build/Debug/Boot/boot_firmware.elf build/Debug/App/app_firmware.elf build/Debug/App/usb_fw_updater.elf
 
       - name: Check Release signing-key policy
         run: |
@@ -83,4 +90,5 @@ jobs:
           cmake --build build/Release --parallel
           cmake --build build/Release --target verify_app_image
           cmake --build build/Release --target verify_usb_loopback_image
-          arm-none-eabi-size build/Release/Boot/boot_firmware.elf build/Release/App/app_firmware.elf
+          cmake --build build/Release --target verify_updater_image
+          arm-none-eabi-size build/Release/Boot/boot_firmware.elf build/Release/App/app_firmware.elf build/Release/App/usb_fw_updater.elf

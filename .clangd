@@ -2,6 +2,7 @@ CompileFlags:
   CompilationDatabase: build/Debug
   Add:
     - -D__PROGRAM_START=Reset_Handler
+    - -U__clang__
   Remove:
     - -fcyclomatic-complexity
     - -mcmse

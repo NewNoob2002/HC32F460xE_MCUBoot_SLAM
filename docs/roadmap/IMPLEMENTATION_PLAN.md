@@ -425,6 +425,8 @@ G3-passed protocol revision.
 
 ## Phase 5 — USB Firmware Upgrade End to End
 
+Detailed execution plan: `docs/roadmap/PHASE5_USB_UPDATER_PLAN.md`.
+
 ### Objective
 
 Deliver the first complete host-to-confirmed-application upgrade path.
@@ -435,19 +437,29 @@ G4 has passed and a release-qualified HIL fixture is available.
 
 ### Scope
 
-Host tool, USB transport, Protocol V1, update manager, Secondary storage, test-pending request, reboot and post-boot confirmation.
+Minimal Rust `info`/`install`/`wait` CLI, one shared Rust protocol/client core,
+blocking nusb USB link, Application USB-to-Manager glue, Secondary storage,
+test-pending request, reboot, bounded post-boot health confirmation and
+persistence verification. After that core path passes, add one Slint window and
+signed Windows `.msi` and Linux package; the Linux package carries the
+udev rule.
 
 ### Out of Scope
 
-Boot recovery, resume, UART and CAN.
+Python updater work, Tokio, plugins, a transport registry, Boot recovery,
+download resume, UART and CAN. The Python USB loopback tool remains a Phase 4
+regression tool only.
 
 ### Architecture Impact
 
-Integrates existing layers without bypasses.
+Integrates existing layers without bypasses. Fake E2E and real USB HIL use the
+same Rust client core; the Slint GUI later calls that same core.
 
 ### Files / Components
 
-Application integration, Python host tool, protocol spec/tests and HIL scripts.
+Application integration, `Tools/updater/`, existing protocol spec/vectors, a
+test-only C Manager fake-device adapter, HIL scripts and delayed GUI/package
+assets.
 
 ### API Impact
 
@@ -455,33 +467,48 @@ Only corrections required by integration evidence; breaking changes require ADR 
 
 ### Implementation Steps
 
-1. Implement host discovery and HELLO/DEVICE_INFO.
-2. Transfer a valid signed image with progress/retry.
-3. Finalize, request test upgrade and reboot.
-4. Verify swap/new App/health confirmation.
-5. Retain immutable E2E evidence.
+1. Freeze release preconditions: signed compatibility metadata source,
+   production VID/PID, WinUSB binding and external signing credentials.
+2. Implement the Rust client core and `info`/`install`/`wait`; prove it against
+   the existing C Manager with fake Storage/Boot Control.
+3. Add the minimum Application USB glue and blocking nusb link.
+4. Transfer a valid signed image, finalize, request test upgrade and reboot.
+5. Verify v2 health confirmation and persistence after another reset.
+6. Only then add the Slint single-window GUI over the same core.
+7. Build/verify the signed Windows `.msi` and Linux package with udev rule.
+8. Retain immutable fake, HIL, GUI and package evidence.
 
 ### Automated Tests
 
-Host CLI tests, golden protocol traces and fake E2E session.
+Rust format/clippy/tests, shared Golden Vectors, fake E2E session, package
+content/signature checks and existing firmware/dependency regressions.
 
 ### HIL Tests
 
-v1 to v2 over USB, swap, new version report, confirmation and persistence.
+CLI v1 to v2 over USB, swap, new version report, bounded confirmation and
+persistence after another reset; then one GUI install using the same core and
+clean Windows/Linux package install/access/uninstall checks.
 
 ### Fault Injection
 
-Wrong hardware ID, oversize image, bad CRC and invalid signature.
+Wrong hardware ID, oversize image, bad CRC, invalid signature, USB disconnect,
+bounded timeout and duplicate response. Download resume is not added.
 
 ### Acceptance Criteria
 
 - A clean host installs a signed compatible image without debugger Flash writes.
 - Invalid/oversize images never become bootable.
 - After confirmation, v2 persists and reports expected versions/hardware identity.
+- Fake E2E, CLI USB and GUI paths use one Rust protocol/client core.
+- Windows ships a verified signed installer without manual driver binding;
+  Linux ships an installable package with the correct udev rule.
+- The Phase 4 Python loopback regression remains unchanged and green.
 
 ### Evidence
 
-Host transcript, USB trace/descriptor, firmware hashes, HIL logs and post-upgrade slot state.
+Fake/host transcript, USB trace/descriptor, firmware hashes, HIL logs,
+confirmation/persistence slot state, package hashes/signature verification and
+clean-VM install results.
 
 ### Exit Gate
 
@@ -494,6 +521,8 @@ G4 USB loopback revision.
 ### Risks
 
 - Cross-layer shortcuts. Mitigation: dependency checks and review of every call path.
+- Current `fffe:ffff` test identity and missing release-signing secret cannot
+  qualify public packages. Mitigation: make both explicit Phase 5A/5F gates.
 
 ## Phase 6 — Failure and Recovery Qualification
 
@@ -580,7 +609,7 @@ G6 has passed.
 
 ### Scope
 
-UART byte-stream backend, host serial adapter and the existing Protocol V1.
+UART byte-stream backend, a later Rust serial link and the existing Protocol V1.
 
 ### Out of Scope
 
@@ -592,7 +621,7 @@ Adds one Transport implementation only.
 
 ### Files / Components
 
-UART platform/backend, host serial adapter and HIL tests.
+UART platform/backend, Rust serial link and HIL tests.
 
 ### API Impact
 

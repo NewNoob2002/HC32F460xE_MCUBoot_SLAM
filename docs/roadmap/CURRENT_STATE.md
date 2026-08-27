@@ -21,7 +21,10 @@ CMakeLists.txt
 ├── HostTests path
 │   ├── Tests/{memory_map,flash_map,boot_handover,app_confirm}
 │   ├── Tests/{fw_update_contract,fw_update_mcuboot_backend}
-│   └── portable dependency check
+│   ├── Protocol/Manager/USB boundary tests + portable dependency check
+│   └── Rust updater tests + production C Manager fake E2E
+├── Rust host updater
+│   └── FirmwareImage + ProtocolV1Client + UpgradeWorkflow + blocking nusb
 └── Firmware path
     ├── hc32_project_options
     ├── hc32_device -> hc32_ll -> hc32_platform
@@ -34,10 +37,12 @@ CMakeLists.txt
     │   ├── hc32_startup_boot
     │   ├── hc32_platform / hc32_device
     │   └── mcuboot_bootutil
-    └── app_firmware
-        ├── hc32_startup_app
-        ├── hc32_platform / hc32_device
-        └── mcuboot_bootutil
+    ├── app_firmware
+    ├── usb_vendor_bulk_loopback
+    └── usb_fw_updater
+        ├── CherryUSB + HC32 USB DCD
+        ├── fw_update_core + fw_update_mcuboot
+        └── hc32_platform reset/watchdog/clock
 ```
 
 Sources: `CMakeLists.txt`, `Drivers/CMakeLists.txt`, `Platform/CMakeLists.txt`, `components/CMakeLists.txt`, `components/mcuboot_port/CMakeLists.txt`, `Boot/CMakeLists.txt`, `App/CMakeLists.txt` and `Tests/CMakeLists.txt`.
@@ -47,20 +52,23 @@ Sources: `CMakeLists.txt`, `Drivers/CMakeLists.txt`, `Platform/CMakeLists.txt`, 
 | Area | Current responsibility | Portability status |
 | --- | --- | --- |
 | `Boot/` | `boot_go()` invocation, safe failure loop and HC32 handover | Boot policy is portable in concept; `main.c` directly includes `hc32f460.h` |
-| `App/` | Clock init, default optional immediate confirmation and test-only Phase 2 HIL profiles | HC32-bound executable; default confirmation wrapper directly uses MCUboot public API |
+| `App/` | Default App, Phase 4 loopback and production USB updater targets | HC32-bound executables; updater callbacks defer Manager/Flash work to the Application poll loop |
 | `components/mcuboot-2.4.0/` | Upstream validation, scratch swap, rollback and trailer state | Vendored upstream; project-specific edits are prohibited |
 | `components/mcuboot_port/` | Flash areas, MCUboot configuration, signing key bridge | HC32 implementation and generated memory map are coupled |
 | `components/fw_update/` | Portable Storage/Boot-Control contracts, Protocol V1 codec/parser, receive/verification Manager and MCUboot backends | Core is host-buildable and dependency-checked; MCUboot backend is intentionally non-portable |
 | `Platform/HC32F460/` | Clock, Flash, startup support and boot handover | Intentionally HC32-specific |
 | `Drivers/` | CMSIS/device/LL libraries and Boot/App startup objects | HC32-specific |
-| `Tests/` | Eleven strict HostTests, Golden Vector verifier, fixed-seed malformed corpus, USB boundary check and reusable HIL assets | Long-duration and repeated USB re-enumeration coverage remains |
+| `Tests/` | Twelve strict HostTests, Rust/C fake E2E, Golden Vectors, malformed corpus, USB boundary check and reusable HIL assets | Physical updater USB and upgrade-persistence HIL remain |
+| `Tools/updater/` | Shared Rust updater core, CLI, fake test link and blocking nusb adapter | Host-side protocol/workflow is portable; USB backend is nusb-specific |
 | `cmake/` | Memory map, toolchain/options, signing and artifacts | Project/HC32 build policy |
 
 There is now a bounded portable `fw_update` Storage/Boot-Control foundation,
 Protocol V1 codec/parser and Manager lifecycle through sequence/replay, receive,
-verification, COMMIT and an emitted RESET action. Production Application glue,
-The Phase 4 diagnostic USB Vendor Bulk loopback is implemented. Production
-updater transport binding, UART, CAN and the host updater are not implemented.
+verification, COMMIT and an emitted RESET action. The Phase 4 diagnostic USB
+Vendor Bulk loopback and Python tool remain regression-only. Phase 5 adds the
+minimal Rust Protocol V1 client/workflow, `info`/`install`/`wait` CLI, fake E2E,
+blocking nusb adapter and production Application USB-to-Manager binding. Physical
+USB/HIL, GUI, release packages, UART and CAN are not complete.
 
 ## Flash layout
 
@@ -120,6 +128,13 @@ Power on / reset
   -> app_confirm_running_image(APP_AUTO_CONFIRM)
        -> boot_set_confirmed() when enabled
   -> idle loop
+
+usb_fw_updater alternative Application target
+  -> bsp_clock_init() + watchdog init + usb_fw_update_init()
+  -> app_confirm_running_image(APP_AUTO_CONFIRM)
+  -> 1 ms cooperative usb_fw_update_poll()
+       -> Manager RX/TX/timeout/disconnect handling
+       -> bsp_system_reset() only after deferred RESET action
 ```
 
 Repository entry points:
@@ -154,24 +169,29 @@ Repository entry points:
   firmware and a libusb host loopback tool.
 - Retained HC32 HIL evidence for USB enumeration, 10,000 mixed-length transfers,
   target counters and exact post-test restoration.
+- Shared Rust `FirmwareImage`, Protocol V1 client and upgrade workflow with
+  bounded retry/re-enumeration, structured progress and `info`/`install`/`wait`.
+- Blocking nusb discovery, interface claim and bounded Bulk transfer adapter.
+- Production `usb_fw_updater` target with ISR-to-poll event handoff, Manager RX/TX
+  integration, disconnect/timeout handling and deferred platform reset.
+- Rust/C fake E2E covering exact image storage and one test-upgrade request.
 
 ### Partially implemented
 
-- Application confirmation exists, but it occurs immediately after clock initialization and is not guarded by bounded product health checks.
-- Safe Application-facing Storage/Boot-Control contracts and the Phase 3D
-  portable Manager exist, but no production Application loop currently feeds
-  bytes, polls time, reports disconnect/TX-idle or executes the RESET action.
-- Manual debugger/probe programming can place an update into Secondary; there is no runtime receive/session path.
+- Default Application confirmation remains immediate. The updater target delays
+  confirmation until clock, watchdog and updater initialization succeed, but the
+  confirmation/persistence behavior is not yet physically evidenced.
+- The runtime receive/session path passed one physical v1 -> v2 -> confirmation
+  -> independent reset -> persistence cycle. Clean-revision repetition and
+  immutable gate evidence are still pending.
 - Rollback is implemented; anti-rollback/version security counters are not.
 
 ### Not implemented
 
-- Production Transport C contract/implementations and Application orchestration.
-- Production USB updater transport binding, UART, CAN or CAN FD.
-- Host firmware updater and production device discovery.
-- Download resume, Host retry policy and transfer recovery after reset.
-- Runtime App wiring that invokes the portable Manager against real time,
-  Transport, MCUboot backend and platform reset.
+- Repeated clean-revision USB updater HIL and immutable G5 evidence.
+- Slint GUI, signed Windows MSI, Linux package and udev rule.
+- UART, CAN or CAN FD transports.
+- Download resume and recovery download.
 - Signed hardware/board compatibility metadata and downgrade policy.
 - Minimal Boot recovery profile.
 
@@ -181,14 +201,15 @@ MCUboot's upstream ability to validate or swap an image is not evidence that thi
 
 | Level | Current coverage | Main gap |
 | --- | --- | --- |
-| Host unit | Memory/Flash map, handover, confirmation, fw_update contracts/backends, Protocol codec/parser, 10,000-case corpus, Manager lifecycle and USB boundary checks | No production App/updater transport integration exists |
-| Component integration | MCUboot Flash backend with mocked BSP Flash plus Storage/Boot-Control backend fakes | No full `boot_go()` host integration or Flash power-loss model |
-| Firmware build | Debug/Release, image signing/verification, layout and key policy in CI | No size regression threshold beyond partition/link failure |
-| HIL/manual | Boot/swap/revert/confirmation, Phase 2 Storage/Boot-Control, and Phase 4 USB enumeration, stall recovery, 10,000 baseline, 10 unplug/re-enumeration recoveries, 30-minute run and exact restoration | Runtime USB upgrade E2E and reset/power-loss matrices remain |
+| Host unit | Twelve strict HostTests plus 11 Rust tests: maps, handover, contracts/backends, Protocol/Manager, corpus, USB boundary, nusb framing and CLI/workflow | Physical nusb/device behavior remains |
+| Component integration | MCUboot Flash backend fakes plus Rust client -> production C Manager fake E2E | No full `boot_go()` host integration or Flash power-loss model |
+| Firmware build | Debug/Release App, loopback and updater image signing/verification; strict warnings on new updater sources | No size regression threshold beyond partition/link failure |
+| HIL/manual | Prior Boot/Phase 2/Phase 4 evidence plus one Rust USB v1→v2→confirm→independent-reset→persist cycle with trailer snapshots | Repeatability, clean immutable evidence and reset/power-loss matrices remain |
 | Fault injection | Unconfirmed test boot followed by reset/revert | No erase/write failure, corrupted trailer or interrupted swap matrix |
-| CI | Evidence checksums, eleven strict HostTests, USB boundary rule and Debug/Release builds/signing; Phase 4 evidence passed CI `33043244338` | No physical USB or runtime update E2E in hosted CI |
+| CI | Evidence checksums, twelve strict HostTests, Rust checks, USB boundary rule and Debug/Release App/loopback/updater builds/signing | Phase 5 changes have not yet passed remote CI; physical USB cannot run in hosted CI |
 
-The largest current delivery gap is production Application/Transport integration.
+The largest current delivery gap is repeatable clean-revision HIL evidence plus
+the deferred GUI/package release work.
 The largest baseline reliability gap remains systematic
 power-interruption testing during swap/update operations.
 
@@ -200,9 +221,9 @@ No P0 defect was identified in the protected baseline. A new P0 is any path that
 
 ### P1 High
 
-- Application confirmation is immediate; a broken test image can confirm before product health is established.
+- Default Application confirmation is immediate; a broken test image can confirm before product health is established.
 - Anti-rollback/downgrade protection is absent. Signed older images remain acceptable unless a later policy rejects them.
-- The future updater has no bounded power-loss/download recovery behavior yet.
+- The updater has no bounded power-loss/download recovery behavior; that remains outside Phase 5.
 - The App currently links MCUboot Boot Utility to call one confirmation API; future updater code must not gain unrestricted Flash-area selection through that dependency.
 
 ### P2 Medium
@@ -226,7 +247,13 @@ No P0 defect was identified in the protected baseline. A new P0 is any path that
 
 The baseline, Phase 2 Storage/Boot-Control foundation, Phase 3 portable
 Protocol/Manager and Phase 4 CherryUSB/HC32 loopback are CI/HIL evidenced. G4
-is `PASSED`. Phase 5 is next: add only the minimum USB Transport glue, reuse
-Manager/Storage, use static buffers, expose host `info`/`install`/`wait`, prove
-fake E2E first, then v1 -> v2 -> confirm -> persistence HIL. UART/CAN, a
-transport registry and download recovery remain out of scope.
+is `PASSED`. Phase 5B and Phase 5C implementation are locally complete under
+`docs/roadmap/PHASE5_USB_UPDATER_PLAN.md`: keep Python loopback as a Phase 4
+regression; the minimal Rust `info`/`install`/`wait` client and shared protocol
+core pass fake E2E against the C Manager, and blocking nusb plus production
+Application USB glue build successfully. One physical v1 -> v2 -> confirmation
+-> independent reset -> persistence cycle now passes with working evidence. A
+clean-revision repeat and immutable evidence remain before one Slint window and
+Windows/Linux packages.
+Tokio, plugins, a transport registry, UART/CAN and download recovery remain out
+of scope.

@@ -1,10 +1,11 @@
 # Firmware Update Architecture
 
-Status: Phase 1 layering and ADR-003 Protocol V1 boundary accepted
+Status: G4 passed; Phase 5 Rust updater plan active
 
-This document defines ownership and semantic boundaries. Phase 2 has converted
-Storage/Boot-Control semantics into tested C contracts; Phase 3 Protocol/Manager
-details follow the accepted ADR-003 boundary and Protocol V1 wire contract.
+This document defines ownership and semantic boundaries. Phase 2 converted
+Storage/Boot-Control semantics into tested C contracts, Phase 3 implemented the
+accepted Protocol V1/Manager boundary, and Phase 4 verified the pinned
+CherryUSB/HC32 Vendor Bulk backend without updater coupling.
 
 ## System ownership
 
@@ -191,9 +192,29 @@ Failure or timeout leaves the image unconfirmed and allows MCUboot revert.
 
 ## Host tool
 
-Phase 5 uses Python with PyUSB/libusb first because it gives the shortest path to Linux development, deterministic protocol tests and CI-host logic. The protocol specification and golden vectors are the shared contract; Python structures are not the specification.
+Phase 5 uses one minimal Rust updater because Windows/Linux packaging and the
+later Slint GUI now justify a compiled cross-platform host. The existing Python
+libusb loopback remains a Phase 4 USB regression tool only. Protocol V1 and its
+Golden Vectors remain the specification; Rust types are not the specification.
 
-Planned commands cover discovery, HELLO, DEVICE_INFO, compatibility checks, BEGIN/erase, chunk transfer, status/retry/progress, END/readback verify, COMMIT, reboot and diagnostics. A C/C++ or Rust host can be added only when packaging, deployment or performance requirements justify it.
+The initial CLI exposes only `info`, `install` and `wait`. CLI and GUI are sibling
+frontends over one Rust library containing `FirmwareImage`, `ProtocolV1Client`
+and `UpgradeWorkflow`. It owns framing, sequence/retry, compatibility, image
+transfer and structured progress events. Fake E2E uses a
+test-only stdio link to the existing C Manager/fake backends; real HIL replaces
+only that link with blocking nusb Bulk transfers. There is no Tokio runtime,
+plugin API, transport registry or transport-selection option.
+
+`FirmwareImage` means one MCUboot signed-image file, not a plugin/package
+container. Host-side CRC and metadata checks provide early rejection and
+transfer integrity; MCUboot remains the signature trust root. nusb owns only
+discovery/open/claim, Bulk I/O and USB error mapping. The workflow owns the
+bounded wait/re-enumeration policy.
+
+After CLI v1 -> v2 -> confirmation -> persistence HIL passes, one Slint window
+calls the same core. Blocking USB work runs on one standard-library worker
+thread so the UI event loop remains responsive. Windows/Linux packaging is the
+final Phase 5 step, not a reason to add a service or framework.
 
 ## Version and compatibility model
 
@@ -231,17 +252,21 @@ separate ADR before production release.
 
 ## CherryUSB boundary
 
-CherryUSB is a proposed USB device-stack backend, not the transport contract or protocol. The evaluated upstream reference on 2026-08-26 is release `v1.6.1` at commit `c9625ff`, licensed Apache-2.0. Its documented DCD boundary includes functions such as `usb_dc_init()`/`usb_dc_deinit()` and chip-specific controller implementations under `port/`. HC32F460 is not listed among the upstream ports reviewed, so Phase 4 includes an independent HC32 DCD feasibility/porting gate.
-
-No CherryUSB source is added in Phase 1. Phase 4 must re-check the current upstream release before pinning a reviewed tag/commit. Project-specific DCD code stays outside CherryUSB core. See `docs/adr/ADR-002-cherryusb-strategy.md`.
+CherryUSB is the verified USB device-stack backend, not the transport contract
+or protocol. Phase 4 pinned the unchanged required subset of release `v1.6.1`
+at commit `c9625ffa773ad10b8824d1b5361bca2ccc1f3d1e`, licensed Apache-2.0,
+under `components/cherryusb/`. The HC32F460 DCD remains project-owned code
+outside CherryUSB core. G4 HIL verified enumeration, Bulk transfer, stall
+recovery, re-enumeration and a 30-minute run. See
+`docs/adr/ADR-002-cherryusb-strategy.md` and `components/cherryusb/UPSTREAM.md`.
 
 ## Architecture self-review
 
 | Question | Result |
 | --- | --- |
-| 1. What is actually complete? | Signed Boot/App baseline, Secondary Storage/Boot-Control, Protocol codec/parser and host-tested Manager lifecycle through COMMIT and RESET action |
-| 2. What should happen next? | Plan and review Phase 4 CherryUSB + HC32 DCD loopback |
-| 3. What should not happen now? | Concurrent USB/CAN/UART implementation, full updater integration or Boot recovery before Phase 4 scope/gate approval |
+| 1. What is actually complete? | Signed Boot/App baseline, Secondary Storage/Boot-Control, Protocol/Manager through COMMIT/RESET, and CherryUSB/HC32 Vendor Bulk G4 loopback |
+| 2. What should happen next? | Execute the accepted Phase 5 Rust CLI/fake E2E plan, then blocking nusb HIL |
+| 3. What should not happen now? | Slint before core HIL, plugins/transport registry, Tokio, UART/CAN, resume or Boot recovery |
 | 4. Top three risks? | Parser bounds/desync, duplicate side effects, unsigned compatibility metadata assumptions |
 | 5. Boot/App/Slot distinguished? | Yes |
 | 6. Full manager in Application? | Yes |

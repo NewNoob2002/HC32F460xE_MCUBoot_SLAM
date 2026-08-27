@@ -82,6 +82,29 @@ target_include_directories(fw_update_manager_tests PRIVATE
 )
 add_test(NAME fw_update_manager COMMAND fw_update_manager_tests)
 
+add_executable(fw_update_fake_device
+    fw_update_fake_device.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/manager.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/protocol.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/storage.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/boot_control.c
+)
+target_include_directories(fw_update_fake_device PRIVATE
+    ${PROJECT_SOURCE_DIR}/components/fw_update/include
+)
+
+find_program(CARGO_EXECUTABLE cargo REQUIRED)
+add_test(
+    NAME rust_updater
+    COMMAND ${CMAKE_COMMAND} -E env
+        "HC32_FAKE_DEVICE=$<TARGET_FILE:fw_update_fake_device>"
+        ${CARGO_EXECUTABLE} test
+        --manifest-path ${PROJECT_SOURCE_DIR}/Tools/updater/Cargo.toml
+        --locked
+        --features fake-e2e
+)
+set_tests_properties(rust_updater PROPERTIES TIMEOUT 60)
+
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 add_test(
     NAME fw_update_architecture
