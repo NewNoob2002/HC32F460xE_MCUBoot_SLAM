@@ -195,7 +195,8 @@ evidence. No debugger writes Secondary during the upgrade.
 
 ### Phase 5E — Slint single-window GUI
 
-Status: in progress.
+Status: local implementation/build complete; launch and physical install
+evidence pending.
 
 Only after Phase 5D passes:
 

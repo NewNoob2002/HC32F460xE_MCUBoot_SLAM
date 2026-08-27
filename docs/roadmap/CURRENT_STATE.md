@@ -188,7 +188,8 @@ Repository entry points:
 
 ### Not implemented
 
-- Slint GUI, signed Windows MSI, Linux package and udev rule.
+- Slint GUI launch/install evidence, signed Windows MSI, Linux package and udev
+  rule.
 - UART, CAN or CAN FD transports.
 - Download resume and recovery download.
 - Signed hardware/board compatibility metadata and downgrade policy.
@@ -200,14 +201,14 @@ MCUboot's upstream ability to validate or swap an image is not evidence that thi
 
 | Level | Current coverage | Main gap |
 | --- | --- | --- |
-| Host unit | Twelve strict HostTests plus 11 Rust tests: maps, handover, contracts/backends, Protocol/Manager, corpus, USB boundary, nusb framing and CLI/workflow | Physical nusb/device behavior remains |
+| Host unit | Twelve strict HostTests plus 12 Rust tests with the GUI target: maps, handover, contracts/backends, Protocol/Manager, corpus, USB boundary, nusb framing and CLI/workflow | GUI launch/install behavior remains |
 | Component integration | MCUboot Flash backend fakes plus Rust client -> production C Manager fake E2E | No full `boot_go()` host integration or Flash power-loss model |
 | Firmware build | Debug/Release App, loopback and updater image signing/verification; strict warnings on new updater sources | No size regression threshold beyond partition/link failure |
 | HIL/manual | Prior Boot/Phase 2/Phase 4 evidence plus clean-revision Rust USB v1→v2→confirm→independent-reset→persist evidence with trailer snapshots | GUI-path install and reset/power-loss matrices remain |
 | Fault injection | Unconfirmed test boot followed by reset/revert | No erase/write failure, corrupted trailer or interrupted swap matrix |
 | CI | Evidence checksums, twelve strict HostTests, Rust checks, USB boundary rule and Debug/Release App/loopback/updater builds/signing | Phase 5 changes have not yet passed remote CI; physical USB cannot run in hosted CI |
 
-The largest current delivery gap is the deferred Slint GUI and package release
+The largest current delivery gap is GUI-path HIL evidence and package release
 work.
 The largest baseline reliability gap remains systematic
 power-interruption testing during swap/update operations.
@@ -253,7 +254,8 @@ core pass fake E2E against the C Manager, and blocking nusb plus production
 Application USB glue build successfully. A clean-revision physical v1 -> v2 ->
 confirmation -> independent reset -> persistence cycle passed from revision
 `e6eeb68` and is archived under
-`evidence/hil/2026-08-27-e6eeb68-phase5-clean/`. Phase 5D is satisfied and the
-single Slint window may now be implemented before Windows/Linux packages.
+`evidence/hil/2026-08-27-e6eeb68-phase5-clean/`. Phase 5D is satisfied. The
+single Slint window now builds over the same Rust core; launch and physical
+install evidence remain before Windows/Linux packages.
 Tokio, plugins, a transport registry, UART/CAN and download recovery remain out
 of scope.

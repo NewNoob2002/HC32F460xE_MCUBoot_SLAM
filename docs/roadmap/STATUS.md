@@ -11,7 +11,7 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 | Phase 2 — Secondary Storage and Boot Control | PASSED | G2 | Strict HostTests 7/7; Debug/Release/signing and remote CI passed | Storage/range-isolation/Pending/restore passed | None | `evidence/hil/2026-08-26-5ebeae6-phase2/`, revisions `5ebeae6`/`0e1abd8`, CI `32928199086`/`32929570437` |
 | Phase 3 — Protocol Core | PASSED | G3 | HostTests 9/9; corpus 10,000; Debug/Release/signing and remote CI PASS | Not required | None | `evidence/host/2026-08-26-e7899bd-phase3/`, revisions `e7899bd`/`515d0c5`, CI `32948384485` |
 | Phase 4 — CherryUSB + HC32 DCD Loopback | PASSED | G4 | HostTests 11/11; Debug/Release image verification; CI passed | Enumeration, stall recovery, 10,000-transfer baseline, 10 unplug/re-enumeration recoveries, 30-minute run, counters and exact restore passed | None | `evidence/hil/2026-08-27-fd703cd-phase4-g4/`, revision `fd703cd`, evidence commit `2b63850`, CI `33043244338` |
-| Phase 5 — USB Upgrade E2E | IN_PROGRESS | G5 | Rust 10/10 standalone; strict HostTests 12/12 including fake E2E; Release v1/v2 verification passed | Clean-revision v1→v2→confirm→reset→persist cycle passed with immutable evidence | Slint GUI; production VID/PID, WinUSB binding and signing inputs; Windows/Linux packages | `evidence/hil/2026-08-27-e6eeb68-phase5-clean/`, `docs/roadmap/PHASE5_USB_UPDATER_PLAN.md` |
+| Phase 5 — USB Upgrade E2E | IN_PROGRESS | G5 | Rust 12/12 with GUI target; strict HostTests 12/12 including fake E2E; Release v1/v2 and GUI builds passed | Clean-revision v1→v2→confirm→reset→persist cycle passed with immutable evidence | GUI launch/install evidence; production VID/PID, WinUSB binding and signing inputs; Windows/Linux packages | `evidence/hil/2026-08-27-e6eeb68-phase5-clean/`, `docs/roadmap/PHASE5_USB_UPDATER_PLAN.md` |
 | Phase 6 — Failure and Recovery | NOT_STARTED | G6 | Not run | Required | G5, power/reset fixture | None |
 | Phase 7 — UART Portability | NOT_STARTED | G7 | Not run | Required | G6 | None |
 | Phase 8 — CAN/CAN FD Portability | NOT_STARTED | G8 | Not run | Required | G7 | None |
@@ -32,10 +32,9 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 
 ## Immediate next action
 
-Implement the smallest Slint single-window frontend over the existing updater
-library: device summary, signed-image selection, install action, bounded progress
-and final result. Keep blocking USB work on one standard-library worker thread.
-Packaging remains deferred until the GUI path is verified.
+Launch-smoke the new Slint single-window frontend, then run one preflighted
+physical install and retain its protocol/result evidence. Packaging remains
+deferred until that GUI path is verified.
 
 ## Phase 5A planning start
 
@@ -164,6 +163,21 @@ Date: 2026-08-27
 - Immutable evidence: `evidence/hil/2026-08-27-e6eeb68-phase5-clean/`. Phase
   5D's clean-repeat/evidence requirement is satisfied. Phase 5E Slint work may
   begin; G5 remains open for GUI and package evidence.
+
+## Latest Phase 5E local result
+
+Date: 2026-08-27
+
+- Added one Slint window with device summary, signed-image path, Refresh,
+  Install, bounded progress, status and final result.
+- The GUI reuses `FirmwareImage`, `ProtocolV1Client`, `UpgradeWorkflow` and the
+  blocking nusb adapter. USB work runs on a standard-library worker thread and
+  updates Slint through its event loop.
+- Install performs the existing core install followed by bounded
+  re-enumeration/version verification; no GUI-specific protocol path exists.
+- `cargo fmt --check`, 12/12 Rust tests, clippy with warnings denied and the
+  locked Release GUI build passed. GUI launch and physical install evidence are
+  still required; G5 remains open.
 
 ## Latest local G1 verification
 

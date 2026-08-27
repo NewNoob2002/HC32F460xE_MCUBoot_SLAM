@@ -1,0 +1,77 @@
+import { Button, HorizontalBox, LineEdit, VerticalBox } from "std-widgets.slint";
+
+export component UpdaterWindow inherits Window {
+    title: "HC32 Firmware Updater";
+    width: 640px;
+    height: 360px;
+
+    in-out property <string> firmware-path;
+    in property <string> device-summary: "No device information";
+    in property <string> status-text: "Ready";
+    in property <float> progress: 0;
+    in property <bool> busy: false;
+
+    callback refresh-device();
+    callback install-firmware(string);
+
+    VerticalBox {
+        padding: 18px;
+        spacing: 12px;
+
+        Text {
+            text: "Device";
+            font-size: 18px;
+            font-weight: 600;
+        }
+        Text {
+            text: root.device-summary;
+            wrap: word-wrap;
+        }
+
+        Text {
+            text: "Signed firmware image";
+            font-size: 18px;
+            font-weight: 600;
+        }
+        HorizontalBox {
+            spacing: 8px;
+            LineEdit {
+                text <=> root.firmware-path;
+                enabled: !root.busy;
+                placeholder-text: "Path to updater_signed.bin";
+            }
+            Button {
+                text: "Install";
+                enabled: !root.busy && root.firmware-path != "";
+                clicked => { root.install-firmware(root.firmware-path); }
+            }
+        }
+
+        Rectangle {
+            height: 12px;
+            background: #d9d9d9;
+            border-radius: 6px;
+
+            Rectangle {
+                width: parent.width * max(0, min(1, root.progress));
+                height: parent.height;
+                background: #2d78d4;
+                border-radius: parent.border-radius;
+            }
+        }
+
+        Text {
+            text: root.status-text;
+            wrap: word-wrap;
+        }
+
+        HorizontalBox {
+            alignment: end;
+            Button {
+                text: "Refresh";
+                enabled: !root.busy;
+                clicked => { root.refresh-device(); }
+            }
+        }
+    }
+}
