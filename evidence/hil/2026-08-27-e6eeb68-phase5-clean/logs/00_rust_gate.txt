@@ -1,0 +1,14 @@
+Script started on 2026-08-27 18:05:01+08:00 [COMMAND="rtk cargo fmt --manifest-path Tools/updater/Cargo.toml -- --check && rtk cargo clippy --manifest-path Tools/updater/Cargo.toml --locked --all-targets --features fake-e2e -- -D warnings && rtk cargo test --manifest-path Tools/updater/Cargo.toml --locked --all-targets --features fake-e2e && rtk cargo build --manifest-path Tools/updater/Cargo.toml --release --locked" <not executed on terminal>]
+cargo clippy: No issues found
+---- rust_core_completes_real_c_manager_fake_e2e stdout ----
+
+thread 'rust_core_completes_real_c_manager_fake_e2e' (191) panicked at tests/fake_e2e.rs:18:61:
+HC32_FAKE_DEVICE from CTest: NotPresent
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+Script done on 2026-08-27 18:05:08+08:00 [COMMAND_EXIT_CODE="101"]

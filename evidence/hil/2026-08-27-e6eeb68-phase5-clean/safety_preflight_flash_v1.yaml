@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-27T10:10:08Z"
+  operation: "flash"
+  authorization: "User requested a clean-revision repeat of the Phase 5 v1-to-v2 HIL flow on 2026-08-27"
+  target:
+    board: "HC32F460xE; Cortex-M4 r0p1"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "J-Link 000020781318"
+    transport: "SWD 4000 kHz"
+  artifact_or_stimulus: "Boot SHA256 43d213d6d50ec73b92748b9aef71d09d3be265288d6b036e8de90a8e7d7e512d at 0x00000000; confirmed updater Primary v1.0.0 SHA256 d5d450d692716f1b60699d4428754604776b6b557812c1fece062fad7799fcb8 at 0x00010000"
+  limits: "Require VTref near 3.35 V; loadbin may erase/write only sectors needed by Boot and Primary 0x00010000-0x00041FFF; verify both binaries; do not mass erase, unlock, recover, access OTP/option bytes/protection or Reserved 0x00076000-0x0007FFFF"
+  recovery_plan: "Restore backup/pre_flash_00000000_00075fff.bin (483328 bytes, SHA256 28055b087ba8982fe5d94970b42c49b9eebfbb7262fe3e6a56c40385f99e036a) at 0x00000000 only under a separate restore preflight, then require exact 0x76000-byte readback"
+  approved: true

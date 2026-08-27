@@ -1,0 +1,13 @@
+test_result:
+  schema_version: 1
+  source_revision: "e6eeb68700662ef87f8093f13d4f3fac53dbe722"
+  level: "host-unit/integration"
+  target: "Linux x86_64 host"
+  command: "cargo fmt/clippy; strict ASan/UBSan HostTests; corrected cargo test; cargo build --release"
+  attempts: 2
+  passed: true
+  counts: {host_tests_total: 12, host_tests_passed: 12, rust_standalone_total: 10, rust_standalone_passed: 10}
+  classified_failures:
+    - "test.invocation.missing-fixture: preliminary direct fake-e2e invocation lacked HC32_FAKE_DEVICE; intended CTest entry passed"
+  logs: ["logs/00_rust_gate.txt", "logs/01_host_tests.txt", "logs/04_rust_retry_correct_entry.txt"]
+  requirements: ["Rust protocol core", "C Manager fake E2E", "strict host regression"]

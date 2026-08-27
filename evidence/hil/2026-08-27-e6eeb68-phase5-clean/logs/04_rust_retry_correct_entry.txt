@@ -1,0 +1,6 @@
+Script started on 2026-08-27 18:05:50+08:00 [COMMAND="rtk cargo test --manifest-path Tools/updater/Cargo.toml --locked && rtk cargo build --manifest-path Tools/updater/Cargo.toml --release --locked" <not executed on terminal>]
+cargo test: 10 passed (4 suites, 0.00s)
+cargo build (9 crates compiled)
+Finished `release` profile [optimized] target(s) in 3.67s
+
+Script done on 2026-08-27 18:05:54+08:00 [COMMAND_EXIT_CODE="0"]

@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-27T10:08:01Z"
+  operation: "debug-halt/readback"
+  authorization: "User requested a clean-revision repeat of the Phase 5 v1-to-v2 HIL flow on 2026-08-27"
+  target:
+    board: "HC32F460xE; Cortex-M4"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "J-Link 000020781318"
+    transport: "SWD 4000 kHz"
+  artifact_or_stimulus: "Read exactly 0x00000000-0x00075FFF into backup/pre_flash_00000000_00075fff.bin"
+  limits: "Halt only for bounded 0x76000-byte readback; never access Reserved 0x00076000-0x0007FFFF; no erase, write, reset, unlock, recover, OTP, option-byte or protection change"
+  recovery_plan: "Resume execution with go; stop immediately on target identity, VTref or readback failure"
+  approved: true

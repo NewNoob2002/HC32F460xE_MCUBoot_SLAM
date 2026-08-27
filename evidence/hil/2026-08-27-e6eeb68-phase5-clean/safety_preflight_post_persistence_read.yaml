@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-27T10:16:47Z"
+  operation: "debug-halt/readback"
+  authorization: "User requested a clean-revision repeat of the Phase 5 v1-to-v2 HIL flow; applies after post-reset v2 wait passes"
+  target:
+    board: "HC32F460 Phase 5 Lab running persisted application 2.0.0"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "J-Link 000020781318"
+    transport: "SWD 4000 kHz"
+  artifact_or_stimulus: "Read confirmation/init/error globals and post-reset Primary/Secondary headers and trailers"
+  limits: "Same bounded addresses as pre-reset read: RAM 0x1FFF90D0+8 and 0x1FFF83A8+8, headers 0x00010000/0x00042000, trailers 0x00041F00/0x00073F00; no write, reset, erase, unlock, recover, OTP, option-byte, protection or Reserved access"
+  recovery_plan: "Resume target with go and stop on any read or identity failure"
+  approved: true

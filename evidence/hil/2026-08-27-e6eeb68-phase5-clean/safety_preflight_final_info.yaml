@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-27T10:20:30Z"
+  operation: "usb-protocol-read"
+  authorization: "User requested a clean-revision repeat of the Phase 5 v1-to-v2 HIL flow; persistence checks passed"
+  target:
+    board: "HC32F460 Phase 5 Lab"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "USB HC32F460-PHASE5-0001; J-Link 000020781318"
+    transport: "USB Vendor Bulk fffe:ffff"
+  artifact_or_stimulus: "Final info command after post-reset state read"
+  limits: "One HELLO/DEVICE_INFO sequence; no install, reset, debugger attachment, power control or Flash/storage write"
+  recovery_plan: "Close USB handle and preserve all prior evidence on failure"
+  approved: true

@@ -1,0 +1,13 @@
+evidence_manifest:
+  schema_version: 1
+  run_id: "2026-08-27-e6eeb68-hc32f460-phase5-clean"
+  source_revision: "e6eeb68700662ef87f8093f13d4f3fac53dbe722"
+  source_tree: "85ef0fe035ac97325bc185bfbd557438d29af613"
+  source_dirty: false
+  target: "HC32F460xE"
+  probe_serial: "20781318"
+  usb_serial: "HC32F460-PHASE5-0001"
+  result: "PASSED_CLEAN_REVISION_HIL"
+  final_target_state: "confirmed and persisted updater 2.0.0"
+  gate_impact: "Phase 5D clean-repeat and immutable-evidence requirement satisfied; G5 remains open for Slint and release packages"
+  checksum_verification: "python3 Tests/HIL/verify_evidence.py evidence/hil/2026-08-27-e6eeb68-phase5-clean/SHA256SUMS"

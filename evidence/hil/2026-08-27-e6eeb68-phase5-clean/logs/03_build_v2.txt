@@ -1,0 +1,161 @@
+Script started on 2026-08-27 18:05:01+08:00 [COMMAND="rtk cmake -S . -B build/HIL/phase5-clean-20260827-e6eeb68/build-v2 -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=cmake/gcc-arm-none-eabi.cmake -DMCUBOOT_SIGNING_KEY=/tmp/hc32-phase5-clean.7CMSZu/release.pem -DAPP_VERSION=2.0.0 -DAPP_AUTO_CONFIRM=ON && rtk cmake --build build/HIL/phase5-clean-20260827-e6eeb68/build-v2 --parallel && rtk cmake --build build/HIL/phase5-clean-20260827-e6eeb68/build-v2 --target verify_updater_image && rtk arm-none-eabi-size build/HIL/phase5-clean-20260827-e6eeb68/build-v2/Boot/boot_firmware.elf build/HIL/phase5-clean-20260827-e6eeb68/build-v2/App/usb_fw_updater.elf" <not executed on terminal>]
+-- The C compiler identification is GNU 14.3.1
+-- The CXX compiler identification is GNU 14.3.1
+-- The ASM compiler identification is GNU
+-- Found assembler: /opt/st/stm32cubeclt_1.21.0/GNU-tools-for-STM32/bin/arm-none-eabi-gcc
+-- Configuring done (0.2s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase5-clean-20260827-e6eeb68/build-v2
+[0/80] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll.c.obj[K[0/80] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_clk.c.obj[K[0/80] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_efm.c.obj[K[0/80] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_fcg.c.obj[K[0/80] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_gpio.c.obj[K[0/80] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_interrupts.c.obj[K[0/80] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_pwc.c.obj[K[0/80] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_sram.c.obj[K[0/80] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_utility.c.obj[K[0/80] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_usb.c.obj[K[0/80] Building ASM object Drivers/CMakeFiles/hc32_startup_boot.dir/CMSIS/Device/HDSC/hc32f4xx/Source/GCC/startup_hc32f460.S.obj[K[0/80] Building C object Drivers/CMakeFiles/hc32_startup_boot.dir/CMSIS/Device/HDSC/hc32f4xx/Source/system_hc32f460.c.obj[K[0/80] Building C object Drivers/CMakeFiles/hc32_startup_boot.dir/hc32f4xx_ll_drivers/src/hc32_ll_icg.c.obj[K[0/80] Building ASM object Drivers/CMakeFiles/hc32_startup_app.dir/CMSIS/Device/HDSC/hc32f4xx/Source/GCC/startup_hc32f460.S.obj[K[0/80] Building C object Drivers/CMakeFiles/hc32_startup_app.dir/CMSIS/Device/HDSC/hc32f4xx/Source/system_hc32f460.c.obj[K[0/80] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/boot_handover.c.obj[K[0/80] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_clock.c.obj[K[0/80] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_external_watchdog.c.obj[K[1/80] Building ASM object Drivers/CMakeFiles/hc32_startup_boot.dir/CMSIS/Device/HDSC/hc32f4xx/Source/GCC/startup_hc32f460.S.obj[K[1/80] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_flash.c.obj[K[2/80] Building ASM object Drivers/CMakeFiles/hc32_startup_app.dir/CMSIS/Device/HDSC/hc32f4xx/Source/GCC/startup_hc32f460.S.obj[K[2/80] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_reset.c.obj[K[3/80] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_gpio.c.obj[K[3/80] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_write_protection.c.obj[K[4/80] Building C object Drivers/CMakeFiles/hc32_startup_boot.dir/hc32f4xx_ll_drivers/src/hc32_ll_icg.c.obj[K[4/80] Building C object components/CMakeFiles/tinycrypt.dir/mcuboot-2.4.0/ext/tinycrypt/lib/source/sha256.c.obj[K[5/80] Building C object Drivers/CMakeFiles/hc32_startup_boot.dir/CMSIS/Device/HDSC/hc32f4xx/Source/system_hc32f460.c.obj[K[5/80] Building C object components/CMakeFiles/tinycrypt.dir/mcuboot-2.4.0/ext/tinycrypt/lib/source/utils.c.obj[K[6/80] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_clock.c.obj[K[6/80] Building C object components/CMakeFiles/tinycrypt.dir/mcuboot-2.4.0/ext/tinycrypt/lib/source/ecc.c.obj[K[7/80] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll.c.obj[K[7/80] Building C object components/CMakeFiles/tinycrypt.dir/mcuboot-2.4.0/ext/tinycrypt/lib/source/ecc_dsa.c.obj[K[8/80] Building C object Drivers/CMakeFiles/hc32_startup_app.dir/CMSIS/Device/HDSC/hc32f4xx/Source/system_hc32f460.c.obj[K[8/80] Building C object components/CMakeFiles/tinycrypt.dir/mcuboot-2.4.0/ext/tinycrypt/lib/source/ecc_platform_specific.c.obj[K[9/80] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_fcg.c.obj[K[9/80] Building C object components/CMakeFiles/mcuboot_asn1.dir/mcuboot-2.4.0/ext/mbedtls-asn1/src/asn1parse.c.obj[K[10/80] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_reset.c.obj[K[10/80] Building C object components/CMakeFiles/mcuboot_asn1.dir/mcuboot-2.4.0/ext/mbedtls-asn1/src/platform_util.c.obj[K[11/80] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/boot_handover.c.obj[K[11/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_area.c.obj[K[12/80] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_utility.c.obj[K[12/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_find_key.c.obj[K[13/80] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_write_protection.c.obj[K[13/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_img_hash.c.obj[K[14/80] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_sram.c.obj[K[14/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_img_security_cnt.c.obj[K[15/80] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_flash.c.obj[K[15/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_loader.c.obj[K[16/80] Building C object components/CMakeFiles/tinycrypt.dir/mcuboot-2.4.0/ext/tinycrypt/lib/source/ecc_platform_specific.c.obj[K[16/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_misc.c.obj[K[17/80] Building C object components/CMakeFiles/tinycrypt.dir/mcuboot-2.4.0/ext/tinycrypt/lib/source/utils.c.obj[K[17/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_public.c.obj[K[18/80] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_external_watchdog.c.obj[K[18/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/caps.c.obj[K[19/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_find_key.c.obj[K[19/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/fault_injection_hardening.c.obj[K[20/80] Building C object components/CMakeFiles/mcuboot_asn1.dir/mcuboot-2.4.0/ext/mbedtls-asn1/src/platform_util.c.obj[K[20/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/image_ecdsa.c.obj[K[21/80] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_clk.c.obj[K[21/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/image_validate.c.obj[K[22/80] Building C object components/CMakeFiles/tinycrypt.dir/mcuboot-2.4.0/ext/tinycrypt/lib/source/sha256.c.obj[K[22/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/loader.c.obj[K[23/80] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_usb.c.obj[K[23/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/swap_misc.c.obj[K[24/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_img_security_cnt.c.obj[K[24/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/swap_scratch.c.obj[K[25/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_img_hash.c.obj[K[25/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/tlv.c.obj[K[26/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/caps.c.obj[K[26/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot_port/Src/config_checks.c.obj[K[27/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_area.c.obj[K[27/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot_port/Src/keys.c.obj[K[28/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/fault_injection_hardening.c.obj[K[28/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/__/generated/keys/signing_keys.c.obj[K[29/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot_port/Src/config_checks.c.obj[K[29/80] Building C object components/mcuboot_port/CMakeFiles/mcuboot_port_hc32.dir/Src/flash_map_backend.c.obj[K[30/80] Building C object components/CMakeFiles/tinycrypt.dir/mcuboot-2.4.0/ext/tinycrypt/lib/source/ecc_dsa.c.obj[K[30/80] Building C object components/cherryusb/CMakeFiles/cherryusb_device.dir/core/usbd_core.c.obj[K[31/80] Building C object components/CMakeFiles/mcuboot_asn1.dir/mcuboot-2.4.0/ext/mbedtls-asn1/src/asn1parse.c.obj[K[31/80] Linking C static library components/libmcuboot_asn1.a[K[32/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_loader.c.obj[K[32/80] Building C object components/fw_update/CMakeFiles/fw_update_core.dir/src/storage.c.obj[K[33/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/__/generated/keys/signing_keys.c.obj[K[33/80] Building C object components/fw_update/CMakeFiles/fw_update_core.dir/src/boot_control.c.obj[K[34/80] Linking C static library components/libmcuboot_asn1.a[K[34/80] Building C object components/fw_update/CMakeFiles/fw_update_core.dir/src/protocol.c.obj[K[35/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot_port/Src/keys.c.obj[K[35/80] Building C object components/fw_update/CMakeFiles/fw_update_core.dir/src/manager.c.obj[K[36/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/swap_misc.c.obj[K[36/80] Building C object components/fw_update/CMakeFiles/fw_update_mcuboot.dir/backends/mcuboot/src/storage_mcuboot.c.obj[K[37/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_misc.c.obj[K[37/80] Building C object components/fw_update/CMakeFiles/fw_update_mcuboot.dir/backends/mcuboot/src/boot_control_mcuboot.c.obj[K[38/80] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_efm.c.obj[K[38/80] Building C object Boot/CMakeFiles/boot_firmware.dir/Core/Src/main.c.obj[K[39/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/tlv.c.obj[K[39/80] Building C object Boot/CMakeFiles/boot_firmware.dir/__/Platform/HC32F460/Src/syscalls.c.obj[K[40/80] Building C object components/fw_update/CMakeFiles/fw_update_core.dir/src/storage.c.obj[K[40/80] Building C object App/CMakeFiles/app_firmware.dir/Core/Src/app_confirm.c.obj[K[41/80] Building C object components/fw_update/CMakeFiles/fw_update_core.dir/src/boot_control.c.obj[K[41/80] Building C object App/CMakeFiles/app_firmware.dir/Core/Src/main.c.obj[K[42/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/image_ecdsa.c.obj[K[42/80] Building C object App/CMakeFiles/app_firmware.dir/__/Platform/HC32F460/Src/syscalls.c.obj[K[43/80] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_pwc.c.obj[K[43/80] Building C object App/CMakeFiles/usb_vendor_bulk_loopback.dir/Core/Src/usb_vendor_bulk.c.obj[K[44/80] Building C object App/CMakeFiles/app_firmware.dir/Core/Src/main.c.obj[K[44/80] Building C object App/CMakeFiles/usb_vendor_bulk_loopback.dir/Core/Src/usb_vendor_bulk_main.c.obj[K[45/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/image_validate.c.obj[K[45/80] Building C object App/CMakeFiles/usb_vendor_bulk_loopback.dir/__/Platform/HC32F460/Src/usb_dc_hc32f460.c.obj[K[46/80] Building C object components/CMakeFiles/tinycrypt.dir/mcuboot-2.4.0/ext/tinycrypt/lib/source/ecc.c.obj[K[46/80] Linking C static library components/libtinycrypt.a[K[47/80] Building C object components/fw_update/CMakeFiles/fw_update_mcuboot.dir/backends/mcuboot/src/boot_control_mcuboot.c.obj[K[47/80] Building C object App/CMakeFiles/usb_vendor_bulk_loopback.dir/__/Platform/HC32F460/Src/syscalls.c.obj[K[48/80] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_interrupts.c.obj[K[48/80] Linking C static library Drivers/libhc32_ll.a[K[49/80] Linking C static library components/libtinycrypt.a[K[49/80] Building C object App/CMakeFiles/usb_fw_updater.dir/Core/Src/app_confirm.c.obj[K[50/80] Linking C static library Drivers/libhc32_ll.a[K[50/80] Linking C static library Platform/libhc32_platform.a[K[51/80] Building C object App/CMakeFiles/app_firmware.dir/Core/Src/app_confirm.c.obj[K[51/80] Building C object App/CMakeFiles/usb_fw_updater.dir/Core/Src/usb_fw_update.c.obj[K[52/80] Building C object Boot/CMakeFiles/boot_firmware.dir/Core/Src/main.c.obj[K[52/80] Building C object App/CMakeFiles/usb_fw_updater.dir/Core/Src/usb_fw_update_main.c.obj[K[53/80] Linking C static library Platform/libhc32_platform.a[K[53/80] Building C object App/CMakeFiles/usb_fw_updater.dir/__/Platform/HC32F460/Src/usb_dc_hc32f460.c.obj[K[54/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_public.c.obj[K[54/80] Building C object App/CMakeFiles/usb_fw_updater.dir/__/Platform/HC32F460/Src/syscalls.c.obj[K[55/80] Building C object components/fw_update/CMakeFiles/fw_update_mcuboot.dir/backends/mcuboot/src/storage_mcuboot.c.obj[K[56/80] Building C object Boot/CMakeFiles/boot_firmware.dir/__/Platform/HC32F460/Src/syscalls.c.obj[K[57/80] Building C object App/CMakeFiles/usb_vendor_bulk_loopback.dir/Core/Src/usb_vendor_bulk_main.c.obj[K[58/80] Building C object App/CMakeFiles/app_firmware.dir/__/Platform/HC32F460/Src/syscalls.c.obj[K[59/80] Building C object App/CMakeFiles/usb_vendor_bulk_loopback.dir/Core/Src/usb_vendor_bulk.c.obj[K[60/80] Building C object App/CMakeFiles/usb_fw_updater.dir/Core/Src/app_confirm.c.obj[K[61/80] Building C object App/CMakeFiles/usb_vendor_bulk_loopback.dir/__/Platform/HC32F460/Src/syscalls.c.obj[K[62/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/swap_scratch.c.obj[K[63/80] Building C object components/mcuboot_port/CMakeFiles/mcuboot_port_hc32.dir/Src/flash_map_backend.c.obj[K[63/80] Linking C static library components/mcuboot_port/libmcuboot_port_hc32.a[K[64/80] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/loader.c.obj[K[65/80] Linking C static library components/mcuboot_port/libmcuboot_port_hc32.a[K[65/80] Linking C static library components/libmcuboot_bootutil.a[K[66/80] Building C object App/CMakeFiles/usb_fw_updater.dir/__/Platform/HC32F460/Src/syscalls.c.obj[K[67/80] Linking C static library components/libmcuboot_bootutil.a[K[67/80] Linking C executable Boot/boot_firmware.elf[K[67/80] Linking C executable App/app_firmware.elf[K[68/80] Building C object App/CMakeFiles/usb_fw_updater.dir/Core/Src/usb_fw_update_main.c.obj[K[69/80] Building C object components/fw_update/CMakeFiles/fw_update_core.dir/src/protocol.c.obj[K[70/80] Linking C executable App/app_firmware.elf[K
+   text	   data	    bss	    dec	    hex	filename
+   8780	     92	    376	   9248	   2420	/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase5-clean-20260827-e6eeb68/build-v2/App/app_firmware.elf
+[71/80] Linking C executable Boot/boot_firmware.elf[K
+   text	   data	    bss	    dec	    hex	filename
+  21624	    100	   2436	  24160	   5e60	/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase5-clean-20260827-e6eeb68/build-v2/Boot/boot_firmware.elf
+[72/80] Building C object components/fw_update/CMakeFiles/fw_update_core.dir/src/manager.c.obj[K[72/80] Linking C static library components/fw_update/libfw_update_core.a[K[73/80] Linking C static library components/fw_update/libfw_update_core.a[K[73/80] Linking C static library components/fw_update/libfw_update_mcuboot.a[K[74/80] Linking C static library components/fw_update/libfw_update_mcuboot.a[K[75/80] Building C object components/cherryusb/CMakeFiles/cherryusb_device.dir/core/usbd_core.c.obj[K[76/80] Building C object App/CMakeFiles/usb_fw_updater.dir/Core/Src/usb_fw_update.c.obj[K[77/80] Building C object App/CMakeFiles/usb_vendor_bulk_loopback.dir/__/Platform/HC32F460/Src/usb_dc_hc32f460.c.obj[K[77/80] Linking C executable App/usb_vendor_bulk_loopback.elf[K[78/80] Linking C executable App/usb_vendor_bulk_loopback.elf[K
+   text	   data	    bss	    dec	    hex	filename
+  13060	     16	   3132	  16208	   3f50	/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase5-clean-20260827-e6eeb68/build-v2/App/usb_vendor_bulk_loopback.elf
+[79/80] Building C object App/CMakeFiles/usb_fw_updater.dir/__/Platform/HC32F460/Src/usb_dc_hc32f460.c.obj[K[79/80] Linking C executable App/usb_fw_updater.elf[K[80/80] Linking C executable App/usb_fw_updater.elf[K
+   text	   data	    bss	    dec	    hex	filename
+  24700	    108	   5808	  30616	   7798	/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase5-clean-20260827-e6eeb68/build-v2/App/usb_fw_updater.elf
+[0/4] Generating ../artifacts/updater_signed.bin[K[0/4] Generating ../artifacts/updater_primary.bin[K[0/4] Generating ../artifacts/updater_update.bin[K[1/4] Generating ../artifacts/updater_update.bin[K
+image.py: sign the payload
+[2/4] Generating ../artifacts/updater_primary.bin[K
+image.py: sign the payload
+[3/4] Generating ../artifacts/updater_signed.bin[K
+image.py: sign the payload
+[3/4] Generating ../artifacts/verify_updater_image.stamp[K[4/4] Generating ../artifacts/verify_updater_image.stamp[K
+Image was correctly validated
+Image version: 2.0.0+0
+Image digest: e07d530d2367dac613843b6b7645388e9ec3c8d8ce60fad87bd9f78bbd31d7a2
+Image was correctly validated
+Image version: 2.0.0+0
+Image digest: e07d530d2367dac613843b6b7645388e9ec3c8d8ce60fad87bd9f78bbd31d7a2
+Image was correctly validated
+Image version: 2.0.0+0
+Image digest: e07d530d2367dac613843b6b7645388e9ec3c8d8ce60fad87bd9f78bbd31d7a2
+Printing content of signed image: updater_primary.bin 
+
+#### Image header (offset: 0x0) ############################
+magic:              0x96f3b83d
+load_addr:          0x0
+hdr_size:           0x200
+protected_tlv_size: 0x0
+img_size:           0x60e8
+flags:              0x0
+version:            2.0.0+0
+############################################################
+#### Payload (offset: 0x200) ###############################
+|                                                          |
+|              FW image (size: 0x60e8 Bytes)               |
+|                                                          |
+############################################################
+#### TLV area (offset: 0x62e8) #############################
+magic:     0x6907
+area size: 0x97
+        ---------------------------------------------
+        type: SHA256 (0x10)
+        len:  0x20
+        data: 0xe0 0x7d 0x53 0x0d 0x23 0x67 0xda 0xc6 
+              0x13 0x84 0x3b 0x6b 0x76 0x45 0x38 0x8e 
+              0x9e 0xc3 0xc8 0xd8 0xce 0x60 0xfa 0xd8 
+              0x7b 0xd9 0xf7 0x8b 0xbd 0x31 0xd7 0xa2 
+        ---------------------------------------------
+        type: KEYHASH (0x1)
+        len:  0x20
+        data: 0x67 0x14 0x8e 0x3d 0x04 0x82 0x0f 0x0d 
+              0x68 0x23 0xef 0xe5 0x94 0x5c 0x7a 0xc0 
+              0xde 0x7c 0xa7 0xce 0xa4 0xf9 0x95 0x8c 
+              0x20 0x0f 0xe6 0x39 0x14 0x98 0x84 0x7c 
+        ---------------------------------------------
+        type: ECDSASIG (0x22)
+        len:  0x47
+        data: 0x30 0x45 0x02 0x20 0x75 0xa7 0x49 0xab 
+              0xd6 0xd3 0xb1 0x43 0xcc 0xd9 0xf6 0x07 
+              0x51 0x13 0x78 0x6d 0x55 0xa3 0x30 0x86 
+              0x50 0xbc 0x41 0x5e 0x17 0x45 0xe3 0xd6 
+              0x4d 0xca 0x74 0x45 0x02 0x21 0x00 0xad 
+              0xf1 0x75 0xb0 0x26 0x52 0x49 0x6e 0x26 
+              0xee 0xdb 0x42 0xda 0x67 0x56 0x98 0x69 
+              0x15 0x5b 0xe7 0x3a 0x7b 0xc3 0xc0 0x93 
+              0x79 0xc3 0x9d 0x63 0x83 0xbf 0x02 
+############################################################
+#### Image trailer (offset: unknown) #######################
+(Note: some fields may not be used, depending on the update 
+strategy)
+
+swap status: (len: unknown)
+enc. keys:   Image not encrypted
+swap size:   unknown
+swap_info:   INVALID (0xff)
+copy_done:   INVALID (0xff)
+image_ok:    SET (0x1)
+boot magic:  0x77 0xc2 0x95 0xf3 0x60 0xd2 0xef 0x7f 
+             0x35 0x52 0x50 0x0f 0x2c 0xb6 0x79 0x80 
+
+#### End of Image  #########################################
+Printing content of signed image: updater_update.bin 
+
+#### Image header (offset: 0x0) ############################
+magic:              0x96f3b83d
+load_addr:          0x0
+hdr_size:           0x200
+protected_tlv_size: 0x0
+img_size:           0x60e8
+flags:              0x0
+version:            2.0.0+0
+############################################################
+#### Payload (offset: 0x200) ###############################
+|                                                          |
+|              FW image (size: 0x60e8 Bytes)               |
+|                                                          |
+############################################################
+#### TLV area (offset: 0x62e8) #############################
+magic:     0x6907
+area size: 0x97
+        ---------------------------------------------
+        type: SHA256 (0x10)
+        len:  0x20
+        data: 0xe0 0x7d 0x53 0x0d 0x23 0x67 0xda 0xc6 
+              0x13 0x84 0x3b 0x6b 0x76 0x45 0x38 0x8e 
+              0x9e 0xc3 0xc8 0xd8 0xce 0x60 0xfa 0xd8 
+              0x7b 0xd9 0xf7 0x8b 0xbd 0x31 0xd7 0xa2 
+        ---------------------------------------------
+        type: KEYHASH (0x1)
+        len:  0x20
+        data: 0x67 0x14 0x8e 0x3d 0x04 0x82 0x0f 0x0d 
+              0x68 0x23 0xef 0xe5 0x94 0x5c 0x7a 0xc0 
+              0xde 0x7c 0xa7 0xce 0xa4 0xf9 0x95 0x8c 
+              0x20 0x0f 0xe6 0x39 0x14 0x98 0x84 0x7c 
+        ---------------------------------------------
+        type: ECDSASIG (0x22)
+        len:  0x47
+        data: 0x30 0x45 0x02 0x20 0x4d 0xae 0x1e 0xb1 
+              0x9b 0xdf 0x3d 0xad 0x87 0xf7 0xe8 0xc9 
+              0x5c 0x4c 0x29 0xb0 0x0b 0x24 0xc8 0x2b 
+              0x35 0x5d 0x5d 0x13 0xbd 0x9e 0x16 0xed 
+              0x15 0x0b 0x62 0xfe 0x02 0x21 0x00 0xae 
+              0xd8 0x88 0x9b 0x53 0xae 0xa4 0xe0 0x27 
+              0xd3 0x6d 0xf7 0xe3 0x98 0x6d 0xb3 0xa2 
+              0x6a 0x89 0xdf 0xef 0xf4 0xe9 0x5b 0x57 
+              0x4d 0x25 0x97 0x45 0xb4 0x72 0x88 
+############################################################
+#### Image trailer (offset: unknown) #######################
+(Note: some fields may not be used, depending on the update 
+strategy)
+
+swap status: (len: unknown)
+enc. keys:   Image not encrypted
+swap size:   unknown
+swap_info:   INVALID (0xff)
+copy_done:   INVALID (0xff)
+image_ok:    INVALID (0xff)
+boot magic:  0x77 0xc2 0x95 0xf3 0x60 0xd2 0xef 0x7f 
+             0x35 0x52 0x50 0x0f 0x2c 0xb6 0x79 0x80 
+
+#### End of Image  #########################################
+   text	   data	    bss	    dec	    hex	filename
+  21624	    100	   2436	  24160	   5e60	build/HIL/phase5-clean-20260827-e6eeb68/build-v2/Boot/boot_firmware.elf
+  24700	    108	   5808	  30616	   7798	build/HIL/phase5-clean-20260827-e6eeb68/build-v2/App/usb_fw_updater.elf
+
+Script done on 2026-08-27 18:05:03+08:00 [COMMAND_EXIT_CODE="0"]

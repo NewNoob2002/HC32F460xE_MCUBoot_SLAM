@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-27T10:15:17Z"
+  operation: "debug-halt/readback"
+  authorization: "User requested a clean-revision repeat of the Phase 5 v1-to-v2 HIL flow; v2 install and wait passed"
+  target:
+    board: "HC32F460 Phase 5 Lab running application 2.0.0"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "J-Link 000020781318"
+    transport: "SWD 4000 kHz"
+  artifact_or_stimulus: "Read v2 ELF globals confirm/init at 0x1FFF90D0 and last-result/error-count at 0x1FFF83A8; save Primary/Secondary 0x200-byte headers and 0x100-byte trailers"
+  limits: "Halt only for bounded RAM/Flash reads at 0x1FFF90D0+8, 0x1FFF83A8+8, 0x00010000+0x200, 0x00042000+0x200, 0x00041F00+0x100 and 0x00073F00+0x100; no write, reset, erase, unlock, recover, OTP, option-byte, protection or Reserved access"
+  recovery_plan: "Resume target with go and stop on any read or identity failure"
+  approved: true

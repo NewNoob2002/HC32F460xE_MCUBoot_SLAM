@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-27T10:16:47Z"
+  operation: "reset"
+  authorization: "User requested a clean-revision repeat of the Phase 5 v1-to-v2 HIL flow; v2 confirmation evidence passed"
+  target:
+    board: "HC32F460 Phase 5 Lab running confirmed application 2.0.0"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "J-Link 000020781318; USB HC32F460-PHASE5-0001"
+    transport: "SWD 4000 kHz"
+  artifact_or_stimulus: "Exactly one J-Link normal reset followed by run; no load, verify or erase command"
+  limits: "One reset only; no Flash/storage write, halt inspection, power control, unlock, recover, OTP, option-byte or protection change"
+  recovery_plan: "Use bounded USB wait for version 2.0.0; on failure preserve reset and udev logs before any retry or restore"
+  approved: true

@@ -1,0 +1,8 @@
+device HC32F460xE
+si SWD
+speed 4000
+connect
+halt
+savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase5-clean-20260827-e6eeb68/backup/pre_flash_00000000_00075fff.bin, 0x00000000, 0x00076000
+g
+exit

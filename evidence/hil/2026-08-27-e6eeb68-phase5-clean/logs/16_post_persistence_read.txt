@@ -1,0 +1,90 @@
+Script started on 2026-08-27 18:19:43+08:00 [COMMAND="rtk /opt/SEGGER/JLink_V970/JLinkExe -SelectEmuBySN 20781318 -CommandFile build/HIL/phase5-clean-20260827-e6eeb68/raw_commands/04_post_persistence_read.jlink" <not executed on terminal>]
+SEGGER J-Link Commander V9.70 (Compiled Aug 19 2026 12:16:13)
+DLL version V9.70, compiled Aug 19 2026 12:15:25
+
+
+J-Link Command File read successfully.
+Processing script file...
+J-Link>device HC32F460xE
+J-Link connection not established yet but required for command.
+Connecting to J-Link ...O.K.
+Firmware: J-Link V9 compiled May  7 2021 16:26:12
+Hardware version: V9.70
+J-Link uptime (since boot): N/A (Not supported by this model)
+S/N: 20781318
+License(s): RDI,FlashBP,FlashDL,JFlash,GDB
+VTref=3.351V
+J-Link>si SWD
+Selecting SWD as current target interface.
+J-Link>speed 4000
+Selecting 4000 kHz as target interface speed
+J-Link>connect
+Device "HC32F460XE" selected.
+
+
+Connecting to target via SWD
+Found SW-DP with ID 0x2BA01477
+DPIDR: 0x2BA01477
+CoreSight SoC-400 or earlier
+Scanning AP map to find all available APs
+AP[1]: Stopped AP scan as end of AP map has been reached
+AP[0]: AHB-AP (IDR: 0x24770011, ADDR: 0x00000000)
+Iterating through AP map to find AHB-AP to use
+AP[0]: Core found
+AP[0]: AHB-AP ROM base: 0xE00FF000
+CPUID register: 0x410FC241. Implementer code: 0x41 (ARM)
+Found Cortex-M4 r0p1, Little endian.
+FPUnit: 6 code (BP) slots and 2 literal slots
+CoreSight components:
+ROMTbl[0] @ E00FF000
+[0][0]: E000E000 CID B105E00D PID 000BB00C SCS-M7
+[0][1]: E0001000 CID B105E00D PID 003BB002 DWT
+[0][2]: E0002000 CID B105E00D PID 002BB003 FPB
+[0][3]: E0000000 CID B105E00D PID 003BB001 ITM
+[0][4]: E0040000 CID B105900D PID 000BB9A1 TPIU
+Memory zones:
+  Zone: "Default" Description: Default access mode
+Cortex-M4 identified.
+J-Link>halt
+PC = 00013A90, CycleCnt = 001B95F3
+R0 = 00000001, R1 = 0000F4D4, R2 = 00000E3C, R3 = 00000E3D
+R4 = 0000F4D5, R5 = FFFFFFFF, R6 = 20000754, R7 = 1FFF9F00
+R8 = 00000009, R9 = 00000009, R10= 1FFF8D10, R11= 00000009
+R12= 00000002
+SP(R13)= 1FFF9F00, MSP= 1FFF9F00, PSP= CA1BBFFC, R14(LR) = 0001184F
+XPSR = 21000000: APSR = nzCvq, EPSR = 01000000, IPSR = 000 (NoException)
+CFBP = 00000000, CONTROL = 00, FAULTMASK = 00, BASEPRI = 00, PRIMASK = 00
+
+FPS0 = 7FE5F3FF, FPS1 = 9FBFA966, FPS2 = 59F87C53, FPS3 = 97E6C758
+FPS4 = DF06AD33, FPS5 = 5FBDF617, FPS6 = FCD0FF5F, FPS7 = BDBAAF7F
+FPS8 = 7DF03DF3, FPS9 = 7CA3C687, FPS10= 5DA3B193, FPS11= 72EC2A41
+FPS12= 7FA27FFF, FPS13= DFF5EC93, FPS14= F6DCF6B7, FPS15= 5FDA7393
+FPS16= 20F81D7E, FPS17= A9D74EA7, FPS18= 6FAE5CEF, FPS19= AB6BF2C7
+FPS20= 6F5F4B69, FPS21= 5CE6927B, FPS22= 7EEB6AFD, FPS23= 9ED2F35F
+FPS24= DCEBB3B7, FPS25= 5CC3AD7F, FPS26= FE66B2EC, FPS27= 7CA4FD5F
+FPS28= B3B9A7F5, FPS29= 2FB14776, FPS30= 64C3FEDC, FPS31= DF77E6C1
+FPSCR= 00000000
+J-Link>mem32 0x1FFF90D0, 2
+1FFF90D0 = 00000000 00000000 
+J-Link>mem32 0x1FFF83A8, 2
+1FFF83A8 = 00000000 00000000 
+J-Link>savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase5-clean-20260827-e6eeb68/snapshots/post_reset_primary_header.bin, 0x00010000, 0x00000200
+Opening binary file for writing... [/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase5-clean-20260827-e6eeb68/snapshots/post_reset_primary_header.bin]
+Reading 512 bytes from addr 0x00010000 into file...O.K.
+J-Link>savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase5-clean-20260827-e6eeb68/snapshots/post_reset_secondary_header.bin, 0x00042000, 0x00000200
+Opening binary file for writing... [/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase5-clean-20260827-e6eeb68/snapshots/post_reset_secondary_header.bin]
+Reading 512 bytes from addr 0x00042000 into file...O.K.
+J-Link>savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase5-clean-20260827-e6eeb68/snapshots/post_reset_primary_trailer.bin, 0x00041F00, 0x00000100
+Opening binary file for writing... [/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase5-clean-20260827-e6eeb68/snapshots/post_reset_primary_trailer.bin]
+Reading 256 bytes from addr 0x00041F00 into file...O.K.
+J-Link>savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase5-clean-20260827-e6eeb68/snapshots/post_reset_secondary_trailer.bin, 0x00073F00, 0x00000100
+Opening binary file for writing... [/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase5-clean-20260827-e6eeb68/snapshots/post_reset_secondary_trailer.bin]
+Reading 256 bytes from addr 0x00073F00 into file...O.K.
+J-Link>g
+Memory map 'after startup completion point' is active
+J-Link>exit
+
+Script processing completed.
+
+
+Script done on 2026-08-27 18:19:43+08:00 [COMMAND_EXIT_CODE="0"]

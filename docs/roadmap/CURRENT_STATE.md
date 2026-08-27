@@ -179,16 +179,15 @@ Repository entry points:
 ### Partially implemented
 
 - Default Application confirmation remains immediate. The updater target delays
-  confirmation until clock, watchdog and updater initialization succeed, but the
-  confirmation/persistence behavior is not yet physically evidenced.
-- The runtime receive/session path passed one physical v1 -> v2 -> confirmation
-  -> independent reset -> persistence cycle. Clean-revision repetition and
-  immutable gate evidence are still pending.
+  confirmation until clock, watchdog and updater initialization succeed; the
+  confirmation/persistence behavior now has clean-revision physical evidence.
+- The runtime receive/session path passed a clean-revision v1 -> v2 ->
+  confirmation -> independent reset -> persistence cycle with immutable
+  evidence under `evidence/hil/2026-08-27-e6eeb68-phase5-clean/`.
 - Rollback is implemented; anti-rollback/version security counters are not.
 
 ### Not implemented
 
-- Repeated clean-revision USB updater HIL and immutable G5 evidence.
 - Slint GUI, signed Windows MSI, Linux package and udev rule.
 - UART, CAN or CAN FD transports.
 - Download resume and recovery download.
@@ -204,12 +203,12 @@ MCUboot's upstream ability to validate or swap an image is not evidence that thi
 | Host unit | Twelve strict HostTests plus 11 Rust tests: maps, handover, contracts/backends, Protocol/Manager, corpus, USB boundary, nusb framing and CLI/workflow | Physical nusb/device behavior remains |
 | Component integration | MCUboot Flash backend fakes plus Rust client -> production C Manager fake E2E | No full `boot_go()` host integration or Flash power-loss model |
 | Firmware build | Debug/Release App, loopback and updater image signing/verification; strict warnings on new updater sources | No size regression threshold beyond partition/link failure |
-| HIL/manual | Prior Boot/Phase 2/Phase 4 evidence plus one Rust USB v1→v2→confirm→independent-reset→persist cycle with trailer snapshots | Repeatability, clean immutable evidence and reset/power-loss matrices remain |
+| HIL/manual | Prior Boot/Phase 2/Phase 4 evidence plus clean-revision Rust USB v1→v2→confirm→independent-reset→persist evidence with trailer snapshots | GUI-path install and reset/power-loss matrices remain |
 | Fault injection | Unconfirmed test boot followed by reset/revert | No erase/write failure, corrupted trailer or interrupted swap matrix |
 | CI | Evidence checksums, twelve strict HostTests, Rust checks, USB boundary rule and Debug/Release App/loopback/updater builds/signing | Phase 5 changes have not yet passed remote CI; physical USB cannot run in hosted CI |
 
-The largest current delivery gap is repeatable clean-revision HIL evidence plus
-the deferred GUI/package release work.
+The largest current delivery gap is the deferred Slint GUI and package release
+work.
 The largest baseline reliability gap remains systematic
 power-interruption testing during swap/update operations.
 
@@ -251,10 +250,10 @@ is `PASSED`. Phase 5B and Phase 5C implementation are locally complete under
 `docs/roadmap/PHASE5_USB_UPDATER_PLAN.md`: keep Python loopback as a Phase 4
 regression; the minimal Rust `info`/`install`/`wait` client and shared protocol
 core pass fake E2E against the C Manager, and blocking nusb plus production
-Application USB glue build successfully. One physical v1 -> v2 -> confirmation
--> independent reset -> persistence cycle now passes and is archived under
-`evidence/hil/2026-08-27-cfd8752-phase5-core/`. The run's runtime inputs match
-revision `cfd8752`, but a clean-revision repeat remains before one Slint window
-and Windows/Linux packages.
+Application USB glue build successfully. A clean-revision physical v1 -> v2 ->
+confirmation -> independent reset -> persistence cycle passed from revision
+`e6eeb68` and is archived under
+`evidence/hil/2026-08-27-e6eeb68-phase5-clean/`. Phase 5D is satisfied and the
+single Slint window may now be implemented before Windows/Linux packages.
 Tokio, plugins, a transport registry, UART/CAN and download recovery remain out
 of scope.

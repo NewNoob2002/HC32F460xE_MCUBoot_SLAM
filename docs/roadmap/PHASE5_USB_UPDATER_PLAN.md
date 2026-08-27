@@ -1,12 +1,14 @@
 # Phase 5 USB Updater Plan
 
-Status: Phase 5B/5C complete; Phase 5D core HIL passed once and archived; clean-revision repeat pending; G5 not passed
+Status: Phase 5B/5C complete; Phase 5D clean-revision HIL passed with immutable evidence; Phase 5E in progress; G5 not passed
 
 Date: 2026-08-27
 
 Baseline: `ebad62c3b5bcf53c07fcbe01ca0b867a40c8e003` (G4 PASSED)
 
-Phase 5 core source node: `cfd87525f86ba22465784dba13c38e5de5d76759`
+Phase 5 core implementation node: `cfd87525f86ba22465784dba13c38e5de5d76759`
+
+Phase 5D clean HIL node: `e6eeb68700662ef87f8093f13d4f3fac53dbe722`
 
 ## Frozen decisions
 
@@ -81,11 +83,13 @@ a second device-state-machine implementation in Rust.
   confirmation/init/error results and byte-identical pre/post-reset headers and
   trailers are archived under
   `evidence/hil/2026-08-27-cfd8752-phase5-core/`.
-- The target remains on confirmed v2.0.0. Runtime sources match revision
-  `cfd8752`, but the run occurred before the dirty worktree was committed. The
-  next gate work is a repeat from a clean revision; G5 is not passed.
-- Slint and release packages remain intentionally absent until Phase 5D proves
-  v1 -> v2 -> confirmation -> reset persistence.
+- A second run from clean revision `e6eeb68` passed the same v1.0.0 -> v2.0.0
+  -> confirmation -> independent reset -> persistence path. Exact artifacts,
+  preflights, logs, backup and byte-identical pre/post-reset snapshots are under
+  `evidence/hil/2026-08-27-e6eeb68-phase5-clean/`.
+- The target remains on confirmed v2.0.0. Phase 5D's clean-repeat and immutable
+  evidence requirement is satisfied; Phase 5E Slint work may begin. G5 remains
+  open for GUI and package evidence.
 
 ## Initial file boundary
 
@@ -176,6 +180,9 @@ and Phase 4 loopback regression remains green.
 
 ### Phase 5D — Upgrade, confirmation and persistence HIL
 
+Status: passed on clean revision `e6eeb68`; immutable evidence retained under
+`evidence/hil/2026-08-27-e6eeb68-phase5-clean/`.
+
 1. Prepare exact signed v1/v2 artifacts and a full safety preflight/restore path.
 2. Establish confirmed v1, then run `info`, `install` and `wait --version 2.0.0`.
 3. Confirm v2 only after bounded essential Application initialization succeeds.
@@ -187,6 +194,8 @@ Exit: v1 -> v2 -> confirm -> persistence passes repeatedly with immutable
 evidence. No debugger writes Secondary during the upgrade.
 
 ### Phase 5E — Slint single-window GUI
+
+Status: in progress.
 
 Only after Phase 5D passes:
 

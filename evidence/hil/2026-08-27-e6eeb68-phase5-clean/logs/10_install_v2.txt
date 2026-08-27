@@ -1,0 +1,58 @@
+Script started on 2026-08-27 18:14:23+08:00 [COMMAND="rtk build/HIL/phase5-clean-20260827-e6eeb68/artifacts/host/hc32-updater install build/HIL/phase5-clean-20260827-e6eeb68/artifacts/v2/updater_signed.bin" <not executed on terminal>]
+device application=1.0.0
+transfer 508/25471
+transfer 1016/25471
+transfer 1524/25471
+transfer 2032/25471
+transfer 2540/25471
+transfer 3048/25471
+transfer 3556/25471
+transfer 4064/25471
+transfer 4572/25471
+transfer 5080/25471
+transfer 5588/25471
+transfer 6096/25471
+transfer 6604/25471
+transfer 7112/25471
+transfer 7620/25471
+transfer 8128/25471
+transfer 8636/25471
+transfer 9144/25471
+transfer 9652/25471
+transfer 10160/25471
+transfer 10668/25471
+transfer 11176/25471
+transfer 11684/25471
+transfer 12192/25471
+transfer 12700/25471
+transfer 13208/25471
+transfer 13716/25471
+transfer 14224/25471
+transfer 14732/25471
+transfer 15240/25471
+transfer 15748/25471
+transfer 16256/25471
+transfer 16764/25471
+transfer 17272/25471
+transfer 17780/25471
+transfer 18288/25471
+transfer 18796/25471
+transfer 19304/25471
+transfer 19812/25471
+transfer 20320/25471
+transfer 20828/25471
+transfer 21336/25471
+transfer 21844/25471
+transfer 22352/25471
+transfer 22860/25471
+transfer 23368/25471
+transfer 23876/25471
+transfer 24384/25471
+transfer 24892/25471
+transfer 25400/25471
+transfer 25471/25471
+verify
+commit
+wait re-enumeration
+
+Script done on 2026-08-27 18:14:24+08:00 [COMMAND_EXIT_CODE="0"]

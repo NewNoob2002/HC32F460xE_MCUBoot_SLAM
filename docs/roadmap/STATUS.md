@@ -11,7 +11,7 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 | Phase 2 — Secondary Storage and Boot Control | PASSED | G2 | Strict HostTests 7/7; Debug/Release/signing and remote CI passed | Storage/range-isolation/Pending/restore passed | None | `evidence/hil/2026-08-26-5ebeae6-phase2/`, revisions `5ebeae6`/`0e1abd8`, CI `32928199086`/`32929570437` |
 | Phase 3 — Protocol Core | PASSED | G3 | HostTests 9/9; corpus 10,000; Debug/Release/signing and remote CI PASS | Not required | None | `evidence/host/2026-08-26-e7899bd-phase3/`, revisions `e7899bd`/`515d0c5`, CI `32948384485` |
 | Phase 4 — CherryUSB + HC32 DCD Loopback | PASSED | G4 | HostTests 11/11; Debug/Release image verification; CI passed | Enumeration, stall recovery, 10,000-transfer baseline, 10 unplug/re-enumeration recoveries, 30-minute run, counters and exact restore passed | None | `evidence/hil/2026-08-27-fd703cd-phase4-g4/`, revision `fd703cd`, evidence commit `2b63850`, CI `33043244338` |
-| Phase 5 — USB Upgrade E2E | IN_PROGRESS | G5 | Rust 11/11; strict HostTests 12/12; Debug/Release App/loopback/updater verification passed locally | One v1→v2→confirm→reset→persist cycle passed and archived; clean-revision repeat pending | Clean-revision repeat; production VID/PID, WinUSB binding and signing inputs required before packaging | `evidence/hil/2026-08-27-cfd8752-phase5-core/`, `docs/roadmap/PHASE5_USB_UPDATER_PLAN.md` |
+| Phase 5 — USB Upgrade E2E | IN_PROGRESS | G5 | Rust 10/10 standalone; strict HostTests 12/12 including fake E2E; Release v1/v2 verification passed | Clean-revision v1→v2→confirm→reset→persist cycle passed with immutable evidence | Slint GUI; production VID/PID, WinUSB binding and signing inputs; Windows/Linux packages | `evidence/hil/2026-08-27-e6eeb68-phase5-clean/`, `docs/roadmap/PHASE5_USB_UPDATER_PLAN.md` |
 | Phase 6 — Failure and Recovery | NOT_STARTED | G6 | Not run | Required | G5, power/reset fixture | None |
 | Phase 7 — UART Portability | NOT_STARTED | G7 | Not run | Required | G6 | None |
 | Phase 8 — CAN/CAN FD Portability | NOT_STARTED | G8 | Not run | Required | G7 | None |
@@ -32,9 +32,10 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 
 ## Immediate next action
 
-Repeat the v1 -> v2 -> confirmation -> persistence cycle from the clean Phase 5
-revision and retain its gate evidence. Keep the target on confirmed v2 until
-that run is approved. Slint and packaging remain deferred until the repeat gate.
+Implement the smallest Slint single-window frontend over the existing updater
+library: device summary, signed-image selection, install action, bounded progress
+and final result. Keep blocking USB work on one standard-library worker thread.
+Packaging remains deferred until the GUI path is verified.
 
 ## Phase 5A planning start
 
@@ -137,8 +138,32 @@ Date: 2026-08-27
   reset. The target remains on confirmed v2.0.0.
 - Immutable core-HIL archive: `evidence/hil/2026-08-27-cfd8752-phase5-core/`.
   Runtime C/Rust/CMake inputs match revision `cfd8752`, but the run itself used
-  the pre-commit dirty worktree. A clean-revision repeat remains required; G5
-  is not passed.
+  the pre-commit dirty worktree. It is retained as the initial core-HIL run and
+  is superseded for the clean-repeat requirement by the evidence below.
+
+## Latest Phase 5D clean-revision HIL result
+
+Date: 2026-08-27
+
+- Source revision `e6eeb68700662ef87f8093f13d4f3fac53dbe722` and tree
+  `85ef0fe035ac97325bc185bfbd557438d29af613` were clean before the build and
+  throughout the hardware run.
+- Strict HostTests passed 12/12, including the Rust/C fake E2E. The corrected
+  standalone Rust suite passed 10/10; Release v1/v2 updater images verified.
+- J-Link `20781318` verified Boot and confirmed v1 Primary, then physical
+  `info` reported Application/Bootloader `1.0.0` with the expected identity and
+  geometry.
+- The Rust updater transferred and verified the 25,471-byte signed v2 image,
+  committed it and observed USB remove/add re-enumeration.
+- Confirmation, initialization, USB error count and final Manager result were
+  zero before and after one independent J-Link reset. Primary matched v2,
+  Secondary matched v1, `copy_done=1`, `image_ok=1`, magic was valid and the
+  Secondary trailer was erased.
+- All four pre/post-reset header/trailer snapshots were byte-identical. Final
+  `info` still reported Application `2.0.0`; the target remains confirmed v2.
+- Immutable evidence: `evidence/hil/2026-08-27-e6eeb68-phase5-clean/`. Phase
+  5D's clean-repeat/evidence requirement is satisfied. Phase 5E Slint work may
+  begin; G5 remains open for GUI and package evidence.
 
 ## Latest local G1 verification
 

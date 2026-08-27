@@ -1,0 +1,50 @@
+test_result:
+  schema_version: 1
+  source_revision: "e6eeb68700662ef87f8093f13d4f3fac53dbe722"
+  source_dirty: false
+  artifact_checksums:
+    host_updater: "7f5f55e80bbd3317f0cc02b0fd1bb7f0c102c1ad0631c60a77308b217d5a046a"
+    v1_boot: "43d213d6d50ec73b92748b9aef71d09d3be265288d6b036e8de90a8e7d7e512d"
+    v1_primary: "d5d450d692716f1b60699d4428754604776b6b557812c1fece062fad7799fcb8"
+    v2_signed_image: "6129034cd01cf61e31f67e824b3218dbee2834a7ec4302af2bc9ca242248a6cc"
+    pre_hil_backup: "28055b087ba8982fe5d94970b42c49b9eebfbb7262fe3e6a56c40385f99e036a"
+  safety_preflight: "safety_preflight_install_v2.yaml"
+  level: "hil"
+  target: "HC32F460xE, J-Link 20781318, USB HC32F460-PHASE5-0001"
+  command: "current info; backup; flash/verify v1; info v1; install v2 signed image; wait v2; confirmation/trailer read; one J-Link reset; wait v2; post-reset read; final info"
+  timing: {started_at_utc: "2026-08-27T10:08:01Z", duration_ms: 749000, timeout_ms: 30000}
+  attempts: 1
+  passed: true
+  counts: {total: 12, passed: 12, failed: 0, skipped: 0}
+  classified_failures: []
+  logs:
+    - "logs/05_current_info.txt"
+    - "logs/06_backup.txt"
+    - "logs/07_flash_updater_v1.txt"
+    - "logs/08_info_v1.txt"
+    - "logs/09_install_udev_monitor.txt"
+    - "logs/10_install_v2.txt"
+    - "logs/11_wait_v2.txt"
+    - "logs/12_confirmation_read.txt"
+    - "logs/13_persistence_udev_monitor.txt"
+    - "logs/14_persistence_reset.txt"
+    - "logs/15_persistence_wait_v2.txt"
+    - "logs/16_post_persistence_read.txt"
+    - "logs/17_final_info.txt"
+  requirements:
+    - "Phase 5D clean-revision v1 to v2 test upgrade"
+    - "Application confirmation after essential initialization"
+    - "v2 persistence after an independent reset"
+    - "immutable source/artifact/log linkage"
+  observations:
+    - "Preflight info reported application 2.0.0 and the expected identity before the run"
+    - "v1 info reported application/bootloader 1.0.0, hardware 0x00004600, board 1, revision 2"
+    - "v2 transfer 25471/25471, readback verify and COMMIT passed"
+    - "USB remove/add events were captured after COMMIT and after the independent reset"
+    - "v2 confirm result, init result, USB error count and Manager result were all zero before and after reset"
+    - "Primary header matches v2.0.0; Secondary header matches v1.0.0"
+    - "Primary trailer copy_done=1, image_ok=1 and magic valid; Secondary trailer is fully erased"
+    - "All four pre/post-reset header and trailer snapshots are byte-identical"
+    - "Final info still reports application 2.0.0 with the expected device identity and geometry"
+  final_state: "confirmed and persisted updater application 2.0.0 running"
+  recovery: "483328-byte pre-run backup retained; restore not exercised"
