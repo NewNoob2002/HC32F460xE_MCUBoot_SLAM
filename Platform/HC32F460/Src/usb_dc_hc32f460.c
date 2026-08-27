@@ -254,6 +254,7 @@ static void usb_handle_out_ep(void)
 static void usb_handle_reset(void)
 {
     CLR_REG32_BIT(g_usb.regs.DREGS->DCTL, USBFS_DCTL_RWUSIG);
+    WRITE_REG32(g_usb.regs.DREGS->DIEPEMPMSK, 0UL);
     usb_txfifoflush(&g_usb.regs, 0x10UL);
     usb_rxfifoflush(&g_usb.regs);
     for (uint8_t i = 0U; i < g_usb.basic.dev_epnum; ++i) {
