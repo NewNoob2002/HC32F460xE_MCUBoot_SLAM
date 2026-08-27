@@ -1,0 +1,4 @@
+Script started on 2026-08-27 12:29:51+08:00 [COMMAND="rtk python3 Tools/host/usb_loopback.py run --iterations 100 --lengths 0,1,63,64,65,512,1024" <not executed on terminal>]
+FAIL: bulk IN failed: libusb error -8
+
+Script done on 2026-08-27 12:29:52+08:00 [COMMAND_EXIT_CODE="1"]

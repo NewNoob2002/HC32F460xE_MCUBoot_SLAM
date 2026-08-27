@@ -1,0 +1,4 @@
+Script started on 2026-08-27 12:38:44+08:00 [COMMAND="rtk python3 Tools/host/usb_loopback.py stall-recovery" <not executed on terminal>]
+PASS endpoint halt and clear-halt recovery
+
+Script done on 2026-08-27 12:38:44+08:00 [COMMAND_EXIT_CODE="0"]

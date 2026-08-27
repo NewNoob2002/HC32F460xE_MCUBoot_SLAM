@@ -1,0 +1,15 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-27T03:35:11Z"
+  operation: "bus-write"
+  authorization: "User ordered Phase 4 G4 USB HIL: endpoint stall recovery, deterministic loopback, 30-minute continuous run, and ten transfer-time unplug/re-enumeration cycles"
+  target:
+    board: "HC32F460xE target board running clean artifact b3da613"
+    hardware_revision: "unknown"
+    probe_or_adapter_serial: "20781318"
+    transport: "USB FS via physical path 1-2.1"
+  artifact_or_stimulus: "VID:PID fffe:ffff; interface 0; Bulk OUT 0x02; Bulk IN 0x81; payload lengths 0,1,63,64,65,512,1024; one standard ENDPOINT_HALT/clear-halt sequence"
+  limits: "Host timeout 1000 ms per transfer; loopback buffer maximum 1024 bytes; 1800-second continuous run; ten intentional transfer-time physical disconnects; no MCUboot update traffic, flash writes, Reserved access, DTR/RTS, option-byte, OTP, or protection changes"
+  recovery_plan: "Clear endpoint halt before closing; release interface on every bounded command; after intentional disconnect wait for automatic re-enumeration at path 1-2.1; preserve every failed attempt; finally restore and verify the exact pre-HIL all-FF image"
+  approved: true
+

@@ -1,0 +1,5 @@
+Script started on 2026-08-27 12:38:44+08:00 [COMMAND="rtk python3 Tools/host/usb_loopback.py run --iterations 10000 --lengths 0,1,63,64,65,512,1024" <not executed on terminal>]
+PASS transfers=10000 elapsed=6.028s rate=1658.9/s
+lengths 0:1429 1:1429 63:1429 64:1429 65:1428 512:1428 1024:1428
+
+Script done on 2026-08-27 12:38:50+08:00 [COMMAND_EXIT_CODE="0"]

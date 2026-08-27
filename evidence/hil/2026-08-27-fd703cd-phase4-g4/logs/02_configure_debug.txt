@@ -1,0 +1,10 @@
+Script started on 2026-08-27 12:35:27+08:00 [COMMAND="rtk cmake -S . -B build/HIL/phase4-g4-fd703cd/Debug -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=cmake/gcc-arm-none-eabi.cmake -DAPP_VERSION=1.0.0 -DAPP_AUTO_CONFIRM=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON" <not executed on terminal>]
+-- The C compiler identification is GNU 14.3.1
+-- The CXX compiler identification is GNU 14.3.1
+-- The ASM compiler identification is GNU
+-- Found assembler: /opt/st/stm32cubeclt_1.21.0/GNU-tools-for-STM32/bin/arm-none-eabi-gcc
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HIL/phase4-g4-fd703cd/Debug
+
+Script done on 2026-08-27 12:35:27+08:00 [COMMAND_EXIT_CODE="0"]

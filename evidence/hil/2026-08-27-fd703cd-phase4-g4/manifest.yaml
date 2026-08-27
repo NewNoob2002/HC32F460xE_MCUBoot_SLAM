@@ -1,0 +1,15 @@
+evidence_manifest:
+  schema_version: 1
+  run_id: "2026-08-27-fd703cd-hc32f460-phase4-g4"
+  source_revision: "fd703cde5a312f05d74926f0c055fca6053d6bbb"
+  source_tree: "04a46a77e3089280193b88d22202bd3c533021e2"
+  source_dirty: false
+  target: "HC32F460xE"
+  probe_serial: "20781318"
+  result: "PASSED"
+  retained_failures:
+    - "b3da613 initial deployment FlashDL/RAMCode failure"
+    - "b3da613 replug round 2 LIBUSB_ERROR_OVERFLOW (-8), product defect"
+    - "fd703cd two uncounted enumeration-window device-not-found starts, test infrastructure"
+  checksum_verification: "python3 Tests/HIL/verify_evidence.py evidence/hil/2026-08-27-fd703cd-phase4-g4/SHA256SUMS"
+

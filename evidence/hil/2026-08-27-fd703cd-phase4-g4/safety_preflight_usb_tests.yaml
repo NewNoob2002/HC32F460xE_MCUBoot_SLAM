@@ -1,0 +1,11 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-27T04:35:50Z"
+  operation: "bus-write"
+  authorization: "User ordered Phase 4 G4 USB HIL: stall recovery, deterministic loopback, 30-minute run, and ten transfer-time unplug/re-enumeration cycles"
+  target: {board: "HC32F460xE running fd703cd", hardware_revision: "unknown", probe_or_adapter_serial: "20781318", transport: "USB FS path 1-2.1"}
+  artifact_or_stimulus: "VID:PID fffe:ffff; interface 0; OUT 0x02; IN 0x81; lengths 0,1,63,64,65,512,1024; endpoint halt/clear-halt"
+  limits: "1000 ms per transfer; 1024-byte max; 1800-second run; ten intentional disconnects; no firmware update, flash, Reserved access, DTR/RTS, OTP, or protection changes"
+  recovery_plan: "Release interface; wait for 1-2.1 re-enumeration; preserve failures; restore exact all-FF image at completion"
+  approved: true
+

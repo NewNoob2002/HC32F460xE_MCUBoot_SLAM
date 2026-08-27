@@ -1,0 +1,14 @@
+Script started on 2026-08-27 12:35:49+08:00 [COMMAND="rtk arm-none-eabi-size build/HIL/phase4-g4-fd703cd/Debug/Boot/boot_firmware.elf build/HIL/phase4-g4-fd703cd/Debug/App/usb_vendor_bulk_loopback.elf && rtk sha256sum build/HIL/phase4-g4-fd703cd/Debug/Boot/boot_firmware.bin build/HIL/phase4-g4-fd703cd/Debug/Boot/boot_firmware.elf build/HIL/phase4-g4-fd703cd/Debug/App/usb_vendor_bulk_loopback.bin build/HIL/phase4-g4-fd703cd/Debug/App/usb_vendor_bulk_loopback.elf build/HIL/phase4-g4-fd703cd/Debug/artifacts/usb_loopback_primary.bin && rtk stat -c "%n %s" build/HIL/phase4-g4-fd703cd/Debug/Boot/boot_firmware.bin build/HIL/phase4-g4-fd703cd/Debug/App/usb_vendor_bulk_loopback.bin build/HIL/phase4-g4-fd703cd/Debug/artifacts/usb_loopback_primary.bin && rtk git status --porcelain=v1" <not executed on terminal>]
+   text	   data	    bss	    dec	    hex	filename
+  24328	    100	   2436	  26864	   68f0	build/HIL/phase4-g4-fd703cd/Debug/Boot/boot_firmware.elf
+  15580	     16	   3132	  18728	   4928	build/HIL/phase4-g4-fd703cd/Debug/App/usb_vendor_bulk_loopback.elf
+47604943b58eeeb4c304b66c2c9dbda3396945834e8d0445bfeb871db7ff895f  build/HIL/phase4-g4-fd703cd/Debug/Boot/boot_firmware.bin
+490316a5cdb25a658f5a74755a92b586197533ee5cb0cbca6675f3dfed053b9e  build/HIL/phase4-g4-fd703cd/Debug/Boot/boot_firmware.elf
+02aa41f7bc50ad541a0779c29bd3aa1f385addcdc3e7dd423c3b9549dea7a776  build/HIL/phase4-g4-fd703cd/Debug/App/usb_vendor_bulk_loopback.bin
+bdf27a40271dd3b9316381798cea7570f0ec104fe8852ba3905ee792986e5a8a  build/HIL/phase4-g4-fd703cd/Debug/App/usb_vendor_bulk_loopback.elf
+97491e08ffe00732136576578352a52c7ff9eb8e7699abd8e2231eca8d4a15b4  build/HIL/phase4-g4-fd703cd/Debug/artifacts/usb_loopback_primary.bin
+build/HIL/phase4-g4-fd703cd/Debug/Boot/boot_firmware.bin 24812
+build/HIL/phase4-g4-fd703cd/Debug/App/usb_vendor_bulk_loopback.bin 15596
+build/HIL/phase4-g4-fd703cd/Debug/artifacts/usb_loopback_primary.bin 204800
+
+Script done on 2026-08-27 12:35:50+08:00 [COMMAND_EXIT_CODE="0"]

@@ -1,0 +1,4 @@
+Script started on 2026-08-27 12:52:07+08:00 [COMMAND="rtk python3 Tools/host/usb_loopback.py run --seconds 300 --lengths 0,1,63,64,65,512,1024" TERM="xterm-256color" TTY="/dev/pts/8" COLUMNS="80" LINES="24"]
+FAIL: USB device fffe:ffff not found
+
+Script done on 2026-08-27 12:52:07+08:00 [COMMAND_EXIT_CODE="1"]

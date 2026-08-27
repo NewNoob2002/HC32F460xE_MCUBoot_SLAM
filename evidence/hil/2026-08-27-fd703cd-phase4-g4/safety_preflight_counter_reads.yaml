@@ -1,0 +1,11 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-27T04:35:50Z"
+  operation: "debug-halt"
+  authorization: "User ordered per-stage USB errors/packets checks"
+  target: {board: "HC32F460xE running fd703cd", hardware_revision: "unknown", probe_or_adapter_serial: "20781318", transport: "SWD"}
+  artifact_or_stimulus: "Read mem32 errors 0x1FFF834C, packets 0x1FFF8350, init-stage 0x1FFF8758; matching ELF SHA256 bdf27a40271dd3b9316381798cea7570f0ec104fe8852ba3905ee792986e5a8a"
+  limits: "SWD 4000 kHz; bounded read-only halt; no reset, flash, RAM write, or Reserved Flash access"
+  recovery_plan: "Issue go immediately after each read"
+  approved: true
+

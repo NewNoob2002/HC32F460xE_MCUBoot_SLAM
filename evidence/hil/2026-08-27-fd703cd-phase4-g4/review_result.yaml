@@ -1,0 +1,7 @@
+review_result:
+  schema_version: 1
+  source_revision: "fd703cde5a312f05d74926f0c055fca6053d6bbb"
+  scope: ["Platform/HC32F460/Src/usb_dc_hc32f460.c bus-reset FIFO handling"]
+  toolchain_context: "arm-none-eabi-gcc 14.3.1, bare-metal Cortex-M4"
+  findings: []
+  verification: ["strict HostTests 11/11", "Debug and Release verify_app_image + verify_usb_loopback_image", "10 replug recoveries", "1800.001-second HIL", "exact image restoration"]

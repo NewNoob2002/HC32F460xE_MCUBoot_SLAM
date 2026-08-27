@@ -1,0 +1,5 @@
+Script started on 2026-08-27 13:00:02+08:00 [COMMAND="rtk python3 Tools/host/usb_loopback.py run --seconds 1800 --lengths 0,1,63,64,65,512,1024" TERM="xterm-256color" TTY="/dev/pts/8" COLUMNS="80" LINES="24"]
+PASS transfers=2960145 elapsed=1800.001s rate=1644.5/s
+lengths 0:422878 1:422878 63:422878 64:422878 65:422878 512:422878 1024:422877
+
+Script done on 2026-08-27 13:30:02+08:00 [COMMAND_EXIT_CODE="0"]

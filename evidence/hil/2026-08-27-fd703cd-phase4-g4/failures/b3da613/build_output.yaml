@@ -1,0 +1,42 @@
+build_output:
+  schema_version: 1
+  created_at_utc: "2026-08-27T03:35:11Z"
+  project: "HC32F460xE_MCUBoot_SLAM"
+  target: "HC32F460xE"
+  mcu: "HC32F460"
+  operating_system: "bare-metal"
+  configuration: "Debug"
+  source_revision: "b3da6133e4cd17c13c9815f65cd99a67d8280781"
+  source_tree: "9d6ca7b5daa94a8f921061951b08edb124b3e288"
+  source_dirty: false
+  toolchain:
+    id: "GNU Arm Embedded / GNU Tools for STM32"
+    version: "arm-none-eabi-gcc 14.3.1; GNU ld 2.44.0.20250616"
+    target: "arm-none-eabi"
+  build_tools:
+    cmake: "3.28.1"
+    ninja: "1.11.1"
+    python: "3.12.3"
+    jlink: "9.70"
+    imgtool: "2.4.0"
+  configure_command: "cmake -S . -B build/HIL/phase4-g4-b3da613/Debug -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=cmake/gcc-arm-none-eabi.cmake -DAPP_VERSION=1.0.0 -DAPP_AUTO_CONFIRM=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+  build_command: "cmake --build build/HIL/phase4-g4-b3da613/Debug --parallel"
+  verification_command: "cmake --build build/HIL/phase4-g4-b3da613/Debug --target verify_app_image verify_usb_loopback_image"
+  artifacts:
+    elf: "Debug/App/usb_vendor_bulk_loopback.elf"
+    bin: "Debug/artifacts/usb_loopback_primary.bin"
+    map: "Debug/App/usb_vendor_bulk_loopback.map"
+    metadata: "build_output.yaml"
+    boot_elf: "Debug/Boot/boot_firmware.elf"
+    boot_bin: "Debug/Boot/boot_firmware.bin"
+  checksums:
+    "Debug/Boot/boot_firmware.bin": "f7407add3bb8b8c3830fb1e04a64ae67f284cf716757f4c27b3b7cb5c2583a88"
+    "Debug/Boot/boot_firmware.elf": "7d1989725f9e5684c21a96f64b26c330c709e63f95a01326e9d7ba6c8cf1e6dc"
+    "Debug/App/usb_vendor_bulk_loopback.bin": "dfb077b11df2a1cf36795f1af0409f8c897de62a3a434637fd14489c2f290f49"
+    "Debug/App/usb_vendor_bulk_loopback.elf": "038bb336e42bc0ce6677670883facd8f30af06b760d921d4509a62db278a1662"
+    "Debug/artifacts/usb_loopback_primary.bin": "c50aabf50b1e03cf13d0313049144d9086d342eb00813ea35d5acc5b8e93ebf8"
+  sizes:
+    "Debug/Boot/boot_firmware.bin": 24812
+    "Debug/App/usb_vendor_bulk_loopback.bin": 15588
+    "Debug/artifacts/usb_loopback_primary.bin": 204800
+

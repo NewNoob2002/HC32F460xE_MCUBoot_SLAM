@@ -1,0 +1,40 @@
+Script started on 2026-08-27 12:35:27+08:00 [COMMAND="rtk env ASAN_OPTIONS=detect_leaks=0 cmake --preset HostTests -DCMAKE_C_FLAGS="-Wall -Wextra -Wconversion -Wshadow -Werror -fsanitize=address,undefined -fno-omit-frame-pointer" -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined" && rtk env ASAN_OPTIONS=detect_leaks=0 cmake --build build/HostTests --parallel && rtk env ASAN_OPTIONS=detect_leaks=0 ctest --test-dir build/HostTests --output-on-failure" <not executed on terminal>]
+Preset CMake variables:
+
+  BOOT_BUILD_HOST_TESTS="ON"
+  CMAKE_BUILD_TYPE="Debug"
+
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HostTests
+ninja: no work to do.
+Internal ctest changing into directory: /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HostTests
+Test project /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/HostTests
+      Start  1: memory_map
+ 1/11 Test  #1: memory_map .......................   Passed    0.00 sec
+      Start  2: flash_map
+ 2/11 Test  #2: flash_map ........................   Passed    0.00 sec
+      Start  3: boot_handover
+ 3/11 Test  #3: boot_handover ....................   Passed    0.00 sec
+      Start  4: app_confirm
+ 4/11 Test  #4: app_confirm ......................   Passed    0.00 sec
+      Start  5: fw_update_contract
+ 5/11 Test  #5: fw_update_contract ...............   Passed    0.00 sec
+      Start  6: fw_update_mcuboot_backend
+ 6/11 Test  #6: fw_update_mcuboot_backend ........   Passed    0.00 sec
+      Start  7: fw_protocol
+ 7/11 Test  #7: fw_protocol ......................   Passed    0.20 sec
+      Start  8: fw_update_manager
+ 8/11 Test  #8: fw_update_manager ................   Passed    0.01 sec
+      Start  9: fw_update_architecture
+ 9/11 Test  #9: fw_update_architecture ...........   Passed    0.02 sec
+      Start 10: usb_evaluation_boundary
+10/11 Test #10: usb_evaluation_boundary ..........   Passed    0.02 sec
+      Start 11: usb_loopback_host_self_test
+11/11 Test #11: usb_loopback_host_self_test ......   Passed    0.02 sec
+
+[0;32m100% tests passed[0;0m, 0 tests failed[0;0m out of 11
+
+Total Test time (real) =   0.28 sec
+
+Script done on 2026-08-27 12:35:27+08:00 [COMMAND_EXIT_CODE="0"]

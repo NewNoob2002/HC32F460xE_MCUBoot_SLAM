@@ -1,0 +1,15 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-27T03:35:11Z"
+  operation: "flash"
+  authorization: "User ordered Phase 4 G4 closure using one clean-commit artifact, including deployment, HIL, and exact restoration"
+  target:
+    board: "HC32F460xE target board; Cortex-M4 r0p1 previously identified"
+    hardware_revision: "unknown"
+    probe_or_adapter_serial: "20781318"
+    transport: "SWD"
+  artifact_or_stimulus: "Boot SHA256 f7407add3bb8b8c3830fb1e04a64ae67f284cf716757f4c27b3b7cb5c2583a88 at 0x00000000; USB Primary SHA256 c50aabf50b1e03cf13d0313049144d9086d342eb00813ea35d5acc5b8e93ebf8 at 0x00010000"
+  limits: "VTref approximately 3.35 V; SWD 4000 kHz; erase only 0x00000000-0x00041FFF; load Boot at 0x00000000 and exactly 204800-byte USB Primary at 0x00010000; no Reserved 0x00076000-0x0007FFFF access, unlock, recover, OTP, option-byte, or protection changes"
+  recovery_plan: "Restore backup/pre_hil_00000000_00075fff.bin (483328 bytes, SHA256 410a0acccbb0a231d35508a9e545953b7490406986557750c531bd56edf39b1b) to 0x00000000, read back exactly 0x76000 bytes, then require byte-for-byte cmp and matching SHA256"
+  approved: true
+

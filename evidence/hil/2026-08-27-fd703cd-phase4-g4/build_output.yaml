@@ -1,0 +1,25 @@
+build_output:
+  schema_version: 1
+  created_at_utc: "2026-08-27T04:35:50Z"
+  project: "HC32F460xE_MCUBoot_SLAM"
+  target: "HC32F460xE"
+  mcu: "HC32F460"
+  operating_system: "bare-metal"
+  configuration: "Debug"
+  source_revision: "fd703cde5a312f05d74926f0c055fca6053d6bbb"
+  source_tree: "04a46a77e3089280193b88d22202bd3c533021e2"
+  source_dirty: false
+  toolchain: {id: "GNU Tools for STM32", version: "arm-none-eabi-gcc 14.3.1; GNU ld 2.44.0.20250616", target: "arm-none-eabi"}
+  build_tools: {cmake: "3.28.1", ninja: "1.11.1", python: "3.12.3", jlink: "9.70", imgtool: "2.4.0"}
+  configure_command: "cmake -S . -B build/HIL/phase4-g4-fd703cd/Debug -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=cmake/gcc-arm-none-eabi.cmake -DAPP_VERSION=1.0.0 -DAPP_AUTO_CONFIRM=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+  build_command: "cmake --build build/HIL/phase4-g4-fd703cd/Debug --parallel"
+  verification_command: "cmake --build build/HIL/phase4-g4-fd703cd/Debug --target verify_app_image verify_usb_loopback_image"
+  artifacts: {elf: "Debug/App/usb_vendor_bulk_loopback.elf", bin: "Debug/artifacts/usb_loopback_primary.bin", map: "Debug/App/usb_vendor_bulk_loopback.map", metadata: "build_output.yaml", boot_elf: "Debug/Boot/boot_firmware.elf", boot_bin: "Debug/Boot/boot_firmware.bin"}
+  checksums:
+    "Debug/Boot/boot_firmware.bin": "47604943b58eeeb4c304b66c2c9dbda3396945834e8d0445bfeb871db7ff895f"
+    "Debug/Boot/boot_firmware.elf": "490316a5cdb25a658f5a74755a92b586197533ee5cb0cbca6675f3dfed053b9e"
+    "Debug/App/usb_vendor_bulk_loopback.bin": "02aa41f7bc50ad541a0779c29bd3aa1f385addcdc3e7dd423c3b9549dea7a776"
+    "Debug/App/usb_vendor_bulk_loopback.elf": "bdf27a40271dd3b9316381798cea7570f0ec104fe8852ba3905ee792986e5a8a"
+    "Debug/artifacts/usb_loopback_primary.bin": "97491e08ffe00732136576578352a52c7ff9eb8e7699abd8e2231eca8d4a15b4"
+  sizes: {"Debug/Boot/boot_firmware.bin": 24812, "Debug/App/usb_vendor_bulk_loopback.bin": 15596, "Debug/artifacts/usb_loopback_primary.bin": 204800}
+

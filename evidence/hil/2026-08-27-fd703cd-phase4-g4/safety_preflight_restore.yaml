@@ -1,0 +1,11 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-27T05:32:54Z"
+  operation: "flash"
+  authorization: "User required exact restoration of the pre-HIL image after Phase 4 testing"
+  target: {board: "HC32F460xE", hardware_revision: "unknown", probe_or_adapter_serial: "20781318", transport: "SWD"}
+  artifact_or_stimulus: "backup/pre_hil_00000000_00075fff.bin; 483328 bytes; SHA256 410a0acccbb0a231d35508a9e545953b7490406986557750c531bd56edf39b1b; destination 0x00000000"
+  limits: "Erase/write/read exactly 0x00000000-0x00075FFF (0x76000 bytes); never access Reserved 0x00076000-0x0007FFFF; no unlock, recover, OTP, option-byte, or protection changes"
+  recovery_plan: "verifybin backup, savebin exactly 0x76000 bytes, cmp byte-for-byte, and require identical SHA256"
+  approved: true
+
