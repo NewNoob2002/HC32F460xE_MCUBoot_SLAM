@@ -1,12 +1,18 @@
-#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include <fal.h>
 
 #include "boot_memory_map.h"
 #include "fw_update/product_config_flashdb.h"
+
+#define CHECK(condition)                                                                                               \
+    do {                                                                                                               \
+        if (!(condition))                                                                                              \
+            abort();                                                                                                   \
+    } while (0)
 
 static uint8_t reserved_flash[RESERVED_SIZE];
 
@@ -56,10 +62,10 @@ const struct fal_flash_dev hc32_product_config_flash = {
 
 static void assert_identity(const struct fw_update_product_config_state* state, uint32_t hardware_id, uint32_t board_id,
                             uint16_t board_revision, uint8_t provisioned) {
-    assert(state->identity.hardware_id == hardware_id);
-    assert(state->identity.board_id == board_id);
-    assert(state->identity.board_revision == board_revision);
-    assert(state->provisioned == provisioned);
+    CHECK(state->identity.hardware_id == hardware_id);
+    CHECK(state->identity.board_id == board_id);
+    CHECK(state->identity.board_revision == board_revision);
+    CHECK(state->provisioned == provisioned);
 }
 
 int main(void) {
@@ -78,17 +84,17 @@ int main(void) {
     struct fw_update_product_config_state state;
 
     memset(reserved_flash, 0xFF, sizeof(reserved_flash));
-    assert(fw_update_product_config_flashdb_init(&config, &defaults) == FW_UPDATE_OK);
-    assert(fw_update_product_config_get(&config, &state) == FW_UPDATE_OK);
+    CHECK(fw_update_product_config_flashdb_init(&config, &defaults) == FW_UPDATE_OK);
+    CHECK(fw_update_product_config_get(&config, &state) == FW_UPDATE_OK);
     assert_identity(&state, defaults.hardware_id, defaults.board_id, defaults.board_revision, 0U);
 
-    assert(fw_update_product_config_set(&config, &provisioned) == FW_UPDATE_OK);
-    assert(fw_update_product_config_get(&config, &state) == FW_UPDATE_OK);
+    CHECK(fw_update_product_config_set(&config, &provisioned) == FW_UPDATE_OK);
+    CHECK(fw_update_product_config_get(&config, &state) == FW_UPDATE_OK);
     assert_identity(&state, provisioned.hardware_id, provisioned.board_id, provisioned.board_revision, 1U);
-    assert(fw_update_product_config_set(&config, &defaults) == FW_UPDATE_ERR_LOCKED);
+    CHECK(fw_update_product_config_set(&config, &defaults) == FW_UPDATE_ERR_LOCKED);
 
-    assert(fw_update_product_config_flashdb_init(&restored, &defaults) == FW_UPDATE_OK);
-    assert(fw_update_product_config_get(&restored, &state) == FW_UPDATE_OK);
+    CHECK(fw_update_product_config_flashdb_init(&restored, &defaults) == FW_UPDATE_OK);
+    CHECK(fw_update_product_config_get(&restored, &state) == FW_UPDATE_OK);
     assert_identity(&state, provisioned.hardware_id, provisioned.board_id, provisioned.board_revision, 1U);
     return 0;
 }

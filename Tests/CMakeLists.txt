@@ -46,10 +46,7 @@ target_include_directories(fw_update_contract_tests PRIVATE
 add_test(NAME fw_update_contract COMMAND fw_update_contract_tests)
 
 set(FLASHDB_ROOT ${PROJECT_SOURCE_DIR}/components/FlashDB-2.2.0)
-add_executable(product_config_flashdb_tests
-    product_config_flashdb_tests.c
-    ${PROJECT_SOURCE_DIR}/components/fw_update/src/product_config.c
-    ${PROJECT_SOURCE_DIR}/components/fw_update/backends/flashdb/src/product_config_flashdb.c
+set(FLASHDB_TEST_SOURCES
     ${FLASHDB_ROOT}/src/fdb.c
     ${FLASHDB_ROOT}/src/fdb_kvdb.c
     ${FLASHDB_ROOT}/src/fdb_utils.c
@@ -57,6 +54,13 @@ add_executable(product_config_flashdb_tests
     ${FLASHDB_ROOT}/port/fal/src/fal_flash.c
     ${FLASHDB_ROOT}/port/fal/src/fal_partition.c
 )
+add_executable(product_config_flashdb_tests
+    product_config_flashdb_tests.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/product_config.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/backends/flashdb/src/product_config_flashdb.c
+    ${FLASHDB_TEST_SOURCES}
+)
+set_source_files_properties(${FLASHDB_TEST_SOURCES} PROPERTIES COMPILE_OPTIONS "-w")
 target_include_directories(product_config_flashdb_tests PRIVATE
     ${PROJECT_SOURCE_DIR}/components/fw_update/include
     ${PROJECT_SOURCE_DIR}/components/fw_update/backends/flashdb/include
@@ -78,10 +82,12 @@ add_executable(fw_update_mcuboot_backend_tests
 target_include_directories(fw_update_mcuboot_backend_tests PRIVATE
     ${PROJECT_SOURCE_DIR}/components/fw_update/include
     ${PROJECT_SOURCE_DIR}/components/fw_update/backends/mcuboot/include
-    ${PROJECT_SOURCE_DIR}/components/mcuboot-2.4.0/boot/bootutil/include
-    ${PROJECT_SOURCE_DIR}/components/mcuboot-2.4.0/boot/bootutil/src
     ${PROJECT_SOURCE_DIR}/components/mcuboot_port/Inc
     ${CMAKE_BINARY_DIR}/generated/Config
+)
+target_include_directories(fw_update_mcuboot_backend_tests SYSTEM PRIVATE
+    ${PROJECT_SOURCE_DIR}/components/mcuboot-2.4.0/boot/bootutil/include
+    ${PROJECT_SOURCE_DIR}/components/mcuboot-2.4.0/boot/bootutil/src
 )
 add_test(NAME fw_update_mcuboot_backend COMMAND fw_update_mcuboot_backend_tests)
 
