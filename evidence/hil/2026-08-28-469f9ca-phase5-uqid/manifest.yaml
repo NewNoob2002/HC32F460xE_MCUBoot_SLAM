@@ -1,0 +1,15 @@
+evidence_manifest:
+  schema_version: 1
+  run_id: "2026-08-28-469f9ca-hc32f460-phase5-uqid"
+  source_revision: "469f9ca6083e32bfaaaaba1cc3bd1b5f2f72178d"
+  source_dirty: true
+  target: "HC32F460xE revision 2"
+  probe_serial: "20781318"
+  usb_serial: "HC32F460-55463233FF035043FFFF7309"
+  result: "PASSED_UQID_APPLICATION_AND_BOOT_RECOVERY"
+  final_target_state: "exact pre-HIL Flash restored; target reset and running"
+  gate_impact: "Unique per-chip serial source and dual-mode equality verified; signed Windows portable evidence remains"
+  contracts:
+    - "hil_test_result.yaml"
+    - "deployment_result_restore.yaml"
+  checksum_verification: "python3 Tests/HIL/verify_evidence.py evidence/hil/2026-08-28-469f9ca-phase5-uqid/SHA256SUMS"

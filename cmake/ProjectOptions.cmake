@@ -12,7 +12,7 @@ target_include_directories(hc32_project_options INTERFACE
 target_compile_definitions(hc32_project_options INTERFACE
     HC32F460
     USE_DDL_DRIVER
-    $<$<CONFIG:Debug>:__CORE_DEBUG>
+    $<$<CONFIG:Debug>:HC32_DEBUG_LOG=1>
 )
 target_compile_options(hc32_project_options INTERFACE
     ${CPU_FLAGS}

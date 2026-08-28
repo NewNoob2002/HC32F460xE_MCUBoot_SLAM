@@ -1,0 +1,12 @@
+evidence_manifest:
+  schema_version: 1
+  run_id: "2026-08-28-469f9ca-phase5-portable-host"
+  source_revision: "469f9ca6083e32bfaaaaba1cc3bd1b5f2f72178d"
+  source_dirty: true
+  result: "PASSED_LINUX_DIRECT_RUN_AND_UNSIGNED_WINDOWS_ZIP_MECHANICS"
+  gate_impact: "Production-signed Windows EXEs and clean-Windows runtime remain G5 blockers"
+  infrastructure_issue: "Fresh post-review Windows GNU cross-build unavailable because the MinGW CRT/import libraries are missing"
+  contracts:
+    - "build_outputs.yaml"
+    - "test_result.yaml"
+  checksum_verification: "python3 Tests/HIL/verify_evidence.py evidence/host/2026-08-28-469f9ca-phase5-portable-host/SHA256SUMS"

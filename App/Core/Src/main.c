@@ -1,5 +1,10 @@
 #include "app_confirm.h"
 #include "bsp_clock.h"
+#include "bsp_timebase.h"
+#if defined(HC32_DEBUG_LOG)
+#include "elog.h"
+#include "hc32_debug_log.h"
+#endif
 #if APP_PHASE2_HIL_MODE != 0
 #include "phase2_hil.h"
 #endif
@@ -8,10 +13,19 @@ volatile int g_app_confirm_result;
 
 int main(void) {
     bsp_clock_init();
+    if (!bsp_timebase_init())
+        for (;;) {}
+#if defined(HC32_DEBUG_LOG)
+    if (hc32_debug_log_init())
+        elog_i("app", "startup");
+#endif
 #if APP_PHASE2_HIL_MODE != 0
     g_app_confirm_result = phase2_hil_run(APP_PHASE2_HIL_MODE);
 #else
     g_app_confirm_result = app_confirm_running_image(APP_AUTO_CONFIRM != 0);
+#endif
+#if defined(HC32_DEBUG_LOG)
+    elog_i("app", "confirm result=%d", g_app_confirm_result);
 #endif
     for (;;) {}
 }

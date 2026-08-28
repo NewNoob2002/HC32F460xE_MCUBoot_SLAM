@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T05:38:54Z"
+  operation: "flash/reset/debug-halt"
+  authorization: "User explicitly authorized J-Link 20781318 and the current board, then requested unique production serial validation."
+  target:
+    board: "HC32F460xE; hardware revision 2"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "J-Link 20781318"
+    transport: "SWD at 4000 kHz"
+  artifact_or_stimulus: "Release-test Boot SHA256 a3f2a18ad5371d5222870acb3b58c2fa6f35309ca09fb2122ac0df7b51af695f at 0x00000000; updater_primary SHA256 b85c477bc02038643c5075cee05dbc3a80c25f82b431039b5bdfc42116133f57 at 0x00010000; read UQID at 0x40010450..0x4001045B."
+  limits: "Back up exactly 0x76000 bytes first. Program Boot only within 0x00000000..0x0000FFFF and Primary only within 0x00010000..0x00041FFF. Invalidate only Primary sector 0x00010000..0x00011FFF. Never write Secondary, Scratch or Reserved. Require VTref and exact probe serial."
+  recovery_plan: "Restore and verify the new 0x76000-byte pre-HIL backup at 0x00000000; compare post-restore readback byte-for-byte and to the prior known-good SHA256 68749a28839ef5b1e98473e014b611261add7434adb3dbc4419793c3fabc9b05 when the pre-HIL state matches it."
+  approved: true

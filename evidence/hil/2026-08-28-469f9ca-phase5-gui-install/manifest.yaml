@@ -1,0 +1,17 @@
+evidence_manifest:
+  schema_version: 1
+  run_id: "2026-08-28-469f9ca-hc32f460-phase5-gui-install"
+  source_revision: "469f9ca6083e32bfaaaaba1cc3bd1b5f2f72178d"
+  source_dirty: true
+  source_capture: "source-working-tree.patch"
+  target: "HC32F460xE revision 2"
+  probe_serial: "20781318"
+  usb_serial: "HC32F460-PHASE5-0001"
+  result: "PASSED_SLINT_GUI_PHYSICAL_INSTALL"
+  final_target_state: "exact pre-GUI-HIL Flash restored; target reset and running"
+  gate_impact: "Phase 5E GUI launch/layout/scroll and physical-install evidence satisfied; G5 remains open for unique production serial/signing inputs and Windows/Linux package evidence"
+  contracts:
+    - "deployment_result_prepare.yaml"
+    - "hil_test_result.yaml"
+    - "deployment_result_restore.yaml"
+  checksum_verification: "python3 Tests/HIL/verify_evidence.py evidence/hil/2026-08-28-469f9ca-phase5-gui-install/SHA256SUMS"

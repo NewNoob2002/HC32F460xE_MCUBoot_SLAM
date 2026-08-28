@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T07:18:07Z"
+  operation: "debug-halt/readback/flash/reset/uart-open/restore"
+  authorization: "User explicitly authorized J-Link 20781318 and the current board, requested completion of UART HIL, and connected the debug UART."
+  target:
+    board: "HC32F460xE; hardware revision 2"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "J-Link 20781318 and its VCOM 000020781318; comparison-only Horco CMSIS-DAP UART 5844333732"
+    transport: "SWD at 4000 kHz; UART 115200 8N1, 3.3 V TTL"
+  artifact_or_stimulus: "Debug Boot build/Debug/Boot/boot_firmware.bin SHA256 a5432d613f6718aa1b51d5ea06fa32e09944b313a5a08fd9e1e3b4f5eeab9fb5 at 0x00000000; Debug updater build/Debug/artifacts/updater_primary.bin SHA256 224d7cb0571590cfb2a6274fa429000f28b281e2d6edfaa9062e869d4c841164 at 0x00010000; UART capture via stable J-Link VCOM by-id path, with one comparison capture on Horco 5844333732 to resolve ttyACM renumbering."
+  limits: "Back up exactly 0x76000 bytes before writes. Program Boot only within 0x00000000..0x0000FFFF and Primary only within 0x00010000..0x00041FFF. Never write Secondary, Scratch, Reserved, option bytes or protection state. No mass erase or unlock. Require J-Link serial 20781318 and VTref near 3.3 V. Bound UART capture to 30 seconds."
+  recovery_plan: "Restore and verify backup/pre_hil_00000000_00075fff.bin (483328 bytes, SHA256 68749a28839ef5b1e98473e014b611261add7434adb3dbc4419793c3fabc9b05) at 0x00000000, read back exactly 0x76000 bytes, require byte-for-byte equality, then reset/run. On flash or verify failure, retain logs and restore immediately without retrying destructive operations."
+  approved: true

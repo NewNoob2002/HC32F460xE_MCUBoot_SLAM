@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T03:27:38Z"
+  operation: "usb-control-read"
+  authorization: "User authorized Boot recovery HIL on the current board"
+  target:
+    board: "HC32F460xE; expected Boot recovery cafe:0001"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "J-Link 000020781318"
+    transport: "USB vendor bulk interface 0"
+  artifact_or_stimulus: "artifacts/hc32-updater SHA256 a58408098b52f137846969889331f941832de781c503006b2d22d6d4e6820120; info command only"
+  limits: "HELLO and DEVICE_INFO only; no BEGIN/DATA/END/COMMIT, reset or storage write; require exactly one cafe:0001 or cafe:0002 updater"
+  recovery_plan: "Stop before install on any mode, hardware ID, board ID/revision, capacity, descriptor or serial mismatch; original Flash backup remains available"
+  approved: true

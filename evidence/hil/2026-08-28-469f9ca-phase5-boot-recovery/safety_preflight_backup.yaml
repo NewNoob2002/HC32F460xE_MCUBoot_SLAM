@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T03:24:01Z"
+  operation: "debug-halt/readback"
+  authorization: "User explicitly authorized J-Link 20781318 on the current board, including backup, Boot flash, Primary/Secondary invalidation, USB install/reset, and final full restore on 2026-08-28"
+  target:
+    board: "HC32F460xE; Cortex-M4; hardware revision 2"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "J-Link 000020781318"
+    transport: "SWD 4000 kHz"
+  artifact_or_stimulus: "Read 0x00076000 bytes from 0x00000000 twice into backup/pre_hil_*.bin"
+  limits: "Board and J-Link are USB-powered/enumerated; require J-Link VTref 3.2-3.6 V and exact HC32F460xE connection; halt only for bounded readback; do not access Reserved 0x00076000-0x0007FFFF; no erase, write, unlock, recover, OTP, option-byte or protection change"
+  recovery_plan: "Resume execution with go; require both 483328-byte backups to be byte-identical before any write; create and validate an erase/load/verify restore script from that backup before flashing"
+  approved: true

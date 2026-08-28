@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T09:12:44Z"
+  operation: "cmsis-dap-peripheral-write/uart-open"
+  authorization: "User confirmed the DAPLink VCOM loopback was removed and RX-to-TP2 plus board ground were restored, then requested continued diagnosis."
+  target:
+    board: "HC32F460xE; hardware revision 2"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "Horco CMSIS-DAP 5844333732"
+    transport: "CMSIS-DAP SWD at 4000 kHz; integrated UART 115200 8N1, 3.3 V TTL"
+  artifact_or_stimulus: "Attempt 3 after physical reconnect: write ASCII UART_TEST\r\n once to initialized USART3 TDR 0x40021004 with 20 ms between halfword writes."
+  limits: "Write exactly 11 values in range 0x00..0xFF only to USART3 TDR 0x40021004. Do not reset, intentionally halt, write Flash, GPIO, clock, option-byte, protection, or other peripheral registers. Capture is bounded to 15 seconds. No further automatic retry."
+  recovery_plan: "The TDR stimulus is transient and requires no persistent rollback. Leave the target running. If no bytes are captured after the proven VCOM loopback, classify the TP2 physical path as failed and stop target-side retries."
+  approved: true

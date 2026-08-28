@@ -1,0 +1,8 @@
+device HC32F460xE
+si SWD
+speed 4000
+connect
+h
+mem32 0x40010450,3
+savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-uqid/backup/pre_hil_00000000_00075fff.bin 0x00000000 0x00076000
+exit

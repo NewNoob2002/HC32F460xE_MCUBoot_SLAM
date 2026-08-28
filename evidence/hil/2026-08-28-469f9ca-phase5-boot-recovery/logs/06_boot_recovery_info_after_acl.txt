@@ -1,0 +1,7 @@
+Script started on 2026-08-28 11:32:48+08:00 [COMMAND="/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-boot-recovery/artifacts/hc32-updater info" <not executed on terminal>]
+application=0.0.0 bootloader=1.0.0
+hardware=0x00004600 board=1 revision=2 capacity=196608 write_alignment=4 erase_alignment=8192
+mode=boot-recovery
+serial=HC32F460-PHASE5-0001
+
+Script done on 2026-08-28 11:32:48+08:00 [COMMAND_EXIT_CODE="0"]

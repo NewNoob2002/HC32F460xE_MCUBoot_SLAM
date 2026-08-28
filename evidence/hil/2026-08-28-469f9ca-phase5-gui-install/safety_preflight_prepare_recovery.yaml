@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T04:33:11Z"
+  operation: "flash/erase/reset"
+  authorization: "User requested starting the Slint GUI physical-install HIL on J-Link 20781318 and the current board"
+  target:
+    board: "HC32F460xE; hardware revision 2"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "J-Link 000020781318"
+    transport: "SWD 4000 kHz; prior VTref 3.351 V"
+  artifact_or_stimulus: "artifacts/boot_firmware.bin, 45040 bytes, SHA256 f1651f4f5d552b5165bd807dd836f70bb747d5401286f65229900ffd7ccdaeef at 0x00000000; invalidate first Primary/Secondary 8 KiB sectors"
+  limits: "Erase Boot only at 0x00000000-0x0000FFFF; load/verify Boot at 0x00000000; erase only 0x00010000-0x00011FFF and 0x00042000-0x00043FFF; no Scratch/Reserved access; no mass erase, unlock, recover, OTP, option-byte or protection changes"
+  recovery_plan: "Restore backup/pre_gui_hil_00000000_00075fff.bin, 483328 bytes, SHA256 68749a28839ef5b1e98473e014b611261add7434adb3dbc4419793c3fabc9b05, after GUI success or failure"
+  approved: true

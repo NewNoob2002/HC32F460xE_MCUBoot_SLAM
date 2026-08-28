@@ -56,10 +56,27 @@ target_include_directories(fw_update_mcuboot_backend_tests PRIVATE
     ${PROJECT_SOURCE_DIR}/components/fw_update/include
     ${PROJECT_SOURCE_DIR}/components/fw_update/backends/mcuboot/include
     ${PROJECT_SOURCE_DIR}/components/mcuboot-2.4.0/boot/bootutil/include
+    ${PROJECT_SOURCE_DIR}/components/mcuboot-2.4.0/boot/bootutil/src
     ${PROJECT_SOURCE_DIR}/components/mcuboot_port/Inc
     ${CMAKE_BINARY_DIR}/generated/Config
 )
 add_test(NAME fw_update_mcuboot_backend COMMAND fw_update_mcuboot_backend_tests)
+
+add_test(
+    NAME product_identity_production_gate
+    COMMAND ${CMAKE_COMMAND}
+        -DHC32_PRODUCT_IDENTITY_FILE=${PROJECT_SOURCE_DIR}/Config/ProductIdentity.env
+        -DHC32_PRODUCT_RELEASE=ON
+        -P ${PROJECT_SOURCE_DIR}/cmake/ProductIdentity.cmake
+)
+add_test(
+    NAME product_identity_rejects_nonproduction
+    COMMAND ${CMAKE_COMMAND}
+        -DHC32_PRODUCT_IDENTITY_FILE=${PROJECT_SOURCE_DIR}/Tests/ProductIdentityNonProduction.env
+        -DHC32_PRODUCT_RELEASE=ON
+        -P ${PROJECT_SOURCE_DIR}/cmake/ProductIdentity.cmake
+)
+set_tests_properties(product_identity_rejects_nonproduction PROPERTIES WILL_FAIL TRUE)
 
 add_executable(fw_protocol_tests
     fw_protocol_tests.c

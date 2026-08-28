@@ -1,0 +1,19 @@
+evidence_bundle:
+  schema_version: 1
+  run_id: "2026-08-28-469f9ca-phase5-gui-smoke"
+  status: "local-smoke-passed"
+  created_at_local: "2026-08-28"
+  source_revision: "469f9ca6083e32bfaaaaba1cc3bd1b5f2f72178d"
+  source_worktree_clean: false
+  gate: "G5-partial"
+  hil_required: false
+  retained:
+    launch_result: true
+    user_layout_confirmation: true
+    screenshot: true
+  excluded:
+    - item: "firmware install"
+      reason: "Explicitly outside this non-destructive GUI smoke"
+  verification:
+    checksums: "SHA256SUMS"
+    command: "python3 Tests/HIL/verify_evidence.py evidence/host/2026-08-28-469f9ca-phase5-gui-smoke/SHA256SUMS"

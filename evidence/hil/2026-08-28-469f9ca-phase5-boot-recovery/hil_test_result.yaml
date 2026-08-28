@@ -1,0 +1,52 @@
+test_result:
+  schema_version: 1
+  source_revision: "469f9ca6083e32bfaaaaba1cc3bd1b5f2f72178d"
+  source_dirty: true
+  artifact_checksums:
+    host_updater: "a58408098b52f137846969889331f941832de781c503006b2d22d6d4e6820120"
+    attempt2_boot: "f1651f4f5d552b5165bd807dd836f70bb747d5401286f65229900ffd7ccdaeef"
+    attempt2_signed_image: "acc9be453440823b13045da96d42c769e1f5ecd85a2364821e49b1a5c1cfe1b0"
+    pre_hil_backup: "68749a28839ef5b1e98473e014b611261add7434adb3dbc4419793c3fabc9b05"
+    post_restore_readback: "68749a28839ef5b1e98473e014b611261add7434adb3dbc4419793c3fabc9b05"
+  safety_preflight: "safety_preflight_usb_install_attempt2.yaml"
+  level: "hil"
+  target: "HC32F460xE revision 2, J-Link 20781318, USB HC32F460-PHASE5-0001"
+  command: "invalidate both slot headers; boot recovery info; one USB install/COMMIT; wait for cafe:0002 version 1.0.0; read slot evidence; restore and verify full pre-HIL Flash"
+  timing: {started_at_utc: "2026-08-28T03:33:44Z", duration_ms: 1508000, timeout_ms: 30000}
+  attempts: 2
+  passed: true
+  counts: {total: 2, passed: 1, failed: 1, skipped: 0}
+  classified_failures:
+    - "attempt1.product.mcuboot-loader-state-contract"
+    - "evidence.test-infrastructure.jlink-savebin-length-radix"
+  logs:
+    - "logs/08_install_from_boot_recovery.txt"
+    - "logs/09_commit_diagnosis.txt"
+    - "logs/11_flash_recovery_attempt2.txt"
+    - "logs/12_boot_recovery_info_attempt2.txt"
+    - "logs/13_udev_attempt2_install.txt"
+    - "logs/14_install_from_boot_recovery_attempt2.txt"
+    - "logs/15_wait_application_attempt2.txt"
+    - "logs/20_post_install_snapshot.txt"
+    - "logs/21_primary_prefix_cmp_attempt2.txt"
+    - "logs/22_primary_prefix_sha256_attempt2.txt"
+    - "logs/23_slot_snapshot_analysis_attempt2.txt"
+    - "logs/99_restore.txt"
+    - "logs/100_post_restore_sha256.txt"
+    - "logs/101_post_restore_cmp.txt"
+  requirements:
+    - "Invalid Primary and Secondary remain in Boot recovery cafe:0001"
+    - "A compatible signed image can be installed through Boot recovery"
+    - "MCUboot bootstrap copies the candidate into Primary and starts cafe:0002"
+    - "The exact pre-HIL target Flash is restored after the test"
+  observations:
+    - "Attempt 1 failed at COMMIT with BootControlError and was not automatically retried"
+    - "Attempt 2 info reported mode boot-recovery, hardware 0x00004600, board 1, revision 2 and capacity 196608"
+    - "Attempt 2 transferred 38339/38339 bytes; verification and COMMIT passed"
+    - "udev captured cafe:0001 removal followed by cafe:0002 addition on /dev/bus/usb/001/017"
+    - "Application 1.0.0 answered with the expected identity and geometry"
+    - "Primary's 38339-byte prefix is byte-identical to the signed image"
+    - "Primary trailer has copy_done=1, image_ok=1 and valid magic; Secondary header/trailer are erased"
+    - "The post-restore 0x76000-byte readback is byte-identical to the pre-HIL backup"
+  final_state: "exact pre-HIL Flash restored; target reset and running"
+  recovery: "exercised and passed"

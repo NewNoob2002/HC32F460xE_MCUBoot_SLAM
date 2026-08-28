@@ -1,0 +1,5 @@
+Script started on 2026-08-28 12:46:05+08:00 [COMMAND="rtk sha256sum /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-gui-install/backup/pre_gui_hil_00000000_00075fff.bin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-gui-install/snapshots/post_restore_00000000_00075fff.bin" <not executed on terminal>]
+68749a28839ef5b1e98473e014b611261add7434adb3dbc4419793c3fabc9b05  /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-gui-install/backup/pre_gui_hil_00000000_00075fff.bin
+68749a28839ef5b1e98473e014b611261add7434adb3dbc4419793c3fabc9b05  /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-gui-install/snapshots/post_restore_00000000_00075fff.bin
+
+Script done on 2026-08-28 12:46:05+08:00 [COMMAND_EXIT_CODE="0"]

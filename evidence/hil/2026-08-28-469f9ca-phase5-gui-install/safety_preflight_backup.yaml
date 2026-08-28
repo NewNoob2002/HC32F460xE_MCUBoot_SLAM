@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T04:31:44Z"
+  operation: "debug-halt/read/run"
+  authorization: "User requested starting the Slint GUI physical-install HIL on the current HC32F460xE board with J-Link 20781318"
+  target:
+    board: "HC32F460xE; hardware revision 2"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "J-Link 000020781318"
+    transport: "SWD 4000 kHz"
+  artifact_or_stimulus: "Read current Flash 0x00000000-0x00075FFF into backup/pre_gui_hil_00000000_00075fff.bin"
+  limits: "Halt once; read exactly 0x76000 bytes; no erase/program/reset; never access Reserved 0x00076000-0x0007FFFF; resume target before disconnect"
+  recovery_plan: "Use the captured 0x76000-byte backup for mandatory final restoration after the GUI install; if the read fails, do not prepare or install firmware"
+  approved: true

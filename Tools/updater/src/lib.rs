@@ -1,5 +1,9 @@
 mod protocol;
 
+pub mod product_identity {
+    include!(concat!(env!("OUT_DIR"), "/product_identity.rs"));
+}
+
 pub use protocol::{Command, Frame, ProtocolError, Status, crc32};
 
 use std::fmt;
@@ -9,6 +13,9 @@ use std::time::{Duration, Instant};
 
 const IMAGE_MAGIC: u32 = 0x96f3_b83d;
 const IMAGE_HEADER_SIZE: usize = 32;
+const IMAGE_TLV_PROT_INFO_MAGIC: u16 = 0x6908;
+const COMPATIBILITY_TLV_TYPE: u16 = 0x00a0;
+const COMPATIBILITY_PAYLOAD_SIZE: usize = 12;
 const REQUIRED_CAPABILITIES: u32 = 0b111;
 const DEFAULT_ATTEMPTS: usize = 3;
 const MAX_STALE_RESPONSES: usize = 2;
@@ -88,6 +95,14 @@ fn parse_number<T: FromStr>(value: Option<&str>, name: &'static str) -> Result<T
 pub struct FirmwareImage {
     bytes: Vec<u8>,
     pub version: Version,
+    pub compatibility: Compatibility,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct Compatibility {
+    pub board_revision: u16,
+    pub hardware_id: u32,
+    pub board_id: u32,
 }
 
 impl FirmwareImage {
@@ -100,6 +115,7 @@ impl FirmwareImage {
         }
 
         let header_size = usize::from(read_u16(&bytes[8..10]));
+        let protected_tlv_size = usize::from(read_u16(&bytes[10..12]));
         let body_size = read_u32(&bytes[12..16]) as usize;
         if header_size < IMAGE_HEADER_SIZE
             || header_size > bytes.len()
@@ -107,9 +123,17 @@ impl FirmwareImage {
         {
             return Err(Error::Image("invalid MCUboot header/body size"));
         }
+        let compatibility = parse_compatibility(
+            &bytes,
+            header_size
+                .checked_add(body_size)
+                .ok_or(Error::Image("invalid MCUboot image size"))?,
+            protected_tlv_size,
+        )?;
 
         Ok(Self {
             version: Version::decode(&bytes[20..28])?,
+            compatibility,
             bytes,
         })
     }
@@ -121,6 +145,62 @@ impl FirmwareImage {
     pub fn crc32(&self) -> u32 {
         crc32(&self.bytes)
     }
+}
+
+fn parse_compatibility(
+    bytes: &[u8],
+    protected_tlv_offset: usize,
+    protected_tlv_size: usize,
+) -> Result<Compatibility, Error> {
+    if protected_tlv_size < 4 {
+        return Err(Error::Image("missing protected compatibility TLV"));
+    }
+    let protected_end = protected_tlv_offset
+        .checked_add(protected_tlv_size)
+        .filter(|end| *end <= bytes.len())
+        .ok_or(Error::Image("invalid protected TLV size"))?;
+    if read_u16(&bytes[protected_tlv_offset..protected_tlv_offset + 2]) != IMAGE_TLV_PROT_INFO_MAGIC
+        || usize::from(read_u16(
+            &bytes[protected_tlv_offset + 2..protected_tlv_offset + 4],
+        )) != protected_tlv_size
+    {
+        return Err(Error::Image("invalid protected TLV header"));
+    }
+
+    let mut compatibility = None;
+    let mut offset = protected_tlv_offset + 4;
+    while offset < protected_end {
+        if protected_end - offset < 4 {
+            return Err(Error::Image("malformed protected TLV"));
+        }
+        let tlv_type = read_u16(&bytes[offset..offset + 2]);
+        let length = usize::from(read_u16(&bytes[offset + 2..offset + 4]));
+        let value_offset = offset + 4;
+        offset = value_offset
+            .checked_add(length)
+            .filter(|end| *end <= protected_end)
+            .ok_or(Error::Image("malformed protected TLV"))?;
+        if tlv_type != COMPATIBILITY_TLV_TYPE {
+            continue;
+        }
+        if compatibility.is_some() {
+            return Err(Error::Image("duplicate compatibility TLV"));
+        }
+        if length != COMPATIBILITY_PAYLOAD_SIZE {
+            return Err(Error::Image("invalid compatibility TLV length"));
+        }
+        let value = &bytes[value_offset..offset];
+        if value[0] != 1 || value[1] != 0 {
+            return Err(Error::Image("unsupported compatibility TLV format"));
+        }
+        compatibility = Some(Compatibility {
+            board_revision: read_u16(&value[2..4]),
+            hardware_id: read_u32(&value[4..8]),
+            board_id: read_u32(&value[8..12]),
+        });
+    }
+
+    compatibility.ok_or(Error::Image("missing protected compatibility TLV"))
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -296,6 +376,12 @@ impl<T: Transport> ProtocolV1Client<T> {
         }
         let device = self.info()?;
         progress(ProgressEvent::Device(device.clone()));
+        if image.compatibility.hardware_id != device.hardware_id
+            || image.compatibility.board_id != device.board_id
+            || image.compatibility.board_revision != device.board_revision
+        {
+            return Err(Error::Image("image compatibility does not match device"));
+        }
         if image.bytes.len() > device.image_capacity as usize {
             return Err(Error::Image("image exceeds device capacity"));
         }
@@ -504,13 +590,39 @@ mod tests {
 
     #[test]
     fn parses_mcuboot_image_and_version() {
-        let mut bytes = vec![0u8; 520];
-        bytes[0..4].copy_from_slice(&IMAGE_MAGIC.to_le_bytes());
-        bytes[8..10].copy_from_slice(&512u16.to_le_bytes());
-        bytes[12..16].copy_from_slice(&8u32.to_le_bytes());
+        let mut bytes = test_image(520);
         bytes[20..28].copy_from_slice(&[2, 1, 3, 0, 4, 0, 0, 0]);
         let image = FirmwareImage::parse(bytes).unwrap();
         assert_eq!(image.version.to_string(), "2.1.3+4");
+        assert_eq!(image.compatibility.hardware_id, 0x0000_4600);
+    }
+
+    #[test]
+    fn rejects_invalid_compatibility_tlvs() {
+        let mut missing = test_image(80);
+        let entry = compatibility_entry_offset(&missing);
+        missing[entry..entry + 2].copy_from_slice(&0x00a1u16.to_le_bytes());
+        assert!(FirmwareImage::parse(missing).is_err());
+
+        let mut malformed = test_image(80);
+        let entry = compatibility_entry_offset(&malformed);
+        malformed[entry + 2..entry + 4].copy_from_slice(&11u16.to_le_bytes());
+        assert!(FirmwareImage::parse(malformed).is_err());
+
+        let mut unsupported = test_image(80);
+        let entry = compatibility_entry_offset(&unsupported);
+        unsupported[entry + 4] = 2;
+        assert!(FirmwareImage::parse(unsupported).is_err());
+
+        let mut duplicate = test_image(80);
+        let entry = compatibility_entry_offset(&duplicate);
+        let second = duplicate[entry..entry + 16].to_vec();
+        let protected_size = read_u16(&duplicate[10..12]);
+        duplicate[10..12].copy_from_slice(&(protected_size + 16).to_le_bytes());
+        let info = entry - 4;
+        duplicate[info + 2..info + 4].copy_from_slice(&(protected_size + 16).to_le_bytes());
+        duplicate.extend_from_slice(&second);
+        assert!(FirmwareImage::parse(duplicate).is_err());
     }
 
     #[test]
@@ -572,10 +684,33 @@ mod tests {
             )),
         ]);
         let mut client = ProtocolV1Client::new(transport, Duration::from_millis(10));
-        let image = FirmwareImage::parse(test_image(40)).unwrap();
+        let image = FirmwareImage::parse(test_image(60)).unwrap();
         assert!(matches!(
             client.install(&image, |_| {}),
             Err(Error::Image("image exceeds device capacity"))
+        ));
+        assert_eq!(client.into_transport().requests.len(), 2);
+    }
+
+    #[test]
+    fn rejects_an_incompatible_image_before_begin() {
+        let transport = ScriptTransport::new([
+            Ok(response(Command::Hello, 0, Status::Ok, &hello_body())),
+            Ok(response(
+                Command::DeviceInfo,
+                1,
+                Status::Ok,
+                &device_info_body(2048),
+            )),
+        ]);
+        let mut bytes = test_image(60);
+        let entry = compatibility_entry_offset(&bytes);
+        bytes[entry + 8] ^= 1;
+        let image = FirmwareImage::parse(bytes).unwrap();
+        let mut client = ProtocolV1Client::new(transport, Duration::from_millis(10));
+        assert!(matches!(
+            client.install(&image, |_| {}),
+            Err(Error::Image("image compatibility does not match device"))
         ));
         assert_eq!(client.into_transport().requests.len(), 2);
     }
@@ -688,11 +823,25 @@ mod tests {
     }
 
     fn test_image(length: usize) -> Vec<u8> {
+        assert!(length >= IMAGE_HEADER_SIZE + 20);
         let mut bytes = vec![0u8; length];
         bytes[0..4].copy_from_slice(&IMAGE_MAGIC.to_le_bytes());
         bytes[8..10].copy_from_slice(&(IMAGE_HEADER_SIZE as u16).to_le_bytes());
-        bytes[12..16].copy_from_slice(&((length - IMAGE_HEADER_SIZE) as u32).to_le_bytes());
+        bytes[10..12].copy_from_slice(&20u16.to_le_bytes());
+        bytes[12..16].copy_from_slice(&((length - IMAGE_HEADER_SIZE - 20) as u32).to_le_bytes());
         bytes[20] = 2;
+        let entry = compatibility_entry_offset(&bytes);
+        bytes[entry - 4..entry - 2].copy_from_slice(&IMAGE_TLV_PROT_INFO_MAGIC.to_le_bytes());
+        bytes[entry - 2..entry].copy_from_slice(&20u16.to_le_bytes());
+        bytes[entry..entry + 2].copy_from_slice(&COMPATIBILITY_TLV_TYPE.to_le_bytes());
+        bytes[entry + 2..entry + 4]
+            .copy_from_slice(&(COMPATIBILITY_PAYLOAD_SIZE as u16).to_le_bytes());
+        bytes[entry + 4..entry + 16]
+            .copy_from_slice(&[1, 0, 2, 0, 0x00, 0x46, 0x00, 0x00, 1, 0, 0, 0]);
         bytes
+    }
+
+    fn compatibility_entry_offset(bytes: &[u8]) -> usize {
+        usize::from(read_u16(&bytes[8..10])) + read_u32(&bytes[12..16]) as usize + 4
     }
 }

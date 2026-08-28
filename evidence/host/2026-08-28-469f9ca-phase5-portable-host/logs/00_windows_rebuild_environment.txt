@@ -1,0 +1,16 @@
+Command:
+  cargo build --manifest-path Tools/updater/Cargo.toml --release --locked --target x86_64-pc-windows-gnu
+
+Result on 2026-08-28:
+  FAILED before linking because x86_64-w64-mingw32-dlltool was not present in PATH.
+  Cargo reported: error calling dlltool 'x86_64-w64-mingw32-dlltool': No such file or directory.
+  A bounded retry mapped the existing LLVM 22 tools to the expected MinGW tool
+  names. Compilation then reached final linking and failed because the host also
+  lacks the MinGW CRT and import libraries (`crt2.o`, `libmingw32`, `kernel32`,
+  `user32`, and related libraries).
+
+Classification:
+  host-toolchain-missing. This is an infrastructure failure, not a product test
+  failure. The already-built EXEs were used only for mechanical ZIP verification.
+  No new claim of a post-review Windows build, signature, or Windows runtime
+  result is made.

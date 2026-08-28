@@ -1,0 +1,11 @@
+Script started on 2026-08-28 17:39:02+08:00 [COMMAND="rtk cargo build --manifest-path Tools/updater/Cargo.toml --release --locked && rtk file Tools/updater/target/release/hc32-updater Tools/updater/target/release/hc32-updater-gui && rtk Tools/updater/target/release/hc32-updater --help" <not executed on terminal>]
+cargo build (0 crates compiled)
+Finished `release` profile [optimized] target(s) in 0.22s
+Tools/updater/target/release/hc32-updater:     ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 3.2.0, BuildID[sha1]=d63b726f08c50983d2ff435dffcaf125d321970d, not stripped
+Tools/updater/target/release/hc32-updater-gui: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 3.2.0, BuildID[sha1]=a5ec0cf5595c090714b3e092f3c2fcc6f0cc0059, not stripped
+usage:
+  hc32-updater info
+  hc32-updater install <signed-image>
+  hc32-updater wait --version <version> [--timeout <seconds>]
+
+Script done on 2026-08-28 17:39:02+08:00 [COMMAND_EXIT_CODE="0"]

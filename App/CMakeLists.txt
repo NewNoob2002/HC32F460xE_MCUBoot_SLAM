@@ -32,7 +32,12 @@ target_compile_definitions(app_firmware PRIVATE
     APP_AUTO_CONFIRM=$<BOOL:${APP_AUTO_CONFIRM}>
     APP_PHASE2_HIL_MODE=${APP_PHASE2_HIL_MODE}
 )
-target_link_libraries(app_firmware PRIVATE hc32_platform hc32_device mcuboot_bootutil)
+target_link_libraries(app_firmware PRIVATE
+    hc32_platform
+    hc32_device
+    $<$<CONFIG:Debug>:hc32_easylogger>
+    mcuboot_bootutil
+)
 if(NOT APP_PHASE2_HIL_MODE STREQUAL "0")
     target_sources(app_firmware PRIVATE ${PROJECT_SOURCE_DIR}/Tests/HIL/phase2_hil.c)
     target_include_directories(app_firmware PRIVATE ${PROJECT_SOURCE_DIR}/Tests/HIL)
@@ -58,6 +63,7 @@ target_link_libraries(usb_vendor_bulk_loopback PRIVATE
     cherryusb_device
     hc32_platform
     hc32_device
+    $<$<CONFIG:Debug>:hc32_easylogger>
 )
 target_link_options(usb_vendor_bulk_loopback PRIVATE
     -T${PROJECT_SOURCE_DIR}/Linker/app.ld
@@ -97,6 +103,7 @@ target_link_libraries(usb_fw_updater PRIVATE
     fw_update_mcuboot
     hc32_platform
     hc32_device
+    $<$<CONFIG:Debug>:hc32_easylogger>
     mcuboot_bootutil
 )
 target_link_options(usb_fw_updater PRIVATE
@@ -105,3 +112,15 @@ target_link_options(usb_fw_updater PRIVATE
 )
 add_firmware_artifacts(usb_fw_updater)
 add_mcuboot_signed_artifacts(usb_fw_updater updater)
+
+add_custom_target(verify_winusb_descriptors
+    COMMAND "${MCUBOOT_PYTHON}" "${PROJECT_SOURCE_DIR}/Tests/verify_winusb_descriptors.py"
+            "${CMAKE_BINARY_DIR}/Boot/boot_firmware.bin"
+            "${CMAKE_CURRENT_BINARY_DIR}/usb_fw_updater.bin"
+            "${HC32_USB_VID_VALUE}"
+            "${HC32_USB_BOOT_PID_VALUE}"
+            "${HC32_USB_APPLICATION_PID_VALUE}"
+            "${HC32_USB_SERIAL_PREFIX}"
+    DEPENDS boot_firmware usb_fw_updater
+    VERBATIM
+)

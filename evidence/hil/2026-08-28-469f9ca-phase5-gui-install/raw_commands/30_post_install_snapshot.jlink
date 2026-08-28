@@ -1,0 +1,12 @@
+device HC32F460xE
+si SWD
+speed 4000
+connect
+halt
+savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-gui-install/snapshots/primary_image_after_gui.bin, 0x00010000, 0x95C3
+savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-gui-install/snapshots/primary_header_after_gui.bin, 0x00010000, 0x200
+savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-gui-install/snapshots/secondary_header_after_gui.bin, 0x00042000, 0x200
+savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-gui-install/snapshots/primary_trailer_after_gui.bin, 0x00041F00, 0x100
+savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-gui-install/snapshots/secondary_trailer_after_gui.bin, 0x00073F00, 0x100
+g
+exit

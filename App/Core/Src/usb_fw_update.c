@@ -9,16 +9,35 @@
 #include "fw_update/manager.h"
 #include "fw_update/storage_mcuboot.h"
 #include "hc32f460.h"
+#include "product_identity.h"
 #include "usbd_core.h"
 
-#define UPDATE_BUS_ID      0U
-#define UPDATE_IN_EP       0x81U
-#define UPDATE_OUT_EP      0x02U
-#define UPDATE_MPS         64U
-#define UPDATE_RX_CAPACITY 1024U
+#define UPDATE_BUS_ID         0U
+#define UPDATE_IN_EP          0x81U
+#define UPDATE_OUT_EP         0x02U
+#define UPDATE_MPS            64U
+#define UPDATE_RX_CAPACITY    1024U
+#define WINUSB_VENDOR_CODE    UINT8_C(0x20)
+#define USB_SERIAL_UID_WORDS  3U
+#define USB_SERIAL_HEX_LENGTH (USB_SERIAL_UID_WORDS * 8U)
+#define MSOS_DESCRIPTOR_SET_TOTAL_LENGTH                                                                               \
+    (WINUSB_DESCRIPTOR_SET_HEADER_SIZE + USB_MSOSV2_COMP_ID_FUNCTION_WINUSB_SINGLE_DESCRIPTOR_LEN)
+#define BOS_DESCRIPTOR_TOTAL_LENGTH (5U + USB_BOS_CAP_PLATFORM_WINUSB_DESCRIPTOR_LEN)
+
+#ifndef USB_FW_UPDATE_BOOT_RECOVERY
+#define USB_FW_UPDATE_BOOT_RECOVERY 0
+#endif
+
+#if USB_FW_UPDATE_BOOT_RECOVERY
+#define UPDATE_USB_PID     HC32_PRODUCT_USB_BOOT_PID
+#define UPDATE_USB_PRODUCT HC32_PRODUCT_USB_BOOT_PRODUCT
+#else
+#define UPDATE_USB_PID     HC32_PRODUCT_USB_APPLICATION_PID
+#define UPDATE_USB_PRODUCT HC32_PRODUCT_USB_APPLICATION_PRODUCT
+#endif
 
 static const uint8_t device_descriptor[] = {
-    USB_DEVICE_DESCRIPTOR_INIT(USB_2_0, 0x00, 0x00, 0x00, 0xFFFE, 0xFFFF, 0x0001, 0x01)};
+    USB_DEVICE_DESCRIPTOR_INIT(USB_2_1, 0x00, 0x00, 0x00, HC32_PRODUCT_USB_VID, UPDATE_USB_PID, 0x0001, 0x01)};
 
 static const uint8_t config_descriptor[] = {
     USB_CONFIG_DESCRIPTOR_INIT(9 + 9 + 7 + 7, 1, 1, USB_CONFIG_BUS_POWERED, 100),
@@ -28,9 +47,59 @@ static const uint8_t config_descriptor[] = {
 };
 
 static const char* string_descriptors[] = {
-    (const char[]){0x09, 0x04},    "HC32 Phase 5 Lab", "HC32 Firmware Updater", "HC32F460-PHASE5-0001",
-    "Vendor Bulk Firmware Update",
+    (const char[]){0x09, 0x04}, HC32_PRODUCT_USB_MANUFACTURER, UPDATE_USB_PRODUCT, NULL, "Vendor Bulk Firmware Update",
 };
+static char usb_serial[sizeof(HC32_PRODUCT_USB_SERIAL_PREFIX) + USB_SERIAL_HEX_LENGTH];
+
+static const uint8_t msosv2_descriptor_set[] = {
+    USB_MSOSV2_COMP_ID_SET_HEADER_DESCRIPTOR_INIT(MSOS_DESCRIPTOR_SET_TOTAL_LENGTH),
+    USB_MSOSV2_COMP_ID_FUNCTION_WINUSB_SINGLE_DESCRIPTOR_INIT(),
+};
+
+static const uint8_t bos_descriptor_bytes[] = {
+    USB_BOS_HEADER_DESCRIPTOR_INIT(BOS_DESCRIPTOR_TOTAL_LENGTH, 1),
+    USB_BOS_CAP_PLATFORM_WINUSB_DESCRIPTOR_INIT(WINUSB_VENDOR_CODE, MSOS_DESCRIPTOR_SET_TOTAL_LENGTH),
+};
+
+_Static_assert(sizeof(msosv2_descriptor_set) == MSOS_DESCRIPTOR_SET_TOTAL_LENGTH,
+               "Microsoft OS 2.0 descriptor length mismatch");
+_Static_assert(sizeof(bos_descriptor_bytes) == BOS_DESCRIPTOR_TOTAL_LENGTH, "BOS descriptor length mismatch");
+_Static_assert((sizeof(usb_serial) * 2U) <= CONFIG_USBDEV_REQUEST_BUFFER_LEN,
+               "USB serial exceeds CherryUSB request buffer");
+
+static const struct usb_msosv2_descriptor msosv2_descriptor = {
+    .compat_id = msosv2_descriptor_set,
+    .compat_id_len = (uint16_t)sizeof(msosv2_descriptor_set),
+    .vendor_code = WINUSB_VENDOR_CODE,
+};
+
+static const struct usb_bos_descriptor bos_descriptor = {
+    .string = bos_descriptor_bytes,
+    .string_len = (uint32_t)sizeof(bos_descriptor_bytes),
+};
+
+static int initialize_usb_serial(void) {
+    static const char hex[] = "0123456789ABCDEF";
+    const uint32_t unique_id[USB_SERIAL_UID_WORDS] = {CM_EFM->UQID0, CM_EFM->UQID1, CM_EFM->UQID2};
+    const uint32_t all_bits = unique_id[0] & unique_id[1] & unique_id[2];
+    const uint32_t any_bits = unique_id[0] | unique_id[1] | unique_id[2];
+    if (any_bits == 0U || all_bits == UINT32_MAX)
+        return -1;
+
+    const size_t prefix_length = sizeof(HC32_PRODUCT_USB_SERIAL_PREFIX) - 1U;
+    memcpy(usb_serial, HC32_PRODUCT_USB_SERIAL_PREFIX, prefix_length);
+    size_t output = prefix_length;
+    for (size_t word = 0U; word < USB_SERIAL_UID_WORDS; ++word) {
+        for (uint32_t nibble = 0U; nibble < 8U; ++nibble) {
+            const uint32_t shift = 28U - (nibble * 4U);
+            const size_t digit = (size_t)((unique_id[word] >> shift) & UINT32_C(0x0F));
+            usb_serial[output++] = hex[digit];
+        }
+    }
+    usb_serial[output] = '\0';
+    string_descriptors[3] = usb_serial;
+    return 0;
+}
 
 static const uint8_t* device_descriptor_get(uint8_t speed) {
     (void)speed;
@@ -53,6 +122,8 @@ static const struct usb_descriptor descriptors = {
     .device_descriptor_callback = device_descriptor_get,
     .config_descriptor_callback = config_descriptor_get,
     .string_descriptor_callback = string_descriptor_get,
+    .msosv2_descriptor = &msosv2_descriptor,
+    .bos_descriptor = &bos_descriptor,
 };
 
 USB_MEM_ALIGNX static uint8_t rx_buffer[UPDATE_RX_CAPACITY];
@@ -136,14 +207,16 @@ static void recover_transport(void) {
 }
 
 int usb_fw_update_init(void) {
+    if (initialize_usb_serial() != 0)
+        return -1;
     fw_update_storage_mcuboot_init(&storage);
     fw_update_boot_control_mcuboot_init(&boot_control);
     const struct fw_update_manager_config config = {
         .storage = &storage,
         .boot_control = &boot_control,
-        .hardware_id = UINT32_C(0x00004600),
-        .board_id = 1U,
-        .board_revision = 2U,
+        .hardware_id = HC32_PRODUCT_HARDWARE_ID,
+        .board_id = HC32_PRODUCT_BOARD_ID,
+        .board_revision = HC32_PRODUCT_BOARD_REVISION,
         .application_version =
             {
                 .major = APP_VERSION_MAJOR,

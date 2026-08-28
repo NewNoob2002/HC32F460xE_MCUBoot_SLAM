@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T03:41:59Z"
+  operation: "usb-storage-write/reset"
+  authorization: "User authorized Secondary install, COMMIT/reset and final restore for the Boot recovery HIL"
+  target:
+    board: "HC32F460xE; expected Boot recovery cafe:0001; hardware revision 2"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "J-Link 000020781318"
+    transport: "USB vendor bulk interface 0"
+  artifact_or_stimulus: "artifacts/updater_signed_attempt2.bin, 38339 bytes, version 1.0.0, SHA256 acc9be453440823b13045da96d42c769e1f5ecd85a2364821e49b1a5c1cfe1b0"
+  limits: "Proceed only after attempt-2 info reports boot-recovery, hardware 0x00004600, board 1/revision 2 and capacity 196608; one BEGIN/DATA/END/COMMIT sequence; Secondary-only backend bounds; one 30-second wait for cafe:0002 version 1.0.0; no automatic retry"
+  recovery_plan: "Retain attempt-2 logs/snapshots and restore exact pre-HIL backup on any failure; after success, capture Primary/Secondary evidence before mandatory final restore"
+  approved: true

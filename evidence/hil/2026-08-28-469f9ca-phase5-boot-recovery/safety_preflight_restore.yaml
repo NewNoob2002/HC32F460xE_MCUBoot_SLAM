@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T03:25:51Z"
+  operation: "flash/restore/reset"
+  authorization: "User explicitly required final restoration of the current board after the Boot recovery HIL"
+  target:
+    board: "HC32F460xE; Cortex-M4; hardware revision 2"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "J-Link 000020781318"
+    transport: "SWD 4000 kHz; VTref measured 3.346 V"
+  artifact_or_stimulus: "backup/pre_hil_a_00000000_00075fff.bin, 483328 bytes, SHA256 68749a28839ef5b1e98473e014b611261add7434adb3dbc4419793c3fabc9b05, destination 0x00000000-0x00075FFF"
+  limits: "Erase/load/verify exactly 0x00000000-0x00075FFF; never access Reserved 0x00076000-0x0007FFFF; no unlock/recover, OTP, option-byte or protection changes"
+  recovery_plan: "If restore or verify fails, keep target halted, retain both identical backups, and do not retry with mass erase or unlock; after verify, reset/run and capture a full 0x76000 post-restore readback for SHA256 comparison"
+  approved: true

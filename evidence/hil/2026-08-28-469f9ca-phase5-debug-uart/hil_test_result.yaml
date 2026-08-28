@@ -1,0 +1,33 @@
+test_result:
+  schema_version: 1
+  source_revision: "469f9ca6083e32bfaaaaba1cc3bd1b5f2f72178d"
+  artifact_checksums:
+    build/Debug/Boot/boot_firmware.bin: "a5432d613f6718aa1b51d5ea06fa32e09944b313a5a08fd9e1e3b4f5eeab9fb5"
+    build/Debug/artifacts/updater_primary.bin: "224d7cb0571590cfb2a6274fa429000f28b281e2d6edfaa9062e869d4c841164"
+  safety_preflight: "safety_preflight_uart.yaml"
+  level: "hil"
+  target: "HC32F460xE revision 2; Horco CMSIS-DAP 5844333732"
+  command: "Debug UART boot capture, live register inspection, bounded USART3 TDR stimulus, DAPLink VCOM self-loop, and official DDL comparison"
+  timing:
+    started_at_utc: "2026-08-28T07:11:02Z"
+    duration_ms: 8309000
+    timeout_ms: 9000000
+  attempts: 3
+  passed: false
+  counts:
+    total: 6
+    passed: 5
+    failed: 1
+    skipped: 0
+  classified_failures:
+    - "hardware-uart-physical-path-unverified"
+  logs:
+    - "logs/04_reset_capture.txt"
+    - "logs/07_uart_registers.txt"
+    - "logs/17_daplink_vcom_loopback.txt"
+    - "logs/18_uart_tdr_stimulus_attempt3.txt"
+    - "logs/20_ddl_usart_comparison.txt"
+  requirements:
+    - "Debug builds emit EasyLogger startup output on USART3 TX PB13/TP2"
+    - "DAPLink UART captures the startup output at 115200 8N1"
+  disposition: "DEFERRED_HARDWARE_INVESTIGATION; do not block consolidation of unrelated Phase 5 software and HIL results"

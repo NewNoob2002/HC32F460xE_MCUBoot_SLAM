@@ -1,0 +1,4 @@
+Script started on 2026-08-28 11:57:48+08:00 [COMMAND="rtk head -c 38339 /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-boot-recovery/snapshots/primary_image_after_attempt2.bin | rtk sha256sum" <not executed on terminal>]
+acc9be453440823b13045da96d42c769e1f5ecd85a2364821e49b1a5c1cfe1b0  -
+
+Script done on 2026-08-28 11:57:48+08:00 [COMMAND_EXIT_CODE="0"]

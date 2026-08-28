@@ -19,6 +19,7 @@ add_library(hc32_ll STATIC
     ${HC32_LL_DIR}/src/hc32_ll_interrupts.c
     ${HC32_LL_DIR}/src/hc32_ll_pwc.c
     ${HC32_LL_DIR}/src/hc32_ll_sram.c
+    ${HC32_LL_DIR}/src/hc32_ll_usart.c
     ${HC32_LL_DIR}/src/hc32_ll_utility.c
     ${HC32_LL_DIR}/src/hc32_ll_usb.c
 )

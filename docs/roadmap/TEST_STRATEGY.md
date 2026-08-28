@@ -70,7 +70,7 @@ HC32 HIL proves:
 
 Phase 5 orders these checks deliberately: the same Rust client core must first
 pass fake E2E, then blocking nusb USB HIL, then confirmation plus another reset
-for persistence. Only afterward may the Slint GUI and clean-OS package tests use
+for persistence. Only afterward may the Slint GUI and clean-host portable tests use
 that core. The Python loopback remains a separate Phase 4 regression oracle.
 
 Every state-changing HIL run requires a safety preflight containing target/probe identity, permitted Flash ranges, firmware hashes, voltage/current bounds if controlled, timeout, cleanup and recovery path. Passive logs start before stimulus. Failures are retained before retry/reset.
@@ -142,7 +142,7 @@ A test without an oracle or linked requirement is not release evidence. Coverage
 - build isolation proving portable targets need no HC32 definitions/include paths.
 - Rust format/clippy/locked tests and shared Protocol Golden Vectors.
 - Fake E2E through the production C Manager and fake backends.
-- Windows installer signature/content checks and Linux package/udev-rule checks.
+- Windows EXE signature/portable-ZIP checks and Linux direct-run/udev-rule checks.
 
 Normal CI does not claim HIL. Hardware CI may be added only with exclusive fixture locking, bounded timeouts and immutable evidence upload.
 

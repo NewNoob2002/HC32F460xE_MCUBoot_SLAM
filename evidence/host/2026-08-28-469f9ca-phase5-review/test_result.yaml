@@ -1,0 +1,31 @@
+test_result:
+  schema_version: 1
+  source_revision: "469f9ca6083e32bfaaaaba1cc3bd1b5f2f72178d"
+  level: "host-unit/integration/build"
+  target: "Linux host and HC32F460 Debug/Release cross-build"
+  command: "Final Phase 5 format, Rust, CTest, firmware/image, WinUSB, identity-negative and evidence verification matrix"
+  timing:
+    started_at_utc: "2026-08-28T09:31:00Z"
+    duration_ms: 1596000
+    timeout_ms: 2400000
+  attempts: 1
+  passed: true
+  counts:
+    total: 10
+    passed: 10
+    failed: 0
+    skipped: 2
+  classified_failures: []
+  requirements:
+    - "Portable updater logic and C Manager fake E2E pass"
+    - "Firmware builds fit and signed images validate"
+    - "Product identity and compatibility input validation is consistent"
+    - "Microsoft OS 2.0 descriptors match both production VID/PID states"
+    - "Evidence checksum manifests are complete"
+  skipped_requirements:
+    - "Production Authenticode signing and verification"
+    - "Clean-Windows portable execution"
+  non_product_failures_retained:
+    - "Direct fake-e2e invocation without CTest's HC32_FAKE_DEVICE environment"
+    - "Release verification invoked after its ephemeral key was intentionally deleted"
+    - "Post-review Windows cross-link without installed MinGW CRT/import libraries"

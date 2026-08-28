@@ -31,6 +31,7 @@ function(add_mcuboot_signed_artifacts target)
         --pad-header
         --erased-val 0xff
         --key "${MCUBOOT_ACTIVE_SIGNING_KEY}"
+        --custom-tlv 0x00A0 "0x${HC32_COMPATIBILITY_TLV_HEX}"
     )
 
     file(MAKE_DIRECTORY "${artifact_dir}")
@@ -39,18 +40,21 @@ function(add_mcuboot_signed_artifacts target)
         COMMAND "${MCUBOOT_PYTHON}" "${MCUBOOT_IMGTOOL}" ${sign_args}
                 "${raw_image}" "${signed_image}"
         DEPENDS "${raw_image}" "${MCUBOOT_ACTIVE_SIGNING_KEY}" "${MCUBOOT_IMGTOOL}"
+                "${HC32_PRODUCT_IDENTITY_FILE}"
         VERBATIM
     )
     add_custom_command(OUTPUT "${primary_image}"
         COMMAND "${MCUBOOT_PYTHON}" "${MCUBOOT_IMGTOOL}" ${sign_args}
                 --pad --confirm "${raw_image}" "${primary_image}"
         DEPENDS "${raw_image}" "${MCUBOOT_ACTIVE_SIGNING_KEY}" "${MCUBOOT_IMGTOOL}"
+                "${HC32_PRODUCT_IDENTITY_FILE}"
         VERBATIM
     )
     add_custom_command(OUTPUT "${update_image}"
         COMMAND "${MCUBOOT_PYTHON}" "${MCUBOOT_IMGTOOL}" ${sign_args}
                 --pad --test "${raw_image}" "${update_image}"
         DEPENDS "${raw_image}" "${MCUBOOT_ACTIVE_SIGNING_KEY}" "${MCUBOOT_IMGTOOL}"
+                "${HC32_PRODUCT_IDENTITY_FILE}"
         VERBATIM
     )
 

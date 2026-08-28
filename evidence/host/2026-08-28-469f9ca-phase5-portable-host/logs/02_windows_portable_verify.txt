@@ -1,0 +1,18 @@
+Script started on 2026-08-28 17:38:28+08:00 [COMMAND="rtk sha256sum Tools/updater/dist/hc32-updater_0.1.0_windows-x64.zip Tools/updater/target/x86_64-pc-windows-gnu/release/hc32-updater.exe Tools/updater/target/x86_64-pc-windows-gnu/release/hc32-updater-gui.exe && rtk file Tools/updater/target/x86_64-pc-windows-gnu/release/hc32-updater.exe Tools/updater/target/x86_64-pc-windows-gnu/release/hc32-updater-gui.exe && rtk unzip -t Tools/updater/dist/hc32-updater_0.1.0_windows-x64.zip && rtk unzip -p Tools/updater/dist/hc32-updater_0.1.0_windows-x64.zip SHA256SUMS && rtk unzip -p Tools/updater/dist/hc32-updater_0.1.0_windows-x64.zip hc32-updater.exe | rtk sha256sum && rtk unzip -p Tools/updater/dist/hc32-updater_0.1.0_windows-x64.zip hc32-updater-gui.exe | rtk sha256sum" <not executed on terminal>]
+4a501fa32a3b229ccd7373f86cfd9ee704038865f4eb81f3fd2712469552f01f  Tools/updater/dist/hc32-updater_0.1.0_windows-x64.zip
+84292dfd2881161b8aa6bd04981847603b4840dfaecbd89a9135967f273e879b  Tools/updater/target/x86_64-pc-windows-gnu/release/hc32-updater.exe
+1102adfdeb356412e3f28acc51dd64da065520d6d01d25b97d0f5f95a48842c8  Tools/updater/target/x86_64-pc-windows-gnu/release/hc32-updater-gui.exe
+Tools/updater/target/x86_64-pc-windows-gnu/release/hc32-updater.exe:     PE32+ executable (console) x86-64 (stripped to external PDB), for MS Windows, 10 sections
+Tools/updater/target/x86_64-pc-windows-gnu/release/hc32-updater-gui.exe: PE32+ executable (console) x86-64 (stripped to external PDB), for MS Windows, 10 sections
+Archive:  Tools/updater/dist/hc32-updater_0.1.0_windows-x64.zip
+    testing: README.txt               OK
+    testing: SHA256SUMS               OK
+    testing: hc32-updater.exe         OK
+    testing: hc32-updater-gui.exe     OK
+No errors detected in compressed data of Tools/updater/dist/hc32-updater_0.1.0_windows-x64.zip.
+84292dfd2881161b8aa6bd04981847603b4840dfaecbd89a9135967f273e879b  hc32-updater.exe
+1102adfdeb356412e3f28acc51dd64da065520d6d01d25b97d0f5f95a48842c8  hc32-updater-gui.exe
+84292dfd2881161b8aa6bd04981847603b4840dfaecbd89a9135967f273e879b  -
+1102adfdeb356412e3f28acc51dd64da065520d6d01d25b97d0f5f95a48842c8  -
+
+Script done on 2026-08-28 17:38:29+08:00 [COMMAND_EXIT_CODE="0"]

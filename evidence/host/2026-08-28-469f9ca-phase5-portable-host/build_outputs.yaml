@@ -1,0 +1,30 @@
+build_output:
+  schema_version: 1
+  created_at_utc: "2026-08-28T09:39:14Z"
+  project: "HC32 Phase 5 host updater"
+  target: "Linux x86-64 direct-run and Windows x86-64 portable archive"
+  operating_system: "linux/windows-host-tools"
+  configuration: "release"
+  source_revision: "469f9ca6083e32bfaaaaba1cc3bd1b5f2f72178d"
+  source_dirty: true
+  toolchain:
+    id: "cargo/rustc; prior Windows GNU cross output"
+    version: "locked Cargo dependencies; see logs"
+    target: "x86_64-unknown-linux-gnu and x86_64-pc-windows-gnu"
+  artifacts:
+    linux_cli: "Tools/updater/target/release/hc32-updater"
+    linux_gui: "Tools/updater/target/release/hc32-updater-gui"
+    windows_cli: "Tools/updater/target/x86_64-pc-windows-gnu/release/hc32-updater.exe"
+    windows_gui: "Tools/updater/target/x86_64-pc-windows-gnu/release/hc32-updater-gui.exe"
+    windows_zip: "Tools/updater/dist/hc32-updater_0.1.0_windows-x64.zip"
+  checksums:
+    linux_cli: "bdf4d2bccf16a2637f8db35d51513041bcf09b9d8e9762451864f7485c9c6c14"
+    linux_gui: "b7a11480c085a4a238a9e856528599dfe0038e1fd2f6cea66f02c3cdc0660cae"
+    windows_cli: "84292dfd2881161b8aa6bd04981847603b4840dfaecbd89a9135967f273e879b"
+    windows_gui: "1102adfdeb356412e3f28acc51dd64da065520d6d01d25b97d0f5f95a48842c8"
+    windows_zip: "4a501fa32a3b229ccd7373f86cfd9ee704038865f4eb81f3fd2712469552f01f"
+  limitations:
+    - "Windows EXEs are unsigned"
+    - "No clean-Windows runtime validation"
+    - "Fresh post-review Windows cross-build blocked by missing MinGW CRT/import libraries"
+    - "Generated Windows ZIP was removed after its hash/content verification; logs retain the result"

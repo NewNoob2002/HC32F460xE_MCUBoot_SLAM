@@ -1,0 +1,13 @@
+date=2026-08-28
+base_revision=469f9ca6083e32bfaaaaba1cc3bd1b5f2f72178d
+worktree_clean=false
+platform=Linux X11 Cinnamon
+release_build=PASS
+gui_launch=PASS
+window_size=560x440
+scroll_container=Slint ScrollView
+mouse_wheel_scroll=PASS user-confirmed
+lower_controls_visible=PASS user-confirmed
+empty_path_update_disabled=PASS
+firmware_install=NOT_RUN
+target_flash_write=NOT_RUN

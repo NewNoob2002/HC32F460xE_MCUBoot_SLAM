@@ -1,0 +1,2029 @@
+diff --git a/App/CMakeLists.txt b/App/CMakeLists.txt
+index d6340a0..e6ceb27 100644
+--- a/App/CMakeLists.txt
++++ b/App/CMakeLists.txt
+@@ -105,3 +105,14 @@ target_link_options(usb_fw_updater PRIVATE
+ )
+ add_firmware_artifacts(usb_fw_updater)
+ add_mcuboot_signed_artifacts(usb_fw_updater updater)
++
++add_custom_target(verify_winusb_descriptors
++    COMMAND "${MCUBOOT_PYTHON}" "${PROJECT_SOURCE_DIR}/Tests/verify_winusb_descriptors.py"
++            "${CMAKE_BINARY_DIR}/Boot/boot_firmware.bin"
++            "${CMAKE_CURRENT_BINARY_DIR}/usb_fw_updater.bin"
++            "${HC32_USB_VID_VALUE}"
++            "${HC32_USB_BOOT_PID_VALUE}"
++            "${HC32_USB_APPLICATION_PID_VALUE}"
++    DEPENDS boot_firmware usb_fw_updater
++    VERBATIM
++)
+diff --git a/App/Core/Src/usb_fw_update.c b/App/Core/Src/usb_fw_update.c
+index 54cf082..d14021d 100644
+--- a/App/Core/Src/usb_fw_update.c
++++ b/App/Core/Src/usb_fw_update.c
+@@ -9,6 +9,7 @@
+ #include "fw_update/manager.h"
+ #include "fw_update/storage_mcuboot.h"
+ #include "hc32f460.h"
++#include "product_identity.h"
+ #include "usbd_core.h"
+ 
+ #define UPDATE_BUS_ID      0U
+@@ -16,9 +17,25 @@
+ #define UPDATE_OUT_EP      0x02U
+ #define UPDATE_MPS         64U
+ #define UPDATE_RX_CAPACITY 1024U
++#define WINUSB_VENDOR_CODE UINT8_C(0x20)
++#define MSOS_DESCRIPTOR_SET_TOTAL_LENGTH                                                                               \
++    (WINUSB_DESCRIPTOR_SET_HEADER_SIZE + USB_MSOSV2_COMP_ID_FUNCTION_WINUSB_SINGLE_DESCRIPTOR_LEN)
++#define BOS_DESCRIPTOR_TOTAL_LENGTH (5U + USB_BOS_CAP_PLATFORM_WINUSB_DESCRIPTOR_LEN)
++
++#ifndef USB_FW_UPDATE_BOOT_RECOVERY
++#define USB_FW_UPDATE_BOOT_RECOVERY 0
++#endif
++
++#if USB_FW_UPDATE_BOOT_RECOVERY
++#define UPDATE_USB_PID     HC32_PRODUCT_USB_BOOT_PID
++#define UPDATE_USB_PRODUCT HC32_PRODUCT_USB_BOOT_PRODUCT
++#else
++#define UPDATE_USB_PID     HC32_PRODUCT_USB_APPLICATION_PID
++#define UPDATE_USB_PRODUCT HC32_PRODUCT_USB_APPLICATION_PRODUCT
++#endif
+ 
+ static const uint8_t device_descriptor[] = {
+-    USB_DEVICE_DESCRIPTOR_INIT(USB_2_0, 0x00, 0x00, 0x00, 0xFFFE, 0xFFFF, 0x0001, 0x01)};
++    USB_DEVICE_DESCRIPTOR_INIT(USB_2_1, 0x00, 0x00, 0x00, HC32_PRODUCT_USB_VID, UPDATE_USB_PID, 0x0001, 0x01)};
+ 
+ static const uint8_t config_descriptor[] = {
+     USB_CONFIG_DESCRIPTOR_INIT(9 + 9 + 7 + 7, 1, 1, USB_CONFIG_BUS_POWERED, 100),
+@@ -28,8 +45,33 @@ static const uint8_t config_descriptor[] = {
+ };
+ 
+ static const char* string_descriptors[] = {
+-    (const char[]){0x09, 0x04},    "HC32 Phase 5 Lab", "HC32 Firmware Updater", "HC32F460-PHASE5-0001",
+-    "Vendor Bulk Firmware Update",
++    (const char[]){0x09, 0x04}, HC32_PRODUCT_USB_MANUFACTURER, UPDATE_USB_PRODUCT,
++    HC32_PRODUCT_USB_SERIAL,    "Vendor Bulk Firmware Update",
++};
++
++static const uint8_t msosv2_descriptor_set[] = {
++    USB_MSOSV2_COMP_ID_SET_HEADER_DESCRIPTOR_INIT(MSOS_DESCRIPTOR_SET_TOTAL_LENGTH),
++    USB_MSOSV2_COMP_ID_FUNCTION_WINUSB_SINGLE_DESCRIPTOR_INIT(),
++};
++
++static const uint8_t bos_descriptor_bytes[] = {
++    USB_BOS_HEADER_DESCRIPTOR_INIT(BOS_DESCRIPTOR_TOTAL_LENGTH, 1),
++    USB_BOS_CAP_PLATFORM_WINUSB_DESCRIPTOR_INIT(WINUSB_VENDOR_CODE, MSOS_DESCRIPTOR_SET_TOTAL_LENGTH),
++};
++
++_Static_assert(sizeof(msosv2_descriptor_set) == MSOS_DESCRIPTOR_SET_TOTAL_LENGTH,
++               "Microsoft OS 2.0 descriptor length mismatch");
++_Static_assert(sizeof(bos_descriptor_bytes) == BOS_DESCRIPTOR_TOTAL_LENGTH, "BOS descriptor length mismatch");
++
++static const struct usb_msosv2_descriptor msosv2_descriptor = {
++    .compat_id = msosv2_descriptor_set,
++    .compat_id_len = (uint16_t)sizeof(msosv2_descriptor_set),
++    .vendor_code = WINUSB_VENDOR_CODE,
++};
++
++static const struct usb_bos_descriptor bos_descriptor = {
++    .string = bos_descriptor_bytes,
++    .string_len = (uint32_t)sizeof(bos_descriptor_bytes),
+ };
+ 
+ static const uint8_t* device_descriptor_get(uint8_t speed) {
+@@ -53,6 +95,8 @@ static const struct usb_descriptor descriptors = {
+     .device_descriptor_callback = device_descriptor_get,
+     .config_descriptor_callback = config_descriptor_get,
+     .string_descriptor_callback = string_descriptor_get,
++    .msosv2_descriptor = &msosv2_descriptor,
++    .bos_descriptor = &bos_descriptor,
+ };
+ 
+ USB_MEM_ALIGNX static uint8_t rx_buffer[UPDATE_RX_CAPACITY];
+@@ -141,9 +185,9 @@ int usb_fw_update_init(void) {
+     const struct fw_update_manager_config config = {
+         .storage = &storage,
+         .boot_control = &boot_control,
+-        .hardware_id = UINT32_C(0x00004600),
+-        .board_id = 1U,
+-        .board_revision = 2U,
++        .hardware_id = HC32_PRODUCT_HARDWARE_ID,
++        .board_id = HC32_PRODUCT_BOARD_ID,
++        .board_revision = HC32_PRODUCT_BOARD_REVISION,
+         .application_version =
+             {
+                 .major = APP_VERSION_MAJOR,
+diff --git a/Boot/CMakeLists.txt b/Boot/CMakeLists.txt
+index a86afcd..73501ae 100644
+--- a/Boot/CMakeLists.txt
++++ b/Boot/CMakeLists.txt
+@@ -1,11 +1,38 @@
+ add_executable(boot_firmware
+     Core/Src/main.c
++    ${PROJECT_SOURCE_DIR}/App/Core/Src/usb_fw_update.c
++    ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Src/usb_dc_hc32f460.c
+     ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Src/syscalls.c
+     $<TARGET_OBJECTS:hc32_startup_boot>
+ )
+ set_target_properties(boot_firmware PROPERTIES SUFFIX .elf)
+-target_include_directories(boot_firmware PRIVATE Core/Inc)
+-target_link_libraries(boot_firmware PRIVATE hc32_platform hc32_device mcuboot_bootutil)
++target_include_directories(boot_firmware PRIVATE
++    Core/Inc
++    ${PROJECT_SOURCE_DIR}/App/Core/Inc
++)
++target_include_directories(boot_firmware SYSTEM PRIVATE
++    ${PROJECT_SOURCE_DIR}/components/cherryusb/common
++    ${PROJECT_SOURCE_DIR}/components/cherryusb/core
++)
++target_compile_definitions(boot_firmware PRIVATE
++    USB_FW_UPDATE_BOOT_RECOVERY=1
++    APP_VERSION_MAJOR=0
++    APP_VERSION_MINOR=0
++    APP_VERSION_REVISION=0
++    APP_VERSION_BUILD=0
++)
++set_source_files_properties(
++    Core/Src/main.c
++    ${PROJECT_SOURCE_DIR}/App/Core/Src/usb_fw_update.c
++    PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wconversion;-Wshadow;-Werror"
++)
++target_link_libraries(boot_firmware PRIVATE
++    cherryusb_device
++    fw_update_mcuboot
++    hc32_platform
++    hc32_device
++    mcuboot_bootutil
++)
+ target_link_options(boot_firmware PRIVATE
+     -T${PROJECT_SOURCE_DIR}/Linker/boot.ld
+     -Wl,-Map,${CMAKE_CURRENT_BINARY_DIR}/boot_firmware.map
+diff --git a/Boot/Core/Src/main.c b/Boot/Core/Src/main.c
+index dd50bf7..3dcec02 100644
+--- a/Boot/Core/Src/main.c
++++ b/Boot/Core/Src/main.c
+@@ -1,7 +1,27 @@
+ #include "boot_handover.h"
+-#include "bsp_clock.h"
+ #include "bootutil/bootutil.h"
+-#include "hc32f460.h"
++#include "bsp_clock.h"
++#include "bsp_external_watchdog.h"
++#include "bsp_reset.h"
++#include "hc32_ll_utility.h"
++#include "usb_fw_update.h"
++
++volatile int g_boot_recovery_init_result;
++
++static _Noreturn void run_recovery_updater(void) {
++    uint32_t now_ms = 0U;
++
++    if (!bsp_external_watchdog_init(now_ms)) {
++        for (;;) {}
++    }
++    g_boot_recovery_init_result = usb_fw_update_init();
++    for (;;) {
++        DDL_DelayMS(1U);
++        bsp_external_watchdog_poll(++now_ms);
++        if (g_boot_recovery_init_result == 0 && usb_fw_update_poll(now_ms) == USB_FW_UPDATE_ACTION_RESET)
++            bsp_system_reset();
++    }
++}
+ 
+ int main(void) {
+     struct boot_rsp rsp = {0};
+@@ -9,10 +29,7 @@ int main(void) {
+ 
+     bsp_clock_init();
+     FIH_CALL(boot_go, rc, &rsp);
+-    if (FIH_NOT_EQ(rc, FIH_SUCCESS)) {
+-        for (;;) {
+-            __WFI();
+-        }
+-    }
++    if (FIH_NOT_EQ(rc, FIH_SUCCESS))
++        run_recovery_updater();
+     boot_handover(&rsp);
+ }
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 51d032f..14d0d3f 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -6,12 +6,18 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+ option(BOOT_BUILD_HOST_TESTS "Build host-only validation tests" OFF)
+ 
+ include(cmake/MemoryMap.cmake)
++include(cmake/ProductIdentity.cmake)
+ file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated/Config")
+ configure_file(
+     Config/boot_memory_map.h.in
+     "${CMAKE_CURRENT_BINARY_DIR}/generated/Config/boot_memory_map.h"
+     @ONLY
+ )
++configure_file(
++    Config/product_identity.h.in
++    "${CMAKE_CURRENT_BINARY_DIR}/generated/Config/product_identity.h"
++    @ONLY
++)
+ 
+ if(BOOT_BUILD_HOST_TESTS)
+     enable_testing()
+diff --git a/Tests/CMakeLists.txt b/Tests/CMakeLists.txt
+index 00c11cf..81a245b 100644
+--- a/Tests/CMakeLists.txt
++++ b/Tests/CMakeLists.txt
+@@ -61,6 +61,15 @@ target_include_directories(fw_update_mcuboot_backend_tests PRIVATE
+ )
+ add_test(NAME fw_update_mcuboot_backend COMMAND fw_update_mcuboot_backend_tests)
+ 
++add_test(
++    NAME product_identity_release_gate
++    COMMAND ${CMAKE_COMMAND}
++        -DHC32_PRODUCT_IDENTITY_FILE=${PROJECT_SOURCE_DIR}/Config/ProductIdentity.env
++        -DHC32_PRODUCT_RELEASE=ON
++        -P ${PROJECT_SOURCE_DIR}/cmake/ProductIdentity.cmake
++)
++set_tests_properties(product_identity_release_gate PROPERTIES WILL_FAIL TRUE)
++
+ add_executable(fw_protocol_tests
+     fw_protocol_tests.c
+     ${PROJECT_SOURCE_DIR}/components/fw_update/src/protocol.c
+diff --git a/Tests/fw_update_mcuboot_backend_tests.c b/Tests/fw_update_mcuboot_backend_tests.c
+index 8cedb4c..0e09842 100644
+--- a/Tests/fw_update_mcuboot_backend_tests.c
++++ b/Tests/fw_update_mcuboot_backend_tests.c
+@@ -1,10 +1,14 @@
+ #include <assert.h>
+ #include <stddef.h>
+ #include <stdint.h>
++#include <string.h>
+ 
++#include "bootutil/fault_injection_hardening.h"
++#include "bootutil/image.h"
+ #include "flash_map_backend/flash_map_backend.h"
+ #include "fw_update/boot_control_mcuboot.h"
+ #include "fw_update/storage_mcuboot.h"
++#include "product_identity.h"
+ 
+ static const struct flash_area secondary = {FLASH_AREA_ID_SECONDARY, FLASH_DEVICE_INTERNAL_FLASH, 0U,
+                                             SECONDARY_SLOT_BASE, SECONDARY_SLOT_SIZE};
+@@ -17,6 +21,16 @@ static int boot_result;
+ static int pending_image;
+ static int pending_permanent;
+ static int confirmed_image;
++static int pending_calls;
++static fih_ret validation_result;
++static int tlv_begin_result;
++static unsigned tlv_count;
++static unsigned tlv_next_calls;
++static uint16_t tlv_length;
++static uint8_t compatibility[HC32_COMPATIBILITY_PAYLOAD_SIZE];
++
++fih_ret FIH_SUCCESS = FIH_POSITIVE_VALUE;
++fih_ret FIH_FAILURE = FIH_NEGATIVE_VALUE;
+ 
+ int flash_area_open(uint8_t id, const struct flash_area** area) {
+     opened_id = id;
+@@ -37,6 +51,9 @@ int flash_area_read(const struct flash_area* area, uint32_t offset, void* data,
+     assert(data != NULL);
+     io_offset = offset;
+     io_length = length;
++    memset(data, 0, length);
++    if (offset == 64U && length == sizeof(compatibility))
++        memcpy(data, compatibility, sizeof(compatibility));
+     return flash_result;
+ }
+ 
+@@ -75,11 +92,43 @@ int flash_area_get_sector(const struct flash_area* area, uint32_t offset, struct
+ }
+ 
+ int boot_set_pending_multi(int image_index, int permanent) {
++    ++pending_calls;
+     pending_image = image_index;
+     pending_permanent = permanent;
+     return boot_result;
+ }
+ 
++fih_ret bootutil_img_validate(struct boot_loader_state* state, struct image_header* header,
++                              const struct flash_area* area, uint8_t* temporary, uint32_t temporary_size, uint8_t* seed,
++                              int seed_length, uint8_t* output_hash) {
++    (void)state;
++    (void)header;
++    (void)area;
++    (void)temporary;
++    (void)temporary_size;
++    (void)seed;
++    (void)seed_length;
++    (void)output_hash;
++    return validation_result;
++}
++
++int bootutil_tlv_iter_begin(struct image_tlv_iter* iterator, const struct image_header* header,
++                            const struct flash_area* area, uint16_t type, bool protected) {
++    assert(iterator != NULL && header != NULL && area == &secondary);
++    assert(type == HC32_COMPATIBILITY_TLV_TYPE && protected);
++    tlv_next_calls = 0U;
++    return tlv_begin_result;
++}
++
++int bootutil_tlv_iter_next(struct image_tlv_iter* iterator, uint32_t* offset, uint16_t* length, uint16_t* type) {
++    assert(iterator != NULL && offset != NULL && length != NULL && type == NULL);
++    if (tlv_next_calls++ >= tlv_count)
++        return 1;
++    *offset = 64U;
++    *length = tlv_length;
++    return 0;
++}
++
+ int boot_set_confirmed_multi(int image_index) {
+     confirmed_image = image_index;
+     return boot_result;
+@@ -123,6 +172,26 @@ static void test_storage_backend(void) {
+ static void test_boot_control_backend(void) {
+     struct fw_update_boot_control control;
+ 
++    open_result = 0;
++    flash_result = 0;
++    boot_result = 0;
++    validation_result = FIH_SUCCESS;
++    tlv_begin_result = 0;
++    tlv_count = 1U;
++    tlv_length = sizeof(compatibility);
++    compatibility[0] = HC32_COMPATIBILITY_FORMAT_VERSION;
++    compatibility[1] = 0U;
++    compatibility[2] = (uint8_t)HC32_PRODUCT_BOARD_REVISION;
++    compatibility[3] = (uint8_t)(HC32_PRODUCT_BOARD_REVISION >> 8U);
++    compatibility[4] = (uint8_t)HC32_PRODUCT_HARDWARE_ID;
++    compatibility[5] = (uint8_t)(HC32_PRODUCT_HARDWARE_ID >> 8U);
++    compatibility[6] = (uint8_t)(HC32_PRODUCT_HARDWARE_ID >> 16U);
++    compatibility[7] = (uint8_t)(HC32_PRODUCT_HARDWARE_ID >> 24U);
++    compatibility[8] = (uint8_t)HC32_PRODUCT_BOARD_ID;
++    compatibility[9] = (uint8_t)(HC32_PRODUCT_BOARD_ID >> 8U);
++    compatibility[10] = (uint8_t)(HC32_PRODUCT_BOARD_ID >> 16U);
++    compatibility[11] = (uint8_t)(HC32_PRODUCT_BOARD_ID >> 24U);
++
+     fw_update_boot_control_mcuboot_init(&control);
+     assert(fw_update_boot_control_request_test_upgrade(&control) == FW_UPDATE_OK);
+     assert(pending_image == 0 && pending_permanent == 0);
+@@ -132,6 +201,18 @@ static void test_boot_control_backend(void) {
+     boot_result = -9;
+     assert(fw_update_boot_control_request_test_upgrade(&control) == FW_UPDATE_ERR_BOOT_CONTROL);
+     assert(fw_update_boot_control_confirm_running_image(&control) == FW_UPDATE_ERR_BOOT_CONTROL);
++
++    boot_result = 0;
++    const int calls_before_rejection = pending_calls;
++    validation_result = FIH_FAILURE;
++    assert(fw_update_boot_control_request_test_upgrade(&control) == FW_UPDATE_ERR_BOOT_CONTROL);
++    validation_result = FIH_SUCCESS;
++    compatibility[4] ^= 1U;
++    assert(fw_update_boot_control_request_test_upgrade(&control) == FW_UPDATE_ERR_BOOT_CONTROL);
++    compatibility[4] ^= 1U;
++    tlv_count = 2U;
++    assert(fw_update_boot_control_request_test_upgrade(&control) == FW_UPDATE_ERR_BOOT_CONTROL);
++    assert(pending_calls == calls_before_rejection);
+ }
+ 
+ int main(void) {
+diff --git a/Tools/updater/Cargo.lock b/Tools/updater/Cargo.lock
+index 4a8d069..21348b8 100644
+--- a/Tools/updater/Cargo.lock
++++ b/Tools/updater/Cargo.lock
+@@ -260,6 +260,28 @@ dependencies = [
+  "stable_deref_trait",
+ ]
+ 
++[[package]]
++name = "ashpd"
++version = "0.11.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "d2f3f79755c74fd155000314eb349864caa787c6592eace6c6882dad873d9c39"
++dependencies = [
++ "async-fs",
++ "async-net",
++ "enumflags2",
++ "futures-channel",
++ "futures-util",
++ "rand",
++ "raw-window-handle",
++ "serde",
++ "serde_repr",
++ "url",
++ "wayland-backend",
++ "wayland-client",
++ "wayland-protocols",
++ "zbus",
++]
++
+ [[package]]
+ name = "async-broadcast"
+ version = "0.7.2"
+@@ -298,6 +320,17 @@ dependencies = [
+  "slab",
+ ]
+ 
++[[package]]
++name = "async-fs"
++version = "2.2.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "8034a681df4aed8b8edbd7fbe472401ecf009251c8b40556b304567052e294c5"
++dependencies = [
++ "async-lock",
++ "blocking",
++ "futures-lite",
++]
++
+ [[package]]
+ name = "async-io"
+ version = "2.6.0"
+@@ -327,6 +360,17 @@ dependencies = [
+  "pin-project-lite",
+ ]
+ 
++[[package]]
++name = "async-net"
++version = "2.0.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "b948000fad4873c1c9339d60f2623323a0cfd3816e5181033c6a5cb68b2accf7"
++dependencies = [
++ "async-io",
++ "blocking",
++ "futures-lite",
++]
++
+ [[package]]
+ name = "async-process"
+ version = "2.5.0"
+@@ -561,6 +605,15 @@ dependencies = [
+  "no_std_io2",
+ ]
+ 
++[[package]]
++name = "block-buffer"
++version = "0.10.4"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71"
++dependencies = [
++ "generic-array",
++]
++
+ [[package]]
+ name = "block2"
+ version = "0.5.1"
+@@ -921,6 +974,15 @@ version = "3.0.1"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "7704b5fdd17b18ae31c4c1da5a2e0305a2bf17b5249300a9ee9ed7b72114c636"
+ 
++[[package]]
++name = "cpufeatures"
++version = "0.2.17"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280"
++dependencies = [
++ "libc",
++]
++
+ [[package]]
+ name = "crc32fast"
+ version = "1.5.1"
+@@ -976,6 +1038,16 @@ version = "0.2.4"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "460fbee9c2c2f33933d720630a6a0bac33ba7053db5344fac858d4b8952d77d5"
+ 
++[[package]]
++name = "crypto-common"
++version = "0.1.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "78c8292055d1c1df0cce5d180393dc8cce0abec0a7102adb6c7b1eef6016d60a"
++dependencies = [
++ "generic-array",
++ "typenum",
++]
++
+ [[package]]
+ name = "ctor"
+ version = "0.10.1"
+@@ -1031,6 +1103,16 @@ dependencies = [
+  "syn 3.0.4",
+ ]
+ 
++[[package]]
++name = "digest"
++version = "0.10.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "9ed9a281f7bc9b7576e61468ba615a66a5c8cfdff42420a70aa82701a3b1e292"
++dependencies = [
++ "block-buffer",
++ "crypto-common",
++]
++
+ [[package]]
+ name = "dispatch"
+ version = "0.2.0"
+@@ -1044,6 +1126,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ checksum = "1e0e367e4e7da84520dedcac1901e4da967309406d1e51017ae1abfb97adbd38"
+ dependencies = [
+  "bitflags 2.13.1",
++ "block2 0.6.2",
++ "libc",
+  "objc2 0.6.4",
+ ]
+ 
+@@ -1552,6 +1636,16 @@ dependencies = [
+  "libc",
+ ]
+ 
++[[package]]
++name = "generic-array"
++version = "0.14.7"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "85649ca51fd72272d7821adaf274ad91c288277713d9c18820d8499a7ff69e9a"
++dependencies = [
++ "typenum",
++ "version_check",
++]
++
+ [[package]]
+ name = "gethostname"
+ version = "1.1.0"
+@@ -1757,6 +1851,8 @@ name = "hc32-updater"
+ version = "0.1.0"
+ dependencies = [
+  "nusb",
++ "rfd",
++ "sha2",
+  "slint",
+  "slint-build",
+ ]
+@@ -3502,6 +3598,12 @@ dependencies = [
+  "windows-sys 0.61.2",
+ ]
+ 
++[[package]]
++name = "pollster"
++version = "0.4.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "2f3a9f18d041e6d0e102a0a46750538147e5e8992d3b4873aaafee2520b00ce3"
++
+ [[package]]
+ name = "polycool"
+ version = "0.4.0"
+@@ -3907,6 +4009,30 @@ dependencies = [
+  "zune-jpeg",
+ ]
+ 
++[[package]]
++name = "rfd"
++version = "0.15.4"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "ef2bee61e6cffa4635c72d7d81a84294e28f0930db0ddcb0f66d10244674ebed"
++dependencies = [
++ "ashpd",
++ "block2 0.6.2",
++ "dispatch2",
++ "js-sys",
++ "log",
++ "objc2 0.6.4",
++ "objc2-app-kit 0.3.2",
++ "objc2-core-foundation",
++ "objc2-foundation 0.3.2",
++ "pollster",
++ "raw-window-handle",
++ "urlencoding",
++ "wasm-bindgen",
++ "wasm-bindgen-futures",
++ "web-sys",
++ "windows-sys 0.59.0",
++]
++
+ [[package]]
+ name = "rgb"
+ version = "0.8.53"
+@@ -4130,6 +4256,17 @@ dependencies = [
+  "serde_core",
+ ]
+ 
++[[package]]
++name = "sha2"
++version = "0.10.9"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "a7507d819769d01a365ab707794a4084392c824f54a7a6a7862f8c3d0892b283"
++dependencies = [
++ "cfg-if",
++ "cpufeatures",
++ "digest",
++]
++
+ [[package]]
+ name = "shlex"
+ version = "1.3.0"
+@@ -4862,6 +4999,12 @@ dependencies = [
+  "serde",
+ ]
+ 
++[[package]]
++name = "typenum"
++version = "1.20.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "b6f5e870be6c3b371b77fe0ee0bafb859fa4964b4404c27de1d380043c4dda20"
++
+ [[package]]
+ name = "udev"
+ version = "0.9.3"
+@@ -4973,8 +5116,15 @@ dependencies = [
+  "idna",
+  "percent-encoding",
+  "serde",
++ "serde_derive",
+ ]
+ 
++[[package]]
++name = "urlencoding"
++version = "2.1.3"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "daf8dba3b7eb870caf1ddeed7bc9d2a049f3cfdfae7cb521b087cc33ae4c49da"
++
+ [[package]]
+ name = "usvg"
+ version = "0.47.0"
+@@ -6215,6 +6365,7 @@ dependencies = [
+  "endi",
+  "enumflags2",
+  "serde",
++ "url",
+  "winnow 1.0.4",
+  "zcheapstr",
+  "zvariant_derive",
+diff --git a/Tools/updater/Cargo.toml b/Tools/updater/Cargo.toml
+index 1c8810f..be84d61 100644
+--- a/Tools/updater/Cargo.toml
++++ b/Tools/updater/Cargo.toml
+@@ -10,6 +10,8 @@ fake-e2e = []
+ 
+ [dependencies]
+ nusb = "=0.2.3"
++rfd = "=0.15.4"
++sha2 = "=0.10.9"
+ slint = "=1.16.0"
+ 
+ [build-dependencies]
+diff --git a/Tools/updater/README.md b/Tools/updater/README.md
+index 13d3313..70b6856 100644
+--- a/Tools/updater/README.md
++++ b/Tools/updater/README.md
+@@ -5,21 +5,34 @@ package. USB uses the pinned blocking `nusb` 0.2.3 API; no Tokio runtime, plugin
+ system or transport registry is present.
+ 
+ ```sh
+-cargo build --manifest-path Tools/updater/Cargo.toml --release --locked
+-Tools/updater/target/release/hc32-updater info
+-Tools/updater/target/release/hc32-updater install <signed-image>
+-Tools/updater/target/release/hc32-updater wait --version 2.0.0
++cargo build --manifest-path Tools/updater/Cargo.toml --locked
++Tools/updater/target/debug/hc32-updater info
++Tools/updater/target/debug/hc32-updater install <signed-image>
++Tools/updater/target/debug/hc32-updater wait --version 2.0.0
+ cargo run --manifest-path Tools/updater/Cargo.toml --bin hc32-updater-gui
+ ```
+ 
++Builds read the project identity from `Config/ProductIdentity.env`. Release
++builds fail closed while the placeholder serial remains; an external identity
++file supplies the unique production serial, for example:
++
++```sh
++HC32_PRODUCT_IDENTITY_FILE=/secure/product/ProductIdentity.env \
++  cargo build --manifest-path Tools/updater/Cargo.toml --release --locked
++```
++
+ Use `artifacts/updater_signed.bin` with `install`. The slot-padded
+ `updater_primary.bin` and `updater_update.bin` are not protocol-transfer inputs.
+ 
+-The current `fffe:ffff` VID/PID is for Phase 5 lab validation only. `install`
+-erases and writes the MCUboot Secondary Slot through the device Manager; run it
+-only after the HIL target/backup/restore safety preflight.
++Boot recovery enumerates as `cafe:0001`; the Application updater enumerates as
++`cafe:0002`. Both expose interface 0 through Microsoft OS 2.0 descriptors for
++automatic WinUSB binding. CLI/GUI accept either mode, while post-install `wait`
++accepts only the Application PID. `install` requires one valid protected
++compatibility TLV and rejects a mismatch before BEGIN/erase. Both modes write
++only MCUboot Secondary; run recovery tests only after the target/backup/restore
++safety preflight.
+ 
+ The GUI keeps blocking USB work on a worker thread and reports progress back to
+-Slint's main event loop. Enter the signed image path, refresh the device, then
+-install. A native file picker is deferred until the path-input workflow proves
+-insufficient.
++Slint's main event loop. Use Browse or enter the signed image path, refresh the
++device, then install. The content remains mouse-wheel scrollable on small or
++high-DPI displays.
+diff --git a/Tools/updater/build.rs b/Tools/updater/build.rs
+index 143e91b..f573fe9 100644
+--- a/Tools/updater/build.rs
++++ b/Tools/updater/build.rs
+@@ -1,3 +1,103 @@
++use std::collections::HashMap;
++use std::env;
++use std::fs;
++use std::path::PathBuf;
++
+ fn main() {
++    generate_product_identity();
+     slint_build::compile("ui/app.slint").expect("failed to compile updater UI");
+ }
++
++fn generate_product_identity() {
++    println!("cargo:rerun-if-env-changed=HC32_PRODUCT_IDENTITY_FILE");
++    let manifest_dir = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap());
++    let path = env::var_os("HC32_PRODUCT_IDENTITY_FILE")
++        .map(PathBuf::from)
++        .unwrap_or_else(|| manifest_dir.join("../../Config/ProductIdentity.env"));
++    println!("cargo:rerun-if-changed={}", path.display());
++
++    let text = fs::read_to_string(&path).unwrap_or_else(|error| {
++        panic!(
++            "failed to read product identity {}: {error}",
++            path.display()
++        )
++    });
++    let mut values = HashMap::new();
++    for line in text.lines().map(str::trim) {
++        if line.is_empty() || line.starts_with('#') {
++            continue;
++        }
++        let (name, value) = line
++            .split_once('=')
++            .unwrap_or_else(|| panic!("invalid product identity line: {line}"));
++        assert!(
++            values.insert(name, value).is_none(),
++            "duplicate product identity key: {name}"
++        );
++    }
++
++    let class = required(&values, "HC32_PRODUCT_CLASS");
++    let hardware_id = number(required(&values, "HC32_HARDWARE_ID"), u32::MAX as u64);
++    let board_id = number(required(&values, "HC32_BOARD_ID"), u32::MAX as u64);
++    let board_revision = number(required(&values, "HC32_BOARD_REVISION"), u16::MAX as u64);
++    let usb_vid = number(required(&values, "HC32_USB_VID"), u16::MAX as u64);
++    let usb_boot_pid = number(required(&values, "HC32_USB_BOOT_PID"), u16::MAX as u64);
++    let usb_application_pid = number(
++        required(&values, "HC32_USB_APPLICATION_PID"),
++        u16::MAX as u64,
++    );
++    let manufacturer = required(&values, "HC32_USB_MANUFACTURER");
++    let boot_product = required(&values, "HC32_USB_BOOT_PRODUCT");
++    let application_product = required(&values, "HC32_USB_APPLICATION_PRODUCT");
++    let serial = required(&values, "HC32_USB_SERIAL");
++    assert!(
++        usb_boot_pid != usb_application_pid,
++        "Boot and Application USB PIDs must differ"
++    );
++
++    if env::var("PROFILE").as_deref() == Ok("release")
++        && (class != "production" || serial == "HC32F460-PHASE5-0001")
++    {
++        panic!("release requires HC32_PRODUCT_IDENTITY_FILE with assigned production identity");
++    }
++
++    let generated = format!(
++        "pub const HARDWARE_ID: u32 = {hardware_id};\n\
++         pub const BOARD_ID: u32 = {board_id};\n\
++         pub const BOARD_REVISION: u16 = {board_revision};\n\
++         pub const USB_VID: u16 = {usb_vid};\n\
++         pub const USB_BOOT_PID: u16 = {usb_boot_pid};\n\
++         pub const USB_APPLICATION_PID: u16 = {usb_application_pid};\n\
++         pub const USB_MANUFACTURER: &str = {manufacturer:?};\n\
++         pub const USB_BOOT_PRODUCT: &str = {boot_product:?};\n\
++         pub const USB_APPLICATION_PRODUCT: &str = {application_product:?};\n\
++         pub const USB_SERIAL: &str = {serial:?};\n"
++    );
++    fs::write(
++        PathBuf::from(env::var_os("OUT_DIR").unwrap()).join("product_identity.rs"),
++        generated,
++    )
++    .expect("write generated product identity");
++}
++
++fn required<'a>(values: &'a HashMap<&str, &str>, name: &str) -> &'a str {
++    values
++        .get(name)
++        .copied()
++        .filter(|value| !value.is_empty())
++        .unwrap_or_else(|| panic!("missing {name} in product identity"))
++}
++
++fn number(value: &str, maximum: u64) -> u64 {
++    let parsed = value
++        .strip_prefix("0x")
++        .or_else(|| value.strip_prefix("0X"))
++        .map(|hex| u64::from_str_radix(hex, 16))
++        .unwrap_or_else(|| value.parse())
++        .unwrap_or_else(|_| panic!("invalid product identity number: {value}"));
++    assert!(
++        parsed <= maximum,
++        "product identity number is too large: {value}"
++    );
++    parsed
++}
+diff --git a/Tools/updater/src/bin/hc32-updater-gui.rs b/Tools/updater/src/bin/hc32-updater-gui.rs
+index 7968fa3..199a36b 100644
+--- a/Tools/updater/src/bin/hc32-updater-gui.rs
++++ b/Tools/updater/src/bin/hc32-updater-gui.rs
+@@ -2,21 +2,31 @@
+ mod nusb_transport;
+ 
+ use hc32_updater::{DeviceInfo, FirmwareImage, ProgressEvent, ProtocolV1Client, UpgradeWorkflow};
+-use nusb_transport::NusbTransport;
++use nusb_transport::{DeviceMode, NusbTransport};
++use sha2::{Digest, Sha256};
+ use slint::ComponentHandle;
+ use std::fs;
+-use std::path::Path;
++use std::path::{Path, PathBuf};
+ use std::thread;
+ use std::time::Duration;
+ 
+-const VID: u16 = 0xfffe;
+-const PID: u16 = 0xffff;
+ const REQUEST_TIMEOUT: Duration = Duration::from_secs(2);
+ const WAIT_TIMEOUT: Duration = Duration::from_secs(30);
+ const WAIT_POLL: Duration = Duration::from_millis(250);
+ 
+ slint::include_modules!();
+ 
++struct GuiDevice {
++    info: DeviceInfo,
++    serial_number: String,
++    mode: DeviceMode,
++}
++
++struct GuiFirmware {
++    version: String,
++    sha256: String,
++}
++
+ fn main() -> Result<(), slint::PlatformError> {
+     let ui = UpdaterWindow::new()?;
+ 
+@@ -27,6 +37,7 @@ fn main() -> Result<(), slint::PlatformError> {
+         };
+         ui.set_busy(true);
+         ui.set_progress(0.0);
++        ui.set_progress_label("0%".into());
+         ui.set_status_text("Reading device information...".into());
+         drop(ui);
+ 
+@@ -37,15 +48,48 @@ fn main() -> Result<(), slint::PlatformError> {
+                 ui.set_busy(false);
+                 match result {
+                     Ok(info) => {
+-                        ui.set_device_summary(format_device(&info).into());
+-                        ui.set_status_text("Device ready".into());
++                        let status = format!("{} ready", info.mode);
++                        set_device(&ui, &info);
++                        ui.set_status_text(status.into());
++                    }
++                    Err(error) => {
++                        ui.set_device_connected(false);
++                        ui.set_status_text(format!("Refresh failed: {error}").into());
+                     }
+-                    Err(error) => ui.set_status_text(format!("Refresh failed: {error}").into()),
+                 }
+             });
+         });
+     });
+ 
++    let weak = ui.as_weak();
++    ui.on_browse_firmware(move || {
++        let Some(ui) = weak.upgrade() else {
++            return;
++        };
++        if ui.get_busy() {
++            return;
++        }
++        let Some(path) = rfd::FileDialog::new()
++            .add_filter("MCUboot signed image", &["bin"])
++            .pick_file()
++        else {
++            return;
++        };
++        match inspect_image(&path) {
++            Ok(image) => {
++                ui.set_firmware_path(path.to_string_lossy().into_owned().into());
++                ui.set_firmware_version(image.version.into());
++                ui.set_firmware_sha256(format!("✓ {}…", &image.sha256[..16]).into());
++                ui.set_status_text("Firmware image ready".into());
++            }
++            Err(error) => {
++                ui.set_firmware_version("Invalid image".into());
++                ui.set_firmware_sha256("Failed".into());
++                ui.set_status_text(format!("Image check failed: {error}").into());
++            }
++        }
++    });
++
+     let weak = ui.as_weak();
+     ui.on_install_firmware(move |path| {
+         let path = path.trim().to_owned();
+@@ -58,6 +102,7 @@ fn main() -> Result<(), slint::PlatformError> {
+         }
+         ui.set_busy(true);
+         ui.set_progress(0.0);
++        ui.set_progress_label("0%".into());
+         ui.set_status_text("Checking firmware image...".into());
+         drop(ui);
+ 
+@@ -72,10 +117,14 @@ fn main() -> Result<(), slint::PlatformError> {
+                 match result {
+                     Ok(info) => {
+                         ui.set_progress(1.0);
+-                        ui.set_device_summary(format_device(&info).into());
++                        ui.set_progress_label("100%".into());
++                        set_device(&ui, &info);
+                         ui.set_status_text(
+-                            format!("Upgrade complete: application {}", info.application_version)
+-                                .into(),
++                            format!(
++                                "Upgrade complete: application {}",
++                                info.info.application_version
++                            )
++                            .into(),
+                         );
+                     }
+                     Err(error) => ui.set_status_text(format!("Install failed: {error}").into()),
+@@ -88,66 +137,103 @@ fn main() -> Result<(), slint::PlatformError> {
+ }
+ 
+ fn open_device() -> Result<NusbTransport, String> {
+-    NusbTransport::open_unique(VID, PID)
++    NusbTransport::open_unique_updater()
+         .map_err(|error| error.to_string())?
+         .ok_or_else(|| "USB device not found".to_owned())
+ }
+ 
+-fn read_device() -> Result<DeviceInfo, String> {
+-    ProtocolV1Client::new(open_device()?, REQUEST_TIMEOUT)
++fn read_device() -> Result<GuiDevice, String> {
++    let transport = open_device()?;
++    let mode = transport.mode();
++    let serial_number = transport
++        .serial_number()
++        .unwrap_or("Not reported")
++        .to_owned();
++    let info = ProtocolV1Client::new(transport, REQUEST_TIMEOUT)
+         .info()
+-        .map_err(|error| error.to_string())
++        .map_err(|error| error.to_string())?;
++    Ok(GuiDevice {
++        info,
++        serial_number,
++        mode,
++    })
+ }
+ 
+ fn install_image(
+     path: &Path,
+     mut progress: impl FnMut(ProgressEvent),
+-) -> Result<DeviceInfo, String> {
++) -> Result<GuiDevice, String> {
+     let image = FirmwareImage::parse(fs::read(path).map_err(|error| error.to_string())?)
+         .map_err(|error| error.to_string())?;
+-    let mut client = ProtocolV1Client::new(open_device()?, REQUEST_TIMEOUT);
++    let transport = open_device()?;
++    let serial_number = transport
++        .serial_number()
++        .unwrap_or("Not reported")
++        .to_owned();
++    let mut client = ProtocolV1Client::new(transport, REQUEST_TIMEOUT);
+     UpgradeWorkflow::install(&mut client, &image, &mut progress)
+         .map_err(|error| error.to_string())?;
+-    UpgradeWorkflow::wait_for_version(
+-        || NusbTransport::open_unique(VID, PID),
++    let info = UpgradeWorkflow::wait_for_version(
++        NusbTransport::open_application,
+         image.version,
+         WAIT_TIMEOUT,
+         WAIT_POLL,
+         REQUEST_TIMEOUT,
+         progress,
+     )
+-    .map_err(|error| error.to_string())
++    .map_err(|error| error.to_string())?;
++    Ok(GuiDevice {
++        info,
++        serial_number,
++        mode: DeviceMode::Application,
++    })
+ }
+ 
+ fn post_progress(ui: &slint::Weak<UpdaterWindow>, event: ProgressEvent) {
+     let _ = ui.upgrade_in_event_loop(move |ui| match event {
+         ProgressEvent::Device(info) => {
+-            ui.set_device_summary(format_device(&info).into());
++            set_device_info(&ui, &info);
+             ui.set_status_text(format!("Device application {}", info.application_version).into());
+         }
+         ProgressEvent::Transferring { sent, total } => {
+             ui.set_progress(sent as f32 / total as f32);
++            ui.set_progress_label(format!("{}%", sent * 100 / total).into());
+             ui.set_status_text(format!("Transferring {sent}/{total} bytes").into());
+         }
+         ProgressEvent::Verifying => {
+             ui.set_progress(0.98);
++            ui.set_progress_label("98%".into());
+             ui.set_status_text("Verifying image...".into());
+         }
+         ProgressEvent::Committing => {
+             ui.set_progress(0.99);
++            ui.set_progress_label("99%".into());
+             ui.set_status_text("Committing upgrade...".into());
+         }
+         ProgressEvent::WaitingForReenumeration => {
+             ui.set_progress(0.99);
++            ui.set_progress_label("99%".into());
+             ui.set_status_text("Waiting for USB re-enumeration...".into());
+         }
+     });
+ }
+ 
+-fn format_device(info: &DeviceInfo) -> String {
++fn set_device(ui: &UpdaterWindow, device: &GuiDevice) {
++    ui.set_device_serial(device.serial_number.clone().into());
++    set_device_info(ui, &device.info);
++    ui.set_device_details(format_device_details(&device.info, Some(device.mode)).into());
++}
++
++fn set_device_info(ui: &UpdaterWindow, info: &DeviceInfo) {
++    ui.set_device_connected(true);
++    ui.set_device_version(info.application_version.to_string().into());
++    ui.set_device_details(format_device_details(info, None).into());
++}
++
++fn format_device_details(info: &DeviceInfo, mode: Option<DeviceMode>) -> String {
++    let mode = mode.map(|value| format!("{value} · ")).unwrap_or_default();
+     format!(
+-        "Application {} · Bootloader {} · HW 0x{:08x} · Board {}/{} · Capacity {} bytes",
+-        info.application_version,
++        "{mode}Bootloader {} · HW 0x{:08x} · Board {}/{} · Capacity {} bytes",
+         info.bootloader_version,
+         info.hardware_id,
+         info.board_id,
+@@ -155,3 +241,13 @@ fn format_device(info: &DeviceInfo) -> String {
+         info.image_capacity
+     )
+ }
++
++fn inspect_image(path: &PathBuf) -> Result<GuiFirmware, String> {
++    let bytes = fs::read(path).map_err(|error| error.to_string())?;
++    let sha256 = format!("{:x}", Sha256::digest(&bytes));
++    let image = FirmwareImage::parse(bytes).map_err(|error| error.to_string())?;
++    Ok(GuiFirmware {
++        version: image.version.to_string(),
++        sha256,
++    })
++}
+diff --git a/Tools/updater/src/lib.rs b/Tools/updater/src/lib.rs
+index 877fbd4..ab45c9a 100644
+--- a/Tools/updater/src/lib.rs
++++ b/Tools/updater/src/lib.rs
+@@ -1,5 +1,9 @@
+ mod protocol;
+ 
++pub mod product_identity {
++    include!(concat!(env!("OUT_DIR"), "/product_identity.rs"));
++}
++
+ pub use protocol::{Command, Frame, ProtocolError, Status, crc32};
+ 
+ use std::fmt;
+@@ -9,6 +13,9 @@ use std::time::{Duration, Instant};
+ 
+ const IMAGE_MAGIC: u32 = 0x96f3_b83d;
+ const IMAGE_HEADER_SIZE: usize = 32;
++const IMAGE_TLV_PROT_INFO_MAGIC: u16 = 0x6908;
++const COMPATIBILITY_TLV_TYPE: u16 = 0x00a0;
++const COMPATIBILITY_PAYLOAD_SIZE: usize = 12;
+ const REQUIRED_CAPABILITIES: u32 = 0b111;
+ const DEFAULT_ATTEMPTS: usize = 3;
+ const MAX_STALE_RESPONSES: usize = 2;
+@@ -88,6 +95,14 @@ fn parse_number<T: FromStr>(value: Option<&str>, name: &'static str) -> Result<T
+ pub struct FirmwareImage {
+     bytes: Vec<u8>,
+     pub version: Version,
++    pub compatibility: Compatibility,
++}
++
++#[derive(Clone, Copy, Debug, Eq, PartialEq)]
++pub struct Compatibility {
++    pub board_revision: u16,
++    pub hardware_id: u32,
++    pub board_id: u32,
+ }
+ 
+ impl FirmwareImage {
+@@ -100,6 +115,7 @@ impl FirmwareImage {
+         }
+ 
+         let header_size = usize::from(read_u16(&bytes[8..10]));
++        let protected_tlv_size = usize::from(read_u16(&bytes[10..12]));
+         let body_size = read_u32(&bytes[12..16]) as usize;
+         if header_size < IMAGE_HEADER_SIZE
+             || header_size > bytes.len()
+@@ -107,9 +123,17 @@ impl FirmwareImage {
+         {
+             return Err(Error::Image("invalid MCUboot header/body size"));
+         }
++        let compatibility = parse_compatibility(
++            &bytes,
++            header_size
++                .checked_add(body_size)
++                .ok_or(Error::Image("invalid MCUboot image size"))?,
++            protected_tlv_size,
++        )?;
+ 
+         Ok(Self {
+             version: Version::decode(&bytes[20..28])?,
++            compatibility,
+             bytes,
+         })
+     }
+@@ -123,6 +147,62 @@ impl FirmwareImage {
+     }
+ }
+ 
++fn parse_compatibility(
++    bytes: &[u8],
++    protected_tlv_offset: usize,
++    protected_tlv_size: usize,
++) -> Result<Compatibility, Error> {
++    if protected_tlv_size < 4 {
++        return Err(Error::Image("missing protected compatibility TLV"));
++    }
++    let protected_end = protected_tlv_offset
++        .checked_add(protected_tlv_size)
++        .filter(|end| *end <= bytes.len())
++        .ok_or(Error::Image("invalid protected TLV size"))?;
++    if read_u16(&bytes[protected_tlv_offset..protected_tlv_offset + 2]) != IMAGE_TLV_PROT_INFO_MAGIC
++        || usize::from(read_u16(
++            &bytes[protected_tlv_offset + 2..protected_tlv_offset + 4],
++        )) != protected_tlv_size
++    {
++        return Err(Error::Image("invalid protected TLV header"));
++    }
++
++    let mut compatibility = None;
++    let mut offset = protected_tlv_offset + 4;
++    while offset < protected_end {
++        if protected_end - offset < 4 {
++            return Err(Error::Image("malformed protected TLV"));
++        }
++        let tlv_type = read_u16(&bytes[offset..offset + 2]);
++        let length = usize::from(read_u16(&bytes[offset + 2..offset + 4]));
++        let value_offset = offset + 4;
++        offset = value_offset
++            .checked_add(length)
++            .filter(|end| *end <= protected_end)
++            .ok_or(Error::Image("malformed protected TLV"))?;
++        if tlv_type != COMPATIBILITY_TLV_TYPE {
++            continue;
++        }
++        if compatibility.is_some() {
++            return Err(Error::Image("duplicate compatibility TLV"));
++        }
++        if length != COMPATIBILITY_PAYLOAD_SIZE {
++            return Err(Error::Image("invalid compatibility TLV length"));
++        }
++        let value = &bytes[value_offset..offset];
++        if value[0] != 1 || value[1] != 0 {
++            return Err(Error::Image("unsupported compatibility TLV format"));
++        }
++        compatibility = Some(Compatibility {
++            board_revision: read_u16(&value[2..4]),
++            hardware_id: read_u32(&value[4..8]),
++            board_id: read_u32(&value[8..12]),
++        });
++    }
++
++    compatibility.ok_or(Error::Image("missing protected compatibility TLV"))
++}
++
+ #[derive(Clone, Debug, Eq, PartialEq)]
+ pub struct HelloInfo {
+     pub max_payload: u16,
+@@ -296,6 +376,12 @@ impl<T: Transport> ProtocolV1Client<T> {
+         }
+         let device = self.info()?;
+         progress(ProgressEvent::Device(device.clone()));
++        if image.compatibility.hardware_id != device.hardware_id
++            || image.compatibility.board_id != device.board_id
++            || image.compatibility.board_revision != device.board_revision
++        {
++            return Err(Error::Image("image compatibility does not match device"));
++        }
+         if image.bytes.len() > device.image_capacity as usize {
+             return Err(Error::Image("image exceeds device capacity"));
+         }
+@@ -504,13 +590,39 @@ mod tests {
+ 
+     #[test]
+     fn parses_mcuboot_image_and_version() {
+-        let mut bytes = vec![0u8; 520];
+-        bytes[0..4].copy_from_slice(&IMAGE_MAGIC.to_le_bytes());
+-        bytes[8..10].copy_from_slice(&512u16.to_le_bytes());
+-        bytes[12..16].copy_from_slice(&8u32.to_le_bytes());
++        let mut bytes = test_image(520);
+         bytes[20..28].copy_from_slice(&[2, 1, 3, 0, 4, 0, 0, 0]);
+         let image = FirmwareImage::parse(bytes).unwrap();
+         assert_eq!(image.version.to_string(), "2.1.3+4");
++        assert_eq!(image.compatibility.hardware_id, 0x0000_4600);
++    }
++
++    #[test]
++    fn rejects_invalid_compatibility_tlvs() {
++        let mut missing = test_image(80);
++        let entry = compatibility_entry_offset(&missing);
++        missing[entry..entry + 2].copy_from_slice(&0x00a1u16.to_le_bytes());
++        assert!(FirmwareImage::parse(missing).is_err());
++
++        let mut malformed = test_image(80);
++        let entry = compatibility_entry_offset(&malformed);
++        malformed[entry + 2..entry + 4].copy_from_slice(&11u16.to_le_bytes());
++        assert!(FirmwareImage::parse(malformed).is_err());
++
++        let mut unsupported = test_image(80);
++        let entry = compatibility_entry_offset(&unsupported);
++        unsupported[entry + 4] = 2;
++        assert!(FirmwareImage::parse(unsupported).is_err());
++
++        let mut duplicate = test_image(80);
++        let entry = compatibility_entry_offset(&duplicate);
++        let second = duplicate[entry..entry + 16].to_vec();
++        let protected_size = read_u16(&duplicate[10..12]);
++        duplicate[10..12].copy_from_slice(&(protected_size + 16).to_le_bytes());
++        let info = entry - 4;
++        duplicate[info + 2..info + 4].copy_from_slice(&(protected_size + 16).to_le_bytes());
++        duplicate.extend_from_slice(&second);
++        assert!(FirmwareImage::parse(duplicate).is_err());
+     }
+ 
+     #[test]
+@@ -572,7 +684,7 @@ mod tests {
+             )),
+         ]);
+         let mut client = ProtocolV1Client::new(transport, Duration::from_millis(10));
+-        let image = FirmwareImage::parse(test_image(40)).unwrap();
++        let image = FirmwareImage::parse(test_image(60)).unwrap();
+         assert!(matches!(
+             client.install(&image, |_| {}),
+             Err(Error::Image("image exceeds device capacity"))
+@@ -580,6 +692,29 @@ mod tests {
+         assert_eq!(client.into_transport().requests.len(), 2);
+     }
+ 
++    #[test]
++    fn rejects_an_incompatible_image_before_begin() {
++        let transport = ScriptTransport::new([
++            Ok(response(Command::Hello, 0, Status::Ok, &hello_body())),
++            Ok(response(
++                Command::DeviceInfo,
++                1,
++                Status::Ok,
++                &device_info_body(2048),
++            )),
++        ]);
++        let mut bytes = test_image(60);
++        let entry = compatibility_entry_offset(&bytes);
++        bytes[entry + 8] ^= 1;
++        let image = FirmwareImage::parse(bytes).unwrap();
++        let mut client = ProtocolV1Client::new(transport, Duration::from_millis(10));
++        assert!(matches!(
++            client.install(&image, |_| {}),
++            Err(Error::Image("image compatibility does not match device"))
++        ));
++        assert_eq!(client.into_transport().requests.len(), 2);
++    }
++
+     #[test]
+     fn wait_workflow_returns_the_requested_version() {
+         let expected = Version {
+@@ -688,11 +823,25 @@ mod tests {
+     }
+ 
+     fn test_image(length: usize) -> Vec<u8> {
++        assert!(length >= IMAGE_HEADER_SIZE + 20);
+         let mut bytes = vec![0u8; length];
+         bytes[0..4].copy_from_slice(&IMAGE_MAGIC.to_le_bytes());
+         bytes[8..10].copy_from_slice(&(IMAGE_HEADER_SIZE as u16).to_le_bytes());
+-        bytes[12..16].copy_from_slice(&((length - IMAGE_HEADER_SIZE) as u32).to_le_bytes());
++        bytes[10..12].copy_from_slice(&20u16.to_le_bytes());
++        bytes[12..16].copy_from_slice(&((length - IMAGE_HEADER_SIZE - 20) as u32).to_le_bytes());
+         bytes[20] = 2;
++        let entry = compatibility_entry_offset(&bytes);
++        bytes[entry - 4..entry - 2].copy_from_slice(&IMAGE_TLV_PROT_INFO_MAGIC.to_le_bytes());
++        bytes[entry - 2..entry].copy_from_slice(&20u16.to_le_bytes());
++        bytes[entry..entry + 2].copy_from_slice(&COMPATIBILITY_TLV_TYPE.to_le_bytes());
++        bytes[entry + 2..entry + 4]
++            .copy_from_slice(&(COMPATIBILITY_PAYLOAD_SIZE as u16).to_le_bytes());
++        bytes[entry + 4..entry + 16]
++            .copy_from_slice(&[1, 0, 2, 0, 0x00, 0x46, 0x00, 0x00, 1, 0, 0, 0]);
+         bytes
+     }
++
++    fn compatibility_entry_offset(bytes: &[u8]) -> usize {
++        usize::from(read_u16(&bytes[8..10])) + read_u32(&bytes[12..16]) as usize + 4
++    }
+ }
+diff --git a/Tools/updater/src/main.rs b/Tools/updater/src/main.rs
+index bc9dafa..8b5f635 100644
+--- a/Tools/updater/src/main.rs
++++ b/Tools/updater/src/main.rs
+@@ -8,8 +8,6 @@ use std::path::PathBuf;
+ use std::process::ExitCode;
+ use std::time::Duration;
+ 
+-const VID: u16 = 0xfffe;
+-const PID: u16 = 0xffff;
+ const REQUEST_TIMEOUT: Duration = Duration::from_secs(2);
+ const WAIT_POLL: Duration = Duration::from_millis(250);
+ 
+@@ -45,8 +43,15 @@ fn run(command: CliCommand) -> Result<(), Box<dyn std::error::Error>> {
+     match command {
+         CliCommand::Info => {
+             let transport = open_device()?.ok_or("USB device not found")?;
++            let mode = transport.mode();
++            let serial_number = transport
++                .serial_number()
++                .unwrap_or("not-reported")
++                .to_owned();
+             let mut client = ProtocolV1Client::new(transport, REQUEST_TIMEOUT);
+             print_info(&client.info()?);
++            println!("mode={mode}");
++            println!("serial={serial_number}");
+         }
+         CliCommand::Install(path) => {
+             let image = FirmwareImage::parse(fs::read(path)?)?;
+@@ -56,7 +61,7 @@ fn run(command: CliCommand) -> Result<(), Box<dyn std::error::Error>> {
+         }
+         CliCommand::Wait { version, timeout } => {
+             let info = UpgradeWorkflow::wait_for_version(
+-                open_device,
++                NusbTransport::open_application,
+                 version,
+                 timeout,
+                 WAIT_POLL,
+@@ -70,7 +75,7 @@ fn run(command: CliCommand) -> Result<(), Box<dyn std::error::Error>> {
+ }
+ 
+ fn open_device() -> std::io::Result<Option<NusbTransport>> {
+-    NusbTransport::open_unique(VID, PID)
++    NusbTransport::open_unique_updater()
+ }
+ 
+ fn print_info(info: &hc32_updater::DeviceInfo) {
+diff --git a/Tools/updater/src/nusb_transport.rs b/Tools/updater/src/nusb_transport.rs
+index 3d79223..ca4767c 100644
+--- a/Tools/updater/src/nusb_transport.rs
++++ b/Tools/updater/src/nusb_transport.rs
+@@ -1,7 +1,9 @@
+ use hc32_updater::Transport;
++use hc32_updater::product_identity::{USB_APPLICATION_PID, USB_BOOT_PID, USB_VID};
+ use nusb::Endpoint;
+ use nusb::MaybeFuture;
+ use nusb::transfer::{Buffer, Bulk, In, Out, TransferError};
++use std::fmt;
+ use std::io;
+ use std::time::Duration;
+ 
+@@ -16,23 +18,51 @@ pub struct NusbTransport {
+     in_endpoint: Endpoint<Bulk, In>,
+     out_max_packet: usize,
+     in_max_packet: usize,
++    serial_number: Option<String>,
++    mode: DeviceMode,
++}
++
++#[derive(Clone, Copy, Debug, Eq, PartialEq)]
++pub enum DeviceMode {
++    BootRecovery,
++    Application,
++}
++
++impl fmt::Display for DeviceMode {
++    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
++        formatter.write_str(match self {
++            Self::BootRecovery => "boot-recovery",
++            Self::Application => "application",
++        })
++    }
+ }
+ 
+ impl NusbTransport {
+-    pub fn open_unique(vid: u16, pid: u16) -> io::Result<Option<Self>> {
+-        let mut devices = nusb::list_devices()
+-            .wait()?
+-            .filter(|device| device.vendor_id() == vid && device.product_id() == pid);
++    pub fn open_unique_updater() -> io::Result<Option<Self>> {
++        Self::open_unique(&[USB_BOOT_PID, USB_APPLICATION_PID])
++    }
++
++    pub fn open_application() -> io::Result<Option<Self>> {
++        Self::open_unique(&[USB_APPLICATION_PID])
++    }
++
++    fn open_unique(product_ids: &[u16]) -> io::Result<Option<Self>> {
++        let mut devices = nusb::list_devices().wait()?.filter(|device| {
++            device.vendor_id() == USB_VID && product_ids.contains(&device.product_id())
++        });
+         let Some(device_info) = devices.next() else {
+             return Ok(None);
+         };
+         if devices.next().is_some() {
+             return Err(io::Error::new(
+                 io::ErrorKind::InvalidInput,
+-                format!("multiple USB devices match {vid:04x}:{pid:04x}"),
++                "multiple Boot/Application updater devices match",
+             ));
+         }
+ 
++        let mode = mode_for_product_id(device_info.product_id())
++            .expect("device was filtered by product ID");
++        let serial_number = device_info.serial_number().map(str::to_owned);
+         let device = device_info.open().wait()?;
+         let interface = device.claim_interface(INTERFACE).wait()?;
+         let out_endpoint = interface.endpoint::<Bulk, Out>(OUT_ENDPOINT)?;
+@@ -44,8 +74,26 @@ impl NusbTransport {
+             in_endpoint,
+             out_max_packet,
+             in_max_packet,
++            serial_number,
++            mode,
+         }))
+     }
++
++    pub fn serial_number(&self) -> Option<&str> {
++        self.serial_number.as_deref()
++    }
++
++    pub fn mode(&self) -> DeviceMode {
++        self.mode
++    }
++}
++
++fn mode_for_product_id(product_id: u16) -> Option<DeviceMode> {
++    match product_id {
++        USB_BOOT_PID => Some(DeviceMode::BootRecovery),
++        USB_APPLICATION_PID => Some(DeviceMode::Application),
++        _ => None,
++    }
+ }
+ 
+ impl Transport for NusbTransport {
+@@ -183,4 +231,17 @@ mod tests {
+             io::ErrorKind::UnexpectedEof
+         );
+     }
++
++    #[test]
++    fn maps_boot_and_application_product_ids() {
++        assert_eq!(
++            mode_for_product_id(USB_BOOT_PID),
++            Some(DeviceMode::BootRecovery)
++        );
++        assert_eq!(
++            mode_for_product_id(USB_APPLICATION_PID),
++            Some(DeviceMode::Application)
++        );
++        assert_eq!(mode_for_product_id(0), None);
++    }
+ }
+diff --git a/Tools/updater/tests/fake_e2e.rs b/Tools/updater/tests/fake_e2e.rs
+index 3c8fc6e..759e399 100644
+--- a/Tools/updater/tests/fake_e2e.rs
++++ b/Tools/updater/tests/fake_e2e.rs
+@@ -104,14 +104,21 @@ fn rust_core_completes_real_c_manager_fake_e2e() {
+ }
+ 
+ fn make_image(length: usize) -> Vec<u8> {
+-    assert!(length >= 32);
++    assert!(length >= 52);
+     let mut bytes: Vec<u8> = (0..length)
+         .map(|index| (index as u8).wrapping_mul(37).wrapping_add(11))
+         .collect();
+     bytes[0..4].copy_from_slice(&0x96f3_b83du32.to_le_bytes());
+     bytes[8..10].copy_from_slice(&32u16.to_le_bytes());
+-    bytes[12..16].copy_from_slice(&((length - 32) as u32).to_le_bytes());
++    bytes[10..12].copy_from_slice(&20u16.to_le_bytes());
++    bytes[12..16].copy_from_slice(&((length - 52) as u32).to_le_bytes());
+     bytes[20..28].copy_from_slice(&[2, 0, 0, 0, 0, 0, 0, 0]);
++    let tlv = length - 20;
++    bytes[tlv..tlv + 2].copy_from_slice(&0x6908u16.to_le_bytes());
++    bytes[tlv + 2..tlv + 4].copy_from_slice(&20u16.to_le_bytes());
++    bytes[tlv + 4..tlv + 6].copy_from_slice(&0x00a0u16.to_le_bytes());
++    bytes[tlv + 6..tlv + 8].copy_from_slice(&12u16.to_le_bytes());
++    bytes[tlv + 8..tlv + 20].copy_from_slice(&[1, 0, 2, 0, 0x00, 0x46, 0, 0, 1, 0, 0, 0]);
+     bytes
+ }
+ 
+diff --git a/Tools/updater/ui/app.slint b/Tools/updater/ui/app.slint
+index 79f9ed0..aed841a 100644
+--- a/Tools/updater/ui/app.slint
++++ b/Tools/updater/ui/app.slint
+@@ -1,36 +1,71 @@
+-import { Button, HorizontalBox, LineEdit, VerticalBox } from "std-widgets.slint";
++import { Button, HorizontalBox, LineEdit, ScrollView, VerticalBox } from "std-widgets.slint";
+ 
+ export component UpdaterWindow inherits Window {
+-    title: "HC32 Firmware Updater";
+-    width: 640px;
+-    height: 360px;
++    title: "Firmware Updater";
++    width: 560px;
++    height: 440px;
+ 
+     in-out property <string> firmware-path;
+-    in property <string> device-summary: "No device information";
++    in property <bool> device-connected: false;
++    in property <string> device-serial: "—";
++    in property <string> device-version: "—";
++    in property <string> device-details: "No device information";
++    in property <string> firmware-version: "Not selected";
++    in property <string> firmware-sha256: "Not checked";
+     in property <string> status-text: "Ready";
+     in property <float> progress: 0;
++    in property <string> progress-label: "0%";
+     in property <bool> busy: false;
+ 
+     callback refresh-device();
++    callback browse-firmware();
+     callback install-firmware(string);
+ 
+-    VerticalBox {
+-        padding: 18px;
+-        spacing: 12px;
++    ScrollView {
++        VerticalBox {
++            padding: 24px;
++            spacing: 10px;
++
++        Text {
++            text: "Firmware Updater";
++            font-size: 24px;
++            font-weight: 700;
++        }
++
++        Rectangle { height: 1px; background: #505050; }
+ 
+         Text {
+             text: "Device";
+-            font-size: 18px;
++            font-size: 16px;
+             font-weight: 600;
+         }
++        HorizontalBox {
++            Text {
++                text: root.device-connected ? "● Connected" : "● Disconnected";
++                color: root.device-connected ? #45c98f : #a0a0a0;
++                vertical-alignment: center;
++            }
++            Button {
++                text: "Refresh";
++                width: 96px;
++                enabled: !root.busy;
++                clicked => { root.refresh-device(); }
++            }
++        }
++        Text { text: "SN: " + root.device-serial; }
++        Text { text: "Current Version: " + root.device-version; }
+         Text {
+-            text: root.device-summary;
++            text: root.device-details;
++            color: #a0a0a0;
++            font-size: 12px;
+             wrap: word-wrap;
+         }
+ 
++        Rectangle { height: 1px; background: #505050; }
++
+         Text {
+-            text: "Signed firmware image";
+-            font-size: 18px;
++            text: "Firmware";
++            font-size: 16px;
+             font-weight: 600;
+         }
+         HorizontalBox {
+@@ -41,22 +76,32 @@ export component UpdaterWindow inherits Window {
+                 placeholder-text: "Path to updater_signed.bin";
+             }
+             Button {
+-                text: "Install";
+-                enabled: !root.busy && root.firmware-path != "";
+-                clicked => { root.install-firmware(root.firmware-path); }
++                text: "Browse";
++                enabled: !root.busy;
++                clicked => { root.browse-firmware(); }
+             }
+         }
++        Text { text: "Version: " + root.firmware-version; }
++        Text { text: "SHA-256: " + root.firmware-sha256; }
+ 
+-        Rectangle {
+-            height: 12px;
+-            background: #d9d9d9;
+-            border-radius: 6px;
+-
++        HorizontalBox {
++            spacing: 10px;
+             Rectangle {
+-                width: parent.width * max(0, min(1, root.progress));
+-                height: parent.height;
+-                background: #2d78d4;
+-                border-radius: parent.border-radius;
++                height: 12px;
++                background: #d9d9d9;
++                border-radius: 6px;
++
++                Rectangle {
++                    width: parent.width * max(0, min(1, root.progress));
++                    height: parent.height;
++                    background: #2d78d4;
++                    border-radius: parent.border-radius;
++                }
++            }
++            Text {
++                width: 44px;
++                text: root.progress-label;
++                horizontal-alignment: right;
+             }
+         }
+ 
+@@ -65,12 +110,14 @@ export component UpdaterWindow inherits Window {
+             wrap: word-wrap;
+         }
+ 
+-        HorizontalBox {
+-            alignment: end;
+-            Button {
+-                text: "Refresh";
+-                enabled: !root.busy;
+-                clicked => { root.refresh-device(); }
++            HorizontalBox {
++                alignment: center;
++                Button {
++                    text: "Update";
++                    width: 140px;
++                    enabled: !root.busy && root.firmware-path != "";
++                    clicked => { root.install-firmware(root.firmware-path); }
++                }
+             }
+         }
+     }
+diff --git a/cmake/FirmwareArtifacts.cmake b/cmake/FirmwareArtifacts.cmake
+index 4cabd94..f6624c9 100644
+--- a/cmake/FirmwareArtifacts.cmake
++++ b/cmake/FirmwareArtifacts.cmake
+@@ -31,6 +31,7 @@ function(add_mcuboot_signed_artifacts target)
+         --pad-header
+         --erased-val 0xff
+         --key "${MCUBOOT_ACTIVE_SIGNING_KEY}"
++        --custom-tlv 0x00A0 "0x${HC32_COMPATIBILITY_TLV_HEX}"
+     )
+ 
+     file(MAKE_DIRECTORY "${artifact_dir}")
+@@ -39,18 +40,21 @@ function(add_mcuboot_signed_artifacts target)
+         COMMAND "${MCUBOOT_PYTHON}" "${MCUBOOT_IMGTOOL}" ${sign_args}
+                 "${raw_image}" "${signed_image}"
+         DEPENDS "${raw_image}" "${MCUBOOT_ACTIVE_SIGNING_KEY}" "${MCUBOOT_IMGTOOL}"
++                "${HC32_PRODUCT_IDENTITY_FILE}"
+         VERBATIM
+     )
+     add_custom_command(OUTPUT "${primary_image}"
+         COMMAND "${MCUBOOT_PYTHON}" "${MCUBOOT_IMGTOOL}" ${sign_args}
+                 --pad --confirm "${raw_image}" "${primary_image}"
+         DEPENDS "${raw_image}" "${MCUBOOT_ACTIVE_SIGNING_KEY}" "${MCUBOOT_IMGTOOL}"
++                "${HC32_PRODUCT_IDENTITY_FILE}"
+         VERBATIM
+     )
+     add_custom_command(OUTPUT "${update_image}"
+         COMMAND "${MCUBOOT_PYTHON}" "${MCUBOOT_IMGTOOL}" ${sign_args}
+                 --pad --test "${raw_image}" "${update_image}"
+         DEPENDS "${raw_image}" "${MCUBOOT_ACTIVE_SIGNING_KEY}" "${MCUBOOT_IMGTOOL}"
++                "${HC32_PRODUCT_IDENTITY_FILE}"
+         VERBATIM
+     )
+ 
+diff --git a/components/fw_update/backends/mcuboot/src/boot_control_mcuboot.c b/components/fw_update/backends/mcuboot/src/boot_control_mcuboot.c
+index ed5a68d..8424634 100644
+--- a/components/fw_update/backends/mcuboot/src/boot_control_mcuboot.c
++++ b/components/fw_update/backends/mcuboot/src/boot_control_mcuboot.c
+@@ -1,11 +1,60 @@
+ #include "fw_update/boot_control_mcuboot.h"
+ 
+ #include <stddef.h>
++#include <stdint.h>
+ 
+ #include "bootutil/bootutil_public.h"
++#include "bootutil/fault_injection_hardening.h"
++#include "bootutil/image.h"
++#include "flash_map_backend/flash_map_backend.h"
++#include "product_identity.h"
++
++enum { VALIDATION_BUFFER_SIZE = 256 };
++
++static uint16_t read_le16(const uint8_t* value) {
++    return (uint16_t)value[0] | (uint16_t)((uint16_t)value[1] << 8U);
++}
++
++static uint32_t read_le32(const uint8_t* value) {
++    return (uint32_t)value[0] | ((uint32_t)value[1] << 8U) | ((uint32_t)value[2] << 16U) | ((uint32_t)value[3] << 24U);
++}
++
++static int candidate_is_valid(const struct flash_area* area) {
++    static uint8_t validation_buffer[VALIDATION_BUFFER_SIZE];
++    struct image_header header;
++    struct image_tlv_iter iterator;
++    uint8_t compatibility[HC32_COMPATIBILITY_PAYLOAD_SIZE];
++    uint32_t offset = 0U;
++    uint16_t length = 0U;
++    FIH_DECLARE(validation_result, FIH_FAILURE);
++
++    if (flash_area_read(area, 0U, &header, sizeof(header)) != 0)
++        return 0;
++    FIH_CALL(bootutil_img_validate, validation_result, NULL, &header, area, validation_buffer,
++             sizeof(validation_buffer), NULL, 0, NULL);
++    if (FIH_NOT_EQ(validation_result, FIH_SUCCESS))
++        return 0;
++    if (bootutil_tlv_iter_begin(&iterator, &header, area, HC32_COMPATIBILITY_TLV_TYPE, true) != 0
++        || bootutil_tlv_iter_next(&iterator, &offset, &length, NULL) != 0 || length != sizeof(compatibility)
++        || flash_area_read(area, offset, compatibility, sizeof(compatibility)) != 0
++        || bootutil_tlv_iter_next(&iterator, &offset, &length, NULL) != 1)
++        return 0;
++
++    return compatibility[0] == HC32_COMPATIBILITY_FORMAT_VERSION && compatibility[1] == 0U
++           && read_le16(&compatibility[2]) == HC32_PRODUCT_BOARD_REVISION
++           && read_le32(&compatibility[4]) == HC32_PRODUCT_HARDWARE_ID
++           && read_le32(&compatibility[8]) == HC32_PRODUCT_BOARD_ID;
++}
+ 
+ static enum fw_update_result request_test_upgrade(void* context) {
+     (void)context;
++    const struct flash_area* area = NULL;
++    if (flash_area_open(FLASH_AREA_ID_SECONDARY, &area) != 0)
++        return FW_UPDATE_ERR_BOOT_CONTROL;
++    const int valid = candidate_is_valid(area);
++    flash_area_close(area);
++    if (valid == 0)
++        return FW_UPDATE_ERR_BOOT_CONTROL;
+     return boot_set_pending_multi(0, 0) == 0 ? FW_UPDATE_OK : FW_UPDATE_ERR_BOOT_CONTROL;
+ }
+ 
+diff --git a/components/mcuboot_port/Inc/mcuboot_config/mcuboot_config.h b/components/mcuboot_port/Inc/mcuboot_config/mcuboot_config.h
+index 1ad0c7d..4a584b4 100644
+--- a/components/mcuboot_port/Inc/mcuboot_config/mcuboot_config.h
++++ b/components/mcuboot_port/Inc/mcuboot_config/mcuboot_config.h
+@@ -5,6 +5,7 @@
+ 
+ #define MCUBOOT_IMAGE_NUMBER 1
+ #define MCUBOOT_SWAP_USING_SCRATCH 1
++#define MCUBOOT_BOOTSTRAP 1
+ #define MCUBOOT_SIGN_EC256 1
+ #define MCUBOOT_USE_TINYCRYPT 1
+ #define MCUBOOT_VALIDATE_PRIMARY_SLOT 1
+diff --git a/docs/roadmap/CURRENT_STATE.md b/docs/roadmap/CURRENT_STATE.md
+index cd2e3de..47f4549 100644
+--- a/docs/roadmap/CURRENT_STATE.md
++++ b/docs/roadmap/CURRENT_STATE.md
+@@ -51,14 +51,14 @@ Sources: `CMakeLists.txt`, `Drivers/CMakeLists.txt`, `Platform/CMakeLists.txt`,
+ 
+ | Area | Current responsibility | Portability status |
+ | --- | --- | --- |
+-| `Boot/` | `boot_go()` invocation, safe failure loop and HC32 handover | Boot policy is portable in concept; `main.c` directly includes `hc32f460.h` |
+-| `App/` | Default App, Phase 4 loopback and production USB updater targets | HC32-bound executables; updater callbacks defer Manager/Flash work to the Application poll loop |
++| `Boot/` | `boot_go()`, HC32 handover and `cafe:0001` recovery updater on boot failure | Boot recovery reuses the bounded updater and remains Secondary-only; HC32 USB/DCD and watchdog are target-specific |
++| `App/` | Default App, Phase 4 loopback and `cafe:0002` production USB updater target | HC32-bound executables; updater callbacks defer Manager/Flash work to the Application poll loop |
+ | `components/mcuboot-2.4.0/` | Upstream validation, scratch swap, rollback and trailer state | Vendored upstream; project-specific edits are prohibited |
+ | `components/mcuboot_port/` | Flash areas, MCUboot configuration, signing key bridge | HC32 implementation and generated memory map are coupled |
+ | `components/fw_update/` | Portable Storage/Boot-Control contracts, Protocol V1 codec/parser, receive/verification Manager and MCUboot backends | Core is host-buildable and dependency-checked; MCUboot backend is intentionally non-portable |
+ | `Platform/HC32F460/` | Clock, Flash, startup support and boot handover | Intentionally HC32-specific |
+ | `Drivers/` | CMSIS/device/LL libraries and Boot/App startup objects | HC32-specific |
+-| `Tests/` | Twelve strict HostTests, Rust/C fake E2E, Golden Vectors, malformed corpus, USB boundary check and reusable HIL assets | Physical updater USB and upgrade-persistence HIL remain |
++| `Tests/` | Thirteen strict HostTests, Rust/C fake E2E, Golden Vectors, malformed corpus, USB/WinUSB descriptor checks and reusable HIL assets | Boot recovery/bootstrap and final GUI HIL remain |
+ | `Tools/updater/` | Shared Rust updater core, CLI, fake test link and blocking nusb adapter | Host-side protocol/workflow is portable; USB backend is nusb-specific |
+ | `cmake/` | Memory map, toolchain/options, signing and artifacts | Project/HC32 build policy |
+ 
+@@ -67,8 +67,10 @@ Protocol V1 codec/parser and Manager lifecycle through sequence/replay, receive,
+ verification, COMMIT and an emitted RESET action. The Phase 4 diagnostic USB
+ Vendor Bulk loopback and Python tool remain regression-only. Phase 5 adds the
+ minimal Rust Protocol V1 client/workflow, `info`/`install`/`wait` CLI, fake E2E,
+-blocking nusb adapter and production Application USB-to-Manager binding. Physical
+-USB/HIL, GUI, release packages, UART and CAN are not complete.
++blocking nusb adapter, Boot/Application USB-to-Manager binding, protected
++compatibility metadata and Microsoft OS 2.0 WinUSB descriptors. Existing
++Application upgrade HIL has passed; Boot recovery/bootstrap, final GUI HIL,
++release packages, UART and CAN are not complete.
+ 
+ ## Flash layout
+ 
+diff --git a/docs/roadmap/PHASE5_USB_UPDATER_PLAN.md b/docs/roadmap/PHASE5_USB_UPDATER_PLAN.md
+index c6b6f47..2fff3bf 100644
+--- a/docs/roadmap/PHASE5_USB_UPDATER_PLAN.md
++++ b/docs/roadmap/PHASE5_USB_UPDATER_PLAN.md
+@@ -1,6 +1,6 @@
+ # Phase 5 USB Updater Plan
+ 
+-Status: Phase 5B/5C complete; Phase 5D clean-revision HIL passed with immutable evidence; Phase 5E in progress; G5 not passed
++Status: Phase 5A compatibility, dual-state identity and WinUSB implementation complete; Phase 5B/5C complete; Phase 5D Application HIL passed; Boot recovery and Phase 5E final HIL pending; G5 not passed
+ 
+ Date: 2026-08-27
+ 
+@@ -25,13 +25,19 @@ Phase 5D clean HIL node: `e6eeb68700662ef87f8093f13d4f3fac53dbe722`
+   second protocol or update path.
+ - Windows ships a signed `.msi`. Linux ships one installable package with
+   the matching udev rule.
+-- Plugins, a transport registry, UART/CAN, download resume and Boot recovery
+-  are not Phase 5 work.
++- Plugins, a transport registry, UART/CAN and download resume are not Phase 5
++  work. Boot recovery is the bounded exception defined by ADR-005.
++- Signed compatibility, production USB identity, automatic WinUSB binding and
++  Windows signing inputs follow
++  `docs/adr/ADR-004-phase5-release-identity-and-compatibility.md`.
++- Boot/Application USB state identity and invalid-slot recovery follow
++  `docs/adr/ADR-005-boot-recovery-usb-state-identity.md`.
+ 
+ ## Objective
+ 
+ Deliver the smallest releasable USB updater that installs a compatible signed
+-image through the existing Protocol V1 and Application Manager, boots it as an
++image through the existing Protocol V1 Manager in Boot recovery or Application
++mode, boots it as an
+ MCUboot test upgrade, confirms it only after bounded Application health checks,
+ and proves that the confirmed image persists across another reset.
+ 
+@@ -49,6 +55,8 @@ CLI: info / install / wait       Slint single window (after core HIL)
+  existing C Manager + fake backends     Vendor Bulk -> C Manager
+                                                    |
+                                   Secondary Storage + Boot Control
++                                                   |
++                       Boot failure -> cafe:0001 -> MCUboot bootstrap -> cafe:0002
+ ```
+ 
+ The shared Rust library owns MCUboot image-header/version inspection, Protocol
+@@ -90,6 +98,14 @@ a second device-state-machine implementation in Rust.
+ - The target remains on confirmed v2.0.0. Phase 5D's clean-repeat and immutable
+   evidence requirement is satisfied; Phase 5E Slint work may begin. G5 remains
+   open for GUI and package evidence.
++- On 2026-08-28 ADR-004's local identity/compatibility implementation completed.
++  One identity file feeds firmware, CLI, GUI and signing; Host rejects mismatch
++  before BEGIN, and Device verifies MCUboot signature plus the same protected
++  TLV before pending. Release builds fail closed without a unique serial source.
++- On 2026-08-28 ADR-005 added Boot recovery `cafe:0001`, Application
++  `cafe:0002`, MCUboot bootstrap for invalid Primary, dual-mode Host discovery
++  and automatic WinUSB descriptors. Local Debug/Release descriptor and size
++  checks pass; destructive recovery HIL remains pending.
+ 
+ ## Initial file boundary
+ 
+@@ -136,14 +152,18 @@ hc32-updater wait --version <version> [--timeout <seconds>]
+ 
+ ### Phase 5A — Contract and release preflight
+ 
++Status: contract decisions, signed compatibility, dual-state identity and
++automatic WinUSB descriptors complete locally on 2026-08-28; unique serial and
++Windows signing inputs remain before G5.
++
+ 1. Accept this plan and synchronize roadmap/gate/test documents.
+ 2. Pin the reviewed `nusb` release when Rust code is first added. The reviewed
+    planning reference is `nusb` v0.2.3, which documents blocking device listing,
+    interface claim and Bulk transfer APIs.
+ 3. Freeze the signed image compatibility source used for hardware/board/version
+    checks before BEGIN. Host-supplied IDs remain an early filter, not image trust.
+-4. Freeze production USB VID/PID and Windows WinUSB binding. The current
+-   `fffe:ffff` values are test identifiers and cannot qualify a public package.
++4. Freeze `cafe:0001` Boot recovery, `cafe:0002` Application and Microsoft OS
++   2.0 automatic WinUSB binding for interface 0.
+ 5. Define signing-secret injection outside the repository for Windows artifacts.
+ 
+ Exit: review approval. No Rust, GUI, package or hardware state change is part of
+@@ -195,8 +215,8 @@ evidence. No debugger writes Secondary during the upgrade.
+ 
+ ### Phase 5E — Slint single-window GUI
+ 
+-Status: local implementation/build complete; launch and physical install
+-evidence pending.
++Status: local implementation/build and Linux launch/layout/scroll smoke complete;
++physical install evidence pending.
+ 
+ Only after Phase 5D passes:
+ 
+diff --git a/docs/roadmap/STATUS.md b/docs/roadmap/STATUS.md
+index dec587c..f930614 100644
+--- a/docs/roadmap/STATUS.md
++++ b/docs/roadmap/STATUS.md
+@@ -1,6 +1,6 @@
+ # Roadmap Status
+ 
+-Last updated: 2026-08-27
++Last updated: 2026-08-28
+ 
+ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIEW`, `PASSED`.
+ 
+@@ -11,7 +11,7 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
+ | Phase 2 — Secondary Storage and Boot Control | PASSED | G2 | Strict HostTests 7/7; Debug/Release/signing and remote CI passed | Storage/range-isolation/Pending/restore passed | None | `evidence/hil/2026-08-26-5ebeae6-phase2/`, revisions `5ebeae6`/`0e1abd8`, CI `32928199086`/`32929570437` |
+ | Phase 3 — Protocol Core | PASSED | G3 | HostTests 9/9; corpus 10,000; Debug/Release/signing and remote CI PASS | Not required | None | `evidence/host/2026-08-26-e7899bd-phase3/`, revisions `e7899bd`/`515d0c5`, CI `32948384485` |
+ | Phase 4 — CherryUSB + HC32 DCD Loopback | PASSED | G4 | HostTests 11/11; Debug/Release image verification; CI passed | Enumeration, stall recovery, 10,000-transfer baseline, 10 unplug/re-enumeration recoveries, 30-minute run, counters and exact restore passed | None | `evidence/hil/2026-08-27-fd703cd-phase4-g4/`, revision `fd703cd`, evidence commit `2b63850`, CI `33043244338` |
+-| Phase 5 — USB Upgrade E2E | IN_PROGRESS | G5 | Rust 12/12 with GUI target; strict HostTests 12/12 including fake E2E; Release v1/v2 and GUI builds passed | Clean-revision v1→v2→confirm→reset→persist cycle passed with immutable evidence | GUI launch/install evidence; production VID/PID, WinUSB binding and signing inputs; Windows/Linux packages | `evidence/hil/2026-08-27-e6eeb68-phase5-clean/`, `docs/roadmap/PHASE5_USB_UPDATER_PLAN.md` |
++| Phase 5 — USB Upgrade E2E | IN_PROGRESS | G5 | Rust 17/17; strict HostTests 13/13; Debug/Release Boot/App builds, protected compatibility TLV and WinUSB descriptor verification passed | Existing Application v1→v2 cycle passed; Boot recovery/bootstrap HIL pending | Boot recovery HIL; final GUI install evidence; unique production serial source; Windows signing inputs; Windows/Linux packages | `evidence/hil/2026-08-27-e6eeb68-phase5-clean/`, `evidence/host/2026-08-28-469f9ca-phase5-gui-smoke/`, `docs/adr/ADR-005-boot-recovery-usb-state-identity.md` |
+ | Phase 6 — Failure and Recovery | NOT_STARTED | G6 | Not run | Required | G5, power/reset fixture | None |
+ | Phase 7 — UART Portability | NOT_STARTED | G7 | Not run | Required | G6 | None |
+ | Phase 8 — CAN/CAN FD Portability | NOT_STARTED | G8 | Not run | Required | G7 | None |
+@@ -32,9 +32,72 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
+ 
+ ## Immediate next action
+ 
+-Launch-smoke the new Slint single-window frontend, then run one preflighted
+-physical install and retain its protocol/result evidence. Packaging remains
+-deferred until that GUI path is verified.
++Run a separately approved Boot recovery HIL: prove `cafe:0001` enumeration with
++invalid slots, install a valid signed image into Secondary, observe MCUboot
++bootstrap into Primary and final `cafe:0002` enumeration. Then repeat the final
++GUI install and retain the protocol/result evidence.
++
++## Latest Boot recovery and WinUSB implementation result
++
++Date: 2026-08-28
++
++- Accepted `ADR-005`: Boot recovery is `cafe:0001`; Application updater is
++  `cafe:0002`. Host discovery accepts exactly one state and reports it; bounded
++  post-install waiting accepts only the Application PID.
++- Boot now runs the shared Protocol V1/CherryUSB updater only when `boot_go()`
++  fails. Storage remains Secondary-only and COMMIT retains MCUboot signature plus
++  protected compatibility validation.
++- Enabled `MCUBOOT_BOOTSTRAP`; a valid Secondary candidate can replace an empty
++  or invalid Primary on the next boot without a Host-provided Primary address.
++- Both firmware modes use USB 2.1 BOS plus a 162-byte Microsoft OS 2.0 descriptor
++  set for automatic WinUSB binding on interface 0. Generated Debug/Release bins
++  passed exact descriptor checks for both VID/PID pairs.
++- Debug Boot occupies 44,652 Flash bytes and Release Boot 38,376 bytes inside
++  the fixed 65,536-byte region. Rust passed 17/17; HostTests passed 13/13; all
++  Debug/Release signed-image verification targets passed. No hardware state was
++  changed, so recovery/bootstrap behavior remains HIL-unproven.
++
++## Latest Phase 5A implementation result
++
++Date: 2026-08-28
++
++- Added one `Config/ProductIdentity.env` source for hardware/board and USB
++  identity. CMake generates the firmware header and protected TLV bytes; the
++  Rust build script generates the same constants for CLI and GUI.
++- Release CMake and Cargo builds fail closed for the lab identity. Production
++  inputs are supplied by external `HC32_PRODUCT_IDENTITY_FILE`; the actual
++  assigned VID/PID and unique serial source remain product-owner blockers.
++- `imgtool` now signs exactly one protected custom `0x00A0` TLV containing
++  `01 00 02 00 00 46 00 00 01 00 00 00` for the current lab board. All three
++  Debug and Release image families verified with `protected_tlv_size=0x14`.
++- Rust rejects missing, duplicate, malformed or unsupported compatibility TLVs
++  and rejects a hardware/board mismatch after DEVICE_INFO but before BEGIN.
++- Device COMMIT now re-reads Secondary, calls `bootutil_img_validate()`, requires
++  exactly one matching protected TLV, and only then calls
++  `boot_set_pending_multi(0, 0)`. Signature failure, mismatch and duplicate TLV
++  tests prove pending is not requested.
++- Rust tests passed 17/17; strict HostTests passed 13/13; clippy with warnings
++  denied, Debug/Release ARM builds and all signed-image verification targets
++  passed. Release verification used temporary non-production values/key under
++  `/tmp`; no hardware command or Flash write was performed.
++
++## Latest Phase 5A contract result
++
++Date: 2026-08-28
++
++- Accepted `ADR-004`: one exact-match custom protected TLV (`0x00A0`) is the
++  signed hardware/board compatibility source. Host and device must both fail
++  closed before COMMIT.
++- Project-owner supplied identities are `cafe:0001` for Boot recovery and
++  `cafe:0002` for the Application updater. Release still requires a unique
++  serial source.
++- Windows uses automatic Microsoft OS 2.0/WinUSB binding; custom drivers, Zadig
++  and manual INF installation cannot pass G5.
++- Windows signing credentials remain external ephemeral release inputs; evidence
++  retains only signer/verification data and package hashes.
++- Contract decisions, signed compatibility, dual-state identity and automatic
++  WinUSB descriptors are implemented locally. Unique serial/signing inputs,
++  recovery/final GUI HIL and packages remain G5 blockers.
+ 
+ ## Phase 5A planning start
+ 
+@@ -176,8 +239,13 @@ Date: 2026-08-27
+ - Install performs the existing core install followed by bounded
+   re-enumeration/version verification; no GUI-specific protocol path exists.
+ - `cargo fmt --check`, 12/12 Rust tests, clippy with warnings denied and the
+-  locked Release GUI build passed. GUI launch and physical install evidence are
+-  still required; G5 remains open.
++  locked Release GUI build passed. Physical install evidence is still required;
++  G5 remains open.
++- On 2026-08-28 the Release GUI launch/layout smoke passed on Linux/X11. The
++  final window uses a native ScrollView; the user confirmed the lower controls
++  remain reachable with the mouse wheel at `560x440`. No Update action was run.
++  Evidence: `evidence/host/2026-08-28-469f9ca-phase5-gui-smoke/`. Physical GUI
++  install evidence remains required.
+ 
+ ## Latest local G1 verification
+ 

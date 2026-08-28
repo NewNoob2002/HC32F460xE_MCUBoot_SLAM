@@ -8,8 +8,6 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 use std::time::Duration;
 
-const VID: u16 = 0xfffe;
-const PID: u16 = 0xffff;
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(2);
 const WAIT_POLL: Duration = Duration::from_millis(250);
 
@@ -45,8 +43,15 @@ fn run(command: CliCommand) -> Result<(), Box<dyn std::error::Error>> {
     match command {
         CliCommand::Info => {
             let transport = open_device()?.ok_or("USB device not found")?;
+            let mode = transport.mode();
+            let serial_number = transport
+                .serial_number()
+                .unwrap_or("not-reported")
+                .to_owned();
             let mut client = ProtocolV1Client::new(transport, REQUEST_TIMEOUT);
             print_info(&client.info()?);
+            println!("mode={mode}");
+            println!("serial={serial_number}");
         }
         CliCommand::Install(path) => {
             let image = FirmwareImage::parse(fs::read(path)?)?;
@@ -56,7 +61,7 @@ fn run(command: CliCommand) -> Result<(), Box<dyn std::error::Error>> {
         }
         CliCommand::Wait { version, timeout } => {
             let info = UpgradeWorkflow::wait_for_version(
-                open_device,
+                NusbTransport::open_application,
                 version,
                 timeout,
                 WAIT_POLL,
@@ -70,7 +75,7 @@ fn run(command: CliCommand) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn open_device() -> std::io::Result<Option<NusbTransport>> {
-    NusbTransport::open_unique(VID, PID)
+    NusbTransport::open_unique_updater()
 }
 
 fn print_info(info: &hc32_updater::DeviceInfo) {

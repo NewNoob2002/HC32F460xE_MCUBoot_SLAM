@@ -12,6 +12,7 @@ add_library(fw_update_mcuboot STATIC
     backends/mcuboot/src/boot_control_mcuboot.c
 )
 target_include_directories(fw_update_mcuboot PUBLIC backends/mcuboot/include)
+target_include_directories(fw_update_mcuboot PRIVATE ${BOOTUTIL_ROOT}/src)
 target_link_libraries(fw_update_mcuboot
     PUBLIC fw_update_core
     PRIVATE mcuboot_bootutil hc32_project_options

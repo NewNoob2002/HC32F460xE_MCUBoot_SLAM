@@ -1,0 +1,15 @@
+device HC32F460xE
+si SWD
+speed 4000
+connect
+halt
+mem32 0x1FFF8394, 2
+mem32 0x1FFF83B4, 2
+mem32 0x1FFF90DC, 1
+mem8 0x1FFF8AA8, 4
+savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-boot-recovery/snapshots/manager_after_commit_failure.bin, 0x1FFF83CC, 0x000006EC
+savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-boot-recovery/snapshots/primary_header_after_commit_failure.bin, 0x00010000, 0x00000200
+savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-boot-recovery/snapshots/primary_trailer_after_commit_failure.bin, 0x00041F00, 0x00000100
+savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-boot-recovery/snapshots/secondary_after_commit_failure.bin, 0x00042000, 0x00032000
+g
+exit

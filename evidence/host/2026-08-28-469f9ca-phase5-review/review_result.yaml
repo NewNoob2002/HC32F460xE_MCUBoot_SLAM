@@ -1,0 +1,34 @@
+review_result:
+  schema_version: 1
+  source_revision: "469f9ca6083e32bfaaaaba1cc3bd1b5f2f72178d"
+  source_dirty: true
+  scope:
+    - "Boot recovery and MCUboot candidate validation"
+    - "Product identity and protected compatibility TLV"
+    - "Boot/Application USB 2.1 and Microsoft OS 2.0 descriptors"
+    - "Rust CLI/GUI/nusb workflow and image parsing"
+    - "SysTick/DWT timebase and Debug EasyLogger UART"
+    - "Windows portable/Linux direct-run scripts and evidence"
+  toolchain_context: "GNU Arm Embedded Cortex-M4 C11; host GCC 13.3; Rust 1.98 edition 2024"
+  findings: []
+  resolved_findings:
+    - severity: "medium"
+      location: "Tools/updater/build.rs"
+      category: "correctness"
+      evidence: "Rust accepted unknown product identity fields and zero VID/PIDs while CMake rejected them, allowing host/firmware contract drift."
+      resolution: "Reject unknown keys and require nonzero USB VID/PIDs; negative Cargo checks passed."
+  residual_risks:
+    - "Production Windows signing certificate/timestamp inputs were not supplied."
+    - "Current Linux host lacks MinGW CRT/import libraries for a post-review Windows link."
+    - "No clean-Windows runtime result exists."
+    - "Debug UART TP2 physical path remains unverified and is not recorded as passed."
+  verification:
+    - "cargo fmt --check"
+    - "cargo test --locked --all-targets: 16 passed"
+    - "CTest rust_updater with HC32_FAKE_DEVICE: Rust/C fake E2E passed"
+    - "cargo clippy --locked --all-targets --features fake-e2e -- -D warnings"
+    - "HostTests: 14/14 passed"
+    - "Debug and Release firmware clean builds passed"
+    - "Debug and Release app/loopback/updater image verification passed"
+    - "Debug and Release Boot/Application WinUSB descriptor verification passed"
+    - "13 evidence bundles verified before this review bundle was added"

@@ -1,0 +1,15 @@
+evidence_manifest:
+  schema_version: 1
+  run_id: "2026-08-28-469f9ca-phase5-review"
+  source_revision: "469f9ca6083e32bfaaaaba1cc3bd1b5f2f72178d"
+  source_dirty: true
+  result: "READY_FOR_COMMIT_WITH_G5_EXTERNAL_BLOCKERS"
+  contracts:
+    - "review_result.yaml"
+    - "test_result.yaml"
+  remaining_gate_blockers:
+    - "Production-signed Windows CLI/GUI EXEs"
+    - "Clean-Windows portable run"
+  deferred_non_gate_diagnostic:
+    - "Debug UART TP2 physical capture"
+  checksum_verification: "python3 Tests/HIL/verify_evidence.py evidence/host/2026-08-28-469f9ca-phase5-review/SHA256SUMS"

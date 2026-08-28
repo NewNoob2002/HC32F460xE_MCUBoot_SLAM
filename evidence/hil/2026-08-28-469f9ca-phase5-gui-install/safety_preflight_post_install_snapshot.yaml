@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T04:43:34Z"
+  operation: "debug-halt/read/run"
+  authorization: "User requested the Slint GUI physical-install HIL, including retained post-install slot evidence and final restoration"
+  target:
+    board: "HC32F460xE; Application cafe:0002; hardware revision 2"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "J-Link 000020781318"
+    transport: "SWD 4000 kHz"
+  artifact_or_stimulus: "Read exact Primary signed-image bytes and Primary/Secondary header/trailer windows after the successful GUI install"
+  limits: "Halt once; read Primary exactly 0x95C3 bytes plus 0x200-byte headers and 0x100-byte trailers; no erase/program/reset; no Scratch access; never access Reserved 0x00076000-0x0007FFFF; resume target before disconnect"
+  recovery_plan: "Retain snapshots and log, then execute the approved full pre-GUI-HIL restore. If a read fails, preserve evidence and continue directly to restore without destructive retry"
+  approved: true

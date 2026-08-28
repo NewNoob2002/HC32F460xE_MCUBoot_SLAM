@@ -5,6 +5,7 @@ set(BOOTUTIL_ROOT ${MCUBOOT_ROOT}/boot/bootutil)
 
 add_subdirectory(mcuboot_port)
 add_subdirectory(cherryusb)
+add_subdirectory(easylogger EXCLUDE_FROM_ALL)
 
 add_library(tinycrypt STATIC
     ${TINYCRYPT_ROOT}/source/sha256.c
@@ -52,7 +53,7 @@ target_include_directories(mcuboot_bootutil
 )
 target_link_libraries(mcuboot_bootutil
     PUBLIC mcuboot_port_hc32
-    PRIVATE tinycrypt mcuboot_asn1 hc32_project_options
+    PRIVATE tinycrypt mcuboot_asn1 hc32_project_options $<$<CONFIG:Debug>:hc32_easylogger>
 )
 target_compile_options(mcuboot_bootutil PRIVATE $<$<CONFIG:Release>:-UNDEBUG>)
 

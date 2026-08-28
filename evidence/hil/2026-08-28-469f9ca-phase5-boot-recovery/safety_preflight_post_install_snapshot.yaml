@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T03:55:46Z"
+  operation: "debug-halt/read/run"
+  authorization: "User authorized completion of the Boot recovery HIL on J-Link 20781318, including post-install slot evidence and mandatory final restore"
+  target:
+    board: "HC32F460xE; Application cafe:0002; hardware revision 2"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "J-Link 000020781318"
+    transport: "SWD 4000 kHz"
+  artifact_or_stimulus: "Read-only snapshots of Primary 0x00010000, Secondary 0x00042000 and MCUboot trailer windows 0x00041F00/0x00073F00 after successful attempt-2 install"
+  limits: "Halt once; read Primary image exactly 38339 bytes plus four bounded 0x200/0x100 snapshots; no erase/program/reset; no Scratch access; never access Reserved 0x00076000-0x0007FFFF; resume target before disconnect"
+  recovery_plan: "Retain snapshots and log; proceed directly to the already-approved full pre-HIL restore. If the probe/read fails, keep failure evidence and restore without retrying destructive operations"
+  approved: true

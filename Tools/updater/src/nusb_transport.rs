@@ -1,7 +1,9 @@
 use hc32_updater::Transport;
+use hc32_updater::product_identity::{USB_APPLICATION_PID, USB_BOOT_PID, USB_VID};
 use nusb::Endpoint;
 use nusb::MaybeFuture;
 use nusb::transfer::{Buffer, Bulk, In, Out, TransferError};
+use std::fmt;
 use std::io;
 use std::time::Duration;
 
@@ -16,23 +18,51 @@ pub struct NusbTransport {
     in_endpoint: Endpoint<Bulk, In>,
     out_max_packet: usize,
     in_max_packet: usize,
+    serial_number: Option<String>,
+    mode: DeviceMode,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum DeviceMode {
+    BootRecovery,
+    Application,
+}
+
+impl fmt::Display for DeviceMode {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str(match self {
+            Self::BootRecovery => "boot-recovery",
+            Self::Application => "application",
+        })
+    }
 }
 
 impl NusbTransport {
-    pub fn open_unique(vid: u16, pid: u16) -> io::Result<Option<Self>> {
-        let mut devices = nusb::list_devices()
-            .wait()?
-            .filter(|device| device.vendor_id() == vid && device.product_id() == pid);
+    pub fn open_unique_updater() -> io::Result<Option<Self>> {
+        Self::open_unique(&[USB_BOOT_PID, USB_APPLICATION_PID])
+    }
+
+    pub fn open_application() -> io::Result<Option<Self>> {
+        Self::open_unique(&[USB_APPLICATION_PID])
+    }
+
+    fn open_unique(product_ids: &[u16]) -> io::Result<Option<Self>> {
+        let mut devices = nusb::list_devices().wait()?.filter(|device| {
+            device.vendor_id() == USB_VID && product_ids.contains(&device.product_id())
+        });
         let Some(device_info) = devices.next() else {
             return Ok(None);
         };
         if devices.next().is_some() {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidInput,
-                format!("multiple USB devices match {vid:04x}:{pid:04x}"),
+                "multiple Boot/Application updater devices match",
             ));
         }
 
+        let mode = mode_for_product_id(device_info.product_id())
+            .expect("device was filtered by product ID");
+        let serial_number = device_info.serial_number().map(str::to_owned);
         let device = device_info.open().wait()?;
         let interface = device.claim_interface(INTERFACE).wait()?;
         let out_endpoint = interface.endpoint::<Bulk, Out>(OUT_ENDPOINT)?;
@@ -44,7 +74,25 @@ impl NusbTransport {
             in_endpoint,
             out_max_packet,
             in_max_packet,
+            serial_number,
+            mode,
         }))
+    }
+
+    pub fn serial_number(&self) -> Option<&str> {
+        self.serial_number.as_deref()
+    }
+
+    pub fn mode(&self) -> DeviceMode {
+        self.mode
+    }
+}
+
+fn mode_for_product_id(product_id: u16) -> Option<DeviceMode> {
+    match product_id {
+        USB_BOOT_PID => Some(DeviceMode::BootRecovery),
+        USB_APPLICATION_PID => Some(DeviceMode::Application),
+        _ => None,
     }
 }
 
@@ -182,5 +230,18 @@ mod tests {
                 .kind(),
             io::ErrorKind::UnexpectedEof
         );
+    }
+
+    #[test]
+    fn maps_boot_and_application_product_ids() {
+        assert_eq!(
+            mode_for_product_id(USB_BOOT_PID),
+            Some(DeviceMode::BootRecovery)
+        );
+        assert_eq!(
+            mode_for_product_id(USB_APPLICATION_PID),
+            Some(DeviceMode::Application)
+        );
+        assert_eq!(mode_for_product_id(0), None);
     }
 }

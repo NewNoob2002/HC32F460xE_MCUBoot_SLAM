@@ -1,0 +1,57 @@
+test_result:
+  schema_version: 1
+  source_revision: "469f9ca6083e32bfaaaaba1cc3bd1b5f2f72178d"
+  source_dirty: true
+  artifact_checksums:
+    gui: "55f8977a0ed93cb4d63cfb70785ce37ec86f589cb7a05b41ea1ee8ee90ea21b4"
+    cli: "a58408098b52f137846969889331f941832de781c503006b2d22d6d4e6820120"
+    boot: "f1651f4f5d552b5165bd807dd836f70bb747d5401286f65229900ffd7ccdaeef"
+    signed_image: "acc9be453440823b13045da96d42c769e1f5ecd85a2364821e49b1a5c1cfe1b0"
+    pre_hil_backup: "68749a28839ef5b1e98473e014b611261add7434adb3dbc4419793c3fabc9b05"
+    post_restore_readback: "68749a28839ef5b1e98473e014b611261add7434adb3dbc4419793c3fabc9b05"
+  safety_preflight: "safety_preflight_gui_install.yaml"
+  level: "hil"
+  target: "HC32F460xE revision 2, J-Link 20781318, USB HC32F460-PHASE5-0001"
+  command: "backup; prepare cafe:0001 recovery; GUI Refresh/Browse/Update once; capture cafe:0002 and completion screenshot; independent CLI/slot verification; exact restore"
+  timing: {started_at_utc: "2026-08-28T04:32:30Z", duration_ms: 794000, timeout_ms: 30000}
+  attempts: 1
+  passed: true
+  counts: {total: 1, passed: 1, failed: 0, skipped: 0}
+  classified_failures: []
+  logs:
+    - "logs/00_backup.txt"
+    - "logs/01_backup_sha256.txt"
+    - "logs/02_backup_cmp.txt"
+    - "logs/10_prepare_recovery.txt"
+    - "logs/11_boot_recovery_info.txt"
+    - "logs/20_gui_udev_monitor.txt"
+    - "logs/21_gui_session.txt"
+    - "logs/22_application_info.txt"
+    - "logs/30_post_install_snapshot.txt"
+    - "logs/31_primary_image_cmp.txt"
+    - "logs/32_primary_image_sha256.txt"
+    - "logs/33_slot_snapshot_analysis.txt"
+    - "logs/99_restore.txt"
+    - "logs/100_post_restore_sha256.txt"
+    - "logs/101_post_restore_cmp.txt"
+  screenshots:
+    - "screenshots/01_gui_ready.png"
+    - "screenshots/02_gui_complete.png"
+  requirements:
+    - "The Slint GUI launches and remains responsive during physical USB work"
+    - "Browse selects and validates the signed MCUboot image"
+    - "One GUI Update uses the shared updater core and reaches 100%"
+    - "The GUI observes cafe:0001 to cafe:0002 and reports Application 1.0.0"
+    - "The exact pre-HIL target Flash is restored after the test"
+  observations:
+    - "GUI ready screenshot shows the single-window layout before user interaction"
+    - "User performed Refresh, Browse and Update exactly once"
+    - "Completion screenshot shows Connected, Current Version 1.0.0, SHA256 valid, 100% and Upgrade complete"
+    - "udev captured cafe:0001 removal followed by cafe:0002 addition at /dev/bus/usb/001/020"
+    - "Independent CLI info reported mode application and Application 1.0.0 with the expected identity and geometry"
+    - "Primary's exact 38339 bytes are byte-identical to the selected signed image"
+    - "Primary trailer has copy_done=1, image_ok=1 and valid magic; Secondary header/trailer are erased"
+    - "GUI and monitor exit code 130 records intentional post-evidence SIGINT cleanup"
+    - "The post-restore 0x76000-byte readback is byte-identical to the pre-HIL backup"
+  final_state: "exact pre-GUI-HIL Flash restored; target reset and running"
+  recovery: "exercised and passed"

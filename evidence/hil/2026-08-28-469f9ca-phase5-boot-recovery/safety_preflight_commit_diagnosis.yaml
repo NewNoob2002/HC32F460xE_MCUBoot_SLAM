@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T03:35:56Z"
+  operation: "debug-halt/readback"
+  authorization: "User authorized the Boot recovery HIL and J-Link 20781318; this bounded inspection diagnoses the retained COMMIT failure without retrying it"
+  target:
+    board: "HC32F460xE; Boot recovery cafe:0001; hardware revision 2"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "J-Link 000020781318"
+    transport: "SWD 4000 kHz; last measured VTref 3.351 V"
+  artifact_or_stimulus: "build/Debug/Boot/boot_firmware.elf SHA256 38bbcded3774f1ccccc5b299b5a5c20b8dd2b6e6d9b10cf7c207d30ddc6a4d53; read Manager RAM, diagnostics, Primary header/trailer and full Secondary only"
+  limits: "Halt once; no reset, erase, flash write, USB retry, memory write, unlock/recover, OTP, option-byte or protection change; read RAM 0x1FFF8394-0x1FFF90DF, Primary 0x00010000/0x00041F00 snapshots, Secondary 0x00042000-0x00073FFF; resume with go"
+  recovery_plan: "Resume target after readback; preserve failed attempt; if inspection cannot prove a safe fix, restore the exact pre-HIL backup rather than retrying COMMIT"
+  approved: true

@@ -1,0 +1,37 @@
+Phase 5 Debug UART - official DDL comparison
+Date: 2026-08-28
+Source revision: 469f9ca6083e
+
+Official sources inspected:
+- HC32F460 DDL Rev3.3.0
+  ZIP SHA256: b3bb8f5e736cc9986fcfe0edd51d713a48e1296441c12a9d891171b515718040
+  Example: projects/ev_hc32f460_lqfp100_v2/examples/usart/usart_uart_polling/source/main.c
+- HC32F460 Series Datasheet Rev1.61
+  PDF SHA256: 5b9a86a4b33c19a9e3def268430a06fd19549bcf0e740ea69a92b8c7e5171ea2
+
+Project configuration:
+- CM_USART3
+- FCG1_PERIPH_USART3
+- PB13 / GPIO_FUNC_32
+- 115200 8N1, no flow control
+
+Initialization comparison:
+1. Unlock GPIO/FCG write protection: equivalent.
+2. Configure TX pin with GPIO_SetFunc: equivalent.
+3. Enable the USART peripheral clock: equivalent.
+4. Initialize stc_usart_uart_init_t with USART_UART_StructInit: equivalent.
+5. Set baud rate and call USART_UART_Init: equivalent.
+6. Enable USART_TX with USART_FuncCmd: equivalent.
+
+The official polling example does not perform a separate GPIO_Init output-direction
+step for the TX pin. No missing GPIO output configuration was found in
+bsp_log_uart_init(). The example explicitly chooses a clock divider and oversampling
+mode, while the project uses the DDL defaults; the live BRR/CR1 register values already
+show a calculated baud rate of approximately 115288.63 bit/s (+0.077%), so this
+difference does not explain the zero-byte capture.
+
+Conclusion:
+Firmware initialization matches the official DDL contract. Together with the live
+USART3 TXE/TC state, PB13 PFSR Func32, complete TDR stimulus, and successful DAPLink
+VCOM self-loop, the remaining fault boundary is the physical PB13-to-TP2-to-DAPLink RX
+path. Do not repeat reset/TDR-only attempts without a voltage or waveform measurement.

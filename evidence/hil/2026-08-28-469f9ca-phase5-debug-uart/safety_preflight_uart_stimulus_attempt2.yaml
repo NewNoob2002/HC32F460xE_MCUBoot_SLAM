@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T09:01:41Z"
+  operation: "cmsis-dap-peripheral-write/uart-open"
+  authorization: "User requested continued diagnosis. Attempt 1 stopped after one byte because the pyOCD sleep argument used seconds instead of the documented integer milliseconds."
+  target:
+    board: "HC32F460xE; hardware revision 2"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "Horco CMSIS-DAP 5844333732"
+    transport: "CMSIS-DAP SWD at 4000 kHz; integrated UART 115200 8N1, 3.3 V TTL"
+  artifact_or_stimulus: "Attempt 2: write ASCII UART_TEST\r\n once to initialized USART3 TDR 0x40021004, using the corrected pyOCD sleep value of 20 milliseconds between halfword writes."
+  limits: "Write exactly 11 values in range 0x00..0xFF only to USART3 TDR 0x40021004. Do not reset, intentionally halt, write Flash, GPIO, clock, option-byte, protection, or other peripheral registers. Capture is bounded to 15 seconds. No further automatic retry."
+  recovery_plan: "The TDR stimulus is transient and requires no persistent rollback. Leave the target running. If no bytes are captured, stop active target tests and validate the DAPLink VCOM with a physical TX-RX loopback before changing firmware."
+  approved: true

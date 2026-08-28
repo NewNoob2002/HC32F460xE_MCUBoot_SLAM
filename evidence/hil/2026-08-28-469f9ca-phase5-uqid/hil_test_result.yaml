@@ -1,0 +1,28 @@
+test_result:
+  schema_version: 1
+  source_revision: "469f9ca6083e32bfaaaaba1cc3bd1b5f2f72178d"
+  safety_preflight: "safety_preflight_uqid.yaml"
+  level: "hil"
+  target: "HC32F460xE revision 2; J-Link 20781318"
+  command: "J-Link UQID/read-back scripts plus hc32-updater info in Application and Boot recovery modes"
+  timing:
+    started_at_utc: "2026-08-28T05:38:54Z"
+    duration_ms: 936000
+    timeout_ms: 1200000
+  attempts: 1
+  passed: true
+  counts:
+    total: 4
+    passed: 4
+    failed: 0
+    skipped: 0
+  classified_failures: []
+  logs:
+    - "logs/00_backup_uid.txt"
+    - "logs/03_application_info.txt"
+    - "logs/06_boot_info.txt"
+    - "logs/99_restore.txt"
+  requirements:
+    - "HC32F460 UQID is nonzero/non-erased"
+    - "Application and Boot recovery expose the same unique serial"
+    - "Full 0x00000000-0x00075FFF state is restored byte-for-byte"

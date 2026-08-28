@@ -440,9 +440,9 @@ G4 has passed and a release-qualified HIL fixture is available.
 Minimal Rust `info`/`install`/`wait` CLI, one shared Rust protocol/client core,
 blocking nusb USB link, Application USB-to-Manager glue, Secondary storage,
 test-pending request, reboot, bounded post-boot health confirmation and
-persistence verification. After that core path passes, add one Slint window and
-signed Windows `.msi` and Linux package; the Linux package carries the
-udev rule.
+persistence verification. After that core path passes, add one Slint window,
+signed Windows portable EXEs/ZIP, and Linux direct-run binaries with one udev
+rule.
 
 ### Out of Scope
 
@@ -475,19 +475,19 @@ Only corrections required by integration evidence; breaking changes require ADR 
 4. Transfer a valid signed image, finalize, request test upgrade and reboot.
 5. Verify v2 health confirmation and persistence after another reset.
 6. Only then add the Slint single-window GUI over the same core.
-7. Build/verify the signed Windows `.msi` and Linux package with udev rule.
-8. Retain immutable fake, HIL, GUI and package evidence.
+7. Build/verify signed Windows portable EXEs/ZIP and Linux direct-run access.
+8. Retain immutable fake, HIL, GUI and portable-release evidence.
 
 ### Automated Tests
 
-Rust format/clippy/tests, shared Golden Vectors, fake E2E session, package
+Rust format/clippy/tests, shared Golden Vectors, fake E2E session, portable ZIP
 content/signature checks and existing firmware/dependency regressions.
 
 ### HIL Tests
 
 CLI v1 to v2 over USB, swap, new version report, bounded confirmation and
 persistence after another reset; then one GUI install using the same core and
-clean Windows/Linux package install/access/uninstall checks.
+clean Windows portable/Linux direct-run access checks.
 
 ### Fault Injection
 
@@ -500,15 +500,15 @@ bounded timeout and duplicate response. Download resume is not added.
 - Invalid/oversize images never become bootable.
 - After confirmation, v2 persists and reports expected versions/hardware identity.
 - Fake E2E, CLI USB and GUI paths use one Rust protocol/client core.
-- Windows ships a verified signed installer without manual driver binding;
-  Linux ships an installable package with the correct udev rule.
+- Windows ships verified signed portable EXEs without manual driver binding;
+  Linux runs directly with the correct udev rule.
 - The Phase 4 Python loopback regression remains unchanged and green.
 
 ### Evidence
 
 Fake/host transcript, USB trace/descriptor, firmware hashes, HIL logs,
-confirmation/persistence slot state, package hashes/signature verification and
-clean-VM install results.
+confirmation/persistence slot state, EXE/ZIP hashes/signature verification and
+clean-host direct-run results.
 
 ### Exit Gate
 
@@ -521,8 +521,8 @@ G4 USB loopback revision.
 ### Risks
 
 - Cross-layer shortcuts. Mitigation: dependency checks and review of every call path.
-- Current `fffe:ffff` test identity and missing release-signing secret cannot
-  qualify public packages. Mitigation: make both explicit Phase 5A/5F gates.
+- Missing release-signing credentials cannot qualify Windows release EXEs.
+  Mitigation: keep signing inputs external and make verification a Phase 5F gate.
 
 ## Phase 6 — Failure and Recovery Qualification
 

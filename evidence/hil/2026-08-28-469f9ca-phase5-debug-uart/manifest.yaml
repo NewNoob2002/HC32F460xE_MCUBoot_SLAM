@@ -1,0 +1,17 @@
+evidence_manifest:
+  schema_version: 1
+  run_id: "2026-08-28-469f9ca-hc32f460-phase5-debug-uart"
+  source_revision: "469f9ca6083e32bfaaaaba1cc3bd1b5f2f72178d"
+  source_dirty: true
+  target: "HC32F460xE revision 2"
+  probe_serial: "Horco CMSIS-DAP 5844333732"
+  uart_port: "/dev/serial/by-id/usb-Horco_Horco_CMSIS-DAP_5844333732-if01"
+  result: "DEFERRED_HARDWARE_UART_PATH_UNVERIFIED"
+  final_target_state: "exact pre-HIL Flash restored; target reset and running"
+  gate_impact: "Debug UART physical capture is not passed; unrelated Phase 5 USB updater, Boot recovery, GUI, identity and portable-host work may continue"
+  resume_gate: "TP2 idle voltage/waveform and PB13-to-TP2 continuity measurement"
+  contracts:
+    - "hil_test_result.yaml"
+    - "runtime_monitor.yaml"
+    - "deployment_result_restore.yaml"
+  checksum_verification: "python3 Tests/HIL/verify_evidence.py evidence/hil/2026-08-28-469f9ca-phase5-debug-uart/SHA256SUMS"

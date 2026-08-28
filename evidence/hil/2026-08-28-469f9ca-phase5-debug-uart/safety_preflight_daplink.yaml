@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T08:33:58Z"
+  operation: "cmsis-dap-debug-halt/readback/reset/uart-open/flash-restore"
+  authorization: "User explicitly switched the current-board HIL from J-Link to DAPLink, confirmed DAPLink RX is connected to TP2, and completed the required Linux udev setup."
+  target:
+    board: "HC32F460xE; hardware revision 2"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "Horco CMSIS-DAP 5844333732"
+    transport: "CMSIS-DAP SWD at no more than 4000 kHz; integrated UART 115200 8N1, 3.3 V TTL"
+  artifact_or_stimulus: "pyOCD 0.45.1 built-in target hc32f460xe; currently deployed Debug Boot SHA256 a5432d613f6718aa1b51d5ea06fa32e09944b313a5a08fd9e1e3b4f5eeab9fb5 at 0x00000000 and Debug updater Primary SHA256 224d7cb0571590cfb2a6274fa429000f28b281e2d6edfaa9062e869d4c841164 at 0x00010000; UART /dev/serial/by-id/usb-Horco_Horco_CMSIS-DAP_5844333732-if01."
+  limits: "Use DAPLink UID 5844333732 for this UART HIL run. J-Link 20781318 remains available for later SWD-only work under a separate preflight. First connect/read only, then perform at most one controlled reset for UART capture. Restore only the exact 483328-byte 0x00000000..0x00075FFF backup. Never write 0x00076000 or above, option bytes, protection state, or external devices. No chip/mass erase, unlock, or automatic retry. UART capture is bounded to 30 seconds."
+  recovery_plan: "Restore backup/pre_hil_00000000_00075fff.bin (SHA256 68749a28839ef5b1e98473e014b611261add7434adb3dbc4419793c3fabc9b05) at 0x00000000 using pyOCD sector erase/program, explicitly compare all 0x76000 bytes, then reset/run. On any DAPLink connect/program/compare failure, retain logs and stop; using J-Link later requires its own preflight."
+  approved: true

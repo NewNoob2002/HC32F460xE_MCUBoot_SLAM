@@ -1,0 +1,2 @@
+savemem 0x00000000 0x00076000 evidence/hil/2026-08-28-469f9ca-phase5-debug-uart/snapshots/post_restore_00000000_00075fff.bin
+status

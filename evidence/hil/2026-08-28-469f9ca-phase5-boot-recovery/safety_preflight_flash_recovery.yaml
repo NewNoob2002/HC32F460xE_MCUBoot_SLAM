@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T03:25:51Z"
+  operation: "flash/erase/reset"
+  authorization: "User explicitly confirmed J-Link 20781318 and the current board, allowing backup, Boot flash, minimal Primary/Secondary invalidation, USB install/reset, and final restore"
+  target:
+    board: "HC32F460xE; Cortex-M4; hardware revision 2"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "J-Link 000020781318"
+    transport: "SWD 4000 kHz; VTref measured 3.346 V"
+  artifact_or_stimulus: "artifacts/boot_firmware.bin SHA256 424487e99d1fb4d1d9657b5d74fdad21e7ad065233f46eb33ff284b8197b30e9 at 0x00000000; erase only Boot 0x00000000-0x0000FFFF, Primary first sector 0x00010000-0x00011FFF, Secondary first sector 0x00042000-0x00043FFF"
+  limits: "No mass erase; no access to Scratch 0x00074000-0x00075FFF or Reserved 0x00076000-0x0007FFFF; no unlock/recover, OTP, option-byte or protection changes; verify Boot byte-for-byte before reset/run"
+  recovery_plan: "Restore backup/pre_hil_a_00000000_00075fff.bin (483328 bytes, SHA256 68749a28839ef5b1e98473e014b611261add7434adb3dbc4419793c3fabc9b05) with raw_commands/99_restore.jlink and require verifybin plus post-restore readback SHA256 equality"
+  approved: true

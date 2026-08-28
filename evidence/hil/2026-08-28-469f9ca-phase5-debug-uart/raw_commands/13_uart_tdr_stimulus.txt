@@ -1,0 +1,27 @@
+status
+read32 0x40021000 4
+write16 0x40021004 0x55
+sleep 0.02
+write16 0x40021004 0x41
+sleep 0.02
+write16 0x40021004 0x52
+sleep 0.02
+write16 0x40021004 0x54
+sleep 0.02
+write16 0x40021004 0x5F
+sleep 0.02
+write16 0x40021004 0x54
+sleep 0.02
+write16 0x40021004 0x45
+sleep 0.02
+write16 0x40021004 0x53
+sleep 0.02
+write16 0x40021004 0x54
+sleep 0.02
+write16 0x40021004 0x0D
+sleep 0.02
+write16 0x40021004 0x0A
+sleep 0.02
+read32 0x40021000 4
+read16 0x40021004 2
+status

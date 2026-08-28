@@ -2,6 +2,7 @@ CompileFlags:
   CompilationDatabase: build/Debug
   Add:
     - --target=arm-none-eabi
+    - -U__clang__
     - -D__PROGRAM_START=Reset_Handler
   Remove:
     - -fcyclomatic-complexity

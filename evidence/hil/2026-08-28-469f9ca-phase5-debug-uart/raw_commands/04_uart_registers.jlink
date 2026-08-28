@@ -1,0 +1,9 @@
+device HC32F460xE
+si SWD
+speed 4000
+connect
+h
+mem32 0x40021000,6
+mem16 0x40053C76,2
+g
+exit

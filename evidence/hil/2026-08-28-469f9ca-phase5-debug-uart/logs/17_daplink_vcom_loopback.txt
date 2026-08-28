@@ -1,0 +1,7 @@
+timestamp_utc: 2026-08-28T09:07:39Z
+port: /dev/serial/by-id/usb-Horco_Horco_CMSIS-DAP_5844333732-if01
+settings: 115200 8N1, flow-control none
+stimulus: DAPLINK_LOOPBACK_5844333732\r\n
+response: DAPLINK_LOOPBACK_5844333732\r\n
+result: PASSED_BYTE_EXACT_LOOPBACK
+command_exit_code: 0

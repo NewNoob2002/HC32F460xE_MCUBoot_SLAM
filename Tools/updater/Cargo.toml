@@ -10,6 +10,8 @@ fake-e2e = []
 
 [dependencies]
 nusb = "=0.2.3"
+rfd = "=0.15.4"
+sha2 = "=0.10.9"
 slint = "=1.16.0"
 
 [build-dependencies]

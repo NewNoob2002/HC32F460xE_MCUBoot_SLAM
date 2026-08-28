@@ -1,0 +1,6 @@
+Script started on 2026-08-28 11:33:21+08:00 [COMMAND="timeout 90s udevadm monitor --kernel --property --subsystem-match=usb" <not executed on terminal>]
+monitor will print the received events for:
+KERNEL - the kernel uevent
+
+
+Script done on 2026-08-28 11:34:51+08:00 [COMMAND_EXIT_CODE="124"]

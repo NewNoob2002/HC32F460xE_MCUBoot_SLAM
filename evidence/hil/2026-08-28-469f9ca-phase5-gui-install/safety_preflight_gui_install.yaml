@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T04:33:11Z"
+  operation: "usb-storage-write/reset"
+  authorization: "User requested the Slint GUI physical-install HIL and agreed to perform the required Browse/Update mouse actions"
+  target:
+    board: "HC32F460xE; expected Boot recovery cafe:0001; hardware revision 2"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "J-Link 000020781318"
+    transport: "USB vendor bulk interface 0"
+  artifact_or_stimulus: "artifacts/hc32-updater-gui SHA256 55f8977a0ed93cb4d63cfb70785ce37ec86f589cb7a05b41ea1ee8ee90ea21b4; artifacts/updater_signed.bin, 38339 bytes, version 1.0.0, SHA256 acc9be453440823b13045da96d42c769e1f5ecd85a2364821e49b1a5c1cfe1b0"
+  limits: "Proceed only after CLI info reports boot-recovery, hardware 0x00004600, board 1/revision 2 and capacity 196608; one GUI Browse selection and one Update click; Secondary-only backend; one bounded cafe:0002/Application 1.0.0 wait; no automatic retry"
+  recovery_plan: "Retain GUI, udev and device logs plus screenshots on success or failure; restore the exact pre-GUI-HIL backup before closing the run"
+  approved: true

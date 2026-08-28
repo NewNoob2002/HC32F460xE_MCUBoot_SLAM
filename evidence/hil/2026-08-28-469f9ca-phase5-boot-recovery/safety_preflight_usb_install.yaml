@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T03:27:38Z"
+  operation: "usb-storage-write/reset"
+  authorization: "User explicitly authorized USB install/reset and final restore on J-Link 20781318 and the current board"
+  target:
+    board: "HC32F460xE; Boot recovery cafe:0001; hardware revision 2"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "J-Link 000020781318"
+    transport: "USB vendor bulk interface 0"
+  artifact_or_stimulus: "artifacts/updater_signed.bin, 37700 bytes, version 1.0.0, SHA256 0416a62c060315fc787197eec68bd2ae855372886a8f97badee4e44384f33290"
+  limits: "Protocol BEGIN/DATA/END/COMMIT only after info reports hardware 0x00004600, board 1, revision 2, capacity 196608 and mode boot-recovery; Manager may erase/write Secondary 0x00042000-0x00071FFF only and mark its trailer; Boot/Primary/Scratch/Reserved remain inaccessible to Host; one bounded 30-second wait for cafe:0002 application version 1.0.0"
+  recovery_plan: "On transfer/verify/commit/wait failure, retain logs and snapshots, do not repeat automatically, and restore the exact pre-HIL 0x00000000-0x00075FFF backup with verifybin"
+  approved: true

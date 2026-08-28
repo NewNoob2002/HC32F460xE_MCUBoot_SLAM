@@ -1,0 +1,3 @@
+Script started on 2026-08-28 12:35:50+08:00 [COMMAND="rtk env RUST_BACKTRACE=1 /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-gui-install/artifacts/hc32-updater-gui" TERM="dumb" TTY="/dev/pts/8" COLUMNS="80" LINES="24"]
+^C
+Script done on 2026-08-28 12:45:12+08:00 [COMMAND_EXIT_CODE="130"]

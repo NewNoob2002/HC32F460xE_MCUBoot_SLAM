@@ -3,7 +3,9 @@ add_library(hc32_platform STATIC
     HC32F460/Src/bsp_clock.c
     HC32F460/Src/bsp_external_watchdog.c
     HC32F460/Src/bsp_flash.c
+    HC32F460/Src/bsp_log_uart.c
     HC32F460/Src/bsp_reset.c
+    HC32F460/Src/bsp_timebase.c
     HC32F460/Src/bsp_write_protection.c
 )
 target_include_directories(hc32_platform PUBLIC HC32F460/Inc)

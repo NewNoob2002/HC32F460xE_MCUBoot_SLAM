@@ -1,0 +1,2 @@
+SUBSYSTEM=="usb", ATTR{idVendor}=="cafe", ATTR{idProduct}=="0001", MODE="0660", TAG+="uaccess"
+SUBSYSTEM=="usb", ATTR{idVendor}=="cafe", ATTR{idProduct}=="0002", MODE="0660", TAG+="uaccess"

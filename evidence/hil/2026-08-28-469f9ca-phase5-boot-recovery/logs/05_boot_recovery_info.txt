@@ -1,0 +1,4 @@
+Script started on 2026-08-28 11:28:42+08:00 [COMMAND="/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-boot-recovery/artifacts/hc32-updater info" <not executed on terminal>]
+FAIL: failed to open device (errno 13)
+
+Script done on 2026-08-28 11:28:42+08:00 [COMMAND_EXIT_CODE="1"]

@@ -1,6 +1,7 @@
 # Generated build outputs
 /build/
 /Tools/updater/target/
+/Tools/updater/dist/
 /components/mcuboot-2.4.0/ext/tinycrypt/tests/pseudo-random-data.bin
 
 # Generated caches and personal tool state

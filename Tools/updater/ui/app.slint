@@ -1,36 +1,71 @@
-import { Button, HorizontalBox, LineEdit, VerticalBox } from "std-widgets.slint";
+import { Button, HorizontalBox, LineEdit, ScrollView, VerticalBox } from "std-widgets.slint";
 
 export component UpdaterWindow inherits Window {
-    title: "HC32 Firmware Updater";
-    width: 640px;
-    height: 360px;
+    title: "Firmware Updater";
+    width: 560px;
+    height: 440px;
 
     in-out property <string> firmware-path;
-    in property <string> device-summary: "No device information";
+    in property <bool> device-connected: false;
+    in property <string> device-serial: "—";
+    in property <string> device-version: "—";
+    in property <string> device-details: "No device information";
+    in property <string> firmware-version: "Not selected";
+    in property <string> firmware-sha256: "Not checked";
     in property <string> status-text: "Ready";
     in property <float> progress: 0;
+    in property <string> progress-label: "0%";
     in property <bool> busy: false;
 
     callback refresh-device();
+    callback browse-firmware();
     callback install-firmware(string);
 
-    VerticalBox {
-        padding: 18px;
-        spacing: 12px;
+    ScrollView {
+        VerticalBox {
+            padding: 24px;
+            spacing: 10px;
+
+        Text {
+            text: "Firmware Updater";
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        Rectangle { height: 1px; background: #505050; }
 
         Text {
             text: "Device";
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
         }
+        HorizontalBox {
+            Text {
+                text: root.device-connected ? "● Connected" : "● Disconnected";
+                color: root.device-connected ? #45c98f : #a0a0a0;
+                vertical-alignment: center;
+            }
+            Button {
+                text: "Refresh";
+                width: 96px;
+                enabled: !root.busy;
+                clicked => { root.refresh-device(); }
+            }
+        }
+        Text { text: "SN: " + root.device-serial; }
+        Text { text: "Current Version: " + root.device-version; }
         Text {
-            text: root.device-summary;
+            text: root.device-details;
+            color: #a0a0a0;
+            font-size: 12px;
             wrap: word-wrap;
         }
 
+        Rectangle { height: 1px; background: #505050; }
+
         Text {
-            text: "Signed firmware image";
-            font-size: 18px;
+            text: "Firmware";
+            font-size: 16px;
             font-weight: 600;
         }
         HorizontalBox {
@@ -41,22 +76,32 @@ export component UpdaterWindow inherits Window {
                 placeholder-text: "Path to updater_signed.bin";
             }
             Button {
-                text: "Install";
-                enabled: !root.busy && root.firmware-path != "";
-                clicked => { root.install-firmware(root.firmware-path); }
+                text: "Browse";
+                enabled: !root.busy;
+                clicked => { root.browse-firmware(); }
             }
         }
+        Text { text: "Version: " + root.firmware-version; }
+        Text { text: "SHA-256: " + root.firmware-sha256; }
 
-        Rectangle {
-            height: 12px;
-            background: #d9d9d9;
-            border-radius: 6px;
-
+        HorizontalBox {
+            spacing: 10px;
             Rectangle {
-                width: parent.width * max(0, min(1, root.progress));
-                height: parent.height;
-                background: #2d78d4;
-                border-radius: parent.border-radius;
+                height: 12px;
+                background: #d9d9d9;
+                border-radius: 6px;
+
+                Rectangle {
+                    width: parent.width * max(0, min(1, root.progress));
+                    height: parent.height;
+                    background: #2d78d4;
+                    border-radius: parent.border-radius;
+                }
+            }
+            Text {
+                width: 44px;
+                text: root.progress-label;
+                horizontal-alignment: right;
             }
         }
 
@@ -65,12 +110,14 @@ export component UpdaterWindow inherits Window {
             wrap: word-wrap;
         }
 
-        HorizontalBox {
-            alignment: end;
-            Button {
-                text: "Refresh";
-                enabled: !root.busy;
-                clicked => { root.refresh-device(); }
+            HorizontalBox {
+                alignment: center;
+                Button {
+                    text: "Update";
+                    width: 140px;
+                    enabled: !root.busy && root.firmware-path != "";
+                    clicked => { root.install-firmware(root.firmware-path); }
+                }
             }
         }
     }

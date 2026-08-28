@@ -1,0 +1,14 @@
+deployment_result:
+  schema_version: 1
+  created_at_utc: "2026-08-28T04:34:18Z"
+  safety_preflight: "safety_preflight_prepare_recovery.yaml"
+  target: {board: "HC32F460xE", hardware_revision: "2", probe_serial: "20781318"}
+  tool: {id: "jlink", version: "9.70"}
+  artifacts:
+    - {path: "artifacts/boot_firmware.bin", sha256: "f1651f4f5d552b5165bd807dd836f70bb747d5401286f65229900ffd7ccdaeef", destination: "0x00000000", verified: true}
+  additional_state_change: "Erased only the first 8 KiB sector at Primary 0x00010000 and Secondary 0x00042000"
+  reset_after_deploy: true
+  previous_state: "exact pre-GUI-HIL Flash backed up"
+  final_state: "cafe:0001 Boot recovery with invalid Primary and Secondary headers"
+  rollback: {required: true, exercised: true, result: "passed after GUI HIL completion"}
+  log: "logs/10_prepare_recovery.txt"

@@ -1,0 +1,13 @@
+device HC32F460xE
+si SWD
+speed 4000
+connect
+r
+h
+loadbin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/Debug/Boot/boot_firmware.bin 0x00000000
+verifybin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/Debug/Boot/boot_firmware.bin 0x00000000
+loadbin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/Debug/artifacts/updater_primary.bin 0x00010000
+verifybin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/Debug/artifacts/updater_primary.bin 0x00010000
+r
+g
+exit

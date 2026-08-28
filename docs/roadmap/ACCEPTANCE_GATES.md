@@ -235,7 +235,7 @@ Enumeration/descriptor mismatch, data mismatch, endpoint hang/stall, core Cherry
 ### Preconditions
 
 G4 passed; `docs/roadmap/PHASE5_USB_UPDATER_PLAN.md` is accepted; compatible
-signed v1/v2 images and safe rollback route exist. Production package checks
+signed v1/v2 images and safe rollback route exist. Production portable-release checks
 also require frozen non-test VID/PID, automatic Windows WinUSB binding and
 external signing credentials.
 
@@ -257,52 +257,51 @@ Tools/updater/target/release/hc32-updater wait --version 2.0.0
 python3 Tests/HIL/verify_evidence.py
 ```
 
-Windows package verification must include `.msi` signature verification and
-clean-VM install/USB access/uninstall. Linux verification must inspect and
-install the package, prove non-root USB access through its udev rule, then remove
-both application files and the rule. Exact packaging commands become normative
-when Phase 5F selects the smallest supported native toolchain.
+Windows verification must validate both signed EXEs, portable ZIP contents and
+clean-machine extraction/USB access. Linux verification runs the binaries
+directly and proves non-root USB access through the repository udev rule; no
+application package install/uninstall is required.
 
 ### Automated tests
 
 Rust format/clippy/tests, one shared client core against Golden Vectors, fake E2E
 through the production C Manager with fake backends, compatibility/error
-rejections, existing firmware/dependency regressions and package inspection.
+rejections, existing firmware/dependency regressions and portable ZIP inspection.
 
 ### Manual / HIL tests
 
 Use the Rust CLI to discover v1, transfer v2 over blocking nusb, mark test, swap,
 boot v2, health-confirm and verify persistence after another reset. Only after
 that passes, repeat one install from the Slint single-window GUI using the same
-core and verify clean Windows/Linux packages. The Python loopback remains a G4
+core and verify Windows portable/Linux direct-run delivery. The Python loopback remains a G4
 regression tool and is not used as the updater.
 
 ### Expected results
 
 No debugger writes Secondary; fake and USB runs produce compatible protocol
 traces; final Primary is confirmed v2 and reports matching versions/identity
-after another reset; signed Windows and Linux packages work on clean supported
-systems.
+after another reset; signed Windows portable tools and Linux direct-run tools
+work on clean supported systems.
 
 ### Required artifacts
 
 Fake/host transcript, USB/target logs, v1/v2 hashes, confirmation and post-reset
-slot state, version/identity output, GUI trace, package hashes/contents/signature,
-udev rule, clean-VM results and immutable evidence index.
+slot state, version/identity output, GUI trace, EXE/ZIP hashes and signatures,
+udev rule, clean-host results and immutable evidence index.
 
 ### PASS criteria
 
 Complete E2E path passes repeatedly with exact evidence and no layering bypass;
 fake/CLI/GUI share one Rust core; Phase 4 regression remains green; Windows
-installer is signed and needs no manual driver binding; Linux package installs
-the matching udev rule.
+EXEs are signed and need no manual driver binding; Linux binaries work directly
+with the matching udev rule.
 
 ### FAIL criteria
 
 Manual Secondary Flash injection, wrong final version/state, missing persistence
 reset, protocol fork/bypass, Python updater reuse, unbounded wait/retry, Phase 4
-regression, test VID/PID in a public package, manual Windows driver setup,
-unsigned installer, missing/mismatched udev rule or incomplete evidence.
+regression, manual Windows driver setup, unsigned release EXEs,
+missing/mismatched udev rule or incomplete evidence.
 
 ## G6 — Reliability Gate
 

@@ -1,6 +1,6 @@
 # Phase 5 USB Updater Plan
 
-Status: Phase 5B/5C complete; Phase 5D clean-revision HIL passed with immutable evidence; Phase 5E in progress; G5 not passed
+Status: Phase 5A compatibility, dual-state identity and WinUSB implementation complete; Phase 5B/5C complete; Phase 5D Application and Boot recovery HIL passed; Phase 5E GUI smoke and physical install passed; G5 not passed
 
 Date: 2026-08-27
 
@@ -23,15 +23,22 @@ Phase 5D clean HIL node: `e6eeb68700662ef87f8093f13d4f3fac53dbe722`
   before Slint is added.
 - The GUI is one window over the same updater core. It does not implement a
   second protocol or update path.
-- Windows ships a signed `.msi`. Linux ships one installable package with
-  the matching udev rule.
-- Plugins, a transport registry, UART/CAN, download resume and Boot recovery
-  are not Phase 5 work.
+- Linux development/validation runs the CLI or GUI directly. Windows ships a
+  signed portable ZIP containing the CLI and GUI EXEs; neither platform uses an
+  application installer during this phase.
+- Plugins, a transport registry, UART/CAN and download resume are not Phase 5
+  work. Boot recovery is the bounded exception defined by ADR-005.
+- Signed compatibility, production USB identity, automatic WinUSB binding and
+  Windows signing inputs follow
+  `docs/adr/ADR-004-phase5-release-identity-and-compatibility.md`.
+- Boot/Application USB state identity and invalid-slot recovery follow
+  `docs/adr/ADR-005-boot-recovery-usb-state-identity.md`.
 
 ## Objective
 
 Deliver the smallest releasable USB updater that installs a compatible signed
-image through the existing Protocol V1 and Application Manager, boots it as an
+image through the existing Protocol V1 Manager in Boot recovery or Application
+mode, boots it as an
 MCUboot test upgrade, confirms it only after bounded Application health checks,
 and proves that the confirmed image persists across another reset.
 
@@ -49,6 +56,8 @@ CLI: info / install / wait       Slint single window (after core HIL)
  existing C Manager + fake backends     Vendor Bulk -> C Manager
                                                    |
                                   Secondary Storage + Boot Control
+                                                   |
+                       Boot failure -> cafe:0001 -> MCUboot bootstrap -> cafe:0002
 ```
 
 The shared Rust library owns MCUboot image-header/version inspection, Protocol
@@ -73,7 +82,7 @@ a second device-state-machine implementation in Rust.
 - Phase 5C code is complete locally: blocking nusb discovery/claim/Bulk I/O and
   the production `usb_fw_updater` Application target feed the existing Manager,
   drain responses and execute its deferred RESET action.
-- Rust tests are 11/11 and strict ASan/UBSan HostTests are 12/12. Debug and
+- Rust tests are 17/17 and strict ASan/UBSan HostTests are 13/13. Debug and
   Release App, Phase 4 loopback and updater image builds/verifications pass.
 - The initial read-only HIL attempt found the target Flash blank and no updater
   USB device. After a separately approved deployment preflight, Boot and the v1
@@ -87,9 +96,29 @@ a second device-state-machine implementation in Rust.
   -> confirmation -> independent reset -> persistence path. Exact artifacts,
   preflights, logs, backup and byte-identical pre/post-reset snapshots are under
   `evidence/hil/2026-08-27-e6eeb68-phase5-clean/`.
-- The target remains on confirmed v2.0.0. Phase 5D's clean-repeat and immutable
-  evidence requirement is satisfied; Phase 5E Slint work may begin. G5 remains
-  open for GUI and package evidence.
+- The clean Application run ended on confirmed v2.0.0. The later Boot recovery
+  HIL restored the current board byte-for-byte to its pre-HIL Flash state. Phase
+  5D's clean-repeat and immutable evidence requirement is satisfied; G5 remains
+  open for signed Windows portable evidence.
+- On 2026-08-28 ADR-004's local identity/compatibility implementation completed.
+  One identity file feeds firmware, CLI, GUI and signing; Host rejects mismatch
+  before BEGIN, and Device verifies MCUboot signature plus the same protected
+  TLV before pending. Firmware derives the serial from the HC32F460 UQID.
+- On 2026-08-28 ADR-005 added Boot recovery `cafe:0001`, Application
+  `cafe:0002`, MCUboot bootstrap for invalid Primary, dual-mode Host discovery
+  and automatic WinUSB descriptors. Local Debug/Release descriptor and size
+  checks pass. The invalid-slot recovery HIL then passed: attempt 1's retained
+  `BootControlError` exposed a null MCUboot loader-state defect, the smallest
+  backend fix passed HostTests 13/13, and attempt 2 installed 38339 bytes,
+  bootstrapped into `cafe:0002` Application 1.0.0 and restored the original
+  483328-byte Flash image exactly. Evidence is under
+  `evidence/hil/2026-08-28-469f9ca-phase5-boot-recovery/`.
+- On 2026-08-28 the archived Release Slint GUI completed one physical install
+  from Boot recovery to Application 1.0.0. The completion screenshot, udev
+  `cafe:0001` -> `cafe:0002` trace, independent CLI result, exact Primary
+  comparison, trailer state and final exact restore are retained under
+  `evidence/hil/2026-08-28-469f9ca-phase5-gui-install/`. Phase 5E is
+  satisfied.
 
 ## Initial file boundary
 
@@ -136,14 +165,18 @@ hc32-updater wait --version <version> [--timeout <seconds>]
 
 ### Phase 5A — Contract and release preflight
 
+Status: contract decisions, signed compatibility, dual-state identity and
+automatic WinUSB descriptors complete locally on 2026-08-28; unique serial and
+Windows signing inputs remain before G5.
+
 1. Accept this plan and synchronize roadmap/gate/test documents.
 2. Pin the reviewed `nusb` release when Rust code is first added. The reviewed
    planning reference is `nusb` v0.2.3, which documents blocking device listing,
    interface claim and Bulk transfer APIs.
 3. Freeze the signed image compatibility source used for hardware/board/version
    checks before BEGIN. Host-supplied IDs remain an early filter, not image trust.
-4. Freeze production USB VID/PID and Windows WinUSB binding. The current
-   `fffe:ffff` values are test identifiers and cannot qualify a public package.
+4. Freeze `cafe:0001` Boot recovery, `cafe:0002` Application and Microsoft OS
+   2.0 automatic WinUSB binding for interface 0.
 5. Define signing-secret injection outside the repository for Windows artifacts.
 
 Exit: review approval. No Rust, GUI, package or hardware state change is part of
@@ -195,8 +228,9 @@ evidence. No debugger writes Secondary during the upgrade.
 
 ### Phase 5E — Slint single-window GUI
 
-Status: local implementation/build complete; launch and physical install
-evidence pending.
+Status: passed on 2026-08-28; Linux launch/layout/scroll smoke and one physical
+install are retained under `evidence/host/2026-08-28-469f9ca-phase5-gui-smoke/`
+and `evidence/hil/2026-08-28-469f9ca-phase5-gui-install/`.
 
 Only after Phase 5D passes:
 
@@ -212,25 +246,23 @@ Only after Phase 5D passes:
 Exit: GUI smoke test and one physical install produce the same protocol trace and
 result as the CLI.
 
-### Phase 5F — Release packages
+### Phase 5F — Portable host release
 
-- Windows: signed `.msi` containing the CLI and GUI; clean-VM install, launch,
-  USB access, signature verification and uninstall must pass without Zadig or a
-  manual driver step. Prefer automatic WinUSB binding over shipping a custom
-  driver package.
-- Linux: one Debian-family package containing the CLI, GUI and a rule under
-  `/usr/lib/udev/rules.d/` for the frozen production VID/PID. Clean-VM install,
-  non-root USB access, upgrade, removal and udev cleanup must pass. Other package
-  formats wait for an actual distribution requirement.
+- Windows: sign the CLI and GUI EXEs, verify both signatures, and create one
+  portable ZIP. Clean Windows extraction, launch and USB access must pass
+  without Zadig, a manual driver step or application installation.
+- Linux: run the CLI/GUI binaries directly. Keep one repository udev rule for
+  `cafe:0001` and `cafe:0002`; validate non-root access after the rule is
+  installed, but do not build a Debian/RPM application package.
 - Private signing keys and certificates remain outside source and release
   evidence. Evidence records signer identity, verification output and hashes.
 
-Exit: both packages install and operate on clean supported systems. Test VID/PID
-or unsigned Windows artifacts cannot pass.
+Exit: Linux direct-run and Windows portable direct-run operate on clean
+supported systems. Unsigned Windows release EXEs cannot pass.
 
 ### Phase 5G — Gate closure
 
-Run the full G5 matrix, retain Host/fake, USB HIL, GUI and package evidence, pass
+Run the full G5 matrix, retain Host/fake, USB HIL, GUI and portable-release evidence, pass
 remote CI, then update `STATUS.md` to `PASSED`.
 
 ## Required checks
@@ -243,7 +275,7 @@ remote CI, then update `STATUS.md` to `PASSED`.
 - Existing strict HostTests, portable dependency checks and Debug/Release image
   verification.
 - Phase 4 Python loopback self-test and firmware build remain regression checks.
-- Package contents, signatures and udev-rule identity are mechanically inspected.
+- Portable ZIP contents, EXE signatures and udev-rule identity are mechanically inspected.
 
 ### HIL
 
@@ -252,7 +284,7 @@ remote CI, then update `STATUS.md` to `PASSED`.
 - Re-enumeration after COMMIT reset.
 - Health confirmation followed by another reset and v2 persistence.
 - CLI and GUI each complete the same core path at least once.
-- Clean Windows and Linux package install/access/uninstall.
+- Clean Windows portable extraction/run and Linux direct-run/non-root access.
 
 ## Evidence
 
@@ -264,7 +296,7 @@ Retain under `evidence/host/` and `evidence/hil/`:
 - CLI/GUI transcript, raw USB/target logs and timing;
 - confirmation result, post-reset version and slot/trailer state;
 - target/probe identity, safety preflight and byte-exact restoration result;
-- Windows/Linux package hashes, signer verification, contents and clean-VM results;
+- Windows EXE/ZIP hashes, signer verification, contents and clean-host results;
 - `SHA256SUMS` and an immutable evidence index.
 
 ## Hard failures
@@ -272,8 +304,8 @@ Retain under `evidence/host/` and `evidence/hil/`:
 G5 fails on any protocol fork between fake/USB/GUI, direct USB-to-Flash or
 MCUboot call, debugger Secondary programming, unbounded retry/wait, confirmation
 without a subsequent persistence reset, regression of the Phase 4 loopback,
-manual Windows driver setup, missing Linux udev rule, test VID/PID in a public
-package, unsigned Windows installer or incomplete evidence.
+manual Windows driver setup, missing Linux udev rule, unsigned Windows release
+EXEs or incomplete evidence.
 
 ## Explicitly deferred
 

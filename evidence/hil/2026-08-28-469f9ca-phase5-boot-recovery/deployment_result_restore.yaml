@@ -1,0 +1,15 @@
+deployment_result:
+  schema_version: 1
+  created_at_utc: "2026-08-28T03:58:32Z"
+  safety_preflight: "safety_preflight_restore.yaml"
+  target: {board: "HC32F460xE", hardware_revision: "2", probe_serial: "20781318"}
+  tool: {id: "jlink", version: "9.70"}
+  artifact: "backup/pre_hil_a_00000000_00075fff.bin"
+  artifact_sha256: "68749a28839ef5b1e98473e014b611261add7434adb3dbc4419793c3fabc9b05"
+  destination: "0x00000000-0x00075FFF"
+  verified: true
+  reset_after_deploy: true
+  previous_state: "attempt-2 Application 1.0.0 after successful Boot recovery/bootstrap"
+  final_state: "byte-identical pre-HIL Flash restored and target running"
+  rollback: {required: true, exercised: true, result: "verifybin, full readback SHA256 and cmp passed"}
+  log: "logs/99_restore.txt"

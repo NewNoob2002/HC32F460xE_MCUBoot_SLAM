@@ -1,0 +1,10 @@
+device HC32F460xE
+si SWD
+speed 4000
+connect
+r
+h
+erase 0x00010000 0x00011FFF
+r
+g
+exit

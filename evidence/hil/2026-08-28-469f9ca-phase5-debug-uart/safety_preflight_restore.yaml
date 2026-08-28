@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T09:25:39Z"
+  operation: "flash"
+  authorization: "User requested the Debug UART HIL be recorded and deferred as a probable hardware issue, then requested consolidation of the remaining Phase 5 work; exact pre-HIL restoration is the approved HIL cleanup step."
+  target:
+    board: "HC32F460xE; hardware revision 2"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "Horco CMSIS-DAP 5844333732"
+    transport: "CMSIS-DAP SWD at 4000 kHz using pyOCD 0.45.1"
+  artifact_or_stimulus: "backup/pre_hil_00000000_00075fff.bin; 483328 bytes; SHA256 68749a28839ef5b1e98473e014b611261add7434adb3dbc4419793c3fabc9b05; load address 0x00000000"
+  limits: "Sector erase/program only the explicit 0x00000000-0x00075FFF range. Do not use chip erase, mass erase, unlock/recover, option-byte or protection writes. Do not access Reserved 0x00076000-0x0007FFFF. One program attempt followed by full-range readback and byte comparison."
+  recovery_plan: "If programming or verification is interrupted, keep the board powered and rerun the same bounded restore from the independently matching backup. Never widen the erase range. After byte-exact verification, reset and run the restored image."
+  approved: true

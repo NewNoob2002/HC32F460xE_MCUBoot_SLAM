@@ -104,14 +104,21 @@ fn rust_core_completes_real_c_manager_fake_e2e() {
 }
 
 fn make_image(length: usize) -> Vec<u8> {
-    assert!(length >= 32);
+    assert!(length >= 52);
     let mut bytes: Vec<u8> = (0..length)
         .map(|index| (index as u8).wrapping_mul(37).wrapping_add(11))
         .collect();
     bytes[0..4].copy_from_slice(&0x96f3_b83du32.to_le_bytes());
     bytes[8..10].copy_from_slice(&32u16.to_le_bytes());
-    bytes[12..16].copy_from_slice(&((length - 32) as u32).to_le_bytes());
+    bytes[10..12].copy_from_slice(&20u16.to_le_bytes());
+    bytes[12..16].copy_from_slice(&((length - 52) as u32).to_le_bytes());
     bytes[20..28].copy_from_slice(&[2, 0, 0, 0, 0, 0, 0, 0]);
+    let tlv = length - 20;
+    bytes[tlv..tlv + 2].copy_from_slice(&0x6908u16.to_le_bytes());
+    bytes[tlv + 2..tlv + 4].copy_from_slice(&20u16.to_le_bytes());
+    bytes[tlv + 4..tlv + 6].copy_from_slice(&0x00a0u16.to_le_bytes());
+    bytes[tlv + 6..tlv + 8].copy_from_slice(&12u16.to_le_bytes());
+    bytes[tlv + 8..tlv + 20].copy_from_slice(&[1, 0, 2, 0, 0x00, 0x46, 0, 0, 1, 0, 0, 0]);
     bytes
 }
 

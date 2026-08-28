@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T03:41:59Z"
+  operation: "flash/erase/reset"
+  authorization: "User authorized Boot recovery HIL on J-Link 20781318; attempt 2 applies the root-cause fix after retaining attempt 1 BootControlError evidence"
+  target:
+    board: "HC32F460xE; Cortex-M4; hardware revision 2"
+    hardware_revision: "2"
+    probe_or_adapter_serial: "J-Link 000020781318"
+    transport: "SWD 4000 kHz; prior VTref 3.346-3.356 V"
+  artifact_or_stimulus: "artifacts/boot_firmware_attempt2.bin, 45040 bytes, SHA256 f1651f4f5d552b5165bd807dd836f70bb747d5401286f65229900ffd7ccdaeef at 0x00000000; erase Boot 0x00000000-0x0000FFFF and first 8 KiB sector of Primary/Secondary"
+  limits: "Attempt 1 is retained and not relabeled; HostTests 13/13 and descriptor/image checks passed after the fix; no mass erase; no Scratch/Reserved access; no unlock/recover, OTP, option-byte or protection changes; verify Boot before reset/run"
+  recovery_plan: "Use raw_commands/99_restore.jlink with the 483328-byte SHA256 68749a28839ef5b1e98473e014b611261add7434adb3dbc4419793c3fabc9b05 pre-HIL backup on any attempt-2 failure or after completion"
+  approved: true

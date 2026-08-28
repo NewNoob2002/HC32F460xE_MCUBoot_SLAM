@@ -1,0 +1,106 @@
+Script started on 2026-08-28 12:45:41+08:00 [COMMAND="rtk JLinkExe -USB 20781318 -CommandFile /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-gui-install/raw_commands/99_restore.jlink" <not executed on terminal>]
+SEGGER J-Link Commander V9.70 (Compiled Aug 19 2026 12:16:13)
+DLL version V9.70, compiled Aug 19 2026 12:15:25
+
+
+J-Link Command File read successfully.
+Processing script file...
+J-Link>device HC32F460xE
+J-Link connection not established yet but required for command.
+Connecting to J-Link ...O.K.
+Firmware: J-Link V9 compiled May  7 2021 16:26:12
+Hardware version: V9.70
+J-Link uptime (since boot): N/A (Not supported by this model)
+S/N: 20781318
+License(s): RDI,FlashBP,FlashDL,JFlash,GDB
+VTref=3.351V
+J-Link>si SWD
+Selecting SWD as current target interface.
+J-Link>speed 4000
+Selecting 4000 kHz as target interface speed
+J-Link>connect
+Device "HC32F460XE" selected.
+
+
+Connecting to target via SWD
+Found SW-DP with ID 0x2BA01477
+DPIDR: 0x2BA01477
+CoreSight SoC-400 or earlier
+Scanning AP map to find all available APs
+AP[1]: Stopped AP scan as end of AP map has been reached
+AP[0]: AHB-AP (IDR: 0x24770011, ADDR: 0x00000000)
+Iterating through AP map to find AHB-AP to use
+AP[0]: Core found
+AP[0]: AHB-AP ROM base: 0xE00FF000
+CPUID register: 0x410FC241. Implementer code: 0x41 (ARM)
+Found Cortex-M4 r0p1, Little endian.
+FPUnit: 6 code (BP) slots and 2 literal slots
+CoreSight components:
+ROMTbl[0] @ E00FF000
+[0][0]: E000E000 CID B105E00D PID 000BB00C SCS-M7
+[0][1]: E0001000 CID B105E00D PID 003BB002 DWT
+[0][2]: E0002000 CID B105E00D PID 002BB003 FPB
+[0][3]: E0000000 CID B105E00D PID 003BB001 ITM
+[0][4]: E0040000 CID B105900D PID 000BB9A1 TPIU
+Memory zones:
+  Zone: "Default" Description: Default access mode
+Cortex-M4 identified.
+J-Link>halt
+PC = 00014F1E, CycleCnt = 004F9A57
+R0 = 00000001, R1 = 000388ED, R2 = 000004C5, R3 = 000004C6
+R4 = 000388ED, R5 = FFFFFFFF, R6 = 2000078C, R7 = 1FFFA260
+R8 = AF93E277, R9 = AE366CDF, R10= 76F96260, R11= FBE37DAF
+R12= 00000000
+SP(R13)= 1FFFA260, MSP= 1FFFA260, PSP= CA13BFFC, R14(LR) = 00011CA9
+XPSR = 21000000: APSR = nzCvq, EPSR = 01000000, IPSR = 000 (NoException)
+CFBP = 00000000, CONTROL = 00, FAULTMASK = 00, BASEPRI = 00, PRIMASK = 00
+
+FPS0 = 7FE5D3FF, FPS1 = 9FBFA977, FPS2 = 5BF87C53, FPS3 = 97E6C758
+FPS4 = DF06AD33, FPS5 = 5FBDF617, FPS6 = F8D0BF55, FPS7 = BDB2AF7F
+FPS8 = 7DD03DD3, FPS9 = 7CA7E68F, FPS10= 5DA3B19B, FPS11= 72FC2A40
+FPS12= 7FA27EFF, FPS13= DFB5E493, FPS14= 769DF302, FPS15= 5FCAF393
+FPS16= 20F81D7E, FPS17= A9934EA7, FPS18= EFAE5DEF, FPS19= AB6BF2DF
+FPS20= 6F5F4B69, FPS21= DCEE927B, FPS22= 7FEB4AFD, FPS23= DED2E17F
+FPS24= DCEBBBDF, FPS25= 5CC3FD5F, FPS26= FE66B2EC, FPS27= 2824FD65
+FPS28= B3B9A7E5, FPS29= 2FB14762, FPS30= E443FEDC, FPS31= DF77E681
+FPSCR= 00000000
+J-Link>erase 0x00000000, 0x00075FFF
+'erase': Performing implicit reset & halt of MCU.
+Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+Reset: Halt core after reset via DEMCR.VC_CORERESET.
+Reset: Reset device via AIRCR.SYSRESETREQ.
+Erasing selected range...
+J-Link: Flash download: Total time needed: 1.196s (Prepare: 0.079s, Compare: 0.000s, Erase: 1.074s, Program: 0.000s, Verify: 0.000s, Restore: 0.042s)
+J-Link: Flash download: 
+Flash sectors within Range [0x00000000 - 0x00075FFF] deleted.
+Erasing done.
+J-Link>loadbin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-gui-install/backup/pre_gui_hil_00000000_00075fff.bin, 0x00000000
+'loadbin': Performing implicit reset & halt of MCU.
+Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+Reset: Halt core after reset via DEMCR.VC_CORERESET.
+Reset: Reset device via AIRCR.SYSRESETREQ.
+Downloading file [/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-gui-install/backup/pre_gui_hil_00000000_00075fff.bin]...
+J-Link: Flash download: Bank 0 @ 0x00000000: 4 ranges affected (106496 bytes)
+J-Link: Flash download: Total: 1.042s (Prepare: 0.070s, Compare: 0.259s, Erase: 0.020s, Program & Verify: 0.650s, Restore: 0.042s)
+J-Link: Flash download: Program & Verify speed: 159 KB/s
+O.K.
+J-Link>verifybin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-gui-install/backup/pre_gui_hil_00000000_00075fff.bin, 0x00000000
+Loading binary file /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-gui-install/backup/pre_gui_hil_00000000_00075fff.bin
+Reading 483328 bytes data from target memory @ 0x00000000.
+Verify successful.
+J-Link>savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-gui-install/snapshots/post_restore_00000000_00075fff.bin, 0x00000000, 0x76000
+Opening binary file for writing... [/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-469f9ca-phase5-gui-install/snapshots/post_restore_00000000_00075fff.bin]
+Reading 483328 bytes from addr 0x00000000 into file...O.K.
+J-Link>r
+Reset delay: 0 ms
+Reset type: NORMAL (https://kb.segger.com/J-Link_Reset_Strategies)
+Reset: Halt core after reset via DEMCR.VC_CORERESET.
+Reset: Reset device via AIRCR.SYSRESETREQ.
+J-Link>g
+Memory map 'after startup completion point' is active
+J-Link>exit
+
+Script processing completed.
+
+
+Script done on 2026-08-28 12:45:44+08:00 [COMMAND_EXIT_CODE="0"]

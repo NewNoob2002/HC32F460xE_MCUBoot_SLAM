@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T09:07:39Z"
+  operation: "uart-write/read"
+  authorization: "User confirmed the DAPLink TX and RX pins are physically shorted for a VCOM loopback test."
+  target:
+    board: "DAPLink adapter only; board UART disconnected"
+    hardware_revision: "not-applicable"
+    probe_or_adapter_serial: "Horco CMSIS-DAP 5844333732"
+    transport: "CDC UART 115200 8N1"
+  artifact_or_stimulus: "Transmit one newline-terminated ASCII frame: DAPLINK_LOOPBACK_5844333732"
+  limits: "One frame only; no SWD connection, MCU reset, Flash access, control-line pulse, break, or retry. Response timeout 3000 ms."
+  recovery_plan: "Close the serial port. After recording the result, ask the user to remove the TX-RX short before reconnecting RX to board TP2."
+  approved: true

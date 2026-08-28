@@ -1,6 +1,6 @@
 # Roadmap Status
 
-Last updated: 2026-08-27
+Last updated: 2026-08-28
 
 Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIEW`, `PASSED`.
 
@@ -11,7 +11,7 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 | Phase 2 — Secondary Storage and Boot Control | PASSED | G2 | Strict HostTests 7/7; Debug/Release/signing and remote CI passed | Storage/range-isolation/Pending/restore passed | None | `evidence/hil/2026-08-26-5ebeae6-phase2/`, revisions `5ebeae6`/`0e1abd8`, CI `32928199086`/`32929570437` |
 | Phase 3 — Protocol Core | PASSED | G3 | HostTests 9/9; corpus 10,000; Debug/Release/signing and remote CI PASS | Not required | None | `evidence/host/2026-08-26-e7899bd-phase3/`, revisions `e7899bd`/`515d0c5`, CI `32948384485` |
 | Phase 4 — CherryUSB + HC32 DCD Loopback | PASSED | G4 | HostTests 11/11; Debug/Release image verification; CI passed | Enumeration, stall recovery, 10,000-transfer baseline, 10 unplug/re-enumeration recoveries, 30-minute run, counters and exact restore passed | None | `evidence/hil/2026-08-27-fd703cd-phase4-g4/`, revision `fd703cd`, evidence commit `2b63850`, CI `33043244338` |
-| Phase 5 — USB Upgrade E2E | IN_PROGRESS | G5 | Rust 12/12 with GUI target; strict HostTests 12/12 including fake E2E; Release v1/v2 and GUI builds passed | Clean-revision v1→v2→confirm→reset→persist cycle passed with immutable evidence | GUI launch/install evidence; production VID/PID, WinUSB binding and signing inputs; Windows/Linux packages | `evidence/hil/2026-08-27-e6eeb68-phase5-clean/`, `docs/roadmap/PHASE5_USB_UPDATER_PLAN.md` |
+| Phase 5 — USB Upgrade E2E | IN_PROGRESS | G5 | Rust/Host quality gates, Debug/Release firmware, protected compatibility TLV, WinUSB descriptors and unsigned Windows portable ZIP passed | Application v1→v2 persistence, invalid-slot Boot recovery/bootstrap, Slint GUI install and per-chip UQID identity passed with exact restore; Debug UART firmware/VCOM diagnostics passed but TP2 capture is hardware-deferred | Production-signed Windows EXEs; clean Windows portable run | `evidence/hil/2026-08-27-e6eeb68-phase5-clean/`, `evidence/hil/2026-08-28-469f9ca-phase5-boot-recovery/`, `evidence/hil/2026-08-28-469f9ca-phase5-gui-install/`, `evidence/hil/2026-08-28-469f9ca-phase5-uqid/`, `evidence/hil/2026-08-28-469f9ca-phase5-debug-uart/` |
 | Phase 6 — Failure and Recovery | NOT_STARTED | G6 | Not run | Required | G5, power/reset fixture | None |
 | Phase 7 — UART Portability | NOT_STARTED | G7 | Not run | Required | G6 | None |
 | Phase 8 — CAN/CAN FD Portability | NOT_STARTED | G8 | Not run | Required | G7 | None |
@@ -32,9 +32,134 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 
 ## Immediate next action
 
-Launch-smoke the new Slint single-window frontend, then run one preflighted
-physical install and retain its protocol/result evidence. Packaging remains
-deferred until that GUI path is verified.
+Build/validate externally signed Windows CLI/GUI EXEs and complete a clean-Windows
+portable run. Linux continues to run the CLI/GUI directly with the repository
+udev rule; no application package is built. Debug UART TP2 capture is deferred
+until board-level voltage/waveform and continuity measurements are available.
+
+## Latest system time, Debug log and portable-host result
+
+Date: 2026-08-28
+
+- Added one HC32 platform timebase: SysTick supplies the 1 ms tick and millisecond
+  delay; DWT CYCCNT supplies microsecond delay. Boot/App/USB entry points initialize
+  it after the clock, and project code no longer calls DDL delay APIs directly.
+- Debug builds link EasyLogger and output through the schematic TP2 path:
+  USART3 TX on PB13, 115200 8N1. The schematic, pin ownership and HIL wiring are
+  archived under `docs/hardware/`.
+- Linux uses direct CLI/GUI execution. The unsigned Windows x64 CLI/GUI EXEs
+  were cross-built and their portable ZIP contains only README, SHA256SUMS and
+  the two PE32+ EXEs; package SHA256 verification passed. A post-review rebuild
+  is locally blocked by the missing MinGW CRT/import libraries. Production
+  certificate/timestamp inputs remain external.
+- Strict HostTests passed 14/14; Rust fmt/clippy/tests passed; Debug and Release
+  firmware plus image/WinUSB verification passed. Debug Boot is 53,632 text bytes
+  and Release Boot is 38,548 text bytes inside the 65,536-byte Boot region.
+
+## Latest Debug UART HIL disposition
+
+Date: 2026-08-28
+
+- USART3 initialization, PB13 Func32, live TX status/baud rate and bounded TDR
+  transmission were verified; the sequence matches the official DDL example.
+- DAPLink `5844333732` VCOM self-loop passed, but TP2 produced no captured bytes.
+  The remaining PB13-to-TP2-to-DAPLink RX physical path is unverified and the
+  test is recorded as deferred, not passed.
+- The exact 483328-byte pre-HIL Flash image was restored with pyOCD and the full
+  readback matched byte-for-byte at SHA256
+  `68749a28839ef5b1e98473e014b611261add7434adb3dbc4419793c3fabc9b05`; the
+  target was reset and left running. Evidence:
+  `evidence/hil/2026-08-28-469f9ca-phase5-debug-uart/`.
+- This diagnostic does not block the USB updater G5 work. Resume it only with a
+  TP2 idle-voltage/waveform measurement and PB13-to-TP2 continuity check.
+
+## Latest Boot recovery/bootstrap HIL result
+
+Date: 2026-08-28
+
+- J-Link `20781318` verified the corrected Boot, then invalid Primary and
+  Secondary headers held the board in `cafe:0001` Boot recovery. `info` reported
+  hardware `0x00004600`, board `1`, revision `2`, capacity `196608`, write
+  alignment `4` and erase alignment `8192`.
+- Attempt 1 transferred and verified its image but COMMIT returned
+  `BootControlError`. The retained diagnosis found the project backend passed a
+  null loader state into scratch-swap image validation. The backend now uses
+  MCUboot's existing loader-state initialization/open/read/close chain; strict
+  HostTests passed 13/13 after the fix.
+- Attempt 2 transferred 38339/38339 bytes, device verify and COMMIT passed, and
+  udev captured `cafe:0001` removal followed by `cafe:0002` Application 1.0.0.
+  Primary's image bytes match the signed artifact; Primary trailer has
+  `copy_done=1`, `image_ok=1` and valid magic while Secondary is erased.
+- One retained evidence-script defect caused an oversized read-only Primary
+  snapshot because J-Link parsed decimal `38339` as hexadecimal. It remained
+  below Reserved; the exact 38339-byte prefix passed `cmp` and SHA256 checks.
+- The final restore programmed and verified exactly `0x00000000-0x00075FFF`.
+  Its complete 483328-byte readback is byte-identical to both pre-HIL backups,
+  SHA256 `68749a28839ef5b1e98473e014b611261add7434adb3dbc4419793c3fabc9b05`.
+  Evidence: `evidence/hil/2026-08-28-469f9ca-phase5-boot-recovery/`.
+
+## Latest Boot recovery and WinUSB implementation result
+
+Date: 2026-08-28
+
+- Accepted `ADR-005`: Boot recovery is `cafe:0001`; Application updater is
+  `cafe:0002`. Host discovery accepts exactly one state and reports it; bounded
+  post-install waiting accepts only the Application PID.
+- Boot now runs the shared Protocol V1/CherryUSB updater only when `boot_go()`
+  fails. Storage remains Secondary-only and COMMIT retains MCUboot signature plus
+  protected compatibility validation.
+- Enabled `MCUBOOT_BOOTSTRAP`; a valid Secondary candidate can replace an empty
+  or invalid Primary on the next boot without a Host-provided Primary address.
+- Both firmware modes use USB 2.1 BOS plus a 162-byte Microsoft OS 2.0 descriptor
+  set for automatic WinUSB binding on interface 0. Generated Debug/Release bins
+  passed exact descriptor checks for both VID/PID pairs.
+- Debug Boot occupies 53,632 text bytes and Release Boot 38,548 text bytes inside
+  the fixed 65,536-byte region. Rust passed 17/17; HostTests passed 13/13; all
+  Debug/Release signed-image verification targets passed. The hardware result
+  is recorded in the Boot recovery/bootstrap HIL section above.
+
+## Latest Phase 5A implementation result
+
+Date: 2026-08-28
+
+- Added one `Config/ProductIdentity.env` source for hardware/board and USB
+  identity. CMake generates the firmware header and protected TLV bytes; the
+  Rust build script generates the same constants for CLI and GUI.
+- Release CMake and Cargo builds use externalizable
+  `HC32_PRODUCT_IDENTITY_FILE`; the frozen VID/PID are
+  `cafe:0001`/`cafe:0002`. Firmware derives one stable serial from the
+  HC32F460 96-bit UQID and exposes it identically in both modes.
+- `imgtool` now signs exactly one protected custom `0x00A0` TLV containing
+  `01 00 02 00 00 46 00 00 01 00 00 00` for the current lab board. All three
+  Debug and Release image families verified with `protected_tlv_size=0x14`.
+- Rust rejects missing, duplicate, malformed or unsupported compatibility TLVs
+  and rejects a hardware/board mismatch after DEVICE_INFO but before BEGIN.
+- Device COMMIT now re-reads Secondary, calls `bootutil_img_validate()`, requires
+  exactly one matching protected TLV, and only then calls
+  `boot_set_pending_multi(0, 0)`. Signature failure, mismatch and duplicate TLV
+  tests prove pending is not requested.
+- Rust tests passed 17/17; strict HostTests passed 13/13; clippy with warnings
+  denied, Debug/Release ARM builds and all signed-image verification targets
+  passed. Release verification used temporary non-production values/key under
+  `/tmp`; no hardware command or Flash write was performed.
+
+## Latest Phase 5A contract result
+
+Date: 2026-08-28
+
+- Accepted `ADR-004`: one exact-match custom protected TLV (`0x00A0`) is the
+  signed hardware/board compatibility source. Host and device must both fail
+  closed before COMMIT.
+- Project-owner supplied identities are `cafe:0001` for Boot recovery and
+  `cafe:0002` for the Application updater. The unique serial source is the
+  HC32F460 96-bit UQID.
+- Windows uses automatic Microsoft OS 2.0/WinUSB binding; custom drivers, Zadig
+  and manual INF installation cannot pass G5.
+- Windows signing credentials remain external ephemeral release inputs; evidence
+  retains only signer/verification data and package hashes.
+- Contract decisions, signed compatibility, dual-state identity, unique UQID
+  serial, automatic WinUSB descriptors and recovery HIL are complete. Signed
+  Windows EXEs and clean Windows portable-run evidence remain G5 blockers.
 
 ## Phase 5A planning start
 
@@ -47,7 +172,7 @@ Date: 2026-08-27
 - Reviewed nusb planning reference: v0.2.3 blocking device/interface/Bulk APIs;
   Tokio is excluded.
 - Execution order is fake E2E, real USB HIL, v1 -> v2 -> confirmation ->
-  persistence, Slint single window, then Windows/Linux packages.
+  persistence, Slint single window, then Windows portable/Linux direct-run delivery.
 - CLI and GUI are sibling frontends over `FirmwareImage`, `ProtocolV1Client` and
   `UpgradeWorkflow`; nusb is only the USB adapter and re-enumeration policy stays
   in the workflow.
@@ -162,11 +287,11 @@ Date: 2026-08-27
   `info` still reported Application `2.0.0`; the target remains confirmed v2.
 - Immutable evidence: `evidence/hil/2026-08-27-e6eeb68-phase5-clean/`. Phase
   5D's clean-repeat/evidence requirement is satisfied. Phase 5E Slint work may
-  begin; G5 remains open for GUI and package evidence.
+  begin; the GUI result is recorded below and G5 remains open for signed Windows portable evidence.
 
-## Latest Phase 5E local result
+## Latest Phase 5E implementation and HIL result
 
-Date: 2026-08-27
+Date: 2026-08-28
 
 - Added one Slint window with device summary, signed-image path, Refresh,
   Install, bounded progress, status and final result.
@@ -175,9 +300,20 @@ Date: 2026-08-27
   updates Slint through its event loop.
 - Install performs the existing core install followed by bounded
   re-enumeration/version verification; no GUI-specific protocol path exists.
-- `cargo fmt --check`, 12/12 Rust tests, clippy with warnings denied and the
-  locked Release GUI build passed. GUI launch and physical install evidence are
-  still required; G5 remains open.
+- `cargo fmt --check`, 17/17 Rust tests, clippy with warnings denied and the
+  locked Release GUI build passed.
+- On 2026-08-28 the Release GUI launch/layout smoke passed on Linux/X11. The
+  final window uses a native ScrollView; the user confirmed the lower controls
+  remain reachable with the mouse wheel at `560x440`. No Update action was run.
+  Evidence: `evidence/host/2026-08-28-469f9ca-phase5-gui-smoke/`.
+- The archived Release GUI then completed one physical install after the user
+  clicked Refresh, Browse and Update exactly once. The completion screenshot
+  shows Connected, Application 1.0.0, valid SHA256, 100% and Upgrade complete.
+  udev captured `cafe:0001` -> `cafe:0002`; independent CLI, exact Primary
+  bytes, trailer state and final byte-identical restoration all passed.
+  Evidence: `evidence/hil/2026-08-28-469f9ca-phase5-gui-install/`. Phase 5E
+  is satisfied; G5 remains open for production-signed Windows EXEs and a clean
+  Windows portable run.
 
 ## Latest local G1 verification
 
