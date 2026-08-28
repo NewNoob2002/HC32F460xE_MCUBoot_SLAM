@@ -5,6 +5,17 @@ The primary source is `SLAMRTK_Chargeborad_V1.0.pdf` (one A2 page, PDF
 metadata date 2026-08-10, SHA256
 `07e75363b1b97b2df771b024f825e3bc89c33713d4e4083df9a75c22b23e73b5`).
 
+## Current lab breakout board
+
+- On 2026-08-28 the active HIL target changed to the user's new board with all
+  MCU IO pins broken out. Its schematic and board revision are not yet archived,
+  so the Charge Board pin table below must not be treated as evidence for it.
+- The current probe is J-Link CE serial `63728710`. Flash/update evidence from
+  earlier boards remains historical and must be rerun on this target.
+- Direct access to PB13 and ground removes the old TP2 routing dependency.
+  USART3 TX logging can therefore be retested at PB13, 115200 8N1, 3.3 V TTL
+  after the FlashDB provisioning HIL is complete.
+
 ## MCU and clocks
 
 - MCU: HC32F460JEUA, QFN48.
@@ -49,6 +60,8 @@ PB12 RX with function 33. Do not select `CM_USART1` from the net label alone.
   self-loop but captured no TP2 bytes. Treat the physical PB13/TP2 path as
   unverified until idle-voltage/waveform and continuity measurements are made;
   see `evidence/hil/2026-08-28-469f9ca-phase5-debug-uart/`.
+- That TP2 result applies only to the archived Charge Board. The current breakout
+  board exposes PB13 directly and has a separate pending UART HIL.
 
 ## USB and update path
 

@@ -1,0 +1,4 @@
+Script started on 2026-08-28 20:46:06+08:00 [COMMAND="rtk Tools/updater/target/debug/hc32-updater config get" <not executed on terminal>]
+provisioned=false hardware=0x00004600 board=1 revision=2
+
+Script done on 2026-08-28 20:46:06+08:00 [COMMAND_EXIT_CODE="0"]

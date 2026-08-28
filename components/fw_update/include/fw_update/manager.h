@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "fw_update/boot_control.h"
+#include "fw_update/product_config.h"
 #include "fw_update/protocol.h"
 #include "fw_update/storage.h"
 
@@ -24,9 +25,8 @@ struct fw_update_version {
 struct fw_update_manager_config {
     const struct fw_update_storage* storage;
     const struct fw_update_boot_control* boot_control;
-    uint32_t hardware_id;
-    uint32_t board_id;
-    uint16_t board_revision;
+    const struct fw_update_product_config* product_config;
+    uint8_t product_config_writable;
     struct fw_update_version application_version;
     struct fw_update_version bootloader_version;
     uint32_t session_timeout_ms;
@@ -68,6 +68,7 @@ enum fw_update_manager_result {
 struct fw_update_manager {
     struct fw_update_manager_config config;
     struct fw_update_storage_info storage_info;
+    struct fw_update_product_config_state product_config_state;
     struct fw_protocol_parser parser;
     uint8_t tx_buffer[FW_PROTOCOL_MAX_FRAME_SIZE];
     uint8_t work_buffer[FW_PROTOCOL_MAX_PAYLOAD];

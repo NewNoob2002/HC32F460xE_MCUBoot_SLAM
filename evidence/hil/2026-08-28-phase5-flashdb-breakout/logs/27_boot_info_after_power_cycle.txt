@@ -1,0 +1,4 @@
+Script started on 2026-08-28 21:00:29+08:00 [COMMAND="rtk Tools/updater/target/debug/hc32-updater info" <not executed on terminal>]
+FAIL: transport error: transfer was cancelled
+
+Script done on 2026-08-28 21:00:35+08:00 [COMMAND_EXIT_CODE="1"]

@@ -1,0 +1,15 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T14:45:11Z"
+  operation: "targeted exact-old-Boot A/B flash/physical-restart/one USB read/debug snapshot/restore"
+  authorization: "User explicitly replied '确认允许缩小写入范围', then '继续 old Boot A/B 预检' on 2026-08-28"
+  target:
+    board: "user-owned HC32F460xE all-IO breakout board"
+    probe_or_adapter_serial: "63728710"
+    transport: "J-Link SWD 4 MHz; J-Link VCOM /dev/ttyACM0 at 115200 8N1; USB Vendor Bulk"
+  artifact_or_stimulus: "Exact old Boot SHA256 9b51a0115d48db001a668403878793e8e3886f827f4d080821031cfbd143d3d8 at 0x00000000; provisioned Reserved image SHA256 a679cca64deb1f08585025da2c93dd7e994c042ee9704cf60378f074438ca3d9 at 0x00076000; erase the Primary and Secondary first sectors; after physical restart issue exactly one info request"
+  limits: "Invoke J-Link Commander with -USB 63728710. Do not load a full-Flash fixture. Write only Boot 0x00000000-0x0000FFFF and Reserved 0x00076000-0x0007FFFF; erase only Primary first sector 0x00010000-0x00011FFF and Secondary first sector 0x00042000-0x00043FFF. Verify both written binaries. Do not run config set, config get, install, or retry info. No unlock, recover, OTP, option-byte or protection changes."
+  recovery_plan: "After snapshot, or on any failure, restore backup/pre_run_a_00000000_0007ffff.bin to exactly 0x00000000-0x0007FFFF, verifybin, read back 524288 bytes and require SHA256/cmp equality before reset/run."
+  approved: true
+  preflight_evidence: "J-Link Commander V9.70; only attached probe S/N 63728710, J-Link CE, VTref 3.300 V; old Boot SHA256 9b51a0115d48db001a668403878793e8e3886f827f4d080821031cfbd143d3d8 (61900 bytes); Reserved SHA256 a679cca64deb1f08585025da2c93dd7e994c042ee9704cf60378f074438ca3d9 (40960 bytes); two 524288-byte recovery backups and prior post-restore snapshot are byte-identical at SHA256 ae1f723d4ef84ea2c27c622f048bf01cdbdd9ad47d3cd66c42cd590c3ca9d8ca; source revision 323ebea6bbdfc57258ccfcc40eaa3e45ba61d3b1 with preserved working-tree changes"
+  execution_status: "Completed at 2026-08-28T15:00:24Z: targeted programming verified, physical power cycle completed, exactly one USB info request succeeded, debug snapshot captured, and the full 524288-byte backup was restored with verifybin plus byte-identical readback"

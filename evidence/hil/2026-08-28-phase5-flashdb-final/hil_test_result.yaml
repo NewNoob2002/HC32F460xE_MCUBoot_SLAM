@@ -1,0 +1,57 @@
+test_result:
+  schema_version: 1
+  source_revision: "323ebea6bbdfc57258ccfcc40eaa3e45ba61d3b1"
+  source_dirty: true
+  artifact_checksums:
+    boot: "7d3776e7ea0e0ddf8335d4110f082b4d59d04f4833936d38cc5e40dc57d737b1"
+    signed_image: "02c87e1b6b5ca0d68e5034ab85131489983ffb07f0d0636e2b0c1b237af9ee10"
+    cli: "aa02090928331d5fbedb84cd18d41285baa1d97d3fe2adb6910d94bc90a5c4be"
+    pre_hil_backup: "ae1f723d4ef84ea2c27c622f048bf01cdbdd9ad47d3cd66c42cd590c3ca9d8ca"
+    post_install_snapshot: "9243e5072e099e7c90eeb9770b1518de6bcf4fd2e67f7d7a5b4bda45c7740cc5"
+    post_restore_readback: "ae1f723d4ef84ea2c27c622f048bf01cdbdd9ad47d3cd66c42cd590c3ca9d8ca"
+  safety_preflight: "safety_preflight.yaml"
+  level: "hil"
+  target: "HC32F460xE all-IO breakout, J-Link 63728710, USB HC32F460-52353639FF0F5041FFFF4849"
+  command: "double full-Flash backup; Boot recovery; unprovisioned read; one config write; physical restart/readback; compatible install/wait; Application readback; full snapshot; exact restore"
+  timing: {started_at_utc: "2026-08-28T15:18:53Z", duration_ms: 25747000, timeout_ms: 30000}
+  attempts: 2
+  passed: true
+  counts: {total: 2, passed: 1, failed: 0, skipped: 1}
+  classified_failures:
+    - "Attempt 1: infrastructure/reset-enumeration failure before any protocol request; retained snapshot showed no product fault; exact restore passed"
+  logs:
+    - "logs/00_backup.txt"
+    - "logs/10_prepare_recovery.txt"
+    - "logs/15_prepare_failure_snapshot.txt"
+    - "logs/19_restore_after_prepare_failure.txt"
+    - "logs/20_boot_info.txt"
+    - "logs/30_prepare_recovery_attempt2.txt"
+    - "logs/31_boot_info_attempt2.txt"
+    - "logs/32_config_get_unprovisioned_attempt2.txt"
+    - "logs/33_config_set_once_attempt2.txt"
+    - "logs/40_config_get_after_power_cycle.txt"
+    - "logs/41_install_compatible_image.txt"
+    - "logs/42_wait_application.txt"
+    - "logs/43_application_info.txt"
+    - "logs/44_application_config_get.txt"
+    - "logs/45_post_install_snapshot.txt"
+    - "logs/46_snapshot_analysis.txt"
+    - "logs/99_restore.txt"
+  requirements:
+    - "Boot recovery reports the build-time identity as unprovisioned"
+    - "Exactly one product identity write succeeds in Reserved Flash"
+    - "The identity survives a physical power cycle"
+    - "A signed image with matching protected compatibility TLV installs successfully"
+    - "Application mode reports the same persisted identity and version 1.0.0"
+    - "The exact complete pre-HIL Flash image is restored"
+  observations:
+    - "Attempt 2 enumerated cafe:0001 only after the planned physical power cycle"
+    - "config get changed from provisioned=false to provisioned=true and remained true after power loss"
+    - "All 55267 image bytes transferred; device verify and COMMIT passed"
+    - "wait observed cafe:0002 Application 1.0.0"
+    - "Primary image bytes match the signed artifact; copy_done=1, image_ok=1 and MCUboot magic are valid"
+    - "Secondary header/trailer are erased; intermediate swap data remains elsewhere in Secondary/Scratch and is not a failure"
+    - "FlashDB product identity magic is present at absolute address 0x0007605C"
+    - "Post-restore readback is byte-identical to both pre-HIL backups"
+  final_state: "exact 512 KiB pre-HIL Flash restored; target reset and running"
+  recovery: "exercised twice and passed"

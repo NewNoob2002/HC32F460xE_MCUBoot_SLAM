@@ -7,6 +7,7 @@
 #include "bsp_critical.h"
 #include "fw_update/boot_control_mcuboot.h"
 #include "fw_update/manager.h"
+#include "fw_update/product_config_flashdb.h"
 #include "fw_update/storage_mcuboot.h"
 #include "hc32f460.h"
 #include "product_identity.h"
@@ -131,6 +132,7 @@ USB_MEM_ALIGNX static uint8_t tx_buffer[FW_PROTOCOL_MAX_FRAME_SIZE];
 
 static struct fw_update_storage storage;
 static struct fw_update_boot_control boot_control;
+static struct fw_update_product_config product_config;
 static struct fw_update_manager manager;
 static volatile uint32_t rx_length;
 static volatile uint32_t tx_complete_length;
@@ -207,16 +209,22 @@ static void recover_transport(void) {
 }
 
 int usb_fw_update_init(void) {
-    if (initialize_usb_serial() != 0)
-        return -1;
-    fw_update_storage_mcuboot_init(&storage);
-    fw_update_boot_control_mcuboot_init(&boot_control);
-    const struct fw_update_manager_config config = {
-        .storage = &storage,
-        .boot_control = &boot_control,
+    const struct fw_update_product_identity default_identity = {
         .hardware_id = HC32_PRODUCT_HARDWARE_ID,
         .board_id = HC32_PRODUCT_BOARD_ID,
         .board_revision = HC32_PRODUCT_BOARD_REVISION,
+    };
+    if (initialize_usb_serial() != 0)
+        return -1;
+    fw_update_storage_mcuboot_init(&storage);
+    if (fw_update_product_config_flashdb_init(&product_config, &default_identity) != FW_UPDATE_OK)
+        return -1;
+    fw_update_boot_control_mcuboot_init(&boot_control, &product_config);
+    const struct fw_update_manager_config config = {
+        .storage = &storage,
+        .boot_control = &boot_control,
+        .product_config = &product_config,
+        .product_config_writable = USB_FW_UPDATE_BOOT_RECOVERY != 0 ? 1U : 0U,
         .application_version =
             {
                 .major = APP_VERSION_MAJOR,

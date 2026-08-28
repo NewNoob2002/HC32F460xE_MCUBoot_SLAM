@@ -241,7 +241,10 @@ separate ADR before production release.
 - MCUboot signature validation is the root of image trust. Transport success is not image trust.
 - Unsigned/invalid-signature images may be received into Secondary but must never replace a valid Primary; Boot validation rejects them.
 - Host inputs use logical offsets and bounded lengths; integer addition is checked before translation.
-- Only the Secondary backend can erase/write during an update session. Boot, Primary, Scratch and Reserved are not selectable.
+- Firmware-image commands can erase/write only Secondary. Product-config
+  commands expose only the fixed write-once identity schema; their FlashDB
+  backend alone owns Reserved. Boot, Primary, Scratch, arbitrary KV keys and
+  physical addresses are not selectable by the Host.
 - Frame lengths, firmware sizes and offsets have fixed compile-time maxima.
 - Release private keys never enter the repository, firmware or host tool.
 - Malformed traffic has bounded CPU/time/retry cost to limit denial of service.

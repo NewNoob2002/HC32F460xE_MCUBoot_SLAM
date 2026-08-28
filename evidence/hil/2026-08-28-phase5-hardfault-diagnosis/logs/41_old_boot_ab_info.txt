@@ -1,0 +1,7 @@
+Script started on 2026-08-28 22:59:25+08:00 [COMMAND="Tools/updater/target/debug/hc32-updater info" <not executed on terminal>]
+application=0.0.0 bootloader=1.0.0
+hardware=0x00004600 board=1 revision=2 capacity=196608 write_alignment=4 erase_alignment=8192
+mode=boot-recovery
+serial=HC32F460-52353639FF0F5041FFFF4849
+
+Script done on 2026-08-28 22:59:25+08:00 [COMMAND_EXIT_CODE="0"]

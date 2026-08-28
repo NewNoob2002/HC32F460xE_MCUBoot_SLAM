@@ -20,17 +20,21 @@ static uint32_t read_le32(const uint8_t* value) {
     return (uint32_t)value[0] | ((uint32_t)value[1] << 8U) | ((uint32_t)value[2] << 16U) | ((uint32_t)value[3] << 24U);
 }
 
-static int candidate_is_valid(void) {
+static int candidate_is_valid(const struct fw_update_product_config* product_config) {
     static uint8_t validation_buffer[VALIDATION_BUFFER_SIZE];
     struct boot_loader_state state;
     struct image_header header;
     struct image_tlv_iter iterator;
     const struct flash_area* area;
     uint8_t compatibility[HC32_COMPATIBILITY_PAYLOAD_SIZE];
+    struct fw_update_product_config_state product_config_state;
     uint32_t offset = 0U;
     uint16_t length = 0U;
     int valid = 0;
     FIH_DECLARE(validation_result, FIH_FAILURE);
+
+    if (fw_update_product_config_get(product_config, &product_config_state) != FW_UPDATE_OK)
+        return 0;
 
     boot_state_init(&state);
     if (boot_open_all_flash_areas(&state) != 0)
@@ -53,9 +57,9 @@ static int candidate_is_valid(void) {
         goto out;
 
     valid = compatibility[0] == HC32_COMPATIBILITY_FORMAT_VERSION && compatibility[1] == 0U
-            && read_le16(&compatibility[2]) == HC32_PRODUCT_BOARD_REVISION
-            && read_le32(&compatibility[4]) == HC32_PRODUCT_HARDWARE_ID
-            && read_le32(&compatibility[8]) == HC32_PRODUCT_BOARD_ID;
+            && read_le16(&compatibility[2]) == product_config_state.identity.board_revision
+            && read_le32(&compatibility[4]) == product_config_state.identity.hardware_id
+            && read_le32(&compatibility[8]) == product_config_state.identity.board_id;
 
 out:
     boot_close_all_flash_areas(&state);
@@ -63,8 +67,8 @@ out:
 }
 
 static enum fw_update_result request_test_upgrade(void* context) {
-    (void)context;
-    if (candidate_is_valid() == 0)
+    const struct fw_update_product_config* product_config = context;
+    if (candidate_is_valid(product_config) == 0)
         return FW_UPDATE_ERR_BOOT_CONTROL;
     return boot_set_pending_multi(0, 0) == 0 ? FW_UPDATE_OK : FW_UPDATE_ERR_BOOT_CONTROL;
 }
@@ -79,9 +83,10 @@ static const struct fw_update_boot_control_ops ops = {
     .confirm_running_image = confirm_running_image,
 };
 
-void fw_update_boot_control_mcuboot_init(struct fw_update_boot_control* control) {
+void fw_update_boot_control_mcuboot_init(struct fw_update_boot_control* control,
+                                         const struct fw_update_product_config* product_config) {
     if (control == NULL)
         return;
     control->ops = &ops;
-    control->context = NULL;
+    control->context = (void*)product_config;
 }

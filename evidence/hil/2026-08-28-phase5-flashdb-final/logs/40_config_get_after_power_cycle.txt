@@ -1,0 +1,4 @@
+Script started on 2026-08-29 06:26:25+08:00 [COMMAND="evidence/hil/2026-08-28-phase5-flashdb-final/artifacts/hc32-updater config get" <not executed on terminal>]
+provisioned=true hardware=0x00004600 board=1 revision=2
+
+Script done on 2026-08-29 06:26:25+08:00 [COMMAND_EXIT_CODE="0"]

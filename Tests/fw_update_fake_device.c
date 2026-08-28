@@ -20,12 +20,14 @@ struct fake_storage {
     uint8_t bytes[FAKE_CAPACITY];
     unsigned int erase_calls;
     unsigned int request_calls;
+    struct fw_update_product_config_state product_config_state;
 };
 
 struct fixture {
     struct fake_storage fake;
     struct fw_update_storage storage;
     struct fw_update_boot_control boot_control;
+    struct fw_update_product_config product_config;
     struct fw_update_manager manager;
     uint32_t now_ms;
 };
@@ -70,6 +72,21 @@ static enum fw_update_result fake_confirm(void* context) {
     return FW_UPDATE_OK;
 }
 
+static enum fw_update_result fake_product_get(void* context, struct fw_update_product_config_state* state) {
+    const struct fake_storage* fake = context;
+    *state = fake->product_config_state;
+    return FW_UPDATE_OK;
+}
+
+static enum fw_update_result fake_product_set(void* context, const struct fw_update_product_identity* identity) {
+    struct fake_storage* fake = context;
+    if (fake->product_config_state.provisioned != 0U)
+        return FW_UPDATE_ERR_LOCKED;
+    fake->product_config_state.identity = *identity;
+    fake->product_config_state.provisioned = 1U;
+    return FW_UPDATE_OK;
+}
+
 static const struct fw_update_storage_ops storage_ops = {
     .get_info = fake_get_info,
     .erase_all = fake_erase_all,
@@ -82,13 +99,17 @@ static const struct fw_update_boot_control_ops boot_control_ops = {
     .confirm_running_image = fake_confirm,
 };
 
+static const struct fw_update_product_config_ops product_config_ops = {
+    .get = fake_product_get,
+    .set = fake_product_set,
+};
+
 static int fixture_init(struct fixture* fixture) {
     const struct fw_update_manager_config config = {
         .storage = &fixture->storage,
         .boot_control = &fixture->boot_control,
-        .hardware_id = UINT32_C(0x00004600),
-        .board_id = 1U,
-        .board_revision = 2U,
+        .product_config = &fixture->product_config,
+        .product_config_writable = 1U,
         .application_version = {.major = 1U, .minor = 0U, .revision = 0U, .build = 0U},
         .bootloader_version = {.major = 1U, .minor = 0U, .revision = 0U, .build = 0U},
         .session_timeout_ms = 5000U,
@@ -103,6 +124,11 @@ static int fixture_init(struct fixture* fixture) {
     fixture->storage.context = &fixture->fake;
     fixture->boot_control.ops = &boot_control_ops;
     fixture->boot_control.context = &fixture->fake;
+    fixture->fake.product_config_state.identity.hardware_id = UINT32_C(0x00004600);
+    fixture->fake.product_config_state.identity.board_id = 1U;
+    fixture->fake.product_config_state.identity.board_revision = 2U;
+    fixture->product_config.ops = &product_config_ops;
+    fixture->product_config.context = &fixture->fake;
     fixture->now_ms = 100U;
     return fw_update_manager_init(&fixture->manager, &config) == FW_UPDATE_MANAGER_OK ? 0 : -1;
 }

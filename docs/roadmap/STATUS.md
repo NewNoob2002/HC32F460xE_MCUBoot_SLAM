@@ -1,6 +1,6 @@
 # Roadmap Status
 
-Last updated: 2026-08-28
+Last updated: 2026-08-29
 
 Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIEW`, `PASSED`.
 
@@ -11,7 +11,7 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 | Phase 2 — Secondary Storage and Boot Control | PASSED | G2 | Strict HostTests 7/7; Debug/Release/signing and remote CI passed | Storage/range-isolation/Pending/restore passed | None | `evidence/hil/2026-08-26-5ebeae6-phase2/`, revisions `5ebeae6`/`0e1abd8`, CI `32928199086`/`32929570437` |
 | Phase 3 — Protocol Core | PASSED | G3 | HostTests 9/9; corpus 10,000; Debug/Release/signing and remote CI PASS | Not required | None | `evidence/host/2026-08-26-e7899bd-phase3/`, revisions `e7899bd`/`515d0c5`, CI `32948384485` |
 | Phase 4 — CherryUSB + HC32 DCD Loopback | PASSED | G4 | HostTests 11/11; Debug/Release image verification; CI passed | Enumeration, stall recovery, 10,000-transfer baseline, 10 unplug/re-enumeration recoveries, 30-minute run, counters and exact restore passed | None | `evidence/hil/2026-08-27-fd703cd-phase4-g4/`, revision `fd703cd`, evidence commit `2b63850`, CI `33043244338` |
-| Phase 5 — USB Upgrade E2E | IN_PROGRESS | G5 | Rust/Host quality gates, Debug/Release firmware, protected compatibility TLV, WinUSB descriptors and unsigned Windows portable ZIP passed | Application v1→v2 persistence, invalid-slot Boot recovery/bootstrap, Slint GUI install and per-chip UQID identity passed with exact restore; Debug UART firmware/VCOM diagnostics passed but TP2 capture is hardware-deferred | Production-signed Windows EXEs; clean Windows portable run | `evidence/hil/2026-08-27-e6eeb68-phase5-clean/`, `evidence/hil/2026-08-28-469f9ca-phase5-boot-recovery/`, `evidence/hil/2026-08-28-469f9ca-phase5-gui-install/`, `evidence/hil/2026-08-28-469f9ca-phase5-uqid/`, `evidence/hil/2026-08-28-469f9ca-phase5-debug-uart/` |
+| Phase 5 — USB Upgrade E2E | IN_PROGRESS | G5 | Rust/Host quality gates, Debug/Release firmware, protected compatibility TLV, WinUSB descriptors and unsigned Windows portable ZIP passed | Application v1→v2 persistence, invalid-slot Boot recovery/bootstrap, FlashDB Boot-only provisioning/power-cycle persistence/compatible install, Slint GUI install and per-chip UQID identity passed with exact restore; Debug UART firmware/VCOM diagnostics passed, physical PB13 capture pending on the new breakout board | Production-signed Windows EXEs; clean Windows portable run | `evidence/hil/2026-08-27-e6eeb68-phase5-clean/`, `evidence/hil/2026-08-28-469f9ca-phase5-boot-recovery/`, `evidence/hil/2026-08-28-phase5-flashdb-final/`, `evidence/hil/2026-08-28-469f9ca-phase5-gui-install/`, `evidence/hil/2026-08-28-469f9ca-phase5-uqid/`, `evidence/hil/2026-08-28-469f9ca-phase5-debug-uart/` |
 | Phase 6 — Failure and Recovery | NOT_STARTED | G6 | Not run | Required | G5, power/reset fixture | None |
 | Phase 7 — UART Portability | NOT_STARTED | G7 | Not run | Required | G6 | None |
 | Phase 8 — CAN/CAN FD Portability | NOT_STARTED | G8 | Not run | Required | G7 | None |
@@ -33,9 +33,33 @@ Allowed status values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIE
 ## Immediate next action
 
 Build/validate externally signed Windows CLI/GUI EXEs and complete a clean-Windows
-portable run. Linux continues to run the CLI/GUI directly with the repository
-udev rule; no application package is built. Debug UART TP2 capture is deferred
-until board-level voltage/waveform and continuity measurements are available.
+portable run. The new all-IO breakout board also permits the pending USART3/PB13
+capture to be rerun independently.
+
+## Latest FlashDB product-configuration development node
+
+Date: 2026-08-29
+
+- Branch `feat/phase5-flashdb-device-config` starts from Phase 5 consolidation
+  revision `323ebea`.
+- FlashDB 2.2.0 KVDB now owns Reserved `0x00076000-0x0007FFFF` through a bounded
+  FAL/HC32 Flash-map port. The first schema stores one atomic write-once product
+  identity blob; UQID remains read-only.
+- Protocol V1 and the Rust CLI support `config get` and `config set` for
+  `hardware_id`, `board_id` and `board_revision`. Device Info, BEGIN and COMMIT
+  all use the same effective persisted identity. Arbitrary KV and Flash-address
+  access are not exposed. Decision: `docs/adr/ADR-006-flashdb-product-configuration.md`.
+- HostTests passed 15/15, including real FlashDB format/set/get/reinitialize and
+  second-write rejection; Rust fmt/clippy and Rust/C fake E2E passed. Debug and
+  Release firmware/image/WinUSB verification passed. Debug Boot is 61,640 text
+  bytes and Release Boot is 45,704 text bytes inside the fixed 65,536-byte Boot
+  region.
+- HIL passed on the all-IO breakout board with J-Link CE `63728710`: Boot
+  recovery reported unprovisioned defaults, one write survived a physical power
+  cycle, a matching signed image installed into Application `1.0.0`, and
+  Application reported the same provisioned identity. Full 512 KiB restore and
+  byte-for-byte readback passed. Evidence:
+  `evidence/hil/2026-08-28-phase5-flashdb-final/`.
 
 ## Latest system time, Debug log and portable-host result
 
@@ -65,6 +89,9 @@ Date: 2026-08-28
 - DAPLink `5844333732` VCOM self-loop passed, but TP2 produced no captured bytes.
   The remaining PB13-to-TP2-to-DAPLink RX physical path is unverified and the
   test is recorded as deferred, not passed.
+- The active target has since changed to an all-IO breakout board. PB13 is now
+  directly accessible, so the physical UART test is pending rerun rather than
+  blocked by the old TP2 route.
 - The exact 483328-byte pre-HIL Flash image was restored with pyOCD and the full
   readback matched byte-for-byte at SHA256
   `68749a28839ef5b1e98473e014b611261add7434adb3dbc4419793c3fabc9b05`; the

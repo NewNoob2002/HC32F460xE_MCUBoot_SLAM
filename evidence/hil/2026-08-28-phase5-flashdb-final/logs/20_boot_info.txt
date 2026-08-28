@@ -1,0 +1,4 @@
+Script started on 2026-08-28 23:21:14+08:00 [COMMAND="evidence/hil/2026-08-28-phase5-flashdb-final/artifacts/hc32-updater info" <not executed on terminal>]
+FAIL: USB device not found
+
+Script done on 2026-08-28 23:21:14+08:00 [COMMAND_EXIT_CODE="1"]

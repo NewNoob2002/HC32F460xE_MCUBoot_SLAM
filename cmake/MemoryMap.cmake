@@ -25,6 +25,7 @@ math(EXPR expected_reserved  "${SCRATCH_BASE} + ${SCRATCH_SIZE}")
 math(EXPR expected_end       "${RESERVED_BASE} + ${RESERVED_SIZE}")
 math(EXPR expected_app       "${PRIMARY_SLOT_BASE} + ${MCUBOOT_HEADER_SIZE}")
 math(EXPR expected_app_size  "${PRIMARY_SLOT_SIZE} - ${MCUBOOT_HEADER_SIZE} - ${MCUBOOT_TLV_RESERVE} - ${MCUBOOT_TRAILER_RESERVE}")
+math(EXPR minimum_reserved_size "${FLASH_SECTOR_SIZE} * 2")
 
 if(NOT PRIMARY_SLOT_BASE EQUAL expected_primary OR
    NOT SECONDARY_SLOT_BASE EQUAL expected_secondary OR
@@ -32,7 +33,8 @@ if(NOT PRIMARY_SLOT_BASE EQUAL expected_primary OR
    NOT RESERVED_BASE EQUAL expected_reserved OR
    NOT FLASH_TOTAL_SIZE EQUAL expected_end OR
    NOT APP_LINK_ORIGIN EQUAL expected_app OR
-   NOT APP_LINK_SIZE EQUAL expected_app_size)
+   NOT APP_LINK_SIZE EQUAL expected_app_size OR
+   RESERVED_SIZE LESS minimum_reserved_size)
     message(FATAL_ERROR "Invalid MCUboot flash layout")
 endif()
 

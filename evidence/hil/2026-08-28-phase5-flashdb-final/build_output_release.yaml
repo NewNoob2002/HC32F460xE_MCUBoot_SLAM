@@ -1,0 +1,28 @@
+build_output:
+  schema_version: 1
+  created_at_utc: "2026-08-28T22:35:15Z"
+  project: "HC32F460xE MCUboot FlashDB product configuration"
+  target: "HC32F460xE all-IO breakout"
+  mcu: "HC32F460xE"
+  operating_system: "bare-metal"
+  configuration: "Release, APP_VERSION=1.0.0, APP_AUTO_CONFIRM=ON, temporary external validation key"
+  source_revision: "323ebea6bbdfc57258ccfcc40eaa3e45ba61d3b1 dirty working tree"
+  toolchain: {id: "arm-none-eabi-gcc", version: "14.3.1 20250623", target: "arm-none-eabi"}
+  linker_script: "Linker/boot.ld"
+  artifacts:
+    elf: "artifacts/post_format_release/boot_firmware.elf"
+    bin: "artifacts/post_format_release/boot_firmware.bin"
+    map: "artifacts/post_format_release/boot_firmware.map"
+    metadata: "logs/software_release_build.txt"
+    size_report: "logs/software_release_build.txt"
+    signed_update: "artifacts/post_format_release/updater_signed.bin"
+  size:
+    boot_text: 45704
+    boot_bin: 46224
+    boot_region: 65536
+  checksums:
+    artifacts/post_format_release/boot_firmware.bin: "fd87198b3c48e843854036bff13bdf4033a71dc82ba2b174d3a5018df52d1a94"
+    artifacts/post_format_release/boot_firmware.elf: "00aee597115de22188ae05114d22eb5d35d93993e4c62e23e71081dfcf3223d0"
+    artifacts/post_format_release/boot_firmware.map: "88ea6d795dd08f892df1ca9c26b105792aab2be5fa5f6c19de3edbc4e1ac24b9"
+    artifacts/post_format_release/updater_signed.bin: "e6c0178c9582af5cca0187417c4c34905fb68fdf3050b2a9d1fb21a8af55a433"
+  verification: "clean build and verify_app_image/verify_usb_loopback_image/verify_updater_image completed with exit code 0; private key not retained"

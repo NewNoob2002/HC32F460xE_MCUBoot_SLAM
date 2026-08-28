@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T14:25:00Z"
+  operation: "exact-old-Boot A/B flash/physical-restart/one USB read/debug snapshot/restore"
+  authorization: "User explicitly replied '确认允许' on 2026-08-28 for exact old-Boot A/B reproduction"
+  target:
+    board: "user-owned HC32F460xE all-IO breakout board"
+    probe_or_adapter_serial: "63728710"
+    transport: "J-Link SWD 4 MHz; J-Link VCOM /dev/ttyACM0 at 115200 8N1; USB Vendor Bulk"
+  artifact_or_stimulus: "Load the captured provisioned full-Flash fixture SHA256 a1e7f563e69599e77d95cd3bbdec10f9f624e758c5c2a231df903b6e795c9b13, then replace Boot with the exact prior failing artifact SHA256 9b51a0115d48db001a668403878793e8e3886f827f4d080821031cfbd143d3d8 at 0x00000000; after physical restart issue exactly one info request"
+  limits: "A full 0x00000000-0x0007FFFF fixture load is permitted only to reproduce the already captured provisioned state. Verify the full fixture and old Boot after programming. Do not run config set, config get, install, or retry info. No unlock, recover, OTP, option-byte or protection changes."
+  recovery_plan: "After snapshot, or on any failure, restore backup/pre_run_a_00000000_0007ffff.bin to exactly 0x00000000-0x0007FFFF, verifybin, read back 524288 bytes and require SHA256/cmp equality before reset/run."
+  approved: true
+  execution_status: "Blocked before execution by automatic safety review; no target connection or state change occurred"

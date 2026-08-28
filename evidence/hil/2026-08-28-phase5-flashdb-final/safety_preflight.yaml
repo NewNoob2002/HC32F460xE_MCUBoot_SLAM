@@ -1,0 +1,24 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T15:16:28Z"
+  operation: "FlashDB Boot-only provisioning, physical restart persistence, compatible USB install, snapshot, and full-Flash restore"
+  authorization: "User explicitly requested the complete configuration-persistence to firmware-install to restore HIL closure on 2026-08-28"
+  target:
+    board: "user-owned HC32F460xE all-IO breakout board"
+    hardware_revision: "product board_revision 2; PCB revision not separately provided"
+    probe_or_adapter_serial: "63728710"
+    transport: "J-Link CE SWD 4 MHz; USB Vendor Bulk"
+  tool: "SEGGER J-Link Commander V9.70; hc32-updater SHA256 aa02090928331d5fbedb84cd18d41285baa1d97d3fe2adb6910d94bc90a5c4be"
+  power_state: "VTref 3.300 V; probe 63728710 is the only attached J-Link"
+  artifact_or_stimulus: "Debug Boot SHA256 7d3776e7ea0e0ddf8335d4110f082b4d59d04f4833936d38cc5e40dc57d737b1 at 0x00000000; signed updater SHA256 02c87e1b6b5ca0d68e5034ab85131489983ffb07f0d0636e2b0c1b237af9ee10 through USB; product identity hardware_id=0x00004600 board_id=1 board_revision=2"
+  limits: "Before writes, capture two identical 524288-byte backups of 0x00000000-0x0007FFFF. Invoke J-Link with -USB 63728710. Direct writes are limited to Boot 0x00000000-0x0000FFFF; erase only Primary 0x00010000-0x00011FFF, Secondary 0x00042000-0x00043FFF, and Product Config 0x00076000-0x0007FFFF. USB install remains Secondary-only. Execute one config set, one physical power cycle, one compatible install, bounded waits up to 30 seconds, and no retries after a product failure. No unlock, recover, OTP, option-byte, protection, or unrelated bus operations."
+  recovery_plan: "On completion or any failure, restore backup/pre_hil_a_00000000_0007ffff.bin to exactly 0x00000000-0x0007FFFF, verifybin, save a 524288-byte readback, require SHA256/cmp equality, then reset and run."
+  approved: true
+  backup_evidence: "Two byte-identical 524288-byte full-Flash backups captured at SHA256 ae1f723d4ef84ea2c27c622f048bf01cdbdd9ad47d3cd66c42cd590c3ca9d8ca"
+  attempts:
+    - number: 1
+      result: "infrastructure-failure-before-protocol"
+      evidence: "Boot recovery did not enumerate after J-Link software reset. Snapshot showed Thread mode in bsp_delay_ms(), IPSR/CFSR/HFSR zero and no fault magic. Full restore matched the backup byte-for-byte."
+    - number: 2
+      change: "Same artifacts and address bounds; require a physical power cycle after recovery preparation and before the first USB request."
+  execution_status: "Completed: Attempt 2 passed physical-restart persistence, compatible install, Application readback and snapshot; full restore verifybin plus byte-identical 524288-byte readback passed"

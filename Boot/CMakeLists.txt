@@ -1,4 +1,5 @@
 add_executable(boot_firmware
+    Core/Src/hc32f460_it.c
     Core/Src/main.c
     ${PROJECT_SOURCE_DIR}/App/Core/Src/usb_fw_update.c
     ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Src/usb_dc_hc32f460.c
@@ -22,6 +23,7 @@ target_compile_definitions(boot_firmware PRIVATE
     APP_VERSION_BUILD=0
 )
 set_source_files_properties(
+    Core/Src/hc32f460_it.c
     Core/Src/main.c
     ${PROJECT_SOURCE_DIR}/App/Core/Src/usb_fw_update.c
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wconversion;-Wshadow;-Werror"

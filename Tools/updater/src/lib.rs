@@ -17,6 +17,8 @@ const IMAGE_TLV_PROT_INFO_MAGIC: u16 = 0x6908;
 const COMPATIBILITY_TLV_TYPE: u16 = 0x00a0;
 const COMPATIBILITY_PAYLOAD_SIZE: usize = 12;
 const REQUIRED_CAPABILITIES: u32 = 0b111;
+const PRODUCT_CONFIG_CAPABILITY: u32 = 1 << 3;
+const PRODUCT_CONFIG_FORMAT_VERSION: u8 = 1;
 const DEFAULT_ATTEMPTS: usize = 3;
 const MAX_STALE_RESPONSES: usize = 2;
 
@@ -103,6 +105,12 @@ pub struct Compatibility {
     pub board_revision: u16,
     pub hardware_id: u32,
     pub board_id: u32,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ProductConfig {
+    pub identity: Compatibility,
+    pub provisioned: bool,
 }
 
 impl FirmwareImage {
@@ -365,6 +373,37 @@ impl<T: Transport> ProtocolV1Client<T> {
         })
     }
 
+    pub fn product_config(&mut self) -> Result<ProductConfig, Error> {
+        let hello = self.hello()?;
+        if hello.capabilities & PRODUCT_CONFIG_CAPABILITY == 0 {
+            return Err(Error::Capability(hello.capabilities));
+        }
+        parse_product_config(&self.request(Command::ProductConfigGet, Vec::new())?)
+    }
+
+    pub fn provision_product_config(
+        &mut self,
+        identity: Compatibility,
+    ) -> Result<ProductConfig, Error> {
+        let hello = self.hello()?;
+        if hello.capabilities & PRODUCT_CONFIG_CAPABILITY == 0 {
+            return Err(Error::Capability(hello.capabilities));
+        }
+
+        let mut payload = Vec::with_capacity(COMPATIBILITY_PAYLOAD_SIZE);
+        payload.extend_from_slice(&[PRODUCT_CONFIG_FORMAT_VERSION, 0]);
+        payload.extend_from_slice(&identity.board_revision.to_le_bytes());
+        payload.extend_from_slice(&identity.hardware_id.to_le_bytes());
+        payload.extend_from_slice(&identity.board_id.to_le_bytes());
+        let persisted = parse_product_config(&self.request(Command::ProductConfigSet, payload)?)?;
+        if !persisted.provisioned || persisted.identity != identity {
+            return Err(Error::ProductConfig(
+                "persisted product configuration does not match request",
+            ));
+        }
+        Ok(persisted)
+    }
+
     pub fn install(
         &mut self,
         image: &FirmwareImage,
@@ -536,6 +575,25 @@ fn append_version(output: &mut Vec<u8>, version: Version) {
     output.extend_from_slice(&version.build.to_le_bytes());
 }
 
+fn parse_product_config(body: &[u8]) -> Result<ProductConfig, Error> {
+    if body.len() != COMPATIBILITY_PAYLOAD_SIZE {
+        return Err(Error::Protocol(ProtocolError::InvalidLength(body.len())));
+    }
+    if body[0] != PRODUCT_CONFIG_FORMAT_VERSION || body[1] & !1 != 0 {
+        return Err(Error::ProductConfig(
+            "unsupported product configuration format",
+        ));
+    }
+    Ok(ProductConfig {
+        provisioned: body[1] & 1 != 0,
+        identity: Compatibility {
+            board_revision: read_u16(&body[2..4]),
+            hardware_id: read_u32(&body[4..8]),
+            board_id: read_u32(&body[8..12]),
+        },
+    })
+}
+
 fn read_u16(input: &[u8]) -> u16 {
     u16::from_le_bytes(input.try_into().expect("u16 slice has fixed length"))
 }
@@ -549,6 +607,7 @@ pub enum Error {
     Argument(&'static str),
     InvalidVersionField(&'static str),
     Image(&'static str),
+    ProductConfig(&'static str),
     Capability(u32),
     Device(Status),
     Protocol(ProtocolError),
@@ -559,7 +618,9 @@ pub enum Error {
 impl fmt::Display for Error {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Argument(message) | Self::Image(message) => formatter.write_str(message),
+            Self::Argument(message) | Self::Image(message) | Self::ProductConfig(message) => {
+                formatter.write_str(message)
+            }
             Self::InvalidVersionField(field) => write!(formatter, "invalid version {field}"),
             Self::Capability(bits) => write!(
                 formatter,
@@ -716,6 +777,43 @@ mod tests {
     }
 
     #[test]
+    fn reads_and_provisions_product_config() {
+        let identity = Compatibility {
+            hardware_id: 0x0000_4601,
+            board_id: 7,
+            board_revision: 4,
+        };
+        let transport = ScriptTransport::new([
+            Ok(response(Command::Hello, 0, Status::Ok, &hello_body())),
+            Ok(response(
+                Command::ProductConfigGet,
+                1,
+                Status::Ok,
+                &product_config_body(
+                    Compatibility {
+                        hardware_id: 0x0000_4600,
+                        board_id: 1,
+                        board_revision: 2,
+                    },
+                    false,
+                ),
+            )),
+            Ok(response(
+                Command::ProductConfigSet,
+                2,
+                Status::Ok,
+                &product_config_body(identity, true),
+            )),
+        ]);
+        let mut client = ProtocolV1Client::new(transport, Duration::from_millis(10));
+        assert!(!client.product_config().unwrap().provisioned);
+        assert_eq!(
+            client.provision_product_config(identity).unwrap().identity,
+            identity
+        );
+    }
+
+    #[test]
     fn wait_workflow_returns_the_requested_version() {
         let expected = Version {
             major: 1,
@@ -788,8 +886,16 @@ mod tests {
     fn hello_body() -> Vec<u8> {
         let mut body = Vec::new();
         body.extend_from_slice(&512u16.to_le_bytes());
-        body.extend_from_slice(&REQUIRED_CAPABILITIES.to_le_bytes());
+        body.extend_from_slice(&(REQUIRED_CAPABILITIES | PRODUCT_CONFIG_CAPABILITY).to_le_bytes());
         body.extend_from_slice(&5000u32.to_le_bytes());
+        body
+    }
+
+    fn product_config_body(identity: Compatibility, provisioned: bool) -> Vec<u8> {
+        let mut body = vec![PRODUCT_CONFIG_FORMAT_VERSION, u8::from(provisioned)];
+        body.extend_from_slice(&identity.board_revision.to_le_bytes());
+        body.extend_from_slice(&identity.hardware_id.to_le_bytes());
+        body.extend_from_slice(&identity.board_id.to_le_bytes());
         body
     }
 

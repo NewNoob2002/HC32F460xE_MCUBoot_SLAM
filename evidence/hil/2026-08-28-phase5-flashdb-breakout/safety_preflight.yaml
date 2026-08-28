@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T12:33:28Z"
+  operation: "flash/storage-write/reset/restore"
+  authorization: "User confirmed the new all-IO board identity 0x00004600/1/2 and authorized the FlashDB HIL with J-Link 63728710"
+  target:
+    board: "user-owned HC32F460xE all-IO breakout board"
+    hardware_revision: "product board_revision 2; PCB revision not separately provided"
+    probe_or_adapter_serial: "63728710"
+    transport: "SWD 4 MHz, then USB Vendor Bulk"
+  artifact_or_stimulus: "Debug Boot at 0x00000000; updater_signed.bin over USB; product identity hardware_id=0x00004600 board_id=1 board_revision=2"
+  limits: "Require two identical 524288-byte backups of 0x00000000-0x0007FFFF before writes. Flash only Boot 0x00000000-0x0000FFFF; erase only Primary first sector 0x00010000-0x00011FFF and Secondary first sector 0x00042000-0x00043FFF to enter recovery. USB install remains Secondary-only; config set may write only FlashDB Product Config 0x00076000-0x0007FFFF. No unlock, recover, OTP, option-byte or protection changes. Full-range erase/program is allowed only for the mandatory exact restore."
+  recovery_plan: "On any failure retain logs, stop retries, restore backup/pre_hil_a_00000000_0007ffff.bin to exactly 0x00000000-0x0007FFFF, verifybin, read back 524288 bytes and require SHA256/cmp equality before reset/run."
+  approved: true

@@ -1,0 +1,13 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T14:05:00Z"
+  operation: "diagnostic flash/config-write/physical-restart/USB read/debug snapshot/restore"
+  authorization: "User explicitly replied '确认允许' on 2026-08-28 for provisioned-state reproduction"
+  target:
+    board: "user-owned HC32F460xE all-IO breakout board"
+    probe_or_adapter_serial: "63728710"
+    transport: "J-Link SWD 4 MHz; J-Link VCOM /dev/ttyACM0 at 115200 8N1; USB Vendor Bulk"
+  artifact_or_stimulus: "Debug diagnostic Boot SHA256 7d3776e7ea0e0ddf8335d4110f082b4d59d04f4833936d38cc5e40dc57d737b1 at 0x00000000; one config set for hardware_id=0x00004600 board_id=1 board_revision=2; after physical restart, one info request"
+  limits: "Reuse the immediately verified 524288-byte recovery backup SHA256 ae1f723d4ef84ea2c27c622f048bf01cdbdd9ad47d3cd66c42cd590c3ca9d8ca. Flash only Boot 0x00000000-0x0000FFFF; erase only Primary first sector 0x00010000-0x00011FFF and Secondary first sector 0x00042000-0x00043FFF. Permit exactly one product configuration write in Reserved 0x00076000-0x0007FFFF, then exactly one info request after physical restart. Do not run install, retry config set, or issue additional USB requests. No unlock, recover, OTP, option-byte or protection changes."
+  recovery_plan: "After snapshot, or on any failure, restore backup/pre_run_a_00000000_0007ffff.bin to exactly 0x00000000-0x0007FFFF, verifybin, read back 524288 bytes and require SHA256/cmp equality before reset/run."
+  approved: true

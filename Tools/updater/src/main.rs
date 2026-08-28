@@ -1,6 +1,9 @@
 mod nusb_transport;
 
-use hc32_updater::{FirmwareImage, ProgressEvent, ProtocolV1Client, UpgradeWorkflow, Version};
+use hc32_updater::{
+    Compatibility, FirmwareImage, ProductConfig, ProgressEvent, ProtocolV1Client, UpgradeWorkflow,
+    Version,
+};
 use nusb_transport::NusbTransport;
 use std::env;
 use std::fs;
@@ -13,6 +16,8 @@ const WAIT_POLL: Duration = Duration::from_millis(250);
 
 enum CliCommand {
     Info,
+    ConfigGet,
+    ConfigSet(Compatibility),
     Install(PathBuf),
     Wait { version: Version, timeout: Duration },
 }
@@ -59,6 +64,16 @@ fn run(command: CliCommand) -> Result<(), Box<dyn std::error::Error>> {
             let mut client = ProtocolV1Client::new(transport, REQUEST_TIMEOUT);
             UpgradeWorkflow::install(&mut client, &image, print_progress)?;
         }
+        CliCommand::ConfigGet => {
+            let transport = open_device()?.ok_or("USB device not found")?;
+            let mut client = ProtocolV1Client::new(transport, REQUEST_TIMEOUT);
+            print_product_config(&client.product_config()?);
+        }
+        CliCommand::ConfigSet(identity) => {
+            let transport = open_device()?.ok_or("USB device not found")?;
+            let mut client = ProtocolV1Client::new(transport, REQUEST_TIMEOUT);
+            print_product_config(&client.provision_product_config(identity)?);
+        }
         CliCommand::Wait { version, timeout } => {
             let info = UpgradeWorkflow::wait_for_version(
                 NusbTransport::open_application,
@@ -94,6 +109,16 @@ fn print_info(info: &hc32_updater::DeviceInfo) {
     );
 }
 
+fn print_product_config(config: &ProductConfig) {
+    println!(
+        "provisioned={} hardware=0x{:08x} board={} revision={}",
+        config.provisioned,
+        config.identity.hardware_id,
+        config.identity.board_id,
+        config.identity.board_revision
+    );
+}
+
 fn print_progress(event: ProgressEvent) {
     match event {
         ProgressEvent::Device(info) => println!("device application={}", info.application_version),
@@ -112,6 +137,7 @@ fn parse_command(args: impl Iterator<Item = String>) -> Result<Option<CliCommand
     match command.as_str() {
         "help" | "--help" | "-h" if args.next().is_none() => Ok(None),
         "info" if args.next().is_none() => Ok(Some(CliCommand::Info)),
+        "config" => parse_config(args).map(Some),
         "install" => {
             let path = args.next().map(PathBuf::from).ok_or(())?;
             if args.next().is_some() {
@@ -122,6 +148,47 @@ fn parse_command(args: impl Iterator<Item = String>) -> Result<Option<CliCommand
         "wait" => parse_wait(args).map(Some),
         _ => Err(()),
     }
+}
+
+fn parse_config(mut args: impl Iterator<Item = String>) -> Result<CliCommand, ()> {
+    match args.next().as_deref() {
+        Some("get") if args.next().is_none() => Ok(CliCommand::ConfigGet),
+        Some("set") => {
+            let mut hardware_id = None;
+            let mut board_id = None;
+            let mut board_revision = None;
+            while let Some(argument) = args.next() {
+                match argument.as_str() {
+                    "--hardware-id" if hardware_id.is_none() => {
+                        hardware_id = Some(parse_u32(&args.next().ok_or(())?)?);
+                    }
+                    "--board-id" if board_id.is_none() => {
+                        board_id = Some(parse_u32(&args.next().ok_or(())?)?);
+                    }
+                    "--board-revision" if board_revision.is_none() => {
+                        board_revision = Some(
+                            u16::try_from(parse_u32(&args.next().ok_or(())?)?).map_err(|_| ())?,
+                        );
+                    }
+                    _ => return Err(()),
+                }
+            }
+            Ok(CliCommand::ConfigSet(Compatibility {
+                hardware_id: hardware_id.ok_or(())?,
+                board_id: board_id.ok_or(())?,
+                board_revision: board_revision.ok_or(())?,
+            }))
+        }
+        _ => Err(()),
+    }
+}
+
+fn parse_u32(value: &str) -> Result<u32, ()> {
+    value
+        .strip_prefix("0x")
+        .or_else(|| value.strip_prefix("0X"))
+        .map_or_else(|| value.parse(), |hex| u32::from_str_radix(hex, 16))
+        .map_err(|_| ())
 }
 
 fn parse_wait(mut args: impl Iterator<Item = String>) -> Result<CliCommand, ()> {
@@ -153,6 +220,10 @@ fn parse_wait(mut args: impl Iterator<Item = String>) -> Result<CliCommand, ()> 
 fn usage() {
     eprintln!("usage:");
     eprintln!("  hc32-updater info");
+    eprintln!("  hc32-updater config get");
+    eprintln!(
+        "  hc32-updater config set --hardware-id <id> --board-id <id> --board-revision <revision>"
+    );
     eprintln!("  hc32-updater install <signed-image>");
     eprintln!("  hc32-updater wait --version <version> [--timeout <seconds>]");
 }
@@ -180,6 +251,53 @@ mod tests {
                 ["wait", "--version", "2.0.0", "--timeout", "0"]
                     .map(String::from)
                     .into_iter()
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
+    fn validates_product_config_arguments() {
+        assert!(parse_command(["config", "get"].map(String::from).into_iter()).is_ok());
+        assert!(
+            parse_command(
+                [
+                    "config",
+                    "set",
+                    "--hardware-id",
+                    "0x4600",
+                    "--board-id",
+                    "7",
+                    "--board-revision",
+                    "2",
+                ]
+                .map(String::from)
+                .into_iter()
+            )
+            .is_ok()
+        );
+        assert!(
+            parse_command(
+                ["config", "set", "--hardware-id", "0x4600"]
+                    .map(String::from)
+                    .into_iter()
+            )
+            .is_err()
+        );
+        assert!(
+            parse_command(
+                [
+                    "config",
+                    "set",
+                    "--hardware-id",
+                    "1",
+                    "--board-id",
+                    "2",
+                    "--board-revision",
+                    "65536",
+                ]
+                .map(String::from)
+                .into_iter()
             )
             .is_err()
         );

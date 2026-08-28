@@ -1,0 +1,503 @@
+Script started on 2026-08-29 06:35:13+08:00 [COMMAND="rtk cmake --build build/Debug --clean-first --parallel && rtk cmake --build build/Debug --target verify_app_image verify_usb_loopback_image verify_updater_image verify_winusb_descriptors" <not executed on terminal>]
+[0/1] Cleaning all built files...[K[1/1] Cleaning all built files...[K
+Cleaning... 120 files.
+[0/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll.c.obj[K[0/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_clk.c.obj[K[0/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_efm.c.obj[K[0/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_fcg.c.obj[K[0/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_gpio.c.obj[K[0/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_interrupts.c.obj[K[0/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_pwc.c.obj[K[0/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_sram.c.obj[K[0/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_usart.c.obj[K[0/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_utility.c.obj[K[0/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_usb.c.obj[K[0/100] Building ASM object Drivers/CMakeFiles/hc32_startup_boot.dir/CMSIS/Device/HDSC/hc32f4xx/Source/GCC/startup_hc32f460.S.obj[K[0/100] Building C object Drivers/CMakeFiles/hc32_startup_boot.dir/CMSIS/Device/HDSC/hc32f4xx/Source/system_hc32f460.c.obj[K[0/100] Building C object Drivers/CMakeFiles/hc32_startup_boot.dir/hc32f4xx_ll_drivers/src/hc32_ll_icg.c.obj[K[0/100] Building ASM object Drivers/CMakeFiles/hc32_startup_app.dir/CMSIS/Device/HDSC/hc32f4xx/Source/GCC/startup_hc32f460.S.obj[K[0/100] Building C object Drivers/CMakeFiles/hc32_startup_app.dir/CMSIS/Device/HDSC/hc32f4xx/Source/system_hc32f460.c.obj[K[0/100] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/boot_handover.c.obj[K[0/100] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_clock.c.obj[K[1/100] Building ASM object Drivers/CMakeFiles/hc32_startup_boot.dir/CMSIS/Device/HDSC/hc32f4xx/Source/GCC/startup_hc32f460.S.obj[K[1/100] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_external_watchdog.c.obj[K[2/100] Building ASM object Drivers/CMakeFiles/hc32_startup_app.dir/CMSIS/Device/HDSC/hc32f4xx/Source/GCC/startup_hc32f460.S.obj[K[2/100] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_flash.c.obj[K[3/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_fcg.c.obj[K[3/100] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_log_uart.c.obj[K[4/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_sram.c.obj[K[4/100] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_reset.c.obj[K[5/100] Building C object Drivers/CMakeFiles/hc32_startup_boot.dir/hc32f4xx_ll_drivers/src/hc32_ll_icg.c.obj[K[5/100] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_timebase.c.obj[K[6/100] Building C object Drivers/CMakeFiles/hc32_startup_boot.dir/CMSIS/Device/HDSC/hc32f4xx/Source/system_hc32f460.c.obj[K[6/100] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_write_protection.c.obj[K[7/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll.c.obj[K[7/100] Building C object components/CMakeFiles/tinycrypt.dir/mcuboot-2.4.0/ext/tinycrypt/lib/source/sha256.c.obj[K[8/100] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_clock.c.obj[K[8/100] Building C object components/CMakeFiles/tinycrypt.dir/mcuboot-2.4.0/ext/tinycrypt/lib/source/utils.c.obj[K[9/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_gpio.c.obj[K[9/100] Building C object components/CMakeFiles/tinycrypt.dir/mcuboot-2.4.0/ext/tinycrypt/lib/source/ecc.c.obj[K[10/100] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/boot_handover.c.obj[K[10/100] Building C object components/CMakeFiles/tinycrypt.dir/mcuboot-2.4.0/ext/tinycrypt/lib/source/ecc_dsa.c.obj[K[11/100] Building C object Drivers/CMakeFiles/hc32_startup_app.dir/CMSIS/Device/HDSC/hc32f4xx/Source/system_hc32f460.c.obj[K[11/100] Building C object components/CMakeFiles/tinycrypt.dir/mcuboot-2.4.0/ext/tinycrypt/lib/source/ecc_platform_specific.c.obj[K[12/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_efm.c.obj[K[12/100] Building C object components/CMakeFiles/mcuboot_asn1.dir/mcuboot-2.4.0/ext/mbedtls-asn1/src/asn1parse.c.obj[K[13/100] Building C object components/CMakeFiles/tinycrypt.dir/mcuboot-2.4.0/ext/tinycrypt/lib/source/sha256.c.obj[K[13/100] Building C object components/CMakeFiles/mcuboot_asn1.dir/mcuboot-2.4.0/ext/mbedtls-asn1/src/platform_util.c.obj[K[14/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_utility.c.obj[K[14/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_area.c.obj[K[15/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_usb.c.obj[K[15/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_find_key.c.obj[K[16/100] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_external_watchdog.c.obj[K[16/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_img_hash.c.obj[K[17/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_clk.c.obj[K[17/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_img_security_cnt.c.obj[K[18/100] Building C object components/CMakeFiles/tinycrypt.dir/mcuboot-2.4.0/ext/tinycrypt/lib/source/ecc_platform_specific.c.obj[K[18/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_loader.c.obj[K[19/100] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_flash.c.obj[K[19/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_misc.c.obj[K[20/100] Building C object components/CMakeFiles/tinycrypt.dir/mcuboot-2.4.0/ext/tinycrypt/lib/source/utils.c.obj[K[20/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_public.c.obj[K[21/100] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_reset.c.obj[K[21/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/caps.c.obj[K[22/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_usart.c.obj[K[22/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/fault_injection_hardening.c.obj[K[23/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_pwc.c.obj[K[23/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/image_ecdsa.c.obj[K[24/100] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_timebase.c.obj[K[24/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/image_validate.c.obj[K[25/100] Building C object Drivers/CMakeFiles/hc32_ll.dir/hc32f4xx_ll_drivers/src/hc32_ll_interrupts.c.obj[K[25/100] Linking C static library Drivers/libhc32_ll.a[K[26/100] Building C object components/CMakeFiles/mcuboot_asn1.dir/mcuboot-2.4.0/ext/mbedtls-asn1/src/platform_util.c.obj[K[26/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/loader.c.obj[K[27/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_img_security_cnt.c.obj[K[27/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/swap_misc.c.obj[K[28/100] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_write_protection.c.obj[K[28/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/swap_scratch.c.obj[K[29/100] Building C object components/CMakeFiles/tinycrypt.dir/mcuboot-2.4.0/ext/tinycrypt/lib/source/ecc_dsa.c.obj[K[29/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/tlv.c.obj[K[30/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/caps.c.obj[K[30/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot_port/Src/config_checks.c.obj[K[31/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_find_key.c.obj[K[31/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot_port/Src/keys.c.obj[K[32/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_area.c.obj[K[32/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/__/generated/keys/signing_keys.c.obj[K[33/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/fault_injection_hardening.c.obj[K[33/100] Building C object components/mcuboot_port/CMakeFiles/mcuboot_port_hc32.dir/Src/flash_map_backend.c.obj[K[34/100] Building C object Platform/CMakeFiles/hc32_platform.dir/HC32F460/Src/bsp_log_uart.c.obj[K[34/100] Building C object components/flashdb_port/CMakeFiles/hc32_flashdb.dir/__/FlashDB-2.2.0/src/fdb.c.obj[K[35/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_misc.c.obj[K[35/100] Building C object components/flashdb_port/CMakeFiles/hc32_flashdb.dir/__/FlashDB-2.2.0/src/fdb_kvdb.c.obj[K[36/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot_port/Src/keys.c.obj[K[36/100] Building C object components/flashdb_port/CMakeFiles/hc32_flashdb.dir/__/FlashDB-2.2.0/src/fdb_utils.c.obj[K[37/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_img_hash.c.obj[K[37/100] Building C object components/flashdb_port/CMakeFiles/hc32_flashdb.dir/__/FlashDB-2.2.0/port/fal/src/fal.c.obj[K[38/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_loader.c.obj[K[38/100] Building C object components/flashdb_port/CMakeFiles/hc32_flashdb.dir/__/FlashDB-2.2.0/port/fal/src/fal_flash.c.obj[K[39/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot_port/Src/config_checks.c.obj[K[39/100] Building C object components/flashdb_port/CMakeFiles/hc32_flashdb.dir/__/FlashDB-2.2.0/port/fal/src/fal_partition.c.obj[K[40/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/__/generated/keys/signing_keys.c.obj[K[40/100] Building C object components/flashdb_port/CMakeFiles/hc32_flashdb.dir/Src/fal_flash_hc32.c.obj[K[41/100] Linking C static library Drivers/libhc32_ll.a[K[41/100] Linking C static library Platform/libhc32_platform.a[K[42/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/image_validate.c.obj[K[42/100] Building C object components/cherryusb/CMakeFiles/cherryusb_device.dir/core/usbd_core.c.obj[K[43/100] Building C object components/CMakeFiles/mcuboot_asn1.dir/mcuboot-2.4.0/ext/mbedtls-asn1/src/asn1parse.c.obj[K[43/100] Linking C static library components/libmcuboot_asn1.a[K[44/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/image_ecdsa.c.obj[K[44/100] Building C object components/easylogger/CMakeFiles/hc32_easylogger.dir/src/elog.c.obj[K[45/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/tlv.c.obj[K[45/100] Building C object components/easylogger/CMakeFiles/hc32_easylogger.dir/src/elog_utils.c.obj[K[46/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/bootutil_public.c.obj[K[46/100] Building C object components/easylogger/CMakeFiles/hc32_easylogger.dir/port/elog_port.c.obj[K[47/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/swap_misc.c.obj[K[47/100] Building C object components/fw_update/CMakeFiles/fw_update_core.dir/src/storage.c.obj[K[48/100] Linking C static library components/libmcuboot_asn1.a[K[48/100] Building C object components/fw_update/CMakeFiles/fw_update_core.dir/src/boot_control.c.obj[K[49/100] Linking C static library Platform/libhc32_platform.a[K[49/100] Building C object components/fw_update/CMakeFiles/fw_update_core.dir/src/product_config.c.obj[K[50/100] Building C object components/mcuboot_port/CMakeFiles/mcuboot_port_hc32.dir/Src/flash_map_backend.c.obj[K[50/100] Linking C static library components/mcuboot_port/libmcuboot_port_hc32.a[K[51/100] Building C object components/flashdb_port/CMakeFiles/hc32_flashdb.dir/__/FlashDB-2.2.0/src/fdb.c.obj[K[51/100] Building C object components/fw_update/CMakeFiles/fw_update_core.dir/src/protocol.c.obj[K[52/100] Linking C static library components/mcuboot_port/libmcuboot_port_hc32.a[K[52/100] Building C object components/fw_update/CMakeFiles/fw_update_core.dir/src/manager.c.obj[K[53/100] Building C object components/flashdb_port/CMakeFiles/hc32_flashdb.dir/Src/fal_flash_hc32.c.obj[K[53/100] Building C object components/fw_update/CMakeFiles/fw_update_mcuboot.dir/backends/flashdb/src/product_config_flashdb.c.obj[K[54/100] Building C object components/flashdb_port/CMakeFiles/hc32_flashdb.dir/__/FlashDB-2.2.0/port/fal/src/fal_flash.c.obj[K[54/100] Building C object components/fw_update/CMakeFiles/fw_update_mcuboot.dir/backends/mcuboot/src/storage_mcuboot.c.obj[K[55/100] Building C object components/flashdb_port/CMakeFiles/hc32_flashdb.dir/__/FlashDB-2.2.0/port/fal/src/fal.c.obj[K[55/100] Building C object components/fw_update/CMakeFiles/fw_update_mcuboot.dir/backends/mcuboot/src/boot_control_mcuboot.c.obj[K[56/100] Building C object components/fw_update/CMakeFiles/fw_update_core.dir/src/product_config.c.obj[K[56/100] Building C object Boot/CMakeFiles/boot_firmware.dir/Core/Src/hc32f460_it.c.obj[K[57/100] Building C object components/fw_update/CMakeFiles/fw_update_core.dir/src/boot_control.c.obj[K[57/100] Building C object Boot/CMakeFiles/boot_firmware.dir/Core/Src/main.c.obj[K[58/100] Building C object components/CMakeFiles/tinycrypt.dir/mcuboot-2.4.0/ext/tinycrypt/lib/source/ecc.c.obj[K[58/100] Linking C static library components/libtinycrypt.a[K[59/100] Building C object components/easylogger/CMakeFiles/hc32_easylogger.dir/src/elog_utils.c.obj[K[59/100] Building C object Boot/CMakeFiles/boot_firmware.dir/__/App/Core/Src/usb_fw_update.c.obj[K[60/100] Building C object components/fw_update/CMakeFiles/fw_update_core.dir/src/storage.c.obj[K[60/100] Building C object Boot/CMakeFiles/boot_firmware.dir/__/Platform/HC32F460/Src/usb_dc_hc32f460.c.obj[K[61/100] Building C object components/flashdb_port/CMakeFiles/hc32_flashdb.dir/__/FlashDB-2.2.0/port/fal/src/fal_partition.c.obj[K[61/100] Building C object Boot/CMakeFiles/boot_firmware.dir/__/Platform/HC32F460/Src/syscalls.c.obj[K[62/100] Building C object components/easylogger/CMakeFiles/hc32_easylogger.dir/port/elog_port.c.obj[K[62/100] Building C object App/CMakeFiles/app_firmware.dir/Core/Src/app_confirm.c.obj[K[63/100] Linking C static library components/libtinycrypt.a[K[63/100] Building C object App/CMakeFiles/app_firmware.dir/Core/Src/main.c.obj[K[64/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/loader.c.obj[K[64/100] Building C object App/CMakeFiles/app_firmware.dir/__/Platform/HC32F460/Src/syscalls.c.obj[K[65/100] Building C object components/flashdb_port/CMakeFiles/hc32_flashdb.dir/__/FlashDB-2.2.0/src/fdb_utils.c.obj[K
+/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/components/FlashDB-2.2.0/src/fdb_utils.c: In function '_fdb_flash_write':
+/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/components/FlashDB-2.2.0/src/fdb_utils.c:299:91: warning: unused parameter 'sync' [-Wunused-parameter]
+  299 | fdb_err_t _fdb_flash_write(fdb_db_t db, uint32_t addr, const void *buf, size_t size, bool sync)
+      |                                                                                           ^
+[65/100] Building C object App/CMakeFiles/usb_vendor_bulk_loopback.dir/Core/Src/usb_vendor_bulk.c.obj[K[66/100] Building C object components/CMakeFiles/mcuboot_bootutil.dir/mcuboot-2.4.0/boot/bootutil/src/swap_scratch.c.obj[K[66/100] Building C object App/CMakeFiles/usb_vendor_bulk_loopback.dir/Core/Src/usb_vendor_bulk_main.c.obj[K[67/100] Building C object components/fw_update/CMakeFiles/fw_update_mcuboot.dir/backends/flashdb/src/product_config_flashdb.c.obj[K[67/100] Building C object App/CMakeFiles/usb_vendor_bulk_loopback.dir/__/Platform/HC32F460/Src/usb_dc_hc32f460.c.obj[K[68/100] Building C object components/fw_update/CMakeFiles/fw_update_mcuboot.dir/backends/mcuboot/src/storage_mcuboot.c.obj[K[68/100] Building C object App/CMakeFiles/usb_vendor_bulk_loopback.dir/__/Platform/HC32F460/Src/syscalls.c.obj[K[69/100] Building C object components/fw_update/CMakeFiles/fw_update_core.dir/src/protocol.c.obj[K[69/100] Building C object App/CMakeFiles/usb_fw_updater.dir/Core/Src/app_confirm.c.obj[K[70/100] Building C object components/fw_update/CMakeFiles/fw_update_mcuboot.dir/backends/mcuboot/src/boot_control_mcuboot.c.obj[K[70/100] Building C object App/CMakeFiles/usb_fw_updater.dir/Core/Src/usb_fw_update.c.obj[K[71/100] Building C object App/CMakeFiles/app_firmware.dir/Core/Src/main.c.obj[K[71/100] Building C object App/CMakeFiles/usb_fw_updater.dir/Core/Src/usb_fw_update_main.c.obj[K[72/100] Building C object Boot/CMakeFiles/boot_firmware.dir/__/Platform/HC32F460/Src/syscalls.c.obj[K[72/100] Building C object App/CMakeFiles/usb_fw_updater.dir/__/Platform/HC32F460/Src/usb_dc_hc32f460.c.obj[K[73/100] Building C object App/CMakeFiles/app_firmware.dir/__/Platform/HC32F460/Src/syscalls.c.obj[K[73/100] Building C object App/CMakeFiles/usb_fw_updater.dir/__/Platform/HC32F460/Src/syscalls.c.obj[K[74/100] Building C object Boot/CMakeFiles/boot_firmware.dir/Core/Src/main.c.obj[K[75/100] Building C object App/CMakeFiles/app_firmware.dir/Core/Src/app_confirm.c.obj[K[76/100] Building C object Boot/CMakeFiles/boot_firmware.dir/Core/Src/hc32f460_it.c.obj[K[77/100] Building C object components/easylogger/CMakeFiles/hc32_easylogger.dir/src/elog.c.obj[K[77/100] Linking C static library components/easylogger/libhc32_easylogger.a[K[78/100] Building C object App/CMakeFiles/usb_fw_updater.dir/Core/Src/usb_fw_update_main.c.obj[K[79/100] Building C object App/CMakeFiles/usb_fw_updater.dir/Core/Src/app_confirm.c.obj[K[80/100] Building C object App/CMakeFiles/usb_vendor_bulk_loopback.dir/__/Platform/HC32F460/Src/syscalls.c.obj[K[81/100] Building C object App/CMakeFiles/usb_fw_updater.dir/__/Platform/HC32F460/Src/syscalls.c.obj[K[82/100] Linking C static library components/easylogger/libhc32_easylogger.a[K[82/100] Linking C static library components/libmcuboot_bootutil.a[K[83/100] Linking C static library components/libmcuboot_bootutil.a[K[83/100] Linking C executable App/app_firmware.elf[K[84/100] Building C object App/CMakeFiles/usb_vendor_bulk_loopback.dir/Core/Src/usb_vendor_bulk_main.c.obj[K[85/100] Building C object components/cherryusb/CMakeFiles/cherryusb_device.dir/core/usbd_core.c.obj[K[86/100] Building C object components/flashdb_port/CMakeFiles/hc32_flashdb.dir/__/FlashDB-2.2.0/src/fdb_kvdb.c.obj[K
+/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/components/FlashDB-2.2.0/src/fdb_kvdb.c: In function 'alloc_kv_cb':
+/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/components/FlashDB-2.2.0/src/fdb_kvdb.c:898:65: warning: unused parameter 'arg2' [-Wunused-parameter]
+  898 | static bool alloc_kv_cb(kv_sec_info_t sector, void *arg1, void *arg2)
+      |                                                           ~~~~~~^~~~
+/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/components/FlashDB-2.2.0/src/fdb_kvdb.c: In function 'do_gc':
+/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/components/FlashDB-2.2.0/src/fdb_kvdb.c:1112:59: warning: unused parameter 'arg2' [-Wunused-parameter]
+ 1112 | static bool do_gc(kv_sec_info_t sector, void *arg1, void *arg2)
+      |                                                     ~~~~~~^~~~
+/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/components/FlashDB-2.2.0/src/fdb_kvdb.c: In function 'check_and_recovery_gc_cb':
+/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/components/FlashDB-2.2.0/src/fdb_kvdb.c:1581:78: warning: unused parameter 'arg2' [-Wunused-parameter]
+ 1581 | static bool check_and_recovery_gc_cb(kv_sec_info_t sector, void *arg1, void *arg2)
+      |                                                                        ~~~~~~^~~~
+/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/components/FlashDB-2.2.0/src/fdb_kvdb.c: In function 'check_and_recovery_kv_cb':
+/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/components/FlashDB-2.2.0/src/fdb_kvdb.c:1595:69: warning: unused parameter 'arg2' [-Wunused-parameter]
+ 1595 | static bool check_and_recovery_kv_cb(fdb_kv_t kv, void *arg1, void *arg2)
+      |                                                               ~~~~~~^~~~
+[86/100] Linking C static library components/flashdb_port/libhc32_flashdb.a[K[87/100] Building C object components/fw_update/CMakeFiles/fw_update_core.dir/src/manager.c.obj[K[87/100] Linking C static library components/fw_update/libfw_update_core.a[K[88/100] Building C object App/CMakeFiles/usb_vendor_bulk_loopback.dir/Core/Src/usb_vendor_bulk.c.obj[K[89/100] Linking C static library components/flashdb_port/libhc32_flashdb.a[K[90/100] Linking C static library components/fw_update/libfw_update_core.a[K[90/100] Linking C static library components/fw_update/libfw_update_mcuboot.a[K[91/100] Linking C static library components/fw_update/libfw_update_mcuboot.a[K[92/100] Building C object Boot/CMakeFiles/boot_firmware.dir/__/App/Core/Src/usb_fw_update.c.obj[K[93/100] Linking C executable App/app_firmware.elf[K
+   text	   data	    bss	    dec	    hex	filename
+  18512	     92	   1084	  19688	   4ce8	/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/Debug/App/app_firmware.elf
+[94/100] Building C object App/CMakeFiles/usb_fw_updater.dir/Core/Src/usb_fw_update.c.obj[K[95/100] Building C object Boot/CMakeFiles/boot_firmware.dir/__/Platform/HC32F460/Src/usb_dc_hc32f460.c.obj[K[95/100] Linking C executable Boot/boot_firmware.elf[K[96/100] Building C object App/CMakeFiles/usb_vendor_bulk_loopback.dir/__/Platform/HC32F460/Src/usb_dc_hc32f460.c.obj[K[96/100] Linking C executable App/usb_vendor_bulk_loopback.elf[K[97/100] Building C object App/CMakeFiles/usb_fw_updater.dir/__/Platform/HC32F460/Src/usb_dc_hc32f460.c.obj[K[97/100] Linking C executable App/usb_fw_updater.elf[K[98/100] Linking C executable App/usb_vendor_bulk_loopback.elf[K
+   text	   data	    bss	    dec	    hex	filename
+  26156	     96	   4172	  30424	   76d8	/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/Debug/App/usb_vendor_bulk_loopback.elf
+[99/100] Linking C executable Boot/boot_firmware.elf[K
+   text	   data	    bss	    dec	    hex	filename
+  61640	    136	   9204	  70980	  11544	/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/Debug/Boot/boot_firmware.elf
+[100/100] Linking C executable App/usb_fw_updater.elf[K
+   text	   data	    bss	    dec	    hex	filename
+  54452	    132	   7636	  62220	   f30c	/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/Debug/App/usb_fw_updater.elf
+[0/13] Generating ../artifacts/app_signed.bin[K[0/13] Generating ../artifacts/app_primary.bin[K[0/13] Generating ../artifacts/app_update.bin[K[0/13] Generating ../artifacts/usb_loopback_signed.bin[K[0/13] Generating ../artifacts/usb_loopback_primary.bin[K[0/13] Generating ../artifacts/usb_loopback_update.bin[K[0/13] Generating ../artifacts/updater_signed.bin[K[0/13] Generating ../artifacts/updater_primary.bin[K[0/13] Generating ../artifacts/updater_update.bin[K[0/13] cd /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/Debug/App && /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/.venv/bin/python /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/Tests/verify_winusb_descriptors.py /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/Debug/Boot/boot_firmware.bin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/Debug/App/usb_fw_updater.bin 51966 1 2 HC32F460-[K[1/13] cd /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/Debug/App && /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/.venv/bin/python /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/Tests/verify_winusb_descriptors.py /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/Debug/Boot/boot_firmware.bin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/build/Debug/App/usb_fw_updater.bin 51966 1 2 HC32F460-[K
+Verified Boot/Application USB 2.1 + Microsoft OS 2.0 descriptors
+[2/13] Generating ../artifacts/app_signed.bin[K
+image.py: sign the payload
+[3/13] Generating ../artifacts/usb_loopback_signed.bin[K
+image.py: sign the payload
+[4/13] Generating ../artifacts/app_primary.bin[K
+image.py: sign the payload
+[5/13] Generating ../artifacts/app_update.bin[K
+image.py: sign the payload
+[5/13] Generating ../artifacts/verify_app_image.stamp[K[6/13] Generating ../artifacts/usb_loopback_primary.bin[K
+image.py: sign the payload
+[7/13] Generating ../artifacts/updater_update.bin[K
+image.py: sign the payload
+[8/13] Generating ../artifacts/usb_loopback_update.bin[K
+image.py: sign the payload
+[8/13] Generating ../artifacts/verify_usb_loopback_image.stamp[K[9/13] Generating ../artifacts/updater_signed.bin[K
+image.py: sign the payload
+[10/13] Generating ../artifacts/updater_primary.bin[K
+image.py: sign the payload
+[10/13] Generating ../artifacts/verify_updater_image.stamp[K[11/13] Generating ../artifacts/verify_usb_loopback_image.stamp[K
+Image was correctly validated
+Image version: 1.0.0+0
+Image digest: eb62821c5a170ff06f1b936d719d88b5c4d163779cd6e5235176342e5336ab1a
+Image was correctly validated
+Image version: 1.0.0+0
+Image digest: eb62821c5a170ff06f1b936d719d88b5c4d163779cd6e5235176342e5336ab1a
+Image was correctly validated
+Image version: 1.0.0+0
+Image digest: eb62821c5a170ff06f1b936d719d88b5c4d163779cd6e5235176342e5336ab1a
+Printing content of signed image: usb_loopback_primary.bin 
+
+#### Image header (offset: 0x0) ############################
+magic:              0x96f3b83d
+load_addr:          0x0
+hdr_size:           0x200
+protected_tlv_size: 0x14
+img_size:           0x668c
+flags:              0x0
+version:            1.0.0+0
+############################################################
+#### Payload (offset: 0x200) ###############################
+|                                                          |
+|              FW image (size: 0x668c Bytes)               |
+|                                                          |
+############################################################
+#### Protected TLV area (offset: 0x688c) ###################
+magic:     0x6908
+area size: 0x14
+        ---------------------------------------------
+        type: UNKNOWN (0xa0)
+        len:  0xc
+        data: 0x01 0x00 0x02 0x00 0x00 0x46 0x00 0x00 
+              0x01 0x00 0x00 0x00 
+############################################################
+#### TLV area (offset: 0x68a0) #############################
+magic:     0x6907
+area size: 0x97
+        ---------------------------------------------
+        type: SHA256 (0x10)
+        len:  0x20
+        data: 0xeb 0x62 0x82 0x1c 0x5a 0x17 0x0f 0xf0 
+              0x6f 0x1b 0x93 0x6d 0x71 0x9d 0x88 0xb5 
+              0xc4 0xd1 0x63 0x77 0x9c 0xd6 0xe5 0x23 
+              0x51 0x76 0x34 0x2e 0x53 0x36 0xab 0x1a 
+        ---------------------------------------------
+        type: KEYHASH (0x1)
+        len:  0x20
+        data: 0xaf 0x98 0xfc 0x39 0x15 0xfd 0xaf 0x62 
+              0x2c 0xb5 0x6d 0x24 0x91 0xe7 0xa5 0x33 
+              0xab 0x54 0xec 0x45 0xc7 0x7e 0x84 0xb8 
+              0x39 0x5d 0xef 0x2c 0x7c 0xdd 0xcb 0x28 
+        ---------------------------------------------
+        type: ECDSASIG (0x22)
+        len:  0x47
+        data: 0x30 0x45 0x02 0x20 0x6d 0x73 0x12 0x2c 
+              0xde 0xa8 0x4c 0xec 0x49 0xd5 0xe2 0xeb 
+              0xaa 0xa2 0x00 0x66 0x1a 0x52 0xf9 0x4c 
+              0x94 0x23 0xab 0x47 0x30 0x4b 0xfa 0xc9 
+              0x8f 0xab 0x2c 0xf5 0x02 0x21 0x00 0x98 
+              0xbc 0x52 0x39 0x01 0x82 0x5d 0x22 0x3e 
+              0x67 0x9a 0xc1 0x34 0x7c 0xea 0xf9 0x5a 
+              0xb6 0x48 0x03 0x1d 0x40 0x57 0x97 0xa7 
+              0x01 0xbc 0xa0 0xf6 0x95 0x6c 0x18 
+############################################################
+#### Image trailer (offset: unknown) #######################
+(Note: some fields may not be used, depending on the update 
+strategy)
+
+swap status: (len: unknown)
+enc. keys:   Image not encrypted
+swap size:   unknown
+swap_info:   INVALID (0xff)
+copy_done:   INVALID (0xff)
+image_ok:    SET (0x1)
+boot magic:  0x77 0xc2 0x95 0xf3 0x60 0xd2 0xef 0x7f 
+             0x35 0x52 0x50 0x0f 0x2c 0xb6 0x79 0x80 
+
+#### End of Image  #########################################
+Printing content of signed image: usb_loopback_update.bin 
+
+#### Image header (offset: 0x0) ############################
+magic:              0x96f3b83d
+load_addr:          0x0
+hdr_size:           0x200
+protected_tlv_size: 0x14
+img_size:           0x668c
+flags:              0x0
+version:            1.0.0+0
+############################################################
+#### Payload (offset: 0x200) ###############################
+|                                                          |
+|              FW image (size: 0x668c Bytes)               |
+|                                                          |
+############################################################
+#### Protected TLV area (offset: 0x688c) ###################
+magic:     0x6908
+area size: 0x14
+        ---------------------------------------------
+        type: UNKNOWN (0xa0)
+        len:  0xc
+        data: 0x01 0x00 0x02 0x00 0x00 0x46 0x00 0x00 
+              0x01 0x00 0x00 0x00 
+############################################################
+#### TLV area (offset: 0x68a0) #############################
+magic:     0x6907
+area size: 0x98
+        ---------------------------------------------
+        type: SHA256 (0x10)
+        len:  0x20
+        data: 0xeb 0x62 0x82 0x1c 0x5a 0x17 0x0f 0xf0 
+              0x6f 0x1b 0x93 0x6d 0x71 0x9d 0x88 0xb5 
+              0xc4 0xd1 0x63 0x77 0x9c 0xd6 0xe5 0x23 
+              0x51 0x76 0x34 0x2e 0x53 0x36 0xab 0x1a 
+        ---------------------------------------------
+        type: KEYHASH (0x1)
+        len:  0x20
+        data: 0xaf 0x98 0xfc 0x39 0x15 0xfd 0xaf 0x62 
+              0x2c 0xb5 0x6d 0x24 0x91 0xe7 0xa5 0x33 
+              0xab 0x54 0xec 0x45 0xc7 0x7e 0x84 0xb8 
+              0x39 0x5d 0xef 0x2c 0x7c 0xdd 0xcb 0x28 
+        ---------------------------------------------
+        type: ECDSASIG (0x22)
+        len:  0x48
+        data: 0x30 0x46 0x02 0x21 0x00 0xd0 0xb0 0x98 
+              0x6a 0x57 0xba 0xe0 0xe1 0x1c 0xe4 0xd9 
+              0x38 0x89 0x69 0x84 0x51 0x89 0x0b 0xdb 
+              0xfa 0xb6 0x93 0x61 0x6d 0x79 0x08 0xb9 
+              0x46 0x1d 0x60 0x83 0x96 0x02 0x21 0x00 
+              0xd5 0x8a 0xcb 0x29 0xd8 0x17 0x4d 0x54 
+              0x3d 0x47 0xe6 0x5d 0x0b 0xd1 0x1b 0x4b 
+              0x04 0x1c 0x09 0x88 0xf0 0x9b 0xd3 0x34 
+              0xcd 0xe5 0x8e 0x88 0xf3 0xc9 0x48 0x5c 
+############################################################
+#### Image trailer (offset: unknown) #######################
+(Note: some fields may not be used, depending on the update 
+strategy)
+
+swap status: (len: unknown)
+enc. keys:   Image not encrypted
+swap size:   unknown
+swap_info:   INVALID (0xff)
+copy_done:   INVALID (0xff)
+image_ok:    INVALID (0xff)
+boot magic:  0x77 0xc2 0x95 0xf3 0x60 0xd2 0xef 0x7f 
+             0x35 0x52 0x50 0x0f 0x2c 0xb6 0x79 0x80 
+
+#### End of Image  #########################################
+[12/13] Generating ../artifacts/verify_app_image.stamp[K
+Image was correctly validated
+Image version: 1.0.0+0
+Image digest: 37dddd6b4800c7d8331e4eea9cad3fac9634ad57a681817709fc798a3559eed8
+Image was correctly validated
+Image version: 1.0.0+0
+Image digest: 37dddd6b4800c7d8331e4eea9cad3fac9634ad57a681817709fc798a3559eed8
+Image was correctly validated
+Image version: 1.0.0+0
+Image digest: 37dddd6b4800c7d8331e4eea9cad3fac9634ad57a681817709fc798a3559eed8
+Printing content of signed image: app_primary.bin 
+
+#### Image header (offset: 0x0) ############################
+magic:              0x96f3b83d
+load_addr:          0x0
+hdr_size:           0x200
+protected_tlv_size: 0x14
+img_size:           0x48ac
+flags:              0x0
+version:            1.0.0+0
+############################################################
+#### Payload (offset: 0x200) ###############################
+|                                                          |
+|              FW image (size: 0x48ac Bytes)               |
+|                                                          |
+############################################################
+#### Protected TLV area (offset: 0x4aac) ###################
+magic:     0x6908
+area size: 0x14
+        ---------------------------------------------
+        type: UNKNOWN (0xa0)
+        len:  0xc
+        data: 0x01 0x00 0x02 0x00 0x00 0x46 0x00 0x00 
+              0x01 0x00 0x00 0x00 
+############################################################
+#### TLV area (offset: 0x4ac0) #############################
+magic:     0x6907
+area size: 0x98
+        ---------------------------------------------
+        type: SHA256 (0x10)
+        len:  0x20
+        data: 0x37 0xdd 0xdd 0x6b 0x48 0x00 0xc7 0xd8 
+              0x33 0x1e 0x4e 0xea 0x9c 0xad 0x3f 0xac 
+              0x96 0x34 0xad 0x57 0xa6 0x81 0x81 0x77 
+              0x09 0xfc 0x79 0x8a 0x35 0x59 0xee 0xd8 
+        ---------------------------------------------
+        type: KEYHASH (0x1)
+        len:  0x20
+        data: 0xaf 0x98 0xfc 0x39 0x15 0xfd 0xaf 0x62 
+              0x2c 0xb5 0x6d 0x24 0x91 0xe7 0xa5 0x33 
+              0xab 0x54 0xec 0x45 0xc7 0x7e 0x84 0xb8 
+              0x39 0x5d 0xef 0x2c 0x7c 0xdd 0xcb 0x28 
+        ---------------------------------------------
+        type: ECDSASIG (0x22)
+        len:  0x48
+        data: 0x30 0x46 0x02 0x21 0x00 0x8b 0x7c 0x14 
+              0xb8 0xa6 0x14 0x76 0x63 0x9f 0x90 0xa5 
+              0xae 0xdc 0xdc 0x4f 0x5e 0x13 0x09 0x40 
+              0x5e 0xfb 0xe3 0x63 0x8c 0x90 0x8d 0xde 
+              0x4e 0x34 0x64 0xa0 0x87 0x02 0x21 0x00 
+              0xd4 0x78 0x19 0x0a 0x94 0x58 0x47 0x83 
+              0x52 0x8e 0x82 0x2b 0xbb 0xe4 0xd5 0x83 
+              0xc8 0x5f 0x29 0x17 0xc5 0xa6 0xb8 0x67 
+              0x45 0x7e 0x17 0xa8 0xbd 0xef 0x25 0x31 
+############################################################
+#### Image trailer (offset: unknown) #######################
+(Note: some fields may not be used, depending on the update 
+strategy)
+
+swap status: (len: unknown)
+enc. keys:   Image not encrypted
+swap size:   unknown
+swap_info:   INVALID (0xff)
+copy_done:   INVALID (0xff)
+image_ok:    SET (0x1)
+boot magic:  0x77 0xc2 0x95 0xf3 0x60 0xd2 0xef 0x7f 
+             0x35 0x52 0x50 0x0f 0x2c 0xb6 0x79 0x80 
+
+#### End of Image  #########################################
+Printing content of signed image: app_update.bin 
+
+#### Image header (offset: 0x0) ############################
+magic:              0x96f3b83d
+load_addr:          0x0
+hdr_size:           0x200
+protected_tlv_size: 0x14
+img_size:           0x48ac
+flags:              0x0
+version:            1.0.0+0
+############################################################
+#### Payload (offset: 0x200) ###############################
+|                                                          |
+|              FW image (size: 0x48ac Bytes)               |
+|                                                          |
+############################################################
+#### Protected TLV area (offset: 0x4aac) ###################
+magic:     0x6908
+area size: 0x14
+        ---------------------------------------------
+        type: UNKNOWN (0xa0)
+        len:  0xc
+        data: 0x01 0x00 0x02 0x00 0x00 0x46 0x00 0x00 
+              0x01 0x00 0x00 0x00 
+############################################################
+#### TLV area (offset: 0x4ac0) #############################
+magic:     0x6907
+area size: 0x97
+        ---------------------------------------------
+        type: SHA256 (0x10)
+        len:  0x20
+        data: 0x37 0xdd 0xdd 0x6b 0x48 0x00 0xc7 0xd8 
+              0x33 0x1e 0x4e 0xea 0x9c 0xad 0x3f 0xac 
+              0x96 0x34 0xad 0x57 0xa6 0x81 0x81 0x77 
+              0x09 0xfc 0x79 0x8a 0x35 0x59 0xee 0xd8 
+        ---------------------------------------------
+        type: KEYHASH (0x1)
+        len:  0x20
+        data: 0xaf 0x98 0xfc 0x39 0x15 0xfd 0xaf 0x62 
+              0x2c 0xb5 0x6d 0x24 0x91 0xe7 0xa5 0x33 
+              0xab 0x54 0xec 0x45 0xc7 0x7e 0x84 0xb8 
+              0x39 0x5d 0xef 0x2c 0x7c 0xdd 0xcb 0x28 
+        ---------------------------------------------
+        type: ECDSASIG (0x22)
+        len:  0x47
+        data: 0x30 0x45 0x02 0x20 0x2b 0xa0 0x3f 0xcc 
+              0xd4 0x82 0xc3 0x44 0xe7 0xf1 0xe6 0xa7 
+              0xf2 0xe8 0x34 0x01 0x81 0xe2 0x2c 0xb9 
+              0x28 0x46 0x41 0x96 0x52 0xbf 0x58 0x13 
+              0xda 0xd8 0xe5 0xfa 0x02 0x21 0x00 0x86 
+              0x83 0x00 0xad 0xca 0xfa 0xdf 0xe0 0xa7 
+              0xdb 0xc9 0xde 0x98 0x4f 0x35 0xbb 0x0c 
+              0xf6 0xe9 0x08 0xa7 0x6e 0xb1 0x94 0xd1 
+              0x21 0x82 0x52 0xd7 0x96 0x39 0x1c 
+############################################################
+#### Image trailer (offset: unknown) #######################
+(Note: some fields may not be used, depending on the update 
+strategy)
+
+swap status: (len: unknown)
+enc. keys:   Image not encrypted
+swap size:   unknown
+swap_info:   INVALID (0xff)
+copy_done:   INVALID (0xff)
+image_ok:    INVALID (0xff)
+boot magic:  0x77 0xc2 0x95 0xf3 0x60 0xd2 0xef 0x7f 
+             0x35 0x52 0x50 0x0f 0x2c 0xb6 0x79 0x80 
+
+#### End of Image  #########################################
+[13/13] Generating ../artifacts/verify_updater_image.stamp[K
+Image was correctly validated
+Image version: 1.0.0+0
+Image digest: f7eebb63ef36d920a97b3cfc5ecefc5066367571016761f266edad5895a5ac6c
+Image was correctly validated
+Image version: 1.0.0+0
+Image digest: f7eebb63ef36d920a97b3cfc5ecefc5066367571016761f266edad5895a5ac6c
+Image was correctly validated
+Image version: 1.0.0+0
+Image digest: f7eebb63ef36d920a97b3cfc5ecefc5066367571016761f266edad5895a5ac6c
+Printing content of signed image: updater_primary.bin 
+
+#### Image header (offset: 0x0) ############################
+magic:              0x96f3b83d
+load_addr:          0x0
+hdr_size:           0x200
+protected_tlv_size: 0x14
+img_size:           0xd538
+flags:              0x0
+version:            1.0.0+0
+############################################################
+#### Payload (offset: 0x200) ###############################
+|                                                          |
+|              FW image (size: 0xd538 Bytes)               |
+|                                                          |
+############################################################
+#### Protected TLV area (offset: 0xd738) ###################
+magic:     0x6908
+area size: 0x14
+        ---------------------------------------------
+        type: UNKNOWN (0xa0)
+        len:  0xc
+        data: 0x01 0x00 0x02 0x00 0x00 0x46 0x00 0x00 
+              0x01 0x00 0x00 0x00 
+############################################################
+#### TLV area (offset: 0xd74c) #############################
+magic:     0x6907
+area size: 0x98
+        ---------------------------------------------
+        type: SHA256 (0x10)
+        len:  0x20
+        data: 0xf7 0xee 0xbb 0x63 0xef 0x36 0xd9 0x20 
+              0xa9 0x7b 0x3c 0xfc 0x5e 0xce 0xfc 0x50 
+              0x66 0x36 0x75 0x71 0x01 0x67 0x61 0xf2 
+              0x66 0xed 0xad 0x58 0x95 0xa5 0xac 0x6c 
+        ---------------------------------------------
+        type: KEYHASH (0x1)
+        len:  0x20
+        data: 0xaf 0x98 0xfc 0x39 0x15 0xfd 0xaf 0x62 
+              0x2c 0xb5 0x6d 0x24 0x91 0xe7 0xa5 0x33 
+              0xab 0x54 0xec 0x45 0xc7 0x7e 0x84 0xb8 
+              0x39 0x5d 0xef 0x2c 0x7c 0xdd 0xcb 0x28 
+        ---------------------------------------------
+        type: ECDSASIG (0x22)
+        len:  0x48
+        data: 0x30 0x46 0x02 0x21 0x00 0xef 0xca 0x3d 
+              0x0e 0xe7 0xd1 0x00 0x39 0x67 0xa3 0xc3 
+              0xfa 0x3f 0x84 0xdb 0x87 0xe2 0x6a 0x57 
+              0xeb 0x89 0x84 0x86 0x21 0xc4 0x52 0xa3 
+              0x45 0x62 0xe4 0xc9 0x77 0x02 0x21 0x00 
+              0xda 0xf9 0x4d 0x38 0x61 0x37 0xd1 0xaf 
+              0x77 0x3e 0xab 0x4b 0x96 0xca 0x40 0x73 
+              0xe7 0x44 0x41 0x31 0xa9 0x2d 0x96 0x00 
+              0xff 0x20 0x03 0xba 0x91 0xad 0x94 0xc4 
+############################################################
+#### Image trailer (offset: unknown) #######################
+(Note: some fields may not be used, depending on the update 
+strategy)
+
+swap status: (len: unknown)
+enc. keys:   Image not encrypted
+swap size:   unknown
+swap_info:   INVALID (0xff)
+copy_done:   INVALID (0xff)
+image_ok:    SET (0x1)
+boot magic:  0x77 0xc2 0x95 0xf3 0x60 0xd2 0xef 0x7f 
+             0x35 0x52 0x50 0x0f 0x2c 0xb6 0x79 0x80 
+
+#### End of Image  #########################################
+Printing content of signed image: updater_update.bin 
+
+#### Image header (offset: 0x0) ############################
+magic:              0x96f3b83d
+load_addr:          0x0
+hdr_size:           0x200
+protected_tlv_size: 0x14
+img_size:           0xd538
+flags:              0x0
+version:            1.0.0+0
+############################################################
+#### Payload (offset: 0x200) ###############################
+|                                                          |
+|              FW image (size: 0xd538 Bytes)               |
+|                                                          |
+############################################################
+#### Protected TLV area (offset: 0xd738) ###################
+magic:     0x6908
+area size: 0x14
+        ---------------------------------------------
+        type: UNKNOWN (0xa0)
+        len:  0xc
+        data: 0x01 0x00 0x02 0x00 0x00 0x46 0x00 0x00 
+              0x01 0x00 0x00 0x00 
+############################################################
+#### TLV area (offset: 0xd74c) #############################
+magic:     0x6907
+area size: 0x98
+        ---------------------------------------------
+        type: SHA256 (0x10)
+        len:  0x20
+        data: 0xf7 0xee 0xbb 0x63 0xef 0x36 0xd9 0x20 
+              0xa9 0x7b 0x3c 0xfc 0x5e 0xce 0xfc 0x50 
+              0x66 0x36 0x75 0x71 0x01 0x67 0x61 0xf2 
+              0x66 0xed 0xad 0x58 0x95 0xa5 0xac 0x6c 
+        ---------------------------------------------
+        type: KEYHASH (0x1)
+        len:  0x20
+        data: 0xaf 0x98 0xfc 0x39 0x15 0xfd 0xaf 0x62 
+              0x2c 0xb5 0x6d 0x24 0x91 0xe7 0xa5 0x33 
+              0xab 0x54 0xec 0x45 0xc7 0x7e 0x84 0xb8 
+              0x39 0x5d 0xef 0x2c 0x7c 0xdd 0xcb 0x28 
+        ---------------------------------------------
+        type: ECDSASIG (0x22)
+        len:  0x48
+        data: 0x30 0x46 0x02 0x21 0x00 0x87 0x2f 0xdb 
+              0x6e 0xdb 0x57 0x2c 0x44 0x21 0x69 0xb3 
+              0x67 0x76 0x02 0xc1 0x4e 0x24 0x63 0x05 
+              0xf4 0xf8 0x96 0xb1 0xad 0x9d 0xa9 0x29 
+              0xaa 0xf9 0x22 0x48 0x7b 0x02 0x21 0x00 
+              0xbd 0x32 0x92 0x7b 0x51 0xa0 0xf8 0x9d 
+              0x73 0xe7 0x04 0x19 0x8a 0x6c 0x5a 0x6b 
+              0x31 0x85 0xee 0x49 0xcd 0x40 0xe3 0xb3 
+              0xc0 0xc8 0x2d 0xce 0x71 0xf8 0xbd 0x1c 
+############################################################
+#### Image trailer (offset: unknown) #######################
+(Note: some fields may not be used, depending on the update 
+strategy)
+
+swap status: (len: unknown)
+enc. keys:   Image not encrypted
+swap size:   unknown
+swap_info:   INVALID (0xff)
+copy_done:   INVALID (0xff)
+image_ok:    INVALID (0xff)
+boot magic:  0x77 0xc2 0x95 0xf3 0x60 0xd2 0xef 0x7f 
+             0x35 0x52 0x50 0x0f 0x2c 0xb6 0x79 0x80 
+
+#### End of Image  #########################################
+
+Script done on 2026-08-29 06:35:14+08:00 [COMMAND_EXIT_CODE="0"]

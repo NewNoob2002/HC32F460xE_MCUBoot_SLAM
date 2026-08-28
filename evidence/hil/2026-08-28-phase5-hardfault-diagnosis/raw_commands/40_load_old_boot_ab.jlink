@@ -1,0 +1,14 @@
+device HC32F460xE
+si SWD
+speed 4000
+connect
+halt
+erase 0x00000000, 0x0007FFFF
+loadbin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-phase5-hardfault-diagnosis/snapshots/provisioned_flash_00000000_0007ffff.bin, 0x00000000
+verifybin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-phase5-hardfault-diagnosis/snapshots/provisioned_flash_00000000_0007ffff.bin, 0x00000000
+erase 0x00000000, 0x0000FFFF
+loadbin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-phase5-flashdb-breakout/artifacts/boot_firmware.bin, 0x00000000
+verifybin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-phase5-flashdb-breakout/artifacts/boot_firmware.bin, 0x00000000
+r
+g
+exit

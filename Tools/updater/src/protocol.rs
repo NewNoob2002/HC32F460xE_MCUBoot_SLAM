@@ -13,6 +13,8 @@ const MAGIC: &[u8; 4] = b"FWUP";
 pub enum Command {
     Hello = 0x01,
     DeviceInfo = 0x02,
+    ProductConfigGet = 0x03,
+    ProductConfigSet = 0x04,
     Begin = 0x10,
     Data = 0x11,
     End = 0x12,
@@ -27,6 +29,8 @@ impl TryFrom<u8> for Command {
         match value {
             0x01 => Ok(Self::Hello),
             0x02 => Ok(Self::DeviceInfo),
+            0x03 => Ok(Self::ProductConfigGet),
+            0x04 => Ok(Self::ProductConfigSet),
             0x10 => Ok(Self::Begin),
             0x11 => Ok(Self::Data),
             0x12 => Ok(Self::End),

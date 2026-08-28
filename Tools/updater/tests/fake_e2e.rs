@@ -1,6 +1,8 @@
 #![cfg(feature = "fake-e2e")]
 
-use hc32_updater::{FirmwareImage, ProgressEvent, ProtocolV1Client, Transport, Version};
+use hc32_updater::{
+    Compatibility, FirmwareImage, ProgressEvent, ProtocolV1Client, Transport, Version,
+};
 use std::fs;
 use std::io::{self, Read, Write};
 use std::path::PathBuf;
@@ -86,6 +88,16 @@ fn rust_core_completes_real_c_manager_fake_e2e() {
     assert_eq!(info.hardware_id, 0x0000_4600);
     assert_eq!(info.board_id, 1);
     assert_eq!(info.board_revision, 2);
+    let config = client.product_config().expect("read product config");
+    assert!(!config.provisioned);
+    let config = client
+        .provision_product_config(Compatibility {
+            hardware_id: 0x0000_4600,
+            board_id: 1,
+            board_revision: 2,
+        })
+        .expect("provision product config");
+    assert!(config.provisioned);
 
     let mut events = Vec::new();
     client

@@ -7,7 +7,7 @@
 #define FW_UPDATE_MANAGER_MAX_PROTOCOL_ERRORS  3U
 #define FW_UPDATE_MANAGER_CAPABILITIES                                                                                 \
     ((uint32_t)(FW_PROTOCOL_CAPABILITY_TEST_UPGRADE | FW_PROTOCOL_CAPABILITY_READBACK_CRC                              \
-                | FW_PROTOCOL_CAPABILITY_STRICT_DATA))
+                | FW_PROTOCOL_CAPABILITY_STRICT_DATA | FW_PROTOCOL_CAPABILITY_PRODUCT_CONFIG))
 
 _Static_assert(sizeof(struct fw_update_manager) <= 2048U, "Manager exceeds the Phase 3 memory limit");
 
@@ -36,6 +36,14 @@ static void write_version(uint8_t* output, const struct fw_update_version* versi
     output[1] = version->minor;
     write_u16_le(&output[2], version->revision);
     write_u32_le(&output[4], version->build);
+}
+
+static void write_product_config(uint8_t* output, const struct fw_update_product_config_state* state) {
+    output[0] = FW_UPDATE_PRODUCT_CONFIG_FORMAT_VERSION;
+    output[1] = state->provisioned != 0U ? 1U : 0U;
+    write_u16_le(&output[2], state->identity.board_revision);
+    write_u32_le(&output[4], state->identity.hardware_id);
+    write_u32_le(&output[8], state->identity.board_id);
 }
 
 static struct fw_update_version read_version(const uint8_t* input) {
@@ -159,9 +167,9 @@ static enum fw_protocol_status validate_begin(struct fw_update_manager* manager,
         return FW_PROTOCOL_STATUS_BAD_FRAME;
     if (image_size == 0U)
         return FW_PROTOCOL_STATUS_INVALID_ARGUMENT;
-    if (read_u32_le(&frame->payload[8]) != manager->config.hardware_id
-        || read_u32_le(&frame->payload[12]) != manager->config.board_id
-        || read_u16_le(&frame->payload[16]) != manager->config.board_revision)
+    if (read_u32_le(&frame->payload[8]) != manager->product_config_state.identity.hardware_id
+        || read_u32_le(&frame->payload[12]) != manager->product_config_state.identity.board_id
+        || read_u16_le(&frame->payload[16]) != manager->product_config_state.identity.board_revision)
         return FW_PROTOCOL_STATUS_INVALID_ARGUMENT;
     if (alignment > FW_PROTOCOL_MAX_PAYLOAD)
         return FW_PROTOCOL_STATUS_INVALID_ARGUMENT;
@@ -255,15 +263,61 @@ static enum fw_protocol_status handle_device_info(struct fw_update_manager* mana
         || manager->state == FW_UPDATE_MANAGER_STATE_VERIFYING || manager->state == FW_UPDATE_MANAGER_STATE_ABORTED)
         return FW_PROTOCOL_STATUS_INVALID_STATE;
 
-    write_u16_le(&body[0], manager->config.board_revision);
-    write_u32_le(&body[2], manager->config.hardware_id);
-    write_u32_le(&body[6], manager->config.board_id);
+    write_u16_le(&body[0], manager->product_config_state.identity.board_revision);
+    write_u32_le(&body[2], manager->product_config_state.identity.hardware_id);
+    write_u32_le(&body[6], manager->product_config_state.identity.board_id);
     write_u32_le(&body[10], manager->storage_info.capacity);
     write_u32_le(&body[14], manager->storage_info.write_alignment);
     write_u32_le(&body[18], manager->storage_info.erase_alignment);
     write_version(&body[22], &manager->config.application_version);
     write_version(&body[30], &manager->config.bootloader_version);
     *body_length = 38U;
+    return FW_PROTOCOL_STATUS_OK;
+}
+
+static enum fw_protocol_status handle_product_config_get(struct fw_update_manager* manager,
+                                                         const struct fw_protocol_frame* frame, uint8_t* body,
+                                                         uint16_t* body_length) {
+    if (frame->payload_length != 0U)
+        return FW_PROTOCOL_STATUS_BAD_FRAME;
+    if (manager->state != FW_UPDATE_MANAGER_STATE_NEGOTIATING)
+        return FW_PROTOCOL_STATUS_INVALID_STATE;
+
+    write_product_config(body, &manager->product_config_state);
+    *body_length = 12U;
+    return FW_PROTOCOL_STATUS_OK;
+}
+
+static enum fw_protocol_status handle_product_config_set(struct fw_update_manager* manager,
+                                                         const struct fw_protocol_frame* frame, uint8_t* body,
+                                                         uint16_t* body_length) {
+    struct fw_update_product_identity identity;
+    enum fw_update_result result;
+
+    if (frame->payload_length != 12U)
+        return FW_PROTOCOL_STATUS_BAD_FRAME;
+    if (manager->state != FW_UPDATE_MANAGER_STATE_NEGOTIATING)
+        return FW_PROTOCOL_STATUS_INVALID_STATE;
+    if (manager->config.product_config_writable == 0U)
+        return FW_PROTOCOL_STATUS_INVALID_STATE;
+    if (manager->product_config_state.provisioned != 0U)
+        return FW_PROTOCOL_STATUS_INVALID_STATE;
+    if (frame->payload[0] != FW_UPDATE_PRODUCT_CONFIG_FORMAT_VERSION || frame->payload[1] != 0U)
+        return FW_PROTOCOL_STATUS_INVALID_ARGUMENT;
+
+    identity.board_revision = read_u16_le(&frame->payload[2]);
+    identity.hardware_id = read_u32_le(&frame->payload[4]);
+    identity.board_id = read_u32_le(&frame->payload[8]);
+    result = fw_update_product_config_set(manager->config.product_config, &identity);
+    if (result == FW_UPDATE_ERR_LOCKED)
+        return FW_PROTOCOL_STATUS_INVALID_STATE;
+    if (result != FW_UPDATE_OK)
+        return FW_PROTOCOL_STATUS_STORAGE_ERROR;
+
+    manager->product_config_state.identity = identity;
+    manager->product_config_state.provisioned = 1U;
+    write_product_config(body, &manager->product_config_state);
+    *body_length = 12U;
     return FW_PROTOCOL_STATUS_OK;
 }
 
@@ -403,10 +457,13 @@ static enum fw_protocol_status validate_request_frame(const struct fw_protocol_f
     switch (frame->command) {
         case FW_PROTOCOL_COMMAND_HELLO:
         case FW_PROTOCOL_COMMAND_DEVICE_INFO:
+        case FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_GET:
         case FW_PROTOCOL_COMMAND_END:
         case FW_PROTOCOL_COMMAND_COMMIT:
         case FW_PROTOCOL_COMMAND_ABORT:
             return frame->payload_length == 0U ? FW_PROTOCOL_STATUS_OK : FW_PROTOCOL_STATUS_BAD_FRAME;
+        case FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_SET:
+            return frame->payload_length == 12U ? FW_PROTOCOL_STATUS_OK : FW_PROTOCOL_STATUS_BAD_FRAME;
         case FW_PROTOCOL_COMMAND_BEGIN:
             return frame->payload_length == 28U ? FW_PROTOCOL_STATUS_OK : FW_PROTOCOL_STATUS_BAD_FRAME;
         case FW_PROTOCOL_COMMAND_DATA:
@@ -425,6 +482,10 @@ static enum fw_protocol_status handle_frame(struct fw_update_manager* manager, c
             return handle_hello(manager, frame, body, body_length);
         case FW_PROTOCOL_COMMAND_DEVICE_INFO:
             return handle_device_info(manager, frame, body, body_length);
+        case FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_GET:
+            return handle_product_config_get(manager, frame, body, body_length);
+        case FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_SET:
+            return handle_product_config_set(manager, frame, body, body_length);
         case FW_PROTOCOL_COMMAND_BEGIN:
             return handle_begin(manager, frame);
         case FW_PROTOCOL_COMMAND_DATA:
@@ -527,17 +588,21 @@ enum fw_update_manager_result fw_update_manager_init(struct fw_update_manager* m
                                                      const struct fw_update_manager_config* config) {
     struct fw_update_manager_config config_copy;
     struct fw_update_storage_info storage_info;
+    struct fw_update_product_config_state product_config_state;
 
     if (manager == NULL || config == NULL || config->storage == NULL || config->boot_control == NULL
-        || config->session_timeout_ms == 0U)
+        || config->product_config == NULL || config->session_timeout_ms == 0U)
         return FW_UPDATE_MANAGER_ERR_INVALID_ARGUMENT;
     if (fw_update_storage_get_info(config->storage, &storage_info) != FW_UPDATE_OK)
+        return FW_UPDATE_MANAGER_ERR_STORAGE;
+    if (fw_update_product_config_get(config->product_config, &product_config_state) != FW_UPDATE_OK)
         return FW_UPDATE_MANAGER_ERR_STORAGE;
 
     config_copy = *config;
     memset(manager, 0, sizeof(*manager));
     manager->config = config_copy;
     manager->storage_info = storage_info;
+    manager->product_config_state = product_config_state;
     manager->state = FW_UPDATE_MANAGER_STATE_IDLE;
     manager->last_status = FW_PROTOCOL_STATUS_OK;
     fw_protocol_parser_init(&manager->parser);

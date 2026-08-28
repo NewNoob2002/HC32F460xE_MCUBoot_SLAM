@@ -1,0 +1,15 @@
+deployment_result:
+  schema_version: 1
+  created_at_utc: "2026-08-28T22:27:57Z"
+  safety_preflight: "safety_preflight.yaml"
+  target: {board: "HC32F460xE all-IO breakout", hardware_revision: "product revision 2", probe_serial: "63728710"}
+  tool: {id: "jlink", version: "9.70"}
+  artifact: "backup/pre_hil_a_00000000_0007ffff.bin"
+  artifact_sha256: "ae1f723d4ef84ea2c27c622f048bf01cdbdd9ad47d3cd66c42cd590c3ca9d8ca"
+  destination: "0x00000000-0x0007FFFF"
+  verified: true
+  reset_after_deploy: true
+  previous_state: "Application 1.0.0 after successful FlashDB provisioning and install"
+  final_state: "byte-identical pre-HIL Flash restored and target running"
+  rollback: {required: true, exercised: true, result: "verifybin, 524288-byte readback SHA256 and cmp passed"}
+  log: "logs/99_restore.txt"

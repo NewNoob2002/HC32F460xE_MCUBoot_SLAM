@@ -58,7 +58,7 @@ Sources: `CMakeLists.txt`, `Drivers/CMakeLists.txt`, `Platform/CMakeLists.txt`, 
 | `components/fw_update/` | Portable Storage/Boot-Control contracts, Protocol V1 codec/parser, receive/verification Manager and MCUboot backends | Core is host-buildable and dependency-checked; MCUboot backend is intentionally non-portable |
 | `Platform/HC32F460/` | Clock, SysTick/DWT timebase, Debug UART, Flash, startup support and boot handover | Intentionally HC32-specific; board pins follow `docs/hardware/` |
 | `Drivers/` | CMSIS/device/LL libraries and Boot/App startup objects | HC32-specific |
-| `Tests/` | Fourteen strict HostTests, Rust/C fake E2E, Golden Vectors, malformed corpus, USB/WinUSB descriptor checks and reusable HIL assets | Production-signed Windows validation remains |
+| `Tests/` | Fifteen strict HostTests, Rust/C fake E2E, Golden Vectors, malformed corpus, USB/WinUSB descriptor checks and reusable HIL assets | Production-signed Windows validation remains |
 | `Tools/updater/` | Shared Rust updater core, CLI, fake test link and blocking nusb adapter | Host-side protocol/workflow is portable; USB backend is nusb-specific |
 | `cmake/` | Memory map, toolchain/options, signing and artifacts | Project/HC32 build policy |
 
@@ -73,8 +73,8 @@ Application upgrade, Boot recovery/bootstrap and Slint GUI physical-install HIL
 have passed. Linux runs the CLI/GUI directly; unsigned Windows portable EXEs
 were cross-built and mechanically packaged, while the current host lacks the
 MinGW CRT for a post-review rebuild. Production EXE signing and clean-Windows
-direct-run remain for G5. Debug UART
-TP2 capture is separately hardware-deferred; updater UART and CAN remain later phases.
+direct-run remain for G5. Debug UART PB13 capture is pending rerun on the new
+all-IO breakout board; updater UART and CAN remain later phases.
 
 ## Flash layout
 
@@ -86,7 +86,7 @@ The canonical project values are in `cmake/MemoryMap.cmake` and generated into `
 | Primary Slot | `0x00010000` | `0x00041FFF` | `0x32000` (200 KiB) | Active MCUboot image slot |
 | Secondary Slot | `0x00042000` | `0x00073FFF` | `0x32000` (200 KiB) | Candidate/previous image slot |
 | Scratch | `0x00074000` | `0x00075FFF` | `0x2000` (8 KiB) | Scratch swap sector |
-| Reserved | `0x00076000` | `0x0007FFFF` | `0xA000` (40 KiB) | Not exposed by the Flash map |
+| Product Config | `0x00076000` | `0x0007FFFF` | `0xA000` (40 KiB) | FlashDB KVDB; bounded product-config Flash area |
 
 Application image layout within a slot:
 
@@ -196,7 +196,7 @@ Repository entry points:
 
 - Production-signed Windows portable EXEs and clean-Windows direct-run evidence.
 - UART updater transport, CAN or CAN FD transports. Debug UART logging exists;
-  its TP2 capture is hardware-deferred pending board-level measurement.
+  PB13 capture is pending rerun on the new all-IO breakout board.
 - Download resume and recovery download.
 - Anti-rollback/downgrade policy and its security counter.
 - Production Windows signing credentials remain external inputs.
@@ -207,12 +207,12 @@ MCUboot's upstream ability to validate or swap an image is not evidence that thi
 
 | Level | Current coverage | Main gap |
 | --- | --- | --- |
-| Host unit | Fourteen strict HostTests plus 17 Rust tests with the GUI target: maps, handover, contracts/backends, Protocol/Manager, product identity, corpus, USB/WinUSB boundary, nusb framing and CLI/workflow | No automated native-GUI interaction coverage |
+| Host unit | Fifteen strict HostTests plus Rust tests with the GUI target: maps, handover, contracts/backends, Protocol/Manager, product identity, corpus, USB/WinUSB boundary, nusb framing and CLI/workflow | No automated native-GUI interaction coverage |
 | Component integration | MCUboot Flash backend fakes plus Rust client -> production C Manager fake E2E | No full `boot_go()` host integration or Flash power-loss model |
 | Firmware build | Debug/Release App, loopback and updater image signing/verification; strict warnings on new updater sources | No size regression threshold beyond partition/link failure |
-| HIL/manual | Prior Boot/Phase 2/Phase 4 evidence, clean-revision Application v1→v2 persistence, invalid-slot `cafe:0001` recovery/bootstrap, one Slint GUI physical install, and per-chip UQID identity in both modes, all with exact restore; Debug UART firmware/VCOM diagnostics retained with exact restore | Debug UART physical TP2 path is deferred; clean Windows portable run and reset/power-loss matrices remain |
+| HIL/manual | Prior Boot/Phase 2/Phase 4 evidence, clean-revision Application v1→v2 persistence, invalid-slot `cafe:0001` recovery/bootstrap, FlashDB Boot-only provisioning/power-cycle persistence/compatible install, one Slint GUI physical install, and per-chip UQID identity in both modes, all with exact restore; Debug UART firmware/VCOM diagnostics retained with exact restore | Debug UART PB13 capture, clean Windows portable run and reset/power-loss matrices remain |
 | Fault injection | Unconfirmed test boot followed by reset/revert | No erase/write failure, corrupted trailer or interrupted swap matrix |
-| CI | Evidence checksums, fourteen strict HostTests, Rust checks, USB boundary rule and Debug/Release App/loopback/updater builds/signing | Phase 5 changes have not yet passed remote CI; physical USB cannot run in hosted CI |
+| CI | Evidence checksums, fifteen strict HostTests, Rust checks, USB boundary rule and Debug/Release App/loopback/updater builds/signing | Phase 5 changes have not yet passed remote CI; physical USB cannot run in hosted CI |
 
 The largest current Phase 5 delivery gap is signed Windows EXE and clean
 Windows portable-run evidence.
@@ -269,14 +269,20 @@ recovery HIL requirement are satisfied. The single Slint window builds, passes
 Linux launch/layout/scroll smoke and completed one physical install using the
 same Rust core, with exact restoration retained under
 `evidence/hil/2026-08-28-469f9ca-phase5-gui-install/`. Phase 5E is satisfied;
-the per-chip UQID serial is verified in both USB modes. Linux remains direct-run;
+the per-chip UQID serial is verified in both USB modes.
+FlashDB product configuration is also HIL accepted: Boot-only provisioning, a
+physical power-cycle readback, compatible install, Application readback and
+exact full-Flash restoration passed on the all-IO breakout board under
+`evidence/hil/2026-08-28-phase5-flashdb-final/`.
+Linux remains direct-run;
 the unsigned Windows x64 portable ZIP is mechanically verified, with the archive
 hash retained instead of the generated ZIP. A post-review Windows rebuild needs
 a complete MinGW toolchain. Production EXE signing and clean-Windows direct-run
 remain before G5. SysTick/DWT timing and
 Debug EasyLogger on the schematic TP2 path are implemented. Firmware registers,
 official DDL initialization and DAPLink VCOM passed, but the physical TP2 capture
-is hardware-deferred under
+on the old board remains unverified under
 `evidence/hil/2026-08-28-469f9ca-phase5-debug-uart/`; the exact pre-HIL Flash was
-restored. Tokio, plugins, a transport registry, updater UART/CAN and download
+restored. The new all-IO breakout board exposes PB13 directly and has a pending
+UART rerun. Tokio, plugins, a transport registry, updater UART/CAN and download
 recovery remain out of scope.

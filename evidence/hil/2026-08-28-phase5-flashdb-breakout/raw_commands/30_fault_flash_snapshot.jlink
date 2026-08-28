@@ -1,0 +1,7 @@
+device HC32F460xE
+si SWD
+speed 4000
+connect
+halt
+savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-phase5-flashdb-breakout/snapshots/fault_00000000_0007ffff.bin, 0x00000000, 0x00080000
+exit

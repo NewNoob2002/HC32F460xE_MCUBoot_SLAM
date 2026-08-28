@@ -1,0 +1,22 @@
+review_result:
+  schema_version: 1
+  source_revision: "323ebea6bbdfc57258ccfcc40eaa3e45ba61d3b1 dirty working tree"
+  scope:
+    - "FlashDB FAL/HC32 bounded product-configuration storage"
+    - "write-once product identity schema and corruption handling"
+    - "Protocol V1 Manager, MCUboot BEGIN/COMMIT compatibility and USB mode permissions"
+    - "Rust CLI config get/set and fake E2E"
+    - "memory map, tests, firmware builds and HIL restore evidence"
+  toolchain_context: "GNU Arm Embedded Cortex-M4 C11 14.3.1; host ASan/UBSan; Rust edition 2024"
+  findings: []
+  residual_risks:
+    - "Production Windows signing and a clean-Windows portable run remain before G5."
+    - "Physical USART3/PB13 capture remains a separate pending diagnostic."
+    - "Systematic update/swap power-interruption testing remains Phase 6 scope."
+  verification:
+    - "logs/software_hosttests.txt: strict HostTests 15/15 passed"
+    - "logs/software_rust.txt: fmt, clippy and repository-defined Rust/C fake E2E passed"
+    - "logs/software_debug_build.txt: Debug build/image/WinUSB verification exit code 0"
+    - "logs/software_release_build.txt: Release build/image/WinUSB verification exit code 0"
+    - "hil_test_result.yaml: Boot-only provisioning, physical restart persistence, compatible install, Application readback and exact restore passed"
+    - "analyze_snapshot.py: image/trailer/product-config/post-restore assertions passed"

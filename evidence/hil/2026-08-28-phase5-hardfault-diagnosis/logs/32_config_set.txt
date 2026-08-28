@@ -1,0 +1,4 @@
+Script started on 2026-08-28 22:16:19+08:00 [COMMAND="Tools/updater/target/debug/hc32-updater config set --hardware-id 0x00004600 --board-id 1 --board-revision 2" <not executed on terminal>]
+provisioned=true hardware=0x00004600 board=1 revision=2
+
+Script done on 2026-08-28 22:16:19+08:00 [COMMAND_EXIT_CODE="0"]

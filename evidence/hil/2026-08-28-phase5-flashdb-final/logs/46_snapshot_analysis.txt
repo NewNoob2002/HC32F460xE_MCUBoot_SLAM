@@ -1,0 +1,16 @@
+Script started on 2026-08-29 06:30:26+08:00 [COMMAND="python3 evidence/hil/2026-08-28-phase5-flashdb-final/analyze_snapshot.py" <not executed on terminal>]
+primary_image_exact_match=true
+primary_header_valid=true
+primary_copy_done=true
+primary_image_ok=true
+primary_magic_valid=true
+secondary_header_erased=true
+secondary_trailer_erased=true
+product_identity_present=true
+reserved_changed_from_backup=true
+post_restore_exact_match=true
+product_identity_offsets=0x0007605c
+secondary_non_erased_bytes=45524
+scratch_non_erased_bytes=7603
+
+Script done on 2026-08-29 06:30:26+08:00 [COMMAND_EXIT_CODE="0"]

@@ -1,0 +1,12 @@
+release_evidence:
+  schema_version: 1
+  version: "FlashDB product configuration closure"
+  source_revision: "323ebea6bbdfc57258ccfcc40eaa3e45ba61d3b1 dirty working tree"
+  safety_preflights: ["safety_preflight.yaml"]
+  build_outputs: ["build_output_debug.yaml", "build_output_release.yaml"]
+  deployments: ["deployment_result_prepare.yaml", "deployment_result_install.yaml", "deployment_result_restore.yaml"]
+  debug_sessions: ["logs/15_prepare_failure_snapshot.txt"]
+  runtime_monitors: []
+  bus_validations: []
+  tests: ["hil_test_result.yaml"]
+  reviews: ["review_result.yaml"]

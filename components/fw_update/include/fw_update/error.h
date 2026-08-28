@@ -9,6 +9,7 @@ enum fw_update_result {
     FW_UPDATE_ERR_ALIGNMENT = -3,
     FW_UPDATE_ERR_IO = -4,
     FW_UPDATE_ERR_BOOT_CONTROL = -5,
+    FW_UPDATE_ERR_LOCKED = -6,
 };
 
 #endif

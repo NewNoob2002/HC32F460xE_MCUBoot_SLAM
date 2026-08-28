@@ -11,7 +11,7 @@ static uint32_t mock_sector;
 static uint32_t mock_erase_calls;
 static int32_t mock_result;
 
-int32_t bsp_flash_write(uint32_t address, const uint8_t *data, uint32_t length) {
+int32_t bsp_flash_write(uint32_t address, const uint8_t* data, uint32_t length) {
     assert(data != NULL);
     mock_address = address;
     mock_length = length;
@@ -24,7 +24,7 @@ int32_t bsp_flash_erase_sector(uint32_t sector) {
     return mock_result;
 }
 
-int32_t bsp_flash_read(uint32_t address, uint8_t *data, uint32_t length) {
+int32_t bsp_flash_read(uint32_t address, uint8_t* data, uint32_t length) {
     assert(data != NULL);
     mock_address = address;
     mock_length = length;
@@ -36,7 +36,7 @@ uint16_t bsp_flash_sector_count(uint32_t size) {
 }
 
 static void test_areas_and_slots(void) {
-    const struct flash_area *area = NULL;
+    const struct flash_area* area = NULL;
     uintptr_t base = 1U;
 
     assert(flash_area_open(FLASH_AREA_IMAGE_PRIMARY(0), &area) == 0);
@@ -46,6 +46,8 @@ static void test_areas_and_slots(void) {
     assert(area->fa_off == SECONDARY_SLOT_BASE);
     assert(flash_area_open(FLASH_AREA_IMAGE_SCRATCH, &area) == 0);
     assert(area->fa_off == SCRATCH_BASE);
+    assert(flash_area_open(FLASH_AREA_ID_PRODUCT_CONFIG, &area) == 0);
+    assert(area->fa_off == RESERVED_BASE && area->fa_size == RESERVED_SIZE);
     assert(flash_area_open(FLASH_AREA_BOOTLOADER, &area) != 0);
     assert(area == NULL);
     assert(flash_area_id_from_image_slot(0) == FLASH_AREA_ID_PRIMARY);
@@ -59,7 +61,7 @@ static void test_areas_and_slots(void) {
 }
 
 static void test_io_bounds_and_alignment(void) {
-    const struct flash_area *area;
+    const struct flash_area* area;
     uint32_t word = 0U;
 
     assert(flash_area_open(FLASH_AREA_ID_PRIMARY, &area) == 0);
@@ -93,7 +95,7 @@ static void test_io_bounds_and_alignment(void) {
 }
 
 static void test_geometry(void) {
-    const struct flash_area *area;
+    const struct flash_area* area;
     struct flash_sector sectors[MCUBOOT_MAX_IMG_SECTORS];
     struct flash_sector sector;
     uint32_t count = MCUBOOT_MAX_IMG_SECTORS;
@@ -107,6 +109,10 @@ static void test_geometry(void) {
     count = 1U;
     assert(flash_area_get_sectors(FLASH_AREA_ID_SCRATCH, &count, sectors) == 0);
     assert(count == 1U);
+
+    count = MCUBOOT_MAX_IMG_SECTORS;
+    assert(flash_area_get_sectors(FLASH_AREA_ID_PRODUCT_CONFIG, &count, sectors) == 0);
+    assert(count == RESERVED_SIZE / FLASH_SECTOR_SIZE);
 
     count = 1U;
     assert(flash_area_get_sectors(FLASH_AREA_ID_PRIMARY, &count, sectors) != 0);

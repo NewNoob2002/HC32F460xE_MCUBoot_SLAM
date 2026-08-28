@@ -7,6 +7,9 @@ system or transport registry is present.
 ```sh
 cargo build --manifest-path Tools/updater/Cargo.toml --locked
 Tools/updater/target/debug/hc32-updater info
+Tools/updater/target/debug/hc32-updater config get
+Tools/updater/target/debug/hc32-updater config set \
+  --hardware-id 0x00004600 --board-id 1 --board-revision 2
 Tools/updater/target/debug/hc32-updater install <signed-image>
 Tools/updater/target/debug/hc32-updater wait --version 2.0.0
 cargo run --manifest-path Tools/updater/Cargo.toml --bin hc32-updater-gui
@@ -21,6 +24,12 @@ public product identity, for example:
 HC32_PRODUCT_IDENTITY_FILE=/secure/product/ProductIdentity.env \
   cargo build --manifest-path Tools/updater/Cargo.toml --release --locked
 ```
+
+`config get` reports the effective `hardware_id`, `board_id`,
+`board_revision` and whether they have been provisioned in FlashDB. `config set`
+is accepted only by Boot recovery and is write-once. Before the
+first write, the build-time product identity is reported as an unprovisioned
+default. The UQID-derived USB serial is never writable.
 
 Use `artifacts/updater_signed.bin` with `install`. The slot-padded
 `updater_primary.bin` and `updater_update.bin` are not protocol-transfer inputs.

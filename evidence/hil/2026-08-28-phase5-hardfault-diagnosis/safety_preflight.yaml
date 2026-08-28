@@ -1,0 +1,15 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-08-28T13:25:00Z"
+  operation: "diagnostic backup/flash/reset/USB read/debug snapshot/restore"
+  authorization: "User explicitly replied '确认允许' on 2026-08-28 for this diagnostic run"
+  target:
+    board: "user-owned HC32F460xE all-IO breakout board"
+    hardware_revision: "product board_revision 2; PCB revision not separately provided"
+    probe_or_adapter_serial: "63728710"
+    transport: "J-Link SWD 4 MHz; J-Link VCOM /dev/ttyACM0 at 115200 8N1; USB Vendor Bulk"
+    observed_initial_usb: "fffe:ffff HC32 Phase 5 Lab HC32 Firmware Updater"
+  artifact_or_stimulus: "Debug diagnostic Boot SHA256 7d3776e7ea0e0ddf8335d4110f082b4d59d04f4833936d38cc5e40dc57d737b1 at 0x00000000; one read-only hc32-updater info request"
+  limits: "Before writes, create two 524288-byte backups of 0x00000000-0x0007FFFF and require byte equality plus SHA256 ae1f723d4ef84ea2c27c622f048bf01cdbdd9ad47d3cd66c42cd590c3ca9d8ca matching the verified post-restore image. Flash only Boot 0x00000000-0x0000FFFF; erase only Primary first sector 0x00010000-0x00011FFF and Secondary first sector 0x00042000-0x00043FFF. Do not run install or config set. At most one info request before snapshot. No unlock, recover, OTP, option-byte or protection changes."
+  recovery_plan: "After the diagnostic snapshot, or on any mismatch/failure, restore the exact verified pre-run backup to 0x00000000-0x0007FFFF, verifybin, read back 524288 bytes and require SHA256/cmp equality before reset/run."
+  approved: true

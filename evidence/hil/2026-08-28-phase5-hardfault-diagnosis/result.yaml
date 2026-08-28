@@ -1,0 +1,40 @@
+diagnostic_result:
+  status: "pass-no-fault-unprovisioned"
+  artifact_sha256: "7d3776e7ea0e0ddf8335d4110f082b4d59d04f4833936d38cc5e40dc57d737b1"
+  usb_identity: "cafe:0001"
+  request: "exactly one hc32-updater info"
+  response: "hardware=0x00004600 board=1 revision=2 mode=boot-recovery capacity=196608"
+  uart: "EasyLogger initialization and boot startup captured at 115200 8N1"
+  fault_snapshot_magic_present: false
+  cfsr: "0x00000000"
+  hfsr: "0x00000000"
+  control: "0x00000004 (FPCA active)"
+  fpccr: "0xC0000018 (ASPEN/LSPEN enabled, no active lazy preservation at halt)"
+  restore_sha256: "ae1f723d4ef84ea2c27c622f048bf01cdbdd9ad47d3cd66c42cd590c3ca9d8ca"
+  conclusion: "The unprovisioned recovery path did not reproduce the prior HardFault; the next bounded discriminator is provisioned FlashDB state across a physical restart."
+provisioned_restart_result:
+  status: "pass-no-fault"
+  config_set: "provisioned=true hardware=0x00004600 board=1 revision=2"
+  post_restart_info: "success"
+  fault_snapshot_magic_present: false
+  cfsr: "0x00000000"
+  hfsr: "0x00000000"
+  reserved_matches_prior_fault_snapshot: true
+  conclusion: "The exact provisioned FlashDB bytes are not sufficient to reproduce the fault. The remaining bounded discriminator is the prior exact Boot artifact versus the diagnostic Boot artifact."
+old_boot_ab_status:
+  status: "pass-no-fault"
+  completed_at_utc: "2026-08-28T15:00:24Z"
+  method: "Targeted old Boot plus provisioned Reserved reproduction, physical power cycle, exactly one USB info request, J-Link fault snapshot, then full restore"
+  prepared_old_boot_sha256: "9b51a0115d48db001a668403878793e8e3886f827f4d080821031cfbd143d3d8"
+  prepared_reserved_sha256: "a679cca64deb1f08585025da2c93dd7e994c042ee9704cf60378f074438ca3d9"
+  captured_flash_sha256: "a2b98c2442469aaa9926bc476b0756a4f8655d17b67a13352eb0cf5acb4963a0"
+  captured_flash_matches_targeted_fixture: true
+  usb_info: "application=0.0.0 bootloader=1.0.0 hardware=0x00004600 board=1 revision=2 mode=boot-recovery"
+  usb_info_attempts: 1
+  fault_snapshot_magic_present: false
+  ipsr: "0x000 (Thread mode, no exception)"
+  cfsr: "0x00000000"
+  hfsr: "0x00000000"
+  restore_sha256: "ae1f723d4ef84ea2c27c622f048bf01cdbdd9ad47d3cd66c42cd590c3ca9d8ca"
+  restore_matches_backup: true
+  conclusion: "The exact prior Boot artifact combined with the exact provisioned Reserved bytes and a physical power cycle did not reproduce the HardFault. Neither discriminator is independently sufficient under this bounded reproduction."

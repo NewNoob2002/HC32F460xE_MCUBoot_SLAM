@@ -32,9 +32,27 @@ static uint8_t compatibility[HC32_COMPATIBILITY_PAYLOAD_SIZE];
 static int loader_open_result;
 static int sector_result;
 static int loader_close_calls;
+static struct fw_update_product_config_state product_config_state;
 
 fih_ret FIH_SUCCESS = FIH_POSITIVE_VALUE;
 fih_ret FIH_FAILURE = FIH_NEGATIVE_VALUE;
+
+static enum fw_update_result product_config_get(void* context, struct fw_update_product_config_state* state) {
+    (void)context;
+    *state = product_config_state;
+    return FW_UPDATE_OK;
+}
+
+static enum fw_update_result product_config_set(void* context, const struct fw_update_product_identity* identity) {
+    (void)context;
+    (void)identity;
+    return FW_UPDATE_ERR_LOCKED;
+}
+
+static const struct fw_update_product_config_ops product_config_ops = {
+    .get = product_config_get,
+    .set = product_config_set,
+};
 
 int flash_area_open(uint8_t id, const struct flash_area** area) {
     opened_id = id;
@@ -198,6 +216,10 @@ static void test_storage_backend(void) {
 
 static void test_boot_control_backend(void) {
     struct fw_update_boot_control control;
+    const struct fw_update_product_config product_config = {
+        .ops = &product_config_ops,
+        .context = NULL,
+    };
 
     open_result = 0;
     flash_result = 0;
@@ -221,8 +243,12 @@ static void test_boot_control_backend(void) {
     compatibility[9] = (uint8_t)(HC32_PRODUCT_BOARD_ID >> 8U);
     compatibility[10] = (uint8_t)(HC32_PRODUCT_BOARD_ID >> 16U);
     compatibility[11] = (uint8_t)(HC32_PRODUCT_BOARD_ID >> 24U);
+    product_config_state.identity.hardware_id = HC32_PRODUCT_HARDWARE_ID;
+    product_config_state.identity.board_id = HC32_PRODUCT_BOARD_ID;
+    product_config_state.identity.board_revision = HC32_PRODUCT_BOARD_REVISION;
+    product_config_state.provisioned = 0U;
 
-    fw_update_boot_control_mcuboot_init(&control);
+    fw_update_boot_control_mcuboot_init(&control, &product_config);
     assert(fw_update_boot_control_request_test_upgrade(&control) == FW_UPDATE_OK);
     assert(pending_image == 0 && pending_permanent == 0);
     assert(loader_close_calls == 1);

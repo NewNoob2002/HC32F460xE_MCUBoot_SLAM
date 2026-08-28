@@ -30,11 +30,21 @@ struct fake_boot_control {
     enum fw_update_result request_result;
 };
 
+struct fake_product_config {
+    struct fw_update_product_config_state state;
+    unsigned int get_calls;
+    unsigned int set_calls;
+    enum fw_update_result get_result;
+    enum fw_update_result set_result;
+};
+
 struct fixture {
     struct fake_storage fake_storage;
     struct fw_update_storage storage;
     struct fake_boot_control fake_boot;
     struct fw_update_boot_control boot_control;
+    struct fake_product_config fake_product;
+    struct fw_update_product_config product_config;
     struct fw_update_manager manager;
     uint32_t now_ms;
     uint32_t next_sequence;
@@ -123,6 +133,27 @@ static enum fw_update_result fake_confirm(void* context) {
     return FW_UPDATE_OK;
 }
 
+static enum fw_update_result fake_product_get(void* context, struct fw_update_product_config_state* state) {
+    struct fake_product_config* fake = context;
+    ++fake->get_calls;
+    if (fake->get_result != FW_UPDATE_OK)
+        return fake->get_result;
+    *state = fake->state;
+    return FW_UPDATE_OK;
+}
+
+static enum fw_update_result fake_product_set(void* context, const struct fw_update_product_identity* identity) {
+    struct fake_product_config* fake = context;
+    ++fake->set_calls;
+    if (fake->set_result != FW_UPDATE_OK)
+        return fake->set_result;
+    if (fake->state.provisioned != 0U)
+        return FW_UPDATE_ERR_LOCKED;
+    fake->state.identity = *identity;
+    fake->state.provisioned = 1U;
+    return FW_UPDATE_OK;
+}
+
 static const struct fw_update_storage_ops storage_ops = {
     .get_info = fake_get_info,
     .erase_all = fake_erase_all,
@@ -135,13 +166,17 @@ static const struct fw_update_boot_control_ops boot_control_ops = {
     .confirm_running_image = fake_confirm,
 };
 
+static const struct fw_update_product_config_ops product_config_ops = {
+    .get = fake_product_get,
+    .set = fake_product_set,
+};
+
 static struct fw_update_manager_config make_config(const struct fixture* fixture) {
     const struct fw_update_manager_config config = {
         .storage = &fixture->storage,
         .boot_control = &fixture->boot_control,
-        .hardware_id = UINT32_C(0x00004600),
-        .board_id = 1U,
-        .board_revision = 2U,
+        .product_config = &fixture->product_config,
+        .product_config_writable = 1U,
         .application_version = {.major = 2U, .minor = 1U, .revision = 3U, .build = 4U},
         .bootloader_version = {.major = 1U, .minor = 0U, .revision = 0U, .build = 0U},
         .session_timeout_ms = 5000U,
@@ -161,6 +196,13 @@ static void fixture_init(struct fixture* fixture, uint32_t alignment) {
     fixture->storage.context = &fixture->fake_storage;
     fixture->boot_control.ops = &boot_control_ops;
     fixture->boot_control.context = &fixture->fake_boot;
+    fixture->fake_product.state.identity.hardware_id = UINT32_C(0x00004600);
+    fixture->fake_product.state.identity.board_id = 1U;
+    fixture->fake_product.state.identity.board_revision = 2U;
+    fixture->fake_product.get_result = FW_UPDATE_OK;
+    fixture->fake_product.set_result = FW_UPDATE_OK;
+    fixture->product_config.ops = &product_config_ops;
+    fixture->product_config.context = &fixture->fake_product;
     fixture->fake_boot.request_result = FW_UPDATE_OK;
     fixture->now_ms = 100U;
     config = make_config(fixture);
@@ -260,19 +302,18 @@ static void send_hello(struct fixture* fixture) {
     assert(read_u16_le(&response.body[0]) == FW_PROTOCOL_MAX_PAYLOAD);
     assert(read_u32_le(&response.body[2])
            == (FW_PROTOCOL_CAPABILITY_TEST_UPGRADE | FW_PROTOCOL_CAPABILITY_READBACK_CRC
-               | FW_PROTOCOL_CAPABILITY_STRICT_DATA));
+               | FW_PROTOCOL_CAPABILITY_STRICT_DATA | FW_PROTOCOL_CAPABILITY_PRODUCT_CONFIG));
     assert(read_u32_le(&response.body[6]) == 5000U);
     fixture->next_sequence = 1U;
 }
 
 static void make_begin_payload(const struct fixture* fixture, uint32_t image_size, uint32_t image_crc,
                                uint8_t* payload) {
-    const struct fw_update_manager_config config = make_config(fixture);
     write_u32_le(&payload[0], image_size);
     write_u32_le(&payload[4], image_crc);
-    write_u32_le(&payload[8], config.hardware_id);
-    write_u32_le(&payload[12], config.board_id);
-    write_u16_le(&payload[16], config.board_revision);
+    write_u32_le(&payload[8], fixture->fake_product.state.identity.hardware_id);
+    write_u32_le(&payload[12], fixture->fake_product.state.identity.board_id);
+    write_u16_le(&payload[16], fixture->fake_product.state.identity.board_revision);
     write_u16_le(&payload[18], 0U);
     payload[20] = 2U;
     payload[21] = 1U;
@@ -602,6 +643,11 @@ static void test_init_validation(void) {
     fixture.storage.context = &fixture.fake_storage;
     fixture.boot_control.ops = &boot_control_ops;
     fixture.boot_control.context = &fixture.fake_boot;
+    fixture.fake_product.state.identity.hardware_id = UINT32_C(0x00004600);
+    fixture.fake_product.state.identity.board_id = 1U;
+    fixture.fake_product.state.identity.board_revision = 2U;
+    fixture.product_config.ops = &product_config_ops;
+    fixture.product_config.context = &fixture.fake_product;
     config = make_config(&fixture);
 
     assert(fw_update_manager_init(NULL, &config) == FW_UPDATE_MANAGER_ERR_INVALID_ARGUMENT);
@@ -612,8 +658,51 @@ static void test_init_validation(void) {
     config.boot_control = NULL;
     assert(fw_update_manager_init(&fixture.manager, &config) == FW_UPDATE_MANAGER_ERR_INVALID_ARGUMENT);
     config = make_config(&fixture);
+    config.product_config = NULL;
+    assert(fw_update_manager_init(&fixture.manager, &config) == FW_UPDATE_MANAGER_ERR_INVALID_ARGUMENT);
+    config = make_config(&fixture);
+    fixture.fake_product.get_result = FW_UPDATE_ERR_IO;
+    assert(fw_update_manager_init(&fixture.manager, &config) == FW_UPDATE_MANAGER_ERR_STORAGE);
+    fixture.fake_product.get_result = FW_UPDATE_OK;
+    config = make_config(&fixture);
     fixture.fake_storage.fail_get_info_call = fixture.fake_storage.get_info_calls + 1U;
     assert(fw_update_manager_init(&fixture.manager, &config) == FW_UPDATE_MANAGER_ERR_STORAGE);
+}
+
+static void test_product_config_provisioning(void) {
+    struct fixture fixture;
+    struct response response;
+    uint8_t payload[12] = {FW_UPDATE_PRODUCT_CONFIG_FORMAT_VERSION, 0U};
+
+    fixture_init(&fixture, 4U);
+    send_hello(&fixture);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_GET, NULL, 0U, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_OK && response.body_length == sizeof(payload));
+    assert(response.body[0] == FW_UPDATE_PRODUCT_CONFIG_FORMAT_VERSION && response.body[1] == 0U);
+    assert(read_u16_le(&response.body[2]) == 2U);
+    assert(read_u32_le(&response.body[4]) == UINT32_C(0x00004600));
+    assert(read_u32_le(&response.body[8]) == 1U);
+
+    write_u16_le(&payload[2], 4U);
+    write_u32_le(&payload[4], UINT32_C(0x00004601));
+    write_u32_le(&payload[8], 7U);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_SET, payload, sizeof(payload), &response);
+    assert(response.status == FW_PROTOCOL_STATUS_OK && response.body[1] == 1U);
+    assert(fixture.fake_product.set_calls == 1U);
+    assert(read_u16_le(&response.body[2]) == 4U);
+    assert(read_u32_le(&response.body[4]) == UINT32_C(0x00004601));
+    assert(read_u32_le(&response.body[8]) == 7U);
+
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_GET, NULL, 0U, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_OK && response.body[1] == 1U);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_SET, payload, sizeof(payload), &response);
+    assert(response.status == FW_PROTOCOL_STATUS_INVALID_STATE && fixture.fake_product.set_calls == 1U);
+
+    fixture_init(&fixture, 4U);
+    fixture.manager.config.product_config_writable = 0U;
+    send_hello(&fixture);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_SET, payload, sizeof(payload), &response);
+    assert(response.status == FW_PROTOCOL_STATUS_INVALID_STATE && fixture.fake_product.set_calls == 0U);
 }
 
 static void prepare_ready(struct fixture* fixture, uint8_t* image, uint32_t image_size) {
@@ -686,6 +775,20 @@ static void test_exact_duplicate_side_effects(void) {
     fixture_init(&fixture, 4U);
     fill_image(image, sizeof(image));
 
+    request_size = encode_request(FW_PROTOCOL_COMMAND_HELLO, 0U, NULL, 0U, request);
+    send_duplicate_encoded(&fixture, request, request_size, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_OK);
+
+    memset(payload, 0, 12U);
+    payload[0] = FW_UPDATE_PRODUCT_CONFIG_FORMAT_VERSION;
+    write_u16_le(&payload[2], 4U);
+    write_u32_le(&payload[4], UINT32_C(0x00004601));
+    write_u32_le(&payload[8], 7U);
+    request_size = encode_request(FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_SET, 1U, payload, 12U, request);
+    send_duplicate_encoded(&fixture, request, request_size, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_OK && fixture.fake_product.set_calls == 1U);
+
+    fixture_init(&fixture, 4U);
     request_size = encode_request(FW_PROTOCOL_COMMAND_HELLO, 0U, NULL, 0U, request);
     send_duplicate_encoded(&fixture, request, request_size, &response);
     assert(response.status == FW_PROTOCOL_STATUS_OK);
@@ -899,6 +1002,7 @@ static void test_commit_tx_idle_ordering_and_failure(void) {
 
 int main(void) {
     test_complete_lifecycle();
+    test_product_config_provisioning();
     test_storage_alignments();
     test_metadata_and_range_rejections();
     test_alignment_above_buffer();

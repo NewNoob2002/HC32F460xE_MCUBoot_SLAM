@@ -1,0 +1,80 @@
+Script started on 2026-08-28 20:35:23+08:00 [COMMAND="rtk JLinkExe -USB 63728710 -CommandFile evidence/hil/2026-08-28-phase5-flashdb-breakout/raw_commands/00_backup.jlink" <not executed on terminal>]
+SEGGER J-Link Commander V9.70 (Compiled Aug 19 2026 12:16:13)
+DLL version V9.70, compiled Aug 19 2026 12:15:25
+
+
+J-Link Command File read successfully.
+Processing script file...
+J-Link>device HC32F460xE
+J-Link connection not established yet but required for command.
+Connecting to J-Link ...O.K.
+Firmware: J-Link OB-Mini Plus-CortexM compiled Mar  8 2099 11:15:54
+Hardware version: V1.00
+J-Link uptime (since boot): N/A (Not supported by this model)
+S/N: 63728710
+License(s): RDI,FlashBP,FlashDL,JFlash,GDB
+VTref=3.300V
+J-Link>si SWD
+Selecting SWD as current target interface.
+J-Link>speed 4000
+Selecting 4000 kHz as target interface speed
+J-Link>connect
+Device "HC32F460XE" selected.
+
+
+Connecting to target via SWD
+Found SW-DP with ID 0x2BA01477
+DPv0 detected
+CoreSight SoC-400 or earlier
+Scanning AP map to find all available APs
+AP[1]: Stopped AP scan as end of AP map has been reached
+AP[0]: AHB-AP (IDR: 0x24770011, ADDR: 0x00000000)
+Iterating through AP map to find AHB-AP to use
+AP[0]: Core found
+AP[0]: AHB-AP ROM base: 0xE00FF000
+CPUID register: 0x410FC241. Implementer code: 0x41 (ARM)
+Found Cortex-M4 r0p1, Little endian.
+FPUnit: 6 code (BP) slots and 2 literal slots
+CoreSight components:
+ROMTbl[0] @ E00FF000
+[0][0]: E000E000 CID B105E00D PID 000BB00C SCS-M7
+[0][1]: E0001000 CID B105E00D PID 003BB002 DWT
+[0][2]: E0002000 CID B105E00D PID 002BB003 FPB
+[0][3]: E0000000 CID B105E00D PID 003BB001 ITM
+[0][4]: E0040000 CID B105900D PID 000BB9A1 TPIU
+Memory zones:
+  Zone: "Default" Description: Default access mode
+Cortex-M4 identified.
+J-Link>halt
+PC = 00015726, CycleCnt = 001479F2
+R0 = 00000001, R1 = 000F6628, R2 = 00006E71, R3 = 00006E72
+R4 = 000F6629, R5 = FFFFFFFF, R6 = AA099CAD, R7 = 1FFF9EF8
+R8 = BAFCDCE6, R9 = 87B8D26F, R10= BEB4692F, R11= 05AFEE6D
+R12= 00000080
+SP(R13)= 1FFF9EF8, MSP= 1FFF9EF8, PSP= 479F53A4, R14(LR) = 000134FF
+XPSR = 21000000: APSR = nzCvq, EPSR = 01000000, IPSR = 000 (NoException)
+CFBP = 00000000, CONTROL = 00, FAULTMASK = 00, BASEPRI = 00, PRIMASK = 00
+
+FPS0 = B9B3D6CB, FPS1 = A42F0E61, FPS2 = 4D911595, FPS3 = 553139EC
+FPS4 = F7C0507B, FPS5 = 238CD4BE, FPS6 = BE6FAF79, FPS7 = 9B6C3B97
+FPS8 = FB450BD5, FPS9 = F9F1B488, FPS10= 7988CDB1, FPS11= D4FCBDA6
+FPS12= 069F527C, FPS13= D57FE3FF, FPS14= 6B2298F1, FPS15= 3B57453D
+FPS16= 8F9F9DA0, FPS17= DFF4F727, FPS18= 2F7BD8DA, FPS19= 32DDFE2D
+FPS20= 5F21B567, FPS21= 9BF3B3D7, FPS22= 125AFCE5, FPS23= 65E6FFDA
+FPS24= 027C1137, FPS25= 1F173CFD, FPS26= 28BD163F, FPS27= BCF3C4E8
+FPS28= 9B7CBD9A, FPS29= 705792DB, FPS30= 6BBEF0A5, FPS31= 8675FD8B
+FPSCR= 00000000
+J-Link>savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-phase5-flashdb-breakout/backup/pre_hil_a_00000000_0007ffff.bin, 0x00000000, 0x00080000
+Opening binary file for writing... [/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-phase5-flashdb-breakout/backup/pre_hil_a_00000000_0007ffff.bin]
+Reading 524288 bytes from addr 0x00000000 into file...O.K.
+J-Link>savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-phase5-flashdb-breakout/backup/pre_hil_b_00000000_0007ffff.bin, 0x00000000, 0x00080000
+Opening binary file for writing... [/home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-08-28-phase5-flashdb-breakout/backup/pre_hil_b_00000000_0007ffff.bin]
+Reading 524288 bytes from addr 0x00000000 into file...O.K.
+J-Link>g
+Memory map 'after startup completion point' is active
+J-Link>exit
+
+Script processing completed.
+
+
+Script done on 2026-08-28 20:35:28+08:00 [COMMAND_EXIT_CODE="0"]

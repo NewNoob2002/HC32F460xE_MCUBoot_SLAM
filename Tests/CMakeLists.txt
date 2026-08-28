@@ -45,10 +45,33 @@ target_include_directories(fw_update_contract_tests PRIVATE
 )
 add_test(NAME fw_update_contract COMMAND fw_update_contract_tests)
 
+set(FLASHDB_ROOT ${PROJECT_SOURCE_DIR}/components/FlashDB-2.2.0)
+add_executable(product_config_flashdb_tests
+    product_config_flashdb_tests.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/product_config.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/backends/flashdb/src/product_config_flashdb.c
+    ${FLASHDB_ROOT}/src/fdb.c
+    ${FLASHDB_ROOT}/src/fdb_kvdb.c
+    ${FLASHDB_ROOT}/src/fdb_utils.c
+    ${FLASHDB_ROOT}/port/fal/src/fal.c
+    ${FLASHDB_ROOT}/port/fal/src/fal_flash.c
+    ${FLASHDB_ROOT}/port/fal/src/fal_partition.c
+)
+target_include_directories(product_config_flashdb_tests PRIVATE
+    ${PROJECT_SOURCE_DIR}/components/fw_update/include
+    ${PROJECT_SOURCE_DIR}/components/fw_update/backends/flashdb/include
+    ${PROJECT_SOURCE_DIR}/components/flashdb_port/Inc
+    ${FLASHDB_ROOT}/inc
+    ${FLASHDB_ROOT}/port/fal/inc
+    ${CMAKE_BINARY_DIR}/generated/Config
+)
+add_test(NAME product_config_flashdb COMMAND product_config_flashdb_tests)
+
 add_executable(fw_update_mcuboot_backend_tests
     fw_update_mcuboot_backend_tests.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/storage.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/boot_control.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/product_config.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/backends/mcuboot/src/storage_mcuboot.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/backends/mcuboot/src/boot_control_mcuboot.c
 )
@@ -93,6 +116,7 @@ add_executable(fw_update_manager_tests
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/protocol.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/storage.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/boot_control.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/product_config.c
 )
 target_include_directories(fw_update_manager_tests PRIVATE
     ${PROJECT_SOURCE_DIR}/components/fw_update/include
@@ -105,6 +129,7 @@ add_executable(fw_update_fake_device
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/protocol.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/storage.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/boot_control.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/product_config.c
 )
 target_include_directories(fw_update_fake_device PRIVATE
     ${PROJECT_SOURCE_DIR}/components/fw_update/include

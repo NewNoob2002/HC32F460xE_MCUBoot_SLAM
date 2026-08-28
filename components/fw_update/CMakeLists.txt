@@ -1,6 +1,7 @@
 add_library(fw_update_core STATIC
     src/storage.c
     src/boot_control.c
+    src/product_config.c
     src/protocol.c
     src/manager.c
 )
@@ -8,12 +9,16 @@ target_include_directories(fw_update_core PUBLIC include)
 target_link_libraries(fw_update_core PRIVATE hc32_project_options)
 
 add_library(fw_update_mcuboot STATIC
+    backends/flashdb/src/product_config_flashdb.c
     backends/mcuboot/src/storage_mcuboot.c
     backends/mcuboot/src/boot_control_mcuboot.c
 )
-target_include_directories(fw_update_mcuboot PUBLIC backends/mcuboot/include)
+target_include_directories(fw_update_mcuboot PUBLIC
+    backends/flashdb/include
+    backends/mcuboot/include
+)
 target_include_directories(fw_update_mcuboot PRIVATE ${BOOTUTIL_ROOT}/src)
 target_link_libraries(fw_update_mcuboot
     PUBLIC fw_update_core
-    PRIVATE mcuboot_bootutil hc32_project_options
+    PRIVATE hc32_flashdb mcuboot_bootutil hc32_project_options
 )
