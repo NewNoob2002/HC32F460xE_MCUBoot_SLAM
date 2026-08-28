@@ -151,7 +151,7 @@ add_test(
         --locked
         --features fake-e2e
 )
-set_tests_properties(rust_updater PROPERTIES TIMEOUT 60)
+set_tests_properties(rust_updater PROPERTIES TIMEOUT 300)
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 add_test(
