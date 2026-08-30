@@ -9,12 +9,12 @@ include(cmake/MemoryMap.cmake)
 include(cmake/ProductIdentity.cmake)
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated/Config")
 configure_file(
-    Config/boot_memory_map.h.in
+    Config/Memory/boot_memory_map.h.in
     "${CMAKE_CURRENT_BINARY_DIR}/generated/Config/boot_memory_map.h"
     @ONLY
 )
 configure_file(
-    Config/product_identity.h.in
+    Config/Product/product_identity.h.in
     "${CMAKE_CURRENT_BINARY_DIR}/generated/Config/product_identity.h"
     @ONLY
 )

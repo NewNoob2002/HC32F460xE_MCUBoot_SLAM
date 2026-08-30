@@ -1,6 +1,6 @@
-#include "hc32f460_it.h"
-#include "hc32f460.h"
+#include "boot_fault.h"
 #include <stdbool.h>
+#include "hc32f460.h"
 
 volatile boot_fault_snapshot_t g_boot_fault_snapshot __attribute__((section(".noinit.boot_fault"), used));
 
@@ -11,13 +11,12 @@ void NMI_Handler(void) {
 }
 
 __attribute__((naked)) void HardFault_Handler(void) {
-    __asm volatile(
-        "tst lr, #4\n"
-        "ite eq\n"
-        "mrseq r0, msp\n"
-        "mrsne r0, psp\n"
-        "mov r1, lr\n"
-        "b boot_hardfault_capture\n");
+    __asm volatile("tst lr, #4\n"
+                   "ite eq\n"
+                   "mrseq r0, msp\n"
+                   "mrsne r0, psp\n"
+                   "mov r1, lr\n"
+                   "b boot_hardfault_capture\n");
 }
 
 __attribute__((noreturn)) void boot_hardfault_capture(uint32_t* frame, uint32_t exc_return) {
@@ -30,8 +29,8 @@ __attribute__((noreturn)) void boot_hardfault_capture(uint32_t* frame, uint32_t 
     g_boot_fault_snapshot.psp = __get_PSP();
     g_boot_fault_snapshot.frame_address = (uint32_t)frame;
     uint32_t frame_address = (uint32_t)frame;
-    bool frame_valid = ((frame_address >= 0x1FFF8000UL) && (frame_address <= (0x20027000UL - 32UL))) ||
-                       ((frame_address >= 0x200F0000UL) && (frame_address <= (0x200F1000UL - 32UL)));
+    bool frame_valid = ((frame_address >= 0x1FFF8000UL) && (frame_address <= (0x20027000UL - 32UL)))
+                       || ((frame_address >= 0x200F0000UL) && (frame_address <= (0x200F1000UL - 32UL)));
     g_boot_fault_snapshot.frame_valid = frame_valid ? 1UL : 0UL;
     if (frame_valid) {
         g_boot_fault_snapshot.stacked_r0 = frame[0];

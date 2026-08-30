@@ -149,7 +149,7 @@ Date: 2026-08-28
 
 Date: 2026-08-28
 
-- Added one `Config/ProductIdentity.env` source for hardware/board and USB
+- Added one `Config/Product/ProductIdentity.env` source for hardware/board and USB
   identity. CMake generates the firmware header and protected TLV bytes; the
   Rust build script generates the same constants for CLI and GUI.
 - Release CMake and Cargo builds use externalizable

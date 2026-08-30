@@ -1,4 +1,5 @@
 #include "bsp_clock.h"
+#include "bsp_board_config.h"
 #include "bsp_write_protection.h"
 #include "hc32_ll.h"
 void bsp_clock_init(void) {
@@ -6,7 +7,7 @@ void bsp_clock_init(void) {
     stc_clock_pll_init_t stcMpllInit;
 
     bsp_write_protection_unlock();
-    GPIO_AnalogCmd(GPIO_PORT_H, (GPIO_PIN_00 | GPIO_PIN_01), ENABLE);
+    GPIO_AnalogCmd(BSP_XTAL_PORT, BSP_XTAL_PINS, ENABLE);
     (void)CLK_XtalStructInit(&stcXtalInit);
     (void)CLK_PLLStructInit(&stcMpllInit);
 

@@ -1,7 +1,6 @@
 #include "bsp_clock.h"
 #include "bsp_external_watchdog.h"
 #include "bsp_timebase.h"
-#include "hc32f460.h"
 #include "usb_vendor_bulk.h"
 #if defined(HC32_DEBUG_LOG)
 #include "elog.h"

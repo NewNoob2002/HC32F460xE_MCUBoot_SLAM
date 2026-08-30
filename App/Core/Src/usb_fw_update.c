@@ -5,11 +5,11 @@
 #include <string.h>
 
 #include "bsp_critical.h"
+#include "bsp_usb.h"
 #include "fw_update/boot_control_mcuboot.h"
 #include "fw_update/manager.h"
 #include "fw_update/product_config_flashdb.h"
 #include "fw_update/storage_mcuboot.h"
-#include "hc32f460.h"
 #include "product_identity.h"
 #include "usbd_core.h"
 
@@ -19,7 +19,7 @@
 #define UPDATE_MPS            64U
 #define UPDATE_RX_CAPACITY    1024U
 #define WINUSB_VENDOR_CODE    UINT8_C(0x20)
-#define USB_SERIAL_UID_WORDS  3U
+#define USB_SERIAL_UID_WORDS  BSP_USB_SERIAL_ID_WORDS
 #define USB_SERIAL_HEX_LENGTH (USB_SERIAL_UID_WORDS * 8U)
 #define MSOS_DESCRIPTOR_SET_TOTAL_LENGTH                                                                               \
     (WINUSB_DESCRIPTOR_SET_HEADER_SIZE + USB_MSOSV2_COMP_ID_FUNCTION_WINUSB_SINGLE_DESCRIPTOR_LEN)
@@ -81,10 +81,8 @@ static const struct usb_bos_descriptor bos_descriptor = {
 
 static int initialize_usb_serial(void) {
     static const char hex[] = "0123456789ABCDEF";
-    const uint32_t unique_id[USB_SERIAL_UID_WORDS] = {CM_EFM->UQID0, CM_EFM->UQID1, CM_EFM->UQID2};
-    const uint32_t all_bits = unique_id[0] & unique_id[1] & unique_id[2];
-    const uint32_t any_bits = unique_id[0] | unique_id[1] | unique_id[2];
-    if (any_bits == 0U || all_bits == UINT32_MAX)
+    uint32_t unique_id[USB_SERIAL_UID_WORDS];
+    if (!bsp_usb_serial_id(unique_id))
         return -1;
 
     const size_t prefix_length = sizeof(HC32_PRODUCT_USB_SERIAL_PREFIX) - 1U;
@@ -243,7 +241,7 @@ int usb_fw_update_init(void) {
     usbd_add_interface(UPDATE_BUS_ID, &vendor_interface);
     usbd_add_endpoint(UPDATE_BUS_ID, &out_endpoint);
     usbd_add_endpoint(UPDATE_BUS_ID, &in_endpoint);
-    return usbd_initialize(UPDATE_BUS_ID, CM_USBFS_BASE, usb_event);
+    return usbd_initialize(UPDATE_BUS_ID, bsp_usb_device_base(), usb_event);
 }
 
 enum usb_fw_update_action usb_fw_update_poll(uint32_t now_ms) {

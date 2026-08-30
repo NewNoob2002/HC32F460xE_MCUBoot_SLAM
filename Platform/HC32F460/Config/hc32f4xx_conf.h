@@ -1,6 +1,6 @@
 /**
  *******************************************************************************
- * @file  spi/spi_dma/source/hc32f4xx_conf.h
+ * @file  hc32f4xx_conf.h
  * @brief This file contains HC32 Series Device Driver Library usage management.
  @verbatim
    Change Logs:

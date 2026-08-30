@@ -15,7 +15,7 @@ Tools/updater/target/debug/hc32-updater wait --version 2.0.0
 cargo run --manifest-path Tools/updater/Cargo.toml --bin hc32-updater-gui
 ```
 
-Builds read the project identity from `Config/ProductIdentity.env`. Firmware
+Builds read the project identity from `Config/Product/ProductIdentity.env`. Firmware
 appends the HC32F460 96-bit UQID to `HC32F460-`, so Boot and Application expose
 one stable per-chip serial. An external identity file can still override the
 public product identity, for example:

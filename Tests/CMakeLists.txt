@@ -94,7 +94,7 @@ add_test(NAME fw_update_mcuboot_backend COMMAND fw_update_mcuboot_backend_tests)
 add_test(
     NAME product_identity_production_gate
     COMMAND ${CMAKE_COMMAND}
-        -DHC32_PRODUCT_IDENTITY_FILE=${PROJECT_SOURCE_DIR}/Config/ProductIdentity.env
+        -DHC32_PRODUCT_IDENTITY_FILE=${PROJECT_SOURCE_DIR}/Config/Product/ProductIdentity.env
         -DHC32_PRODUCT_RELEASE=ON
         -P ${PROJECT_SOURCE_DIR}/cmake/ProductIdentity.cmake
 )
@@ -157,6 +157,10 @@ find_package(Python3 REQUIRED COMPONENTS Interpreter)
 add_test(
     NAME fw_update_architecture
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Architecture/check_portable_dependencies.py
+)
+add_test(
+    NAME application_platform_boundary
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Architecture/check_application_platform_boundary.py
 )
 add_test(
     NAME usb_evaluation_boundary

@@ -1,5 +1,5 @@
-#ifndef HC32F460_IT_H
-#define HC32F460_IT_H
+#ifndef BOOT_FAULT_H
+#define BOOT_FAULT_H
 #include <stdint.h>
 
 #define BOOT_FAULT_SNAPSHOT_MAGIC 0x4641554CUL

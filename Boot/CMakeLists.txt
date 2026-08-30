@@ -1,9 +1,7 @@
 add_executable(boot_firmware
-    Core/Src/hc32f460_it.c
     Core/Src/main.c
     ${PROJECT_SOURCE_DIR}/App/Core/Src/usb_fw_update.c
-    ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Src/usb_dc_hc32f460.c
-    ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Src/syscalls.c
+    $<TARGET_OBJECTS:hc32_boot_fault>
     $<TARGET_OBJECTS:hc32_startup_boot>
 )
 set_target_properties(boot_firmware PROPERTIES SUFFIX .elf)
@@ -23,7 +21,6 @@ target_compile_definitions(boot_firmware PRIVATE
     APP_VERSION_BUILD=0
 )
 set_source_files_properties(
-    Core/Src/hc32f460_it.c
     Core/Src/main.c
     ${PROJECT_SOURCE_DIR}/App/Core/Src/usb_fw_update.c
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wconversion;-Wshadow;-Werror"
@@ -31,7 +28,7 @@ set_source_files_properties(
 target_link_libraries(boot_firmware PRIVATE
     cherryusb_device
     fw_update_mcuboot
-    hc32_platform
+    hc32_usb_device_port
     hc32_device
     $<$<CONFIG:Debug>:hc32_easylogger>
     mcuboot_bootutil

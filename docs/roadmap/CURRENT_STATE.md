@@ -28,6 +28,7 @@ CMakeLists.txt
 └── Firmware path
     ├── hc32_project_options
     ├── hc32_device -> hc32_ll -> hc32_platform
+    ├── hc32_usb_device_port -> hc32_platform
     ├── tinycrypt + mcuboot_asn1
     ├── mcuboot_port_hc32 -> hc32_platform
     ├── mcuboot_bootutil -> mcuboot_port_hc32
@@ -40,7 +41,7 @@ CMakeLists.txt
     ├── app_firmware
     ├── usb_vendor_bulk_loopback
     └── usb_fw_updater
-        ├── CherryUSB + HC32 USB DCD
+        ├── CherryUSB + hc32_usb_device_port
         ├── fw_update_core + fw_update_mcuboot
         └── hc32_platform reset/watchdog/clock
 ```
@@ -53,12 +54,13 @@ Sources: `CMakeLists.txt`, `Drivers/CMakeLists.txt`, `Platform/CMakeLists.txt`, 
 | --- | --- | --- |
 | `Boot/` | `boot_go()`, HC32 handover and `cafe:0001` recovery updater on boot failure | Boot recovery reuses the bounded updater and remains Secondary-only; HC32 USB/DCD and watchdog are target-specific |
 | `App/` | Default App, Phase 4 loopback and `cafe:0002` production USB updater target | HC32-bound executables; updater callbacks defer Manager/Flash work to the Application poll loop |
+| `Config/` | Application, memory-map and product configuration inputs | Project-level policy only; HC32 DDL and board pin settings are excluded |
 | `components/mcuboot-2.4.0/` | Upstream validation, scratch swap, rollback and trailer state | Vendored upstream; project-specific edits are prohibited |
 | `components/mcuboot_port/` | Flash areas, MCUboot configuration, signing key bridge | HC32 implementation and generated memory map are coupled |
 | `components/fw_update/` | Portable Storage/Boot-Control contracts, Protocol V1 codec/parser, receive/verification Manager and MCUboot backends | Core is host-buildable and dependency-checked; MCUboot backend is intentionally non-portable |
-| `Platform/HC32F460/` | Clock, SysTick/DWT timebase, Debug UART, Flash, startup support and boot handover | Intentionally HC32-specific; board pins follow `docs/hardware/` |
+| `Platform/HC32F460/` | HC32 BSP, USB DCD, fault capture, syscalls, DDL selection and board pin configuration | Intentionally HC32-specific; `Config/` owns MCU/controller/pin settings and `Inc/` exposes BSP APIs |
 | `Drivers/` | CMSIS/device/LL libraries and Boot/App startup objects | HC32-specific |
-| `Tests/` | Fifteen strict HostTests, Rust/C fake E2E, Golden Vectors, malformed corpus, USB/WinUSB descriptor checks and reusable HIL assets | Production-signed Windows validation remains |
+| `Tests/` | Strict HostTests, Rust/C fake E2E, Golden Vectors, malformed corpus, architecture/USB boundary checks and reusable HIL assets | Production-signed Windows validation remains |
 | `Tools/updater/` | Shared Rust updater core, CLI, fake test link and blocking nusb adapter | Host-side protocol/workflow is portable; USB backend is nusb-specific |
 | `cmake/` | Memory map, toolchain/options, signing and artifacts | Project/HC32 build policy |
 

@@ -24,7 +24,7 @@ addresses or weakening the signed-image compatibility check.
   magic/version, `hardware_id`, `board_id` and `board_revision`. The HC32 UQID
   USB serial remains hardware-derived and read-only.
 - Before provisioning, reads return the build-time values from
-  `Config/ProductIdentity.env` with `provisioned=false`. A successful USB write
+  `Config/Product/ProductIdentity.env` with `provisioned=false`. A successful USB write
   persists the complete blob and changes the state to `provisioned=true`.
 - USB provisioning is accepted only from Boot recovery (`cafe:0001`) and is
   write-once. Application mode remains read-only. A second write is rejected; changing or

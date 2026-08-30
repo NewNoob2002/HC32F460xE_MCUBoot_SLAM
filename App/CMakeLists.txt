@@ -23,7 +23,6 @@ endif()
 add_executable(app_firmware
     Core/Src/app_confirm.c
     Core/Src/main.c
-    ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Src/syscalls.c
     $<TARGET_OBJECTS:hc32_startup_app>
 )
 set_target_properties(app_firmware PROPERTIES SUFFIX .elf)
@@ -53,15 +52,13 @@ add_mcuboot_signed_artifacts(app_firmware)
 add_executable(usb_vendor_bulk_loopback
     Core/Src/usb_vendor_bulk.c
     Core/Src/usb_vendor_bulk_main.c
-    ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Src/usb_dc_hc32f460.c
-    ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Src/syscalls.c
     $<TARGET_OBJECTS:hc32_startup_app>
 )
 set_target_properties(usb_vendor_bulk_loopback PROPERTIES SUFFIX .elf)
 target_include_directories(usb_vendor_bulk_loopback PRIVATE Core/Inc)
 target_link_libraries(usb_vendor_bulk_loopback PRIVATE
     cherryusb_device
-    hc32_platform
+    hc32_usb_device_port
     hc32_device
     $<$<CONFIG:Debug>:hc32_easylogger>
 )
@@ -76,8 +73,6 @@ add_executable(usb_fw_updater
     Core/Src/app_confirm.c
     Core/Src/usb_fw_update.c
     Core/Src/usb_fw_update_main.c
-    ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Src/usb_dc_hc32f460.c
-    ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Src/syscalls.c
     $<TARGET_OBJECTS:hc32_startup_app>
 )
 set_target_properties(usb_fw_updater PROPERTIES SUFFIX .elf)
@@ -101,7 +96,7 @@ target_include_directories(usb_fw_updater SYSTEM PRIVATE
 target_link_libraries(usb_fw_updater PRIVATE
     cherryusb_device
     fw_update_mcuboot
-    hc32_platform
+    hc32_usb_device_port
     hc32_device
     $<$<CONFIG:Debug>:hc32_easylogger>
     mcuboot_bootutil

@@ -1,6 +1,6 @@
 if(NOT DEFINED HC32_PRODUCT_IDENTITY_FILE)
     set(HC32_PRODUCT_IDENTITY_FILE
-        "${PROJECT_SOURCE_DIR}/Config/ProductIdentity.env"
+        "${PROJECT_SOURCE_DIR}/Config/Product/ProductIdentity.env"
         CACHE FILEPATH "Public product and USB identity input"
     )
 endif()

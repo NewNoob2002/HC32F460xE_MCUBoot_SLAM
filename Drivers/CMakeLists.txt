@@ -6,7 +6,7 @@ target_include_directories(hc32_device INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/CMSIS/Include
     ${HC32_DEVICE_DIR}/Include
     ${HC32_LL_DIR}/inc
-    ${PROJECT_SOURCE_DIR}/Config
+    ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Config
 )
 target_link_libraries(hc32_device INTERFACE hc32_project_options)
 

@@ -27,7 +27,7 @@ fn generate_product_identity() {
     let manifest_dir = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap());
     let path = env::var_os("HC32_PRODUCT_IDENTITY_FILE")
         .map(PathBuf::from)
-        .unwrap_or_else(|| manifest_dir.join("../../Config/ProductIdentity.env"));
+        .unwrap_or_else(|| manifest_dir.join("../../Config/Product/ProductIdentity.env"));
     println!("cargo:rerun-if-changed={}", path.display());
 
     let text = fs::read_to_string(&path).unwrap_or_else(|error| {

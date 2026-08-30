@@ -68,7 +68,7 @@ PB12 RX with function 33. Do not select `CM_USART1` from the net label alone.
 - USB FS uses PA11/PA12 and the USB-C connector J3.
 - J3 CC1/CC2 also connect to the HUSB238 controller (U10).
 - Firmware USB identities and WinUSB descriptors are software contracts; keep
-  them in `Config/ProductIdentity.env` and the Phase 5 ADRs, not in this board
+  them in `Config/Product/ProductIdentity.env` and the Phase 5 ADRs, not in this board
   pin table.
 
 ## Watchdog

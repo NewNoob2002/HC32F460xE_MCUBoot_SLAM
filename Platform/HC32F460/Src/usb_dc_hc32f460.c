@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "bsp_board_config.h"
 #include "bsp_timebase.h"
 #include "bsp_write_protection.h"
 #include "hc32_ll.h"
@@ -73,8 +74,8 @@ static int usb_low_level_init(void) {
 
     (void)GPIO_StructInit(&gpio);
     gpio.u16PinAttr = PIN_ATTR_ANALOG;
-    (void)GPIO_Init(GPIO_PORT_A, GPIO_PIN_11 | GPIO_PIN_12, &gpio);
-    GPIO_SetFunc(GPIO_PORT_A, GPIO_PIN_09, GPIO_FUNC_10);
+    (void)GPIO_Init(BSP_USB_DATA_PORT, BSP_USB_DATA_PINS, &gpio);
+    GPIO_SetFunc(BSP_USB_VBUS_PORT, BSP_USB_VBUS_PIN, BSP_USB_VBUS_FUNCTION);
 
     FCG_Fcg1PeriphClockCmd(FCG1_PERIPH_USBFS, ENABLE);
     bsp_write_protection_restore();
