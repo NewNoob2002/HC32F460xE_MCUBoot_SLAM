@@ -34,7 +34,7 @@ target_compile_definitions(app_firmware PRIVATE
 target_link_libraries(app_firmware PRIVATE
     hc32_platform
     hc32_device
-    $<$<CONFIG:Debug>:hc32_easylogger>
+    $<$<CONFIG:Debug>:easylogger_port_hc32>
     mcuboot_bootutil
 )
 if(NOT APP_PHASE2_HIL_MODE STREQUAL "0")
@@ -60,7 +60,7 @@ target_link_libraries(usb_vendor_bulk_loopback PRIVATE
     cherryusb_device
     hc32_usb_device_port
     hc32_device
-    $<$<CONFIG:Debug>:hc32_easylogger>
+    $<$<CONFIG:Debug>:easylogger_port_hc32>
 )
 target_link_options(usb_vendor_bulk_loopback PRIVATE
     -T${PROJECT_SOURCE_DIR}/Linker/app.ld
@@ -98,7 +98,7 @@ target_link_libraries(usb_fw_updater PRIVATE
     fw_update_mcuboot
     hc32_usb_device_port
     hc32_device
-    $<$<CONFIG:Debug>:hc32_easylogger>
+    $<$<CONFIG:Debug>:easylogger_port_hc32>
     mcuboot_bootutil
 )
 target_link_options(usb_fw_updater PRIVATE

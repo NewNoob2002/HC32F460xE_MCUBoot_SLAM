@@ -1,6 +1,7 @@
 #include "app_confirm.h"
 #include "bsp_clock.h"
 #include "bsp_external_watchdog.h"
+#include "bsp_panic.h"
 #include "bsp_reset.h"
 #include "bsp_timebase.h"
 #include "usb_fw_update.h"
@@ -17,7 +18,7 @@ int main(void) {
 
     bsp_clock_init();
     if (!bsp_timebase_init())
-        for (;;) {}
+        bsp_panic("updater timebase init failed");
 #if defined(HC32_DEBUG_LOG)
     if (hc32_debug_log_init())
         elog_i("updater", "startup");
@@ -25,18 +26,15 @@ int main(void) {
     now_ms = bsp_millis();
     if (!bsp_external_watchdog_init(now_ms)) {
         g_usb_fw_update_init_result = -1;
-        for (;;) {}
+        bsp_panic("updater watchdog init failed");
     }
     g_usb_fw_update_init_result = usb_fw_update_init();
-    if (g_usb_fw_update_init_result != 0) {
-        for (;;) {
-            bsp_delay_ms(1U);
-            now_ms = bsp_millis();
-            bsp_external_watchdog_poll(now_ms);
-        }
-    }
+    if (g_usb_fw_update_init_result != 0)
+        bsp_panic("updater USB init failed");
 
     g_usb_fw_update_confirm_result = app_confirm_running_image(APP_AUTO_CONFIRM != 0);
+    if (g_usb_fw_update_confirm_result != 0)
+        bsp_panic("updater image confirmation failed");
 #if defined(HC32_DEBUG_LOG)
     elog_i("updater", "init=%d confirm=%d", g_usb_fw_update_init_result, g_usb_fw_update_confirm_result);
 #endif

@@ -2,6 +2,7 @@
 #include "bootutil/bootutil.h"
 #include "bsp_clock.h"
 #include "bsp_external_watchdog.h"
+#include "bsp_panic.h"
 #include "bsp_reset.h"
 #include "bsp_timebase.h"
 #include "usb_fw_update.h"
@@ -15,10 +16,11 @@ volatile int g_boot_recovery_init_result;
 static _Noreturn void run_recovery_updater(void) {
     uint32_t now_ms = bsp_millis();
 
-    if (!bsp_external_watchdog_init(now_ms)) {
-        for (;;) {}
-    }
+    if (!bsp_external_watchdog_init(now_ms))
+        bsp_panic("recovery watchdog init failed");
     g_boot_recovery_init_result = usb_fw_update_init();
+    if (g_boot_recovery_init_result != 0)
+        bsp_panic("recovery updater init failed");
     for (;;) {
         bsp_delay_ms(1U);
         now_ms = bsp_millis();
@@ -34,7 +36,7 @@ int main(void) {
 
     bsp_clock_init();
     if (!bsp_timebase_init())
-        for (;;) {}
+        bsp_panic("boot timebase init failed");
 #if defined(HC32_DEBUG_LOG)
     if (hc32_debug_log_init())
         elog_i("boot", "startup");

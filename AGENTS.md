@@ -18,8 +18,9 @@
 
 ## Ownership boundaries
 
-- Project code: `Boot/`, `App/`, `Platform/HC32F460/`, `components/mcuboot_port/`, `components/fw_update/`, `Tests/`, `cmake/`, `Config/`, `Linker/`, and `Tools/`.
-- Vendored code: `components/mcuboot-2.4.0/`, `components/cherryusb/`, most of `Drivers/`, and third-party `Libraries/`. Avoid edits there unless the task explicitly requires a vendor change.
+- Project code: `Boot/`, `App/`, `Platform/HC32F460/`, `components/fw_update/`, `Tests/`, `cmake/`, `Config/`, `Linker/`, and `Tools/`.
+- Vendored code: `components/mcuboot-2.4.0/`, `components/FlashDB-2.2.0/`, `components/cherryusb/`, most of `Drivers/`, and third-party `Libraries/`. Avoid edits there unless the task explicitly requires a vendor change.
+- Keep `components/` limited to vendored or portable component code. MCU-specific ports belong under `Platform/<MCU>/Ports/<component>/`.
 - Generated/output files: `build/`, generated `boot_memory_map.h`, generated signing-key sources, ELF/HEX/BIN/map files, and signed artifacts. Change their inputs, never the generated files.
 - Preserve unrelated working-tree changes, especially roadmap and evidence documents.
 
@@ -31,7 +32,7 @@
 - USB diagnostic entry: `App/Core/Src/usb_vendor_bulk_main.c`; it also services the external watchdog.
 - USB updater entry: `App/Core/Src/usb_fw_update_main.c`; callbacks publish events and the cooperative poll loop owns Manager, Flash and deferred reset work.
 - Host updater: `Tools/updater/`; CLI and future Slint GUI share `FirmwareImage`, `ProtocolV1Client` and `UpgradeWorkflow`.
-- MCUboot port: `components/mcuboot_port/` owns Flash areas, MCUboot configuration, assertions/logging, and the generated public-key bridge.
+- MCUboot port: `Platform/HC32F460/Ports/mcuboot/` owns Flash areas, MCUboot configuration, assertions/logging, and the generated public-key bridge.
 - Update core: `components/fw_update/src/` must remain host-buildable and platform-independent. Hardware/MCUboot access belongs in `components/fw_update/backends/`.
 
 ## Critical invariants

@@ -20,5 +20,5 @@ target_include_directories(fw_update_mcuboot PUBLIC
 target_include_directories(fw_update_mcuboot PRIVATE ${BOOTUTIL_ROOT}/src)
 target_link_libraries(fw_update_mcuboot
     PUBLIC fw_update_core
-    PRIVATE hc32_flashdb mcuboot_bootutil hc32_project_options
+    PRIVATE flashdb_port_hc32 mcuboot_bootutil hc32_project_options
 )

@@ -1,4 +1,5 @@
 #include "bsp_reset.h"
+#include "bsp_panic.h"
 #include "hc32_ll_rmu.h"
 uint32_t bsp_reset_capture(void) {
     /* Preserve the latched reset cause for the application after direct handover. */
@@ -10,5 +11,5 @@ bool bsp_reset_was_software(uint32_t flags) {
 }
 void bsp_system_reset(void) {
     NVIC_SystemReset();
-    for (;;) {}
+    bsp_panic("system reset returned");
 }

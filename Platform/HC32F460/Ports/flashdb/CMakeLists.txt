@@ -1,6 +1,6 @@
 set(FLASHDB_ROOT ${PROJECT_SOURCE_DIR}/components/FlashDB-2.2.0)
 
-add_library(hc32_flashdb STATIC
+add_library(flashdb_port_hc32 STATIC
     ${FLASHDB_ROOT}/src/fdb.c
     ${FLASHDB_ROOT}/src/fdb_kvdb.c
     ${FLASHDB_ROOT}/src/fdb_utils.c
@@ -9,12 +9,12 @@ add_library(hc32_flashdb STATIC
     ${FLASHDB_ROOT}/port/fal/src/fal_partition.c
     Src/fal_flash_hc32.c
 )
-target_include_directories(hc32_flashdb PUBLIC
+target_include_directories(flashdb_port_hc32 PUBLIC
     Inc
     ${FLASHDB_ROOT}/inc
     ${FLASHDB_ROOT}/port/fal/inc
 )
-target_link_libraries(hc32_flashdb
+target_link_libraries(flashdb_port_hc32
     PUBLIC mcuboot_port_hc32
     PRIVATE hc32_project_options
 )

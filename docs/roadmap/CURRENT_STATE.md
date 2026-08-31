@@ -31,6 +31,8 @@ CMakeLists.txt
     ├── hc32_usb_device_port -> hc32_platform
     ├── tinycrypt + mcuboot_asn1
     ├── mcuboot_port_hc32 -> hc32_platform
+    ├── flashdb_port_hc32 -> mcuboot_port_hc32
+    ├── easylogger_port_hc32 -> hc32_platform
     ├── mcuboot_bootutil -> mcuboot_port_hc32
     ├── fw_update_core
     ├── fw_update_mcuboot -> fw_update_core + mcuboot_bootutil
@@ -46,7 +48,24 @@ CMakeLists.txt
         └── hc32_platform reset/watchdog/clock
 ```
 
-Sources: `CMakeLists.txt`, `Drivers/CMakeLists.txt`, `Platform/CMakeLists.txt`, `components/CMakeLists.txt`, `components/mcuboot_port/CMakeLists.txt`, `Boot/CMakeLists.txt`, `App/CMakeLists.txt` and `Tests/CMakeLists.txt`.
+Sources: `CMakeLists.txt`, `Drivers/CMakeLists.txt`, `Platform/CMakeLists.txt`, `Platform/HC32F460/Ports/*/CMakeLists.txt`, `components/CMakeLists.txt`, `Boot/CMakeLists.txt`, `App/CMakeLists.txt` and `Tests/CMakeLists.txt`.
+
+Platform-independent code and MCU-specific ports follow this fixed ownership rule:
+
+```text
+components/
+├── mcuboot-2.4.0/
+├── FlashDB-2.2.0/
+├── cherryusb/
+└── fw_update/
+
+Platform/<MCU>/Ports/
+├── mcuboot/
+├── flashdb/
+└── easylogger/
+```
+
+Component CMake may depend on named port targets, but must not compile files through physical `Platform/` paths.
 
 ### Ownership and portability
 
@@ -56,9 +75,9 @@ Sources: `CMakeLists.txt`, `Drivers/CMakeLists.txt`, `Platform/CMakeLists.txt`, 
 | `App/` | Default App, Phase 4 loopback and `cafe:0002` production USB updater target | HC32-bound executables; updater callbacks defer Manager/Flash work to the Application poll loop |
 | `Config/` | Application, memory-map and product configuration inputs | Project-level policy only; HC32 DDL and board pin settings are excluded |
 | `components/mcuboot-2.4.0/` | Upstream validation, scratch swap, rollback and trailer state | Vendored upstream; project-specific edits are prohibited |
-| `components/mcuboot_port/` | Flash areas, MCUboot configuration, signing key bridge | HC32 implementation and generated memory map are coupled |
+| `components/` | MCUboot, FlashDB and CherryUSB upstream code plus the portable `fw_update` core/backends | MCU-specific ports are prohibited at the top level by the architecture check |
 | `components/fw_update/` | Portable Storage/Boot-Control contracts, Protocol V1 codec/parser, receive/verification Manager and MCUboot backends | Core is host-buildable and dependency-checked; MCUboot backend is intentionally non-portable |
-| `Platform/HC32F460/` | HC32 BSP, USB DCD, fault capture, syscalls, DDL selection and board pin configuration | Intentionally HC32-specific; `Config/` owns MCU/controller/pin settings and `Inc/` exposes BSP APIs |
+| `Platform/HC32F460/` | HC32 BSP, USB DCD, fault capture, syscalls, DDL selection, board pin configuration and component ports | `Ports/mcuboot`, `Ports/flashdb` and `Ports/easylogger` contain all HC32 component adaptation |
 | `Drivers/` | CMSIS/device/LL libraries and Boot/App startup objects | HC32-specific |
 | `Tests/` | Strict HostTests, Rust/C fake E2E, Golden Vectors, malformed corpus, architecture/USB boundary checks and reusable HIL assets | Production-signed Windows validation remains |
 | `Tools/updater/` | Shared Rust updater core, CLI, fake test link and blocking nusb adapter | Host-side protocol/workflow is portable; USB backend is nusb-specific |
@@ -109,7 +128,7 @@ With 25 sectors, three scratch-swap status states and 4-byte Flash write alignme
 | image OK | `0x31FE8` | `0x00041FE8` | `0x00073FE8` |
 | magic | `0x31FF0..0x31FFF` | `0x00041FF0..0x00041FFF` | `0x00073FF0..0x00073FFF` |
 
-Sources: `components/mcuboot-2.4.0/boot/bootutil/src/bootutil_area.c`, `bootutil_area.h`, `bootutil_misc.h`, `components/mcuboot_port/Src/flash_map_backend.c` and `components/mcuboot_port/Inc/mcuboot_config/mcuboot_config.h`.
+Sources: `components/mcuboot-2.4.0/boot/bootutil/src/bootutil_area.c`, `bootutil_area.h`, `bootutil_misc.h`, `Platform/HC32F460/Ports/mcuboot/Src/flash_map_backend.c` and `Platform/HC32F460/Ports/mcuboot/Inc/mcuboot_config/mcuboot_config.h`.
 
 The project reserve is deliberately larger than the currently computed trailer. Future code must use MCUboot APIs/helpers rather than copying these offsets.
 
@@ -148,8 +167,8 @@ usb_fw_updater alternative Application target
 Repository entry points:
 
 - Boot entry and `boot_go`: `Boot/Core/Src/main.c`.
-- MCUboot configuration: `components/mcuboot_port/Inc/mcuboot_config/mcuboot_config.h`.
-- Flash areas: `components/mcuboot_port/Src/flash_map_backend.c`.
+- MCUboot configuration: `Platform/HC32F460/Ports/mcuboot/Inc/mcuboot_config/mcuboot_config.h`.
+- Flash areas: `Platform/HC32F460/Ports/mcuboot/Src/flash_map_backend.c`.
 - Handover validation/state cleanup: `Platform/HC32F460/Src/boot_handover.c`.
 - App entry/confirmation: `App/Core/Src/main.c` and `App/Core/Src/app_confirm.c`.
 

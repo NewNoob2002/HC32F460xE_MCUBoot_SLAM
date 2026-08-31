@@ -30,7 +30,7 @@ target_link_libraries(boot_firmware PRIVATE
     fw_update_mcuboot
     hc32_usb_device_port
     hc32_device
-    $<$<CONFIG:Debug>:hc32_easylogger>
+    $<$<CONFIG:Debug>:easylogger_port_hc32>
     mcuboot_bootutil
 )
 target_link_options(boot_firmware PRIVATE

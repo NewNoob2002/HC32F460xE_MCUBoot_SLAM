@@ -3,10 +3,7 @@ set(TINYCRYPT_ROOT ${MCUBOOT_ROOT}/ext/tinycrypt/lib)
 set(MCUBOOT_ASN1_ROOT ${MCUBOOT_ROOT}/ext/mbedtls-asn1)
 set(BOOTUTIL_ROOT ${MCUBOOT_ROOT}/boot/bootutil)
 
-add_subdirectory(mcuboot_port)
-add_subdirectory(flashdb_port)
 add_subdirectory(cherryusb)
-add_subdirectory(easylogger EXCLUDE_FROM_ALL)
 
 add_library(tinycrypt STATIC
     ${TINYCRYPT_ROOT}/source/sha256.c
@@ -41,20 +38,16 @@ add_library(mcuboot_bootutil STATIC
     ${BOOTUTIL_ROOT}/src/swap_misc.c
     ${BOOTUTIL_ROOT}/src/swap_scratch.c
     ${BOOTUTIL_ROOT}/src/tlv.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/mcuboot_port/Src/config_checks.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/mcuboot_port/Src/keys.c
-    ${MCUBOOT_PUBLIC_KEY_SOURCE}
 )
 target_include_directories(mcuboot_bootutil
     PUBLIC
         ${BOOTUTIL_ROOT}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/mcuboot_port/Inc
     PRIVATE
         ${BOOTUTIL_ROOT}/src
 )
 target_link_libraries(mcuboot_bootutil
     PUBLIC mcuboot_port_hc32
-    PRIVATE tinycrypt mcuboot_asn1 hc32_project_options $<$<CONFIG:Debug>:hc32_easylogger>
+    PRIVATE tinycrypt mcuboot_asn1 hc32_project_options $<$<CONFIG:Debug>:easylogger_port_hc32>
 )
 target_compile_options(mcuboot_bootutil PRIVATE $<$<CONFIG:Release>:-UNDEBUG>)
 

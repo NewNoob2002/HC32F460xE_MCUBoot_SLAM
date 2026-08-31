@@ -4,10 +4,10 @@ add_test(NAME memory_map COMMAND memory_map_tests)
 
 add_executable(flash_map_tests
     flash_map_tests.c
-    ${PROJECT_SOURCE_DIR}/components/mcuboot_port/Src/flash_map_backend.c
+    ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Ports/mcuboot/Src/flash_map_backend.c
 )
 target_include_directories(flash_map_tests PRIVATE
-    "${PROJECT_SOURCE_DIR}/components/mcuboot_port/Inc"
+    "${PROJECT_SOURCE_DIR}/Platform/HC32F460/Ports/mcuboot/Inc"
     "${PROJECT_SOURCE_DIR}/Platform/HC32F460/Inc"
     "${CMAKE_BINARY_DIR}/generated/Config"
 )
@@ -30,7 +30,7 @@ add_executable(app_confirm_tests
 target_include_directories(app_confirm_tests PRIVATE
     "${PROJECT_SOURCE_DIR}/App/Core/Inc"
     "${PROJECT_SOURCE_DIR}/components/mcuboot-2.4.0/boot/bootutil/include"
-    "${PROJECT_SOURCE_DIR}/components/mcuboot_port/Inc"
+    "${PROJECT_SOURCE_DIR}/Platform/HC32F460/Ports/mcuboot/Inc"
     "${CMAKE_BINARY_DIR}/generated/Config"
 )
 add_test(NAME app_confirm COMMAND app_confirm_tests)
@@ -64,7 +64,7 @@ set_source_files_properties(${FLASHDB_TEST_SOURCES} PROPERTIES COMPILE_OPTIONS "
 target_include_directories(product_config_flashdb_tests PRIVATE
     ${PROJECT_SOURCE_DIR}/components/fw_update/include
     ${PROJECT_SOURCE_DIR}/components/fw_update/backends/flashdb/include
-    ${PROJECT_SOURCE_DIR}/components/flashdb_port/Inc
+    ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Ports/flashdb/Inc
     ${FLASHDB_ROOT}/inc
     ${FLASHDB_ROOT}/port/fal/inc
     ${CMAKE_BINARY_DIR}/generated/Config
@@ -82,7 +82,7 @@ add_executable(fw_update_mcuboot_backend_tests
 target_include_directories(fw_update_mcuboot_backend_tests PRIVATE
     ${PROJECT_SOURCE_DIR}/components/fw_update/include
     ${PROJECT_SOURCE_DIR}/components/fw_update/backends/mcuboot/include
-    ${PROJECT_SOURCE_DIR}/components/mcuboot_port/Inc
+    ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Ports/mcuboot/Inc
     ${CMAKE_BINARY_DIR}/generated/Config
 )
 target_include_directories(fw_update_mcuboot_backend_tests SYSTEM PRIVATE

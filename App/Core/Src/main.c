@@ -1,5 +1,6 @@
 #include "app_confirm.h"
 #include "bsp_clock.h"
+#include "bsp_panic.h"
 #include "bsp_timebase.h"
 #if defined(HC32_DEBUG_LOG)
 #include "elog.h"
@@ -14,7 +15,7 @@ volatile int g_app_confirm_result;
 int main(void) {
     bsp_clock_init();
     if (!bsp_timebase_init())
-        for (;;) {}
+        bsp_panic("app timebase init failed");
 #if defined(HC32_DEBUG_LOG)
     if (hc32_debug_log_init())
         elog_i("app", "startup");
@@ -24,6 +25,8 @@ int main(void) {
 #else
     g_app_confirm_result = app_confirm_running_image(APP_AUTO_CONFIRM != 0);
 #endif
+    if (g_app_confirm_result != 0)
+        bsp_panic("app startup check failed");
 #if defined(HC32_DEBUG_LOG)
     elog_i("app", "confirm result=%d", g_app_confirm_result);
 #endif

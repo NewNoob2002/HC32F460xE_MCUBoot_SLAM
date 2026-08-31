@@ -43,7 +43,7 @@ Establishes the protected Boot/App/MCUboot/platform baseline.
 
 ### Files / Components
 
-Existing `Boot/`, `App/`, `Platform/HC32F460/`, `components/mcuboot_port/`, build scripts, HostTests and `evidence/hil/`.
+Existing `Boot/`, `App/`, `Platform/HC32F460/Ports/mcuboot/`, build scripts, HostTests and `evidence/hil/`.
 
 ### API Impact
 
