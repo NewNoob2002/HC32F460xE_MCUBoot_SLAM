@@ -31,6 +31,7 @@
 - Default App entry: `App/Core/Src/main.c` initializes clocks and optionally calls `app_confirm_running_image()`.
 - USB diagnostic entry: `App/Core/Src/usb_vendor_bulk_main.c`; it also services the external watchdog.
 - USB updater entry: `App/Core/Src/usb_fw_update_main.c`; callbacks publish events and the cooperative poll loop owns Manager, Flash and deferred reset work.
+- Active-low RGB status LED: PA0=red, PA1=green, PA2=blue. Boot is solid blue; recovery is slow red; firmware update is fast blue; default App is green heartbeat; updater App is blue heartbeat; USB diagnostic App is cyan heartbeat; panic/error is solid red.
 - Host updater: `Tools/updater/`; CLI and future Slint GUI share `FirmwareImage`, `ProtocolV1Client` and `UpgradeWorkflow`.
 - MCUboot port: `Platform/HC32F460/Ports/mcuboot/` owns Flash areas, MCUboot configuration, assertions/logging, and the generated public-key bridge.
 - Update core: `components/fw_update/src/` must remain host-buildable and platform-independent. Hardware/MCUboot access belongs in `components/fw_update/backends/`.
@@ -97,8 +98,10 @@ python3 Tests/HIL/verify_evidence.py
 
 ## Programmable artifacts and hardware safety
 
+- Before every J-Link flash or USB updater install, state the build configuration and exact artifact path, role, and destination. For raw binaries, state the absolute Flash address; for USB installs, state that delivery is protocol-controlled Secondary-only.
 - Direct-program only `build/<preset>/Boot/boot_firmware.bin` at `0x00000000`, a matching `*_primary.bin` at `0x00010000`, or a matching `*_update.bin` at `0x00042000`, under an approved HIL preflight.
 - USB updater `install` accepts `artifacts/updater_signed.bin`; do not pass the 204800-byte slot-padded `updater_primary.bin` or `updater_update.bin`. Raw linked payloads are not direct-programming artifacts.
+- Never mix artifacts from different presets or silently substitute files from `build/HIL/`, `evidence/`, or an earlier build. Any exceptional artifact must be named explicitly and checksum-verified before use.
 - Before programming, identify the exact probe and target, verify addresses and artifact hashes, preserve required device data, and avoid the Reserved region. Do not claim HIL success without retained logs/evidence.
 
 ## Change discipline

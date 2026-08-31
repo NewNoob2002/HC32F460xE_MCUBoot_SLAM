@@ -23,6 +23,16 @@ target_include_directories(boot_handover_tests PRIVATE
 target_compile_definitions(boot_handover_tests PRIVATE BOOT_HOST_TEST)
 add_test(NAME boot_handover COMMAND boot_handover_tests)
 
+add_executable(status_led_tests
+    status_led_tests.c
+    ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Src/bsp_status_led.c
+)
+target_include_directories(status_led_tests PRIVATE
+    "${PROJECT_SOURCE_DIR}/Platform/HC32F460/Inc"
+)
+target_compile_definitions(status_led_tests PRIVATE BOOT_HOST_TEST)
+add_test(NAME status_led COMMAND status_led_tests)
+
 add_executable(app_confirm_tests
     app_confirm_tests.c
     ${PROJECT_SOURCE_DIR}/App/Core/Src/app_confirm.c

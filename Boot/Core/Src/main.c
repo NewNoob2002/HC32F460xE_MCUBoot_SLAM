@@ -4,6 +4,7 @@
 #include "bsp_external_watchdog.h"
 #include "bsp_panic.h"
 #include "bsp_reset.h"
+#include "bsp_status_led.h"
 #include "bsp_timebase.h"
 #include "usb_fw_update.h"
 #if defined(HC32_DEBUG_LOG)
@@ -16,6 +17,7 @@ volatile int g_boot_recovery_init_result;
 static _Noreturn void run_recovery_updater(void) {
     uint32_t now_ms = bsp_millis();
 
+    bsp_status_led_set_mode(BSP_STATUS_LED_MODE_RECOVERY);
     if (!bsp_external_watchdog_init(now_ms))
         bsp_panic("recovery watchdog init failed");
     g_boot_recovery_init_result = usb_fw_update_init();
@@ -35,6 +37,9 @@ int main(void) {
     FIH_DECLARE(rc, FIH_FAILURE);
 
     bsp_clock_init();
+    if (!bsp_status_led_init())
+        bsp_panic("boot status LED init failed");
+    bsp_status_led_set_mode(BSP_STATUS_LED_MODE_BOOT);
     if (!bsp_timebase_init())
         bsp_panic("boot timebase init failed");
 #if defined(HC32_DEBUG_LOG)
@@ -42,7 +47,11 @@ int main(void) {
         elog_i("boot", "startup");
 #endif
     FIH_CALL(boot_go, rc, &rsp);
-    if (FIH_NOT_EQ(rc, FIH_SUCCESS))
+    if (FIH_NOT_EQ(rc, FIH_SUCCESS)) {
+#if defined(HC32_DEBUG_LOG)
+        elog_i("boot", "no valid image found, running recovery updater");
+#endif
         run_recovery_updater();
+    }
     boot_handover(&rsp);
 }

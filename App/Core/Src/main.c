@@ -1,6 +1,7 @@
 #include "app_confirm.h"
 #include "bsp_clock.h"
 #include "bsp_panic.h"
+#include "bsp_status_led.h"
 #include "bsp_timebase.h"
 #if defined(HC32_DEBUG_LOG)
 #include "elog.h"
@@ -14,6 +15,9 @@ volatile int g_app_confirm_result;
 
 int main(void) {
     bsp_clock_init();
+    if (!bsp_status_led_init())
+        bsp_panic("app status LED init failed");
+    bsp_status_led_set_mode(BSP_STATUS_LED_MODE_APP_PRIMARY);
     if (!bsp_timebase_init())
         bsp_panic("app timebase init failed");
 #if defined(HC32_DEBUG_LOG)
@@ -30,5 +34,8 @@ int main(void) {
 #if defined(HC32_DEBUG_LOG)
     elog_i("app", "confirm result=%d", g_app_confirm_result);
 #endif
-    for (;;) {}
+    for (;;) {
+        bsp_delay_ms(1U);
+        bsp_status_led_poll(bsp_millis());
+    }
 }

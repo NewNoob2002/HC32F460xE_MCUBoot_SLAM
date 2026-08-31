@@ -3,6 +3,7 @@
 #include "bsp_external_watchdog.h"
 #include "bsp_panic.h"
 #include "bsp_reset.h"
+#include "bsp_status_led.h"
 #include "bsp_timebase.h"
 #include "usb_fw_update.h"
 #if defined(HC32_DEBUG_LOG)
@@ -17,6 +18,9 @@ int main(void) {
     uint32_t now_ms;
 
     bsp_clock_init();
+    if (!bsp_status_led_init())
+        bsp_panic("updater status LED init failed");
+    bsp_status_led_set_mode(BSP_STATUS_LED_MODE_APP_UPDATER);
     if (!bsp_timebase_init())
         bsp_panic("updater timebase init failed");
 #if defined(HC32_DEBUG_LOG)

@@ -6,6 +6,7 @@ add_library(hc32_platform STATIC
     HC32F460/Src/bsp_log_uart.c
     HC32F460/Src/bsp_panic.c
     HC32F460/Src/bsp_reset.c
+    HC32F460/Src/bsp_status_led.c
     HC32F460/Src/bsp_timebase.c
     HC32F460/Src/bsp_usb.c
     HC32F460/Src/bsp_write_protection.c

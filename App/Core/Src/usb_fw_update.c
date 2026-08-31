@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "bsp_critical.h"
+#include "bsp_status_led.h"
 #include "bsp_usb.h"
 #include "fw_update/boot_control_mcuboot.h"
 #include "fw_update/manager.h"
@@ -143,6 +144,20 @@ static uint8_t tx_active;
 
 volatile uint32_t g_usb_fw_update_errors;
 volatile int g_usb_fw_update_last_result;
+
+static void update_status_led(uint32_t now_ms) {
+    enum bsp_status_led_mode mode =
+        USB_FW_UPDATE_BOOT_RECOVERY != 0 ? BSP_STATUS_LED_MODE_RECOVERY : BSP_STATUS_LED_MODE_APP_UPDATER;
+    const enum fw_update_manager_state state = fw_update_manager_get_state(&manager);
+    if (state == FW_UPDATE_MANAGER_STATE_PREPARING || state == FW_UPDATE_MANAGER_STATE_RECEIVING
+        || state == FW_UPDATE_MANAGER_STATE_VERIFYING || state == FW_UPDATE_MANAGER_STATE_READY_TO_COMMIT
+        || state == FW_UPDATE_MANAGER_STATE_COMMITTING || state == FW_UPDATE_MANAGER_STATE_COMPLETED)
+        mode = BSP_STATUS_LED_MODE_UPDATE;
+    else if (state == FW_UPDATE_MANAGER_STATE_ABORTED || state == FW_UPDATE_MANAGER_STATE_ERROR)
+        mode = BSP_STATUS_LED_MODE_ERROR;
+    bsp_status_led_set_mode(mode);
+    bsp_status_led_poll(now_ms);
+}
 
 static void update_out(uint8_t busid, uint8_t ep, uint32_t nbytes) {
     (void)busid;
@@ -325,6 +340,7 @@ enum usb_fw_update_action usb_fw_update_poll(uint32_t now_ms) {
     }
 
     g_usb_fw_update_last_result = fw_update_manager_poll(&manager, now_ms);
+    update_status_led(now_ms);
     return fw_update_manager_take_action(&manager) == FW_UPDATE_MANAGER_ACTION_RESET ? USB_FW_UPDATE_ACTION_RESET
                                                                                      : USB_FW_UPDATE_ACTION_NONE;
 }
