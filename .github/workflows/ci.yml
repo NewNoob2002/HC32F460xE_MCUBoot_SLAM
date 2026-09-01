@@ -73,10 +73,9 @@ jobs:
             -DMCUBOOT_SIGNING_KEY=${{ github.workspace }}/build/ci-keys/debug.pem
           cmake --build build/Debug --parallel
           cmake --build build/Debug --target verify_app_image
-          cmake --build build/Debug --target verify_usb_loopback_image
-          cmake --build build/Debug --target verify_updater_image
+          cmake --build build/Debug --target verify_winusb_descriptors
           cmake --build build/Debug --target verify_newlib_syscalls
-          arm-none-eabi-size build/Debug/Boot/boot_firmware.elf build/Debug/App/app_firmware.elf build/Debug/App/usb_fw_updater.elf
+          arm-none-eabi-size build/Debug/Boot/boot_firmware.elf build/Debug/App/app-1.0.0.elf
 
       - name: Check Release signing-key policy
         run: |
@@ -106,7 +105,6 @@ jobs:
             -DMCUBOOT_SIGNING_KEY=${{ github.workspace }}/build/ci-keys/release.pem
           cmake --build build/Release --parallel
           cmake --build build/Release --target verify_app_image
-          cmake --build build/Release --target verify_usb_loopback_image
-          cmake --build build/Release --target verify_updater_image
+          cmake --build build/Release --target verify_winusb_descriptors
           cmake --build build/Release --target verify_newlib_syscalls
-          arm-none-eabi-size build/Release/Boot/boot_firmware.elf build/Release/App/app_firmware.elf build/Release/App/usb_fw_updater.elf
+          arm-none-eabi-size build/Release/Boot/boot_firmware.elf build/Release/App/app-1.0.0.elf
