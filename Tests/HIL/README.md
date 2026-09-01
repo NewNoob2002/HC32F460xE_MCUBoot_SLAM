@@ -12,9 +12,9 @@ cmake \
   -DHIL_OUTPUT_DIR=build/HIL/commands \
   -DHIL_BACKUP_BIN=build/HIL/evidence/backup_before_hil.bin \
   -DHIL_BOOT_BIN=build/HIL/v1/Boot/boot_firmware.bin \
-  -DHIL_V1_PRIMARY_BIN=build/HIL/v1/artifacts/app_primary.bin \
-  -DHIL_V2_TEST_BIN=build/HIL/v2-test/artifacts/app_update.bin \
-  -DHIL_V2_CONFIRM_BIN=build/HIL/v2-confirm/artifacts/app_update.bin \
+  -DHIL_V1_PRIMARY_BIN=build/HIL/v1/artifacts/app-primary-1.0.0.bin \
+  -DHIL_V2_TEST_BIN=build/HIL/v2-test/artifacts/app-update-2.0.0.bin \
+  -DHIL_V2_CONFIRM_BIN=build/HIL/v2-confirm/artifacts/app-update-2.0.0.bin \
   -P Tests/HIL/render_scripts.cmake
 ~~~
 

@@ -1,6 +1,10 @@
 function(add_firmware_artifacts target)
-    set(hex_file "${CMAKE_CURRENT_BINARY_DIR}/${target}.hex")
-    set(bin_file "${CMAKE_CURRENT_BINARY_DIR}/${target}.bin")
+    get_target_property(output_name ${target} OUTPUT_NAME)
+    if(NOT output_name)
+        set(output_name "${target}")
+    endif()
+    set(hex_file "${CMAKE_CURRENT_BINARY_DIR}/${output_name}.hex")
+    set(bin_file "${CMAKE_CURRENT_BINARY_DIR}/${output_name}.bin")
     target_link_options(${target} PRIVATE -Wl,--print-memory-usage)
     add_custom_command(TARGET ${target} POST_BUILD
         BYPRODUCTS "${hex_file}" "${bin_file}"
@@ -18,11 +22,15 @@ function(add_mcuboot_signed_artifacts target)
         set(artifact_name "${ARGV1}")
     endif()
     set(artifact_dir "${CMAKE_BINARY_DIR}/artifacts")
-    set(raw_image "${CMAKE_CURRENT_BINARY_DIR}/${target}.bin")
-    set(signed_image "${artifact_dir}/${artifact_name}_signed.bin")
-    set(primary_image "${artifact_dir}/${artifact_name}_primary.bin")
-    set(update_image "${artifact_dir}/${artifact_name}_update.bin")
-    set(verify_stamp "${artifact_dir}/verify_${artifact_name}_image.stamp")
+    get_target_property(output_name ${target} OUTPUT_NAME)
+    if(NOT output_name)
+        set(output_name "${target}")
+    endif()
+    set(raw_image "${CMAKE_CURRENT_BINARY_DIR}/${output_name}.bin")
+    set(signed_image "${artifact_dir}/${artifact_name}-signed-${APP_VERSION}.bin")
+    set(primary_image "${artifact_dir}/${artifact_name}-primary-${APP_VERSION}.bin")
+    set(update_image "${artifact_dir}/${artifact_name}-update-${APP_VERSION}.bin")
+    set(verify_stamp "${artifact_dir}/verify-${artifact_name}-${APP_VERSION}.stamp")
     set(sign_args
         sign
         --align "${FLASH_WRITE_ALIGN}"

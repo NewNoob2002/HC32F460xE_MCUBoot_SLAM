@@ -74,10 +74,14 @@ USB install
   -> Application enumeration and version/SN verification
 ```
 
-`usb_fw_updater` initializes clock, status LED, timebase, debug UART, watchdog,
-FlashDB, Manager and USB, then confirms the running image after initialization.
+The single `app_firmware` target initializes clock, status LED, timebase, debug
+logging, watchdog, FlashDB, Manager and USB, then confirms the running image.
 USB callbacks publish events; the cooperative poll loop owns protocol, Flash and
 reset work.
+
+Debug Application EasyLogger output is mirrored to the existing UART and SEGGER
+RTT channel 0. The Debug App places `_SEGGER_RTT` at `0x1FFF8000`
+for J-Link MCP reconnect across reset. Boot and Release firmware remain UART-only.
 
 Boot's frozen scope is secure image selection/swap, invalid-image USB recovery,
 recovery-only provisioning and validated handover. Successful handover never
@@ -137,9 +141,11 @@ Known deferred host issues for a later node:
 - Retained evidence integrity is checked by `Tests/HIL/verify_evidence.py`.
 - Product Config v3 HIL is retained under
   `evidence/hil/2026-09-01-product-config-v3/`.
-- Final Boot freeze HIL is retained under
-  `evidence/hil/2026-09-01-boot-freeze-final/`; the frozen source is tagged
-  `boot-freeze-2026-09-01`.
+- Initial Boot freeze HIL is retained under
+  `evidence/hil/2026-09-01-boot-freeze-final/`. The final single-App, USB
+  descriptor and RTT HIL is retained locally under
+  `build/local-evidence-backup/2026-09-01-single-app-hil/`; the frozen source
+  is tagged `boot-freeze-2026-09-01-v2`.
 - Earlier evidence covers rollback/confirmation, Secondary isolation, protocol
   corpus, USB loopback endurance, Boot recovery/bootstrap, Application upgrade,
   GUI installation and exact restoration.

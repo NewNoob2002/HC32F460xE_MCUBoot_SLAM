@@ -5,6 +5,9 @@
 
 #include "bsp_log_uart.h"
 #include "bsp_timebase.h"
+#if defined(HC32_ELOG_RTT)
+#include "SEGGER_RTT.h"
+#endif
 
 static char g_time_buffer[16];
 
@@ -18,6 +21,9 @@ ElogErrCode elog_port_deinit(void) {
 
 void elog_port_output(const char* log, size_t size) {
     (void)bsp_log_uart_write(log, size);
+#if defined(HC32_ELOG_RTT)
+    (void)SEGGER_RTT_Write(0U, log, (unsigned)size);
+#endif
 }
 
 void elog_port_output_lock(void) {}
@@ -40,6 +46,9 @@ const char* elog_port_get_t_info(void) {
 bool hc32_debug_log_init(void) {
     if (!bsp_log_uart_init())
         return false;
+#if defined(HC32_ELOG_RTT)
+    SEGGER_RTT_Init();
+#endif
     if (elog_init() != ELOG_NO_ERR)
         return false;
 

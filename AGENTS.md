@@ -6,9 +6,9 @@
 
 - Bare-metal HC32F460xE Boot + App firmware built with CMake/Ninja and GNU Arm Embedded.
 - MCUboot 2.4.0 uses one image, ECDSA-P256 verification, Primary/Secondary slots, scratch swap, rollback, and application confirmation.
-- `components/fw_update/` contains the portable protocol/manager plus MCUboot storage and boot-control backends. `usb_fw_updater` wires it to the production Application USB poll loop.
+- `components/fw_update/` contains the portable protocol/manager plus MCUboot storage and boot-control backends. The single `app_firmware` target wires it to the production Application USB poll loop.
 - `Tools/updater/` contains the shared Rust CLI/Slint GUI, blocking nusb adapter, Product Config v3 and SN-bound reconnect workflow. Linux and HC32 HIL pass; signed Windows packaging, UART/CAN and G5 closure remain pending.
-- `usb_vendor_bulk_loopback` and `Tools/host/usb_loopback.py` remain Phase 4 regression-only paths.
+- `Tools/host/usb_loopback.py` remains a host-side Phase 4 regression utility; no loopback firmware target is built.
 
 ## Navigate before editing
 
@@ -28,9 +28,7 @@
 
 - Boot entry: `Boot/Core/Src/main.c` -> `bsp_clock_init()` -> `boot_go()` -> `boot_handover()`.
 - Handover: `Platform/HC32F460/Src/boot_handover.c` accepts only internal Primary with the fixed header, validates MSP/Thumb reset vectors, clears interrupt/SysTick state, then uses a small assembly trampoline to restore CONTROL/MSP and branch.
-- Default App entry: `App/Core/Src/main.c` initializes clocks and optionally calls `app_confirm_running_image()`.
-- USB diagnostic entry: `App/Core/Src/usb_vendor_bulk_main.c`; it also services the external watchdog.
-- USB updater entry: `App/Core/Src/usb_fw_update_main.c`; callbacks publish events and the cooperative poll loop owns Manager, Flash and deferred reset work.
+- Application entry: `App/Core/Src/main.c` initializes clocks, watchdog, USB updater and image confirmation; callbacks publish events and the cooperative poll loop owns Manager, Flash and deferred reset work.
 - Active-low RGB status LED: PA0=red, PA1=green, PA2=blue. Boot is solid blue; recovery is slow red; firmware update is fast blue; default App is green heartbeat; updater App is blue heartbeat; USB diagnostic App is cyan heartbeat; panic/error is solid red.
 - Host updater: `Tools/updater/`; CLI and Slint GUI share `FirmwareImage`, `ProtocolV1Client` and `UpgradeWorkflow`.
 - MCUboot port: `Platform/HC32F460/Ports/mcuboot/` owns Flash areas, MCUboot configuration, assertions/logging, and the generated public-key bridge.
@@ -75,7 +73,7 @@ Build and verify Debug firmware for firmware/CMake/linker changes:
 ```sh
 cmake --preset Debug -DAPP_VERSION=1.0.0 -DAPP_AUTO_CONFIRM=ON
 cmake --build build/Debug --clean-first --parallel
-cmake --build build/Debug --target verify_app_image verify_usb_loopback_image verify_updater_image verify_newlib_syscalls
+cmake --build build/Debug --target verify_app_image verify_winusb_descriptors verify_newlib_syscalls
 ```
 
 Release verification requires an existing ECDSA-P256 key outside the repository:
@@ -83,7 +81,7 @@ Release verification requires an existing ECDSA-P256 key outside the repository:
 ```sh
 cmake --preset Release -DMCUBOOT_SIGNING_KEY=/secure/path/release-ec-p256.pem
 cmake --build build/Release --clean-first --parallel
-cmake --build build/Release --target verify_app_image verify_usb_loopback_image verify_updater_image verify_newlib_syscalls
+cmake --build build/Release --target verify_app_image verify_winusb_descriptors verify_newlib_syscalls
 ```
 
 Verify retained evidence when changing HIL assets, evidence manifests, or release documentation:
@@ -100,7 +98,7 @@ python3 Tests/HIL/verify_evidence.py
 
 - Before every J-Link flash or USB updater install, state the build configuration and exact artifact path, role, and destination. For raw binaries, state the absolute Flash address; for USB installs, state that delivery is protocol-controlled Secondary-only.
 - Direct-program only `build/<preset>/Boot/boot_firmware.bin` at `0x00000000`, a matching `*_primary.bin` at `0x00010000`, or a matching `*_update.bin` at `0x00042000`, under an approved HIL preflight.
-- USB updater `install` accepts `artifacts/updater_signed.bin`; do not pass the 204800-byte slot-padded `updater_primary.bin` or `updater_update.bin`. Raw linked payloads are not direct-programming artifacts.
+- USB updater `install` accepts `artifacts/app-signed-<version>.bin`; do not pass the 204800-byte slot-padded `app-primary-<version>.bin` or `app-update-<version>.bin`. Raw linked payloads are not direct-programming artifacts.
 - Never mix artifacts from different presets or silently substitute files from `build/HIL/`, `evidence/`, or an earlier build. Any exceptional artifact must be named explicitly and checksum-verified before use.
 - Before programming, identify the exact probe and target, verify addresses and artifact hashes, preserve required device data, and avoid the Reserved region. Do not claim HIL success without retained logs/evidence.
 

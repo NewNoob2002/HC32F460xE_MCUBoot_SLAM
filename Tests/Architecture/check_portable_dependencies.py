@@ -9,6 +9,7 @@ COMPONENTS_DIR = ROOT / "components"
 ALLOWED_COMPONENT_ENTRIES = {
     "CMakeLists.txt",
     "FlashDB-2.2.0",
+    "SEGGER_RTT",
     "cherryusb",
     "fw_update",
     "mcuboot-2.4.0",

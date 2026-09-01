@@ -47,7 +47,7 @@ Not implemented:
 
 Critical integration fact:
 
-The runtime artifact is unpadded app_signed.bin and may not end on the Storage
+The runtime artifact is unpadded app-signed-<version>.bin and may not end on the Storage
 write alignment. Protocol DATA is not allowed to inherit Flash alignment.
 Manager coalesces arbitrary DATA bytes in one bounded work buffer, writes only
 aligned prefixes, and pads only the final physical write with erased_value;

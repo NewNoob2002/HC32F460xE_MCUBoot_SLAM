@@ -200,9 +200,7 @@ G3 passed; CherryUSB tag/commit/license and HC32 DCD boundary are reviewed; safe
 
 ```sh
 cmake --preset Debug --fresh
-cmake --build build/Debug --target usb_vendor_bulk_loopback --parallel
-python3 Tools/host/usb_loopback.py descriptors
-python3 Tools/host/usb_loopback.py run --iterations 10000 --lengths 0,1,63,64,65,512,1024
+cmake --build build/Debug --target app_firmware --parallel
 python3 Tests/Architecture/check_portable_dependencies.py
 ```
 

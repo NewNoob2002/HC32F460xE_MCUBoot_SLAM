@@ -20,7 +20,7 @@ for input in "$cli" "$gui"; do
         -readpass "$HC32_WINDOWS_SIGN_PASSWORD_FILE" \
         -h sha256 \
         -ts "$HC32_WINDOWS_TIMESTAMP_URL" \
-        -n "HC32 Firmware Updater" \
+        -n "Slam-ChargerManager USB" \
         -in "$input" \
         -out "$output"
     if test -n "${HC32_WINDOWS_SIGN_CA_FILE:-}"; then

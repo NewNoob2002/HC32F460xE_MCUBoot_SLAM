@@ -1,4 +1,4 @@
-HC32 Firmware Updater
+Slam-ChargerManager USB
 
 No installation is required. Keep both executables in this directory.
 

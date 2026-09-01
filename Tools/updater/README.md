@@ -39,8 +39,8 @@ PID must be inside the approved range in the product identity file and cannot
 equal the fixed Boot PID. The signed-image compatibility identity remains a
 build-time constant and is not changed by provisioning.
 
-Use `artifacts/updater_signed.bin` with `install`. The slot-padded
-`updater_primary.bin` and `updater_update.bin` are not protocol-transfer inputs.
+Use `artifacts/app-signed-<version>.bin` with `install`. The slot-padded
+`app-primary-<version>.bin` and `app-update-<version>.bin` are not protocol-transfer inputs.
 Set the Application/MCUboot image version when configuring the firmware build,
 for example `cmake --preset Debug -DAPP_VERSION=2.0.0 -DAPP_AUTO_CONFIRM=ON`.
 The accepted form is `MAJOR.MINOR.REVISION[+BUILD]`.

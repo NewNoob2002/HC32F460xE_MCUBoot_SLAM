@@ -123,6 +123,13 @@ SECTIONS
 
     __etext = ALIGN(4);
 
+    .rtt_cb (NOLOAD) :
+    {
+        . = ALIGN(8);
+        KEEP(*(.rtt_cb))
+        . = ALIGN(8);
+    } >RAM
+
     .data : AT (__etext)
     {
         . = ALIGN(4);

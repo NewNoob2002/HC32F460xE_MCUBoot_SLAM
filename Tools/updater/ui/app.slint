@@ -146,7 +146,7 @@ export component UpdaterWindow inherits Window {
                             LineEdit {
                                 text <=> root.firmware-path;
                                 enabled: !root.busy;
-                                placeholder-text: "Path to updater_signed.bin";
+                                placeholder-text: "Path to app-signed-<version>.bin";
                             }
 
                             Button {

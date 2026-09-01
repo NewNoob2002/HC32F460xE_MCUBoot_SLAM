@@ -24,7 +24,15 @@ def device_descriptor(vid: int, pid: int) -> bytes:
     )
 
 
-def verify(path: str, vid: int, pid: int, serial_prefix: str, mode: str) -> None:
+def verify(
+    path: str,
+    vid: int,
+    pid: int,
+    serial_prefix: str,
+    manufacturer: str,
+    product: str,
+    mode: str,
+) -> None:
     image = Path(path).read_bytes()
     require_once(image, device_descriptor(vid, pid), f"{mode} device descriptor")
     require_once(
@@ -46,15 +54,34 @@ def verify(path: str, vid: int, pid: int, serial_prefix: str, mode: str) -> None
         f"{mode} WinUSB interface GUID property",
     )
     require_present(image, serial_prefix.encode(), f"{mode} UQID serial prefix")
+    require_once(image, manufacturer.encode(), f"{mode} manufacturer string")
+    require_once(image, product.encode(), f"{mode} product string")
     if b"HC32F460-PHASE5-0001" in image:
         raise SystemExit(f"{mode}: lab-only serial remains in firmware")
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 7:
+    if len(sys.argv) != 10:
         raise SystemExit(
-            "usage: verify_winusb_descriptors.py BOOT APP VID BOOT_PID APP_PID SERIAL_PREFIX"
+            "usage: verify_winusb_descriptors.py BOOT APP VID BOOT_PID APP_PID "
+            "SERIAL_PREFIX MANUFACTURER BOOT_PRODUCT APP_PRODUCT"
         )
-    verify(sys.argv[1], int(sys.argv[3]), int(sys.argv[4]), sys.argv[6], "Boot recovery")
-    verify(sys.argv[2], int(sys.argv[3]), int(sys.argv[5]), sys.argv[6], "Application")
+    verify(
+        sys.argv[1],
+        int(sys.argv[3]),
+        int(sys.argv[4]),
+        sys.argv[6],
+        sys.argv[7],
+        sys.argv[8],
+        "Boot recovery",
+    )
+    verify(
+        sys.argv[2],
+        int(sys.argv[3]),
+        int(sys.argv[5]),
+        sys.argv[6],
+        sys.argv[7],
+        sys.argv[9],
+        "Application",
+    )
     print("Verified Boot/Application USB 2.1 + Microsoft OS 2.0 descriptors")

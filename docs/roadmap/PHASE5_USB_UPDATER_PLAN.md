@@ -80,7 +80,7 @@ a second device-state-machine implementation in Rust.
 - Phase 5B is complete locally: the shared Rust core, `info`/`install`/`wait`
   CLI and fake E2E against the production C Manager are implemented.
 - Phase 5C code is complete locally: blocking nusb discovery/claim/Bulk I/O and
-  the production `usb_fw_updater` Application target feed the existing Manager,
+  the production `app_firmware` target feed the existing Manager,
   drain responses and execute its deferred RESET action.
 - Rust tests are 17/17 and strict ASan/UBSan HostTests are 13/13. Debug and
   Release App, Phase 4 loopback and updater image builds/verifications pass.
@@ -151,8 +151,8 @@ hc32-updater wait --version <version> [--timeout <seconds>]
 - `install` always means the only supported V1 policy: compatible signed image,
   test upgrade and reset after the COMMIT response is physically drained. There
   are no redundant `--test`, `--reboot` or `--transport usb` options.
-- For this repository, the CLI input is `artifacts/updater_signed.bin`; the
-  204800-byte `updater_primary.bin` and `updater_update.bin` are slot-padded
+- For this repository, the CLI input is `artifacts/app-signed-<version>.bin`; the
+  204800-byte `app-primary-<version>.bin` and `app-update-<version>.bin` are slot-padded
   direct-programming artifacts and exceed the protocol's logical image capacity.
 - `wait` handles disappearance/re-enumeration and succeeds when the requested
   Application version answers DEVICE_INFO before the bounded timeout.

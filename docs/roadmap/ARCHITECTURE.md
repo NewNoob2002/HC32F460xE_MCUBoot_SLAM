@@ -124,7 +124,7 @@ Future extensions include resume metadata, windowing, optional authentication, a
 
 `open/close`, general partitions, physical addresses and arbitrary area IDs are excluded. V1 writes only the image region of Secondary; the final MCUboot trailer sector is never writable through logical Host offsets. Marking an image pending is not a Storage operation.
 
-Phase 3 Manager owns `begin`, received-range accounting, readback/digest verification, finalize and abort session semantics. Internal HC32 Flash has no separate flush operation, so Phase 2 does not add a no-op API for one backend. Runtime transfer uses the signed, unpadded `app_signed.bin`; slot-padded `app_update.bin` remains a direct-programming/HIL artifact because it contains trailer state outside the logical writable region.
+Phase 3 Manager owns `begin`, received-range accounting, readback/digest verification, finalize and abort session semantics. Internal HC32 Flash has no separate flush operation, so Phase 2 does not add a no-op API for one backend. Runtime transfer uses the signed, unpadded `app-signed-<version>.bin`; slot-padded `app-update-<version>.bin` remains a direct-programming/HIL artifact because it contains trailer state outside the logical writable region.
 
 ### Boot Control and platform lifecycle
 

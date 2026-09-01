@@ -23,112 +23,70 @@ endif()
 add_executable(app_firmware
     Core/Src/app_confirm.c
     Core/Src/main.c
+    Core/Src/usb_fw_update.c
     $<TARGET_OBJECTS:hc32_newlib>
     $<TARGET_OBJECTS:hc32_startup_app>
 )
-set_target_properties(app_firmware PROPERTIES SUFFIX .elf)
+set_target_properties(app_firmware PROPERTIES
+    OUTPUT_NAME "app-${APP_VERSION}"
+    SUFFIX .elf
+)
 target_include_directories(app_firmware PRIVATE Core/Inc)
 target_compile_definitions(app_firmware PRIVATE
     APP_AUTO_CONFIRM=$<BOOL:${APP_AUTO_CONFIRM}>
     APP_PHASE2_HIL_MODE=${APP_PHASE2_HIL_MODE}
-)
-target_link_libraries(app_firmware PRIVATE
-    hc32_platform
-    hc32_device
-    $<$<CONFIG:Debug>:easylogger_port_hc32>
-    mcuboot_bootutil
-)
-if(NOT APP_PHASE2_HIL_MODE STREQUAL "0")
-    target_sources(app_firmware PRIVATE ${PROJECT_SOURCE_DIR}/Tests/HIL/phase2_hil.c)
-    target_include_directories(app_firmware PRIVATE ${PROJECT_SOURCE_DIR}/Tests/HIL)
-    target_link_libraries(app_firmware PRIVATE fw_update_mcuboot)
-endif()
-target_link_options(app_firmware PRIVATE
-    -T${PROJECT_SOURCE_DIR}/Linker/app.ld
-    -Wl,-Map,${CMAKE_CURRENT_BINARY_DIR}/app_firmware.map
-)
-add_firmware_artifacts(app_firmware)
-add_mcuboot_signed_artifacts(app_firmware)
-
-add_executable(usb_vendor_bulk_loopback
-    Core/Src/usb_vendor_bulk.c
-    Core/Src/usb_vendor_bulk_main.c
-    $<TARGET_OBJECTS:hc32_newlib>
-    $<TARGET_OBJECTS:hc32_startup_app>
-)
-set_target_properties(usb_vendor_bulk_loopback PROPERTIES SUFFIX .elf)
-target_include_directories(usb_vendor_bulk_loopback PRIVATE Core/Inc)
-target_link_libraries(usb_vendor_bulk_loopback PRIVATE
-    cherryusb_device
-    hc32_usb_device_port
-    hc32_device
-    $<$<CONFIG:Debug>:easylogger_port_hc32>
-)
-target_link_options(usb_vendor_bulk_loopback PRIVATE
-    -T${PROJECT_SOURCE_DIR}/Linker/app.ld
-    -Wl,-Map,${CMAKE_CURRENT_BINARY_DIR}/usb_vendor_bulk_loopback.map
-)
-add_firmware_artifacts(usb_vendor_bulk_loopback)
-add_mcuboot_signed_artifacts(usb_vendor_bulk_loopback usb_loopback)
-
-add_executable(usb_fw_updater
-    Core/Src/app_confirm.c
-    Core/Src/usb_fw_update.c
-    Core/Src/usb_fw_update_main.c
-    $<TARGET_OBJECTS:hc32_newlib>
-    $<TARGET_OBJECTS:hc32_startup_app>
-)
-set_target_properties(usb_fw_updater PROPERTIES SUFFIX .elf)
-target_include_directories(usb_fw_updater PRIVATE Core/Inc)
-target_compile_definitions(usb_fw_updater PRIVATE
-    APP_AUTO_CONFIRM=$<BOOL:${APP_AUTO_CONFIRM}>
     APP_VERSION_MAJOR=${APP_VERSION_MAJOR_VALUE}
     APP_VERSION_MINOR=${APP_VERSION_MINOR_VALUE}
     APP_VERSION_REVISION=${APP_VERSION_REVISION_VALUE}
     APP_VERSION_BUILD=${APP_VERSION_BUILD_VALUE}
 )
 set_source_files_properties(
+    Core/Src/main.c
     Core/Src/usb_fw_update.c
-    Core/Src/usb_fw_update_main.c
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wconversion;-Wshadow;-Werror"
 )
-target_include_directories(usb_fw_updater SYSTEM PRIVATE
+target_include_directories(app_firmware SYSTEM PRIVATE
     ${PROJECT_SOURCE_DIR}/components/cherryusb/common
     ${PROJECT_SOURCE_DIR}/components/cherryusb/core
 )
-target_link_libraries(usb_fw_updater PRIVATE
+target_link_libraries(app_firmware PRIVATE
     cherryusb_device
     fw_update_mcuboot
     hc32_usb_device_port
     hc32_device
-    $<$<CONFIG:Debug>:easylogger_port_hc32>
+    $<$<CONFIG:Debug>:easylogger_port_hc32_rtt>
     mcuboot_bootutil
 )
-target_link_options(usb_fw_updater PRIVATE
+if(NOT APP_PHASE2_HIL_MODE STREQUAL "0")
+    target_sources(app_firmware PRIVATE ${PROJECT_SOURCE_DIR}/Tests/HIL/phase2_hil.c)
+    target_include_directories(app_firmware PRIVATE ${PROJECT_SOURCE_DIR}/Tests/HIL)
+endif()
+target_link_options(app_firmware PRIVATE
     -T${PROJECT_SOURCE_DIR}/Linker/app.ld
-    -Wl,-Map,${CMAKE_CURRENT_BINARY_DIR}/usb_fw_updater.map
+    -Wl,-Map,${CMAKE_CURRENT_BINARY_DIR}/app-${APP_VERSION}.map
 )
-add_firmware_artifacts(usb_fw_updater)
-add_mcuboot_signed_artifacts(usb_fw_updater updater)
+add_firmware_artifacts(app_firmware)
+add_mcuboot_signed_artifacts(app_firmware)
 
 add_custom_target(verify_newlib_syscalls
     COMMAND "${MCUBOOT_PYTHON}" "${PROJECT_SOURCE_DIR}/Tests/verify_newlib_syscalls.py"
             "${CMAKE_BINARY_DIR}/Boot/boot_firmware.map"
-            "${CMAKE_CURRENT_BINARY_DIR}/app_firmware.map"
-            "${CMAKE_CURRENT_BINARY_DIR}/usb_vendor_bulk_loopback.map"
-            "${CMAKE_CURRENT_BINARY_DIR}/usb_fw_updater.map"
-    DEPENDS boot_firmware app_firmware usb_vendor_bulk_loopback usb_fw_updater
+            "${CMAKE_CURRENT_BINARY_DIR}/app-${APP_VERSION}.map"
+    DEPENDS boot_firmware app_firmware
     VERBATIM
 )
 
 add_custom_target(verify_winusb_descriptors
     COMMAND "${MCUBOOT_PYTHON}" "${PROJECT_SOURCE_DIR}/Tests/verify_winusb_descriptors.py"
             "${CMAKE_BINARY_DIR}/Boot/boot_firmware.bin"
-            "${CMAKE_CURRENT_BINARY_DIR}/usb_fw_updater.bin"
+            "${CMAKE_CURRENT_BINARY_DIR}/app-${APP_VERSION}.bin"
             "${HC32_USB_VID_VALUE}"
             "${HC32_USB_BOOT_PID_VALUE}"
             "${HC32_USB_APPLICATION_PID_VALUE}"
             "${HC32_USB_SERIAL_PREFIX}"
-    DEPENDS boot_firmware usb_fw_updater
+            "${HC32_USB_MANUFACTURER}"
+            "${HC32_USB_BOOT_PRODUCT}"
+            "${HC32_USB_APPLICATION_PRODUCT}"
+    DEPENDS boot_firmware app_firmware
     VERBATIM
 )

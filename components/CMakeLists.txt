@@ -5,6 +5,10 @@ set(BOOTUTIL_ROOT ${MCUBOOT_ROOT}/boot/bootutil)
 
 add_subdirectory(cherryusb)
 
+add_library(segger_rtt STATIC EXCLUDE_FROM_ALL SEGGER_RTT/SEGGER_RTT.c)
+target_include_directories(segger_rtt PUBLIC SEGGER_RTT)
+target_link_libraries(segger_rtt PRIVATE hc32_project_options)
+
 add_library(tinycrypt STATIC
     ${TINYCRYPT_ROOT}/source/sha256.c
     ${TINYCRYPT_ROOT}/source/utils.c
