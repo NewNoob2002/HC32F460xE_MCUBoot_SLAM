@@ -7,7 +7,7 @@
 - Bare-metal HC32F460xE Boot + App firmware built with CMake/Ninja and GNU Arm Embedded.
 - MCUboot 2.4.0 uses one image, ECDSA-P256 verification, Primary/Secondary slots, scratch swap, rollback, and application confirmation.
 - `components/fw_update/` contains the portable protocol/manager plus MCUboot storage and boot-control backends. `usb_fw_updater` wires it to the production Application USB poll loop.
-- `Tools/updater/` contains the Rust `info`/`install`/`wait` client and blocking nusb adapter. One physical v1 -> v2 -> confirmation -> persistence cycle has passed; Slint, packages, UART/CAN and G5 closure remain pending.
+- `Tools/updater/` contains the shared Rust CLI/Slint GUI, blocking nusb adapter, Product Config v3 and SN-bound reconnect workflow. Linux and HC32 HIL pass; signed Windows packaging, UART/CAN and G5 closure remain pending.
 - `usb_vendor_bulk_loopback` and `Tools/host/usb_loopback.py` remain Phase 4 regression-only paths.
 
 ## Navigate before editing
@@ -32,7 +32,7 @@
 - USB diagnostic entry: `App/Core/Src/usb_vendor_bulk_main.c`; it also services the external watchdog.
 - USB updater entry: `App/Core/Src/usb_fw_update_main.c`; callbacks publish events and the cooperative poll loop owns Manager, Flash and deferred reset work.
 - Active-low RGB status LED: PA0=red, PA1=green, PA2=blue. Boot is solid blue; recovery is slow red; firmware update is fast blue; default App is green heartbeat; updater App is blue heartbeat; USB diagnostic App is cyan heartbeat; panic/error is solid red.
-- Host updater: `Tools/updater/`; CLI and future Slint GUI share `FirmwareImage`, `ProtocolV1Client` and `UpgradeWorkflow`.
+- Host updater: `Tools/updater/`; CLI and Slint GUI share `FirmwareImage`, `ProtocolV1Client` and `UpgradeWorkflow`.
 - MCUboot port: `Platform/HC32F460/Ports/mcuboot/` owns Flash areas, MCUboot configuration, assertions/logging, and the generated public-key bridge.
 - Update core: `components/fw_update/src/` must remain host-buildable and platform-independent. Hardware/MCUboot access belongs in `components/fw_update/backends/`.
 
@@ -43,7 +43,7 @@
 - Firmware-update writes are Secondary-only, aligned, bounds-checked, and exclude the reserved trailer sector. Never accept host-provided physical Flash addresses.
 - Keep the portable updater bounded and caller-allocated. Do not add heap, RTOS, transport registries, or new dependencies without a demonstrated need.
 - Do not weaken image validation, ECDSA-P256 key checks, rollback behavior, handover validation, or trust-boundary input validation.
-- Release builds require an explicitly supplied private key. Never commit private keys. Auto-generated Debug keys are development-only and stay under `build/<preset>/generated/keys/`.
+- Firmware builds require an explicitly supplied external private key. Never commit private keys or generate them under `build/`; the Debug preset uses the fixed development key outside the repository.
 - Immediate App confirmation is the current baseline, not an ideal health policy. If changing confirmation timing, confirm only after explicit bounded health checks.
 
 ## Build and verification
@@ -75,7 +75,7 @@ Build and verify Debug firmware for firmware/CMake/linker changes:
 ```sh
 cmake --preset Debug -DAPP_VERSION=1.0.0 -DAPP_AUTO_CONFIRM=ON
 cmake --build build/Debug --clean-first --parallel
-cmake --build build/Debug --target verify_app_image verify_usb_loopback_image verify_updater_image
+cmake --build build/Debug --target verify_app_image verify_usb_loopback_image verify_updater_image verify_newlib_syscalls
 ```
 
 Release verification requires an existing ECDSA-P256 key outside the repository:
@@ -83,7 +83,7 @@ Release verification requires an existing ECDSA-P256 key outside the repository:
 ```sh
 cmake --preset Release -DMCUBOOT_SIGNING_KEY=/secure/path/release-ec-p256.pem
 cmake --build build/Release --clean-first --parallel
-cmake --build build/Release --target verify_app_image verify_usb_loopback_image verify_updater_image
+cmake --build build/Release --target verify_app_image verify_usb_loopback_image verify_updater_image verify_newlib_syscalls
 ```
 
 Verify retained evidence when changing HIL assets, evidence manifests, or release documentation:

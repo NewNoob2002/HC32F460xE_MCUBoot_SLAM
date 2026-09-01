@@ -1,0 +1,9 @@
+device HC32F460xE
+si SWD
+speed 4000
+connect
+halt
+regs
+savebin /home/gtc/Desktop/workspace/HC32_PROJ/HC32F460xE_MCUBoot_SLAM/evidence/hil/2026-09-01-product-config-v3/snapshots/post_install_00000000_0007ffff.bin, 0x00000000, 0x00080000
+g
+exit

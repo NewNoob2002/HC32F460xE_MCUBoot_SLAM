@@ -1,0 +1,16 @@
+Bus 001 Device 041: ID cafe:0001 HC32 HC32 Boot Recovery Updater
+Product: HC32 Boot Recovery Updater
+Serial: HC32F460-52353639FF0F5041FFFF4849
+Interface 0: Vendor Bulk Firmware Update
+Endpoints: 0x81 Bulk IN, 0x02 Bulk OUT, MPS 64
+BOS/WinUSB platform capability present
+
+application=0.0.0 bootloader=1.0.0
+hardware=0x013527df board=16 revision=32 capacity=196608 write_alignment=4 erase_alignment=8192
+mode=boot-recovery
+serial=HC32F460-52353639FF0F5041FFFF4849
+
+The restored pre-HIL firmware/configuration predates Product Config v3, so the current CLI reports:
+FAIL: unsupported product configuration format
+This is expected for an exact pre-HIL restore and is not a v3 persistence failure.
+Result: PASS

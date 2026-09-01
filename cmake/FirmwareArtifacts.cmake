@@ -1,11 +1,13 @@
 function(add_firmware_artifacts target)
     set(hex_file "${CMAKE_CURRENT_BINARY_DIR}/${target}.hex")
     set(bin_file "${CMAKE_CURRENT_BINARY_DIR}/${target}.bin")
+    target_link_options(${target} PRIVATE -Wl,--print-memory-usage)
     add_custom_command(TARGET ${target} POST_BUILD
         BYPRODUCTS "${hex_file}" "${bin_file}"
         COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${target}> "${hex_file}"
         COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${target}> "${bin_file}"
-        COMMAND ${CMAKE_SIZE} $<TARGET_FILE:${target}>
+        COMMAND ${CMAKE_SIZE} --format=berkeley --radix=10 $<TARGET_FILE:${target}>
+        COMMAND ${CMAKE_SIZE} --format=sysv --radix=16 $<TARGET_FILE:${target}>
         VERBATIM
     )
 endfunction()

@@ -1,0 +1,6 @@
+J-Link Commander V9.70, probe 63728710, VTref 3.300 V.
+Connected to HC32F460xE over SWD at 4000 kHz.
+Read 0x00000000-0x0007FFFF twice into two 524288-byte files.
+Both files compare byte-for-byte and have SHA256:
+ca978fe5a0d17f77785efaf2552c02e95ba2b54f82c6f0164481d0f44334aa44
+CPU was resumed after backup.

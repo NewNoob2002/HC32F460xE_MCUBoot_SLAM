@@ -11,6 +11,8 @@ const IDENTITY_KEYS: &[&str] = &[
     "HC32_USB_VID",
     "HC32_USB_BOOT_PID",
     "HC32_USB_APPLICATION_PID",
+    "HC32_USB_APPLICATION_PID_MIN",
+    "HC32_USB_APPLICATION_PID_MAX",
     "HC32_USB_MANUFACTURER",
     "HC32_USB_BOOT_PRODUCT",
     "HC32_USB_APPLICATION_PRODUCT",
@@ -64,17 +66,30 @@ fn generate_product_identity() {
         required(&values, "HC32_USB_APPLICATION_PID"),
         u16::MAX as u64,
     );
+    let usb_application_pid_min = number(
+        required(&values, "HC32_USB_APPLICATION_PID_MIN"),
+        u16::MAX as u64,
+    );
+    let usb_application_pid_max = number(
+        required(&values, "HC32_USB_APPLICATION_PID_MAX"),
+        u16::MAX as u64,
+    );
     let manufacturer = required(&values, "HC32_USB_MANUFACTURER");
     let boot_product = required(&values, "HC32_USB_BOOT_PRODUCT");
     let application_product = required(&values, "HC32_USB_APPLICATION_PRODUCT");
     let serial_prefix = required(&values, "HC32_USB_SERIAL_PREFIX");
     assert!(
-        usb_vid != 0 && usb_boot_pid != 0 && usb_application_pid != 0,
+        usb_vid != 0
+            && usb_boot_pid != 0
+            && usb_application_pid != 0
+            && usb_application_pid_min != 0,
         "USB VID and PIDs must be non-zero"
     );
     assert!(
-        usb_boot_pid != usb_application_pid,
-        "Boot and Application USB PIDs must differ"
+        usb_application_pid_min <= usb_application_pid
+            && usb_application_pid <= usb_application_pid_max
+            && !(usb_application_pid_min..=usb_application_pid_max).contains(&usb_boot_pid),
+        "Application PID and approved range must exclude the Boot PID"
     );
 
     if env::var("PROFILE").as_deref() == Ok("release") && class != "production" {
@@ -88,6 +103,8 @@ fn generate_product_identity() {
          pub const USB_VID: u16 = {usb_vid};\n\
          pub const USB_BOOT_PID: u16 = {usb_boot_pid};\n\
          pub const USB_APPLICATION_PID: u16 = {usb_application_pid};\n\
+         pub const USB_APPLICATION_PID_MIN: u16 = {usb_application_pid_min};\n\
+         pub const USB_APPLICATION_PID_MAX: u16 = {usb_application_pid_max};\n\
          pub const USB_MANUFACTURER: &str = {manufacturer:?};\n\
          pub const USB_BOOT_PRODUCT: &str = {boot_product:?};\n\
          pub const USB_APPLICATION_PRODUCT: &str = {application_product:?};\n\

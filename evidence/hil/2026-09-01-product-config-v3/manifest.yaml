@@ -1,0 +1,21 @@
+evidence_manifest:
+  schema_version: 1
+  run_id: "2026-09-01-product-config-v3"
+  source_revision: "7d9a22680b268f98afde31a7e04d41ed57af015c"
+  source_dirty: true
+  target: "HC32F460xE"
+  probe_serial: "63728710"
+  configured_usb_serial: "SN20260901A"
+  result: "PASSED"
+  contracts:
+    - "safety_preflight.yaml"
+    - "deployment_result.yaml"
+    - "hil_test_result.yaml"
+  checksum_file: "SHA256SUMS"
+  excluded_raw_flash:
+    reason: "full readbacks may contain device data and are not retained in the repository"
+    files:
+      - {path: "backup/pre_hil_a_00000000_0007ffff.bin", sha256: "ca978fe5a0d17f77785efaf2552c02e95ba2b54f82c6f0164481d0f44334aa44"}
+      - {path: "backup/pre_hil_b_00000000_0007ffff.bin", sha256: "ca978fe5a0d17f77785efaf2552c02e95ba2b54f82c6f0164481d0f44334aa44"}
+      - {path: "snapshots/post_install_00000000_0007ffff.bin", sha256: "aff190ff2227efec5eedddad353eb881d625f6b4bab202db0d5965620a0dc4e4"}
+      - {path: "snapshots/post_restore_00000000_0007ffff.bin", sha256: "ca978fe5a0d17f77785efaf2552c02e95ba2b54f82c6f0164481d0f44334aa44"}

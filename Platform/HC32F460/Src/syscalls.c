@@ -1,3 +1,5 @@
+#include <errno.h>
+#include <stddef.h>
 #include <sys/stat.h>
 
 #if defined(HC32_DEBUG_LOG)
@@ -46,4 +48,16 @@ int _kill(int pid, int signal) {
     (void)pid;
     (void)signal;
     return -1;
+}
+
+void* _sbrk(ptrdiff_t increment) {
+    /* The linker reserves no heap; never let newlib grow into the stack. */
+    (void)increment;
+    errno = ENOMEM;
+    return (void*)-1;
+}
+
+__attribute__((noreturn)) void _exit(int status) {
+    (void)status;
+    for (;;) {}
 }

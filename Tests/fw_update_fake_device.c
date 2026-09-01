@@ -110,6 +110,9 @@ static int fixture_init(struct fixture* fixture) {
         .boot_control = &fixture->boot_control,
         .product_config = &fixture->product_config,
         .product_config_writable = 1U,
+        .usb_boot_pid = 0x0001U,
+        .usb_application_pid_min = 0x0002U,
+        .usb_application_pid_max = 0x00FFU,
         .application_version = {.major = 1U, .minor = 0U, .revision = 0U, .build = 0U},
         .bootloader_version = {.major = 1U, .minor = 0U, .revision = 0U, .build = 0U},
         .session_timeout_ms = 5000U,
@@ -127,6 +130,7 @@ static int fixture_init(struct fixture* fixture) {
     fixture->fake.product_config_state.identity.hardware_id = UINT32_C(0x00004600);
     fixture->fake.product_config_state.identity.board_id = 1U;
     fixture->fake.product_config_state.identity.board_revision = 2U;
+    fixture->fake.product_config_state.identity.application_pid = 0x0002U;
     fixture->product_config.ops = &product_config_ops;
     fixture->product_config.context = &fixture->fake;
     fixture->now_ms = 100U;

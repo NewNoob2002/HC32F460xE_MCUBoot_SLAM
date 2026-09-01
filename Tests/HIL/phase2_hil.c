@@ -21,9 +21,11 @@ volatile int g_phase2_hil_result;
 
 static enum fw_update_result get_product_config(void* context, struct fw_update_product_config_state* state) {
     (void)context;
+    *state = (struct fw_update_product_config_state){0};
     state->identity.hardware_id = HC32_PRODUCT_HARDWARE_ID;
     state->identity.board_id = HC32_PRODUCT_BOARD_ID;
     state->identity.board_revision = HC32_PRODUCT_BOARD_REVISION;
+    state->identity.application_pid = HC32_PRODUCT_USB_APPLICATION_PID;
     state->provisioned = 0U;
     return FW_UPDATE_OK;
 }

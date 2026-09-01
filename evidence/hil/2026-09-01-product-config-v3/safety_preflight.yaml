@@ -1,0 +1,18 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-09-01T01:18:47Z"
+  operation: "Product Config v3 Boot-only provisioning, USB descriptor validation, physical power-cycle persistence, compatible USB install/reconnect, and full-Flash restore"
+  authorization: "User explicitly requested real hardware flashing and validation on 2026-09-01"
+  target:
+    board: "user-owned HC32F460xE all-IO breakout board"
+    hardware_revision: "compatibility board_revision 2; physical PCB revision not separately identified"
+    probe_or_adapter_serial: "63728710"
+    transport: "J-Link CE SWD 4 MHz; USB Vendor Bulk"
+  tool: "SEGGER J-Link Commander V9.70; hc32-updater SHA256 8b11d916632fc8debf382c303e4c515c551b2ad92c2546ffb18f65e71c77501c"
+  power_state: "VTref 3.300 V; one J-Link and one cafe:0001 HC32 Boot Recovery device detected"
+  artifact_or_stimulus: "Debug Boot build/Debug/Boot/boot_firmware.bin SHA256 6fc63f82ded4e83b450e893242e3f66a50a13b620b7823e9b13328d3b10e3cc2 at 0x00000000; Debug signed updater build/Debug/artifacts/updater_signed.bin SHA256 6b7e01afa8d454b2bc36dc66aabbc9c699a61ea70177413c90987d451cf5a2a1 through protocol-controlled Secondary-only delivery; temporary config SN20260901A, hardware version A1.2, App PID 0x0020"
+  limits: "Before writes, capture two identical 524288-byte backups of 0x00000000-0x0007FFFF. Invoke J-Link with -USB 63728710. Direct writes are limited to Boot 0x00000000-0x0000FFFF; erase only Primary 0x00010000-0x00011FFF, Secondary 0x00042000-0x00043FFF, and Product Config 0x00076000-0x0007FFFF. USB install remains protocol-controlled Secondary-only. One config set, bounded USB waits of 30 seconds, no retries after a product failure. No unlock, recover, mass erase, OTP, option-byte, protection, or unrelated bus operation."
+  recovery_plan: "On completion or any failure, restore backup/pre_hil_a_00000000_0007ffff.bin to exactly 0x00000000-0x0007FFFF, verifybin, save a 524288-byte readback, require SHA256/cmp equality, then reset and run."
+  physical_controls: "No software-controlled USB power switch is available. Physical power removal/reapplication is required at the persistence checkpoint."
+  approved: true
+  backup_evidence: "Two byte-identical 524288-byte full-Flash backups captured; SHA256 ca978fe5a0d17f77785efaf2552c02e95ba2b54f82c6f0164481d0f44334aa44."

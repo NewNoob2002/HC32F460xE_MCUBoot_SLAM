@@ -27,6 +27,9 @@ struct fw_update_manager_config {
     const struct fw_update_boot_control* boot_control;
     const struct fw_update_product_config* product_config;
     uint8_t product_config_writable;
+    uint16_t usb_boot_pid;
+    uint16_t usb_application_pid_min;
+    uint16_t usb_application_pid_max;
     struct fw_update_version application_version;
     struct fw_update_version bootloader_version;
     uint32_t session_timeout_ms;
@@ -72,7 +75,7 @@ struct fw_update_manager {
     struct fw_protocol_parser parser;
     uint8_t tx_buffer[FW_PROTOCOL_MAX_FRAME_SIZE];
     uint8_t work_buffer[FW_PROTOCOL_MAX_PAYLOAD];
-    uint8_t cached_response[FW_PROTOCOL_HEADER_SIZE + 40U + FW_PROTOCOL_CRC_SIZE];
+    uint8_t cached_response[FW_PROTOCOL_HEADER_SIZE + FW_UPDATE_PRODUCT_CONFIG_MAX_WIRE_SIZE + FW_PROTOCOL_CRC_SIZE];
     size_t tx_size;
     size_t tx_offset;
     size_t cached_request_size;

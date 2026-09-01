@@ -177,6 +177,9 @@ static struct fw_update_manager_config make_config(const struct fixture* fixture
         .boot_control = &fixture->boot_control,
         .product_config = &fixture->product_config,
         .product_config_writable = 1U,
+        .usb_boot_pid = 0x0001U,
+        .usb_application_pid_min = 0x0002U,
+        .usb_application_pid_max = 0x00FFU,
         .application_version = {.major = 2U, .minor = 1U, .revision = 3U, .build = 4U},
         .bootloader_version = {.major = 1U, .minor = 0U, .revision = 0U, .build = 0U},
         .session_timeout_ms = 5000U,
@@ -199,6 +202,7 @@ static void fixture_init(struct fixture* fixture, uint32_t alignment) {
     fixture->fake_product.state.identity.hardware_id = UINT32_C(0x00004600);
     fixture->fake_product.state.identity.board_id = 1U;
     fixture->fake_product.state.identity.board_revision = 2U;
+    fixture->fake_product.state.identity.application_pid = 0x0002U;
     fixture->fake_product.get_result = FW_UPDATE_OK;
     fixture->fake_product.set_result = FW_UPDATE_OK;
     fixture->product_config.ops = &product_config_ops;
@@ -646,6 +650,7 @@ static void test_init_validation(void) {
     fixture.fake_product.state.identity.hardware_id = UINT32_C(0x00004600);
     fixture.fake_product.state.identity.board_id = 1U;
     fixture.fake_product.state.identity.board_revision = 2U;
+    fixture.fake_product.state.identity.application_pid = 0x0002U;
     fixture.product_config.ops = &product_config_ops;
     fixture.product_config.context = &fixture.fake_product;
     config = make_config(&fixture);
@@ -664,6 +669,19 @@ static void test_init_validation(void) {
     fixture.fake_product.get_result = FW_UPDATE_ERR_IO;
     assert(fw_update_manager_init(&fixture.manager, &config) == FW_UPDATE_MANAGER_ERR_STORAGE);
     fixture.fake_product.get_result = FW_UPDATE_OK;
+    fixture.fake_product.state.identity.application_pid = 0x0100U;
+    config = make_config(&fixture);
+    assert(fw_update_manager_init(&fixture.manager, &config) == FW_UPDATE_MANAGER_ERR_INVALID_ARGUMENT);
+    fixture.fake_product.state.identity.application_pid = 0x0002U;
+    fixture.fake_product.state.provisioned = 1U;
+    memset(fixture.fake_product.state.identity.device_serial, 'A',
+           sizeof(fixture.fake_product.state.identity.device_serial));
+    strcpy(fixture.fake_product.state.identity.hardware_version, "A1.0");
+    config = make_config(&fixture);
+    assert(fw_update_manager_init(&fixture.manager, &config) == FW_UPDATE_MANAGER_ERR_INVALID_ARGUMENT);
+    fixture.fake_product.state.provisioned = 0U;
+    fixture.fake_product.state.identity.device_serial[0] = '\0';
+    fixture.fake_product.state.identity.hardware_version[0] = '\0';
     config = make_config(&fixture);
     fixture.fake_storage.fail_get_info_call = fixture.fake_storage.get_info_calls + 1U;
     assert(fw_update_manager_init(&fixture.manager, &config) == FW_UPDATE_MANAGER_ERR_STORAGE);
@@ -672,36 +690,69 @@ static void test_init_validation(void) {
 static void test_product_config_provisioning(void) {
     struct fixture fixture;
     struct response response;
-    uint8_t payload[12] = {FW_UPDATE_PRODUCT_CONFIG_FORMAT_VERSION, 0U};
+    static const char device_serial[] = "SN12AB34";
+    static const char hardware_version[] = "A1.2";
+    uint8_t payload[FW_UPDATE_PRODUCT_CONFIG_MAX_WIRE_SIZE] = {FW_UPDATE_PRODUCT_CONFIG_FORMAT_VERSION, 0U};
+    size_t payload_length =
+        FW_UPDATE_PRODUCT_CONFIG_WIRE_HEADER_SIZE + sizeof(device_serial) - 1U + sizeof(hardware_version) - 1U;
 
     fixture_init(&fixture, 4U);
     send_hello(&fixture);
     send_expected_request(&fixture, FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_GET, NULL, 0U, &response);
-    assert(response.status == FW_PROTOCOL_STATUS_OK && response.body_length == sizeof(payload));
+    assert(response.status == FW_PROTOCOL_STATUS_OK
+           && response.body_length == FW_UPDATE_PRODUCT_CONFIG_WIRE_HEADER_SIZE);
     assert(response.body[0] == FW_UPDATE_PRODUCT_CONFIG_FORMAT_VERSION && response.body[1] == 0U);
-    assert(read_u16_le(&response.body[2]) == 2U);
-    assert(read_u32_le(&response.body[4]) == UINT32_C(0x00004600));
-    assert(read_u32_le(&response.body[8]) == 1U);
+    assert(response.body[2] == 0U && response.body[3] == 0U);
+    assert(read_u16_le(&response.body[4]) == 0x0002U);
 
-    write_u16_le(&payload[2], 4U);
-    write_u32_le(&payload[4], UINT32_C(0x00004601));
-    write_u32_le(&payload[8], 7U);
-    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_SET, payload, sizeof(payload), &response);
+    payload[2] = sizeof(device_serial) - 1U;
+    payload[3] = sizeof(hardware_version) - 1U;
+    write_u16_le(&payload[4], 0x0020U);
+    memcpy(&payload[FW_UPDATE_PRODUCT_CONFIG_WIRE_HEADER_SIZE], device_serial, sizeof(device_serial) - 1U);
+    memcpy(&payload[FW_UPDATE_PRODUCT_CONFIG_WIRE_HEADER_SIZE + sizeof(device_serial) - 1U], hardware_version,
+           sizeof(hardware_version) - 1U);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_SET, payload, (uint16_t)payload_length,
+                          &response);
     assert(response.status == FW_PROTOCOL_STATUS_OK && response.body[1] == 1U);
     assert(fixture.fake_product.set_calls == 1U);
-    assert(read_u16_le(&response.body[2]) == 4U);
-    assert(read_u32_le(&response.body[4]) == UINT32_C(0x00004601));
-    assert(read_u32_le(&response.body[8]) == 7U);
+    assert(response.body[2] == sizeof(device_serial) - 1U && response.body[3] == sizeof(hardware_version) - 1U);
+    assert(read_u16_le(&response.body[4]) == 0x0020U);
+    assert(memcmp(&response.body[FW_UPDATE_PRODUCT_CONFIG_WIRE_HEADER_SIZE], device_serial, sizeof(device_serial) - 1U)
+           == 0);
+    assert(memcmp(&response.body[FW_UPDATE_PRODUCT_CONFIG_WIRE_HEADER_SIZE + sizeof(device_serial) - 1U],
+                  hardware_version, sizeof(hardware_version) - 1U)
+           == 0);
+    assert(fixture.fake_product.state.identity.hardware_id == UINT32_C(0x00004600));
+    assert(fixture.fake_product.state.identity.board_id == 1U);
+    assert(fixture.fake_product.state.identity.board_revision == 2U);
 
     send_expected_request(&fixture, FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_GET, NULL, 0U, &response);
     assert(response.status == FW_PROTOCOL_STATUS_OK && response.body[1] == 1U);
-    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_SET, payload, sizeof(payload), &response);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_SET, payload, (uint16_t)payload_length,
+                          &response);
     assert(response.status == FW_PROTOCOL_STATUS_INVALID_STATE && fixture.fake_product.set_calls == 1U);
 
     fixture_init(&fixture, 4U);
+    write_u16_le(&payload[4], 0x0100U);
+    send_hello(&fixture);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_SET, payload, (uint16_t)payload_length,
+                          &response);
+    assert(response.status == FW_PROTOCOL_STATUS_INVALID_ARGUMENT && fixture.fake_product.set_calls == 0U);
+
+    fixture_init(&fixture, 4U);
+    write_u16_le(&payload[4], 0x0020U);
+    payload[FW_UPDATE_PRODUCT_CONFIG_WIRE_HEADER_SIZE] = '-';
+    send_hello(&fixture);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_SET, payload, (uint16_t)payload_length,
+                          &response);
+    assert(response.status == FW_PROTOCOL_STATUS_INVALID_ARGUMENT && fixture.fake_product.set_calls == 0U);
+
+    fixture_init(&fixture, 4U);
+    payload[FW_UPDATE_PRODUCT_CONFIG_WIRE_HEADER_SIZE] = (uint8_t)device_serial[0];
     fixture.manager.config.product_config_writable = 0U;
     send_hello(&fixture);
-    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_SET, payload, sizeof(payload), &response);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_SET, payload, (uint16_t)payload_length,
+                          &response);
     assert(response.status == FW_PROTOCOL_STATUS_INVALID_STATE && fixture.fake_product.set_calls == 0U);
 }
 
@@ -779,12 +830,13 @@ static void test_exact_duplicate_side_effects(void) {
     send_duplicate_encoded(&fixture, request, request_size, &response);
     assert(response.status == FW_PROTOCOL_STATUS_OK);
 
-    memset(payload, 0, 12U);
+    memset(payload, 0, FW_UPDATE_PRODUCT_CONFIG_MAX_WIRE_SIZE);
     payload[0] = FW_UPDATE_PRODUCT_CONFIG_FORMAT_VERSION;
-    write_u16_le(&payload[2], 4U);
-    write_u32_le(&payload[4], UINT32_C(0x00004601));
-    write_u32_le(&payload[8], 7U);
-    request_size = encode_request(FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_SET, 1U, payload, 12U, request);
+    payload[2] = 8U;
+    payload[3] = 4U;
+    write_u16_le(&payload[4], 0x0020U);
+    memcpy(&payload[FW_UPDATE_PRODUCT_CONFIG_WIRE_HEADER_SIZE], "SN12AB34A1.2", 12U);
+    request_size = encode_request(FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_SET, 1U, payload, 18U, request);
     send_duplicate_encoded(&fixture, request, request_size, &response);
     assert(response.status == FW_PROTOCOL_STATUS_OK && fixture.fake_product.set_calls == 1U);
 

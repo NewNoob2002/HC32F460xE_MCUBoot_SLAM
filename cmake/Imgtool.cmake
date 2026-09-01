@@ -1,6 +1,5 @@
 set(MCUBOOT_IMGTOOL "${PROJECT_SOURCE_DIR}/components/mcuboot-2.4.0/scripts/imgtool.py")
-set(MCUBOOT_SIGNING_KEY "" CACHE FILEPATH "ECDSA-P256 private key used to verify MCUboot images")
-set(MCUBOOT_GENERATED_DEBUG_KEY OFF)
+set(MCUBOOT_SIGNING_KEY "" CACHE FILEPATH "ECDSA-P256 private key used to sign and verify MCUboot images")
 
 if(EXISTS "${PROJECT_SOURCE_DIR}/.venv/bin/python")
     set(MCUBOOT_PYTHON "${PROJECT_SOURCE_DIR}/.venv/bin/python")
@@ -9,41 +8,23 @@ else()
     set(MCUBOOT_PYTHON "${Python3_EXECUTABLE}")
 endif()
 
-if(MCUBOOT_SIGNING_KEY)
-    get_filename_component(MCUBOOT_ACTIVE_SIGNING_KEY "${MCUBOOT_SIGNING_KEY}" ABSOLUTE)
-elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    message(FATAL_ERROR "Release builds require -DMCUBOOT_SIGNING_KEY=/path/to/ec-p256.pem")
-else()
-    set(MCUBOOT_ACTIVE_SIGNING_KEY "${CMAKE_BINARY_DIR}/generated/keys/dev-ec-p256.pem")
-    set(MCUBOOT_GENERATED_DEBUG_KEY ON)
+if(NOT MCUBOOT_SIGNING_KEY)
+    message(FATAL_ERROR "Firmware builds require -DMCUBOOT_SIGNING_KEY=/path/to/ec-p256.pem")
 endif()
+get_filename_component(MCUBOOT_ACTIVE_SIGNING_KEY "${MCUBOOT_SIGNING_KEY}" ABSOLUTE)
 
 if(NOT EXISTS "${MCUBOOT_ACTIVE_SIGNING_KEY}")
-    if(MCUBOOT_SIGNING_KEY)
-        message(FATAL_ERROR "MCUBOOT_SIGNING_KEY does not exist: ${MCUBOOT_ACTIVE_SIGNING_KEY}")
-    endif()
-    file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/generated/keys")
-    execute_process(
-        COMMAND "${MCUBOOT_PYTHON}" "${MCUBOOT_IMGTOOL}" keygen
-                -t ecdsa-p256 -k "${MCUBOOT_ACTIVE_SIGNING_KEY}"
-        RESULT_VARIABLE keygen_result
-    )
-    if(NOT keygen_result EQUAL 0)
-        message(FATAL_ERROR "imgtool failed to generate the Debug signing key")
-    endif()
+    message(FATAL_ERROR "MCUBOOT_SIGNING_KEY does not exist: ${MCUBOOT_ACTIVE_SIGNING_KEY}")
 endif()
 
-if(MCUBOOT_GENERATED_DEBUG_KEY)
-    file(CHMOD "${MCUBOOT_ACTIVE_SIGNING_KEY}" PERMISSIONS OWNER_READ OWNER_WRITE)
-endif()
 file(READ "${MCUBOOT_ACTIVE_SIGNING_KEY}" signing_key_text LIMIT 256)
 string(FIND "${signing_key_text}" "PRIVATE KEY" private_key_marker)
 if(private_key_marker EQUAL -1)
     message(FATAL_ERROR "MCUBOOT_SIGNING_KEY must contain a private key")
 endif()
 
-set(MCUBOOT_PUBLIC_KEY_SOURCE "${CMAKE_BINARY_DIR}/generated/keys/signing_keys.c")
-file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/generated/keys")
+set(MCUBOOT_PUBLIC_KEY_SOURCE "${CMAKE_BINARY_DIR}/generated/signing_keys.c")
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/generated")
 execute_process(
     COMMAND "${MCUBOOT_PYTHON}" "${MCUBOOT_IMGTOOL}" getpub
             -k "${MCUBOOT_ACTIVE_SIGNING_KEY}" -e lang-c -o "${MCUBOOT_PUBLIC_KEY_SOURCE}"

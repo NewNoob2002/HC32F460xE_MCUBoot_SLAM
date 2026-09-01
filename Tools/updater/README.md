@@ -9,38 +9,50 @@ cargo build --manifest-path Tools/updater/Cargo.toml --locked
 Tools/updater/target/debug/hc32-updater info
 Tools/updater/target/debug/hc32-updater config get
 Tools/updater/target/debug/hc32-updater config set \
-  --hardware-id 0x00004600 --board-id 1 --board-revision 2
+  --device-serial SN12AB34 --hardware-version A1.2 --app-pid 0x0020
 Tools/updater/target/debug/hc32-updater install <signed-image>
 Tools/updater/target/debug/hc32-updater wait --version 2.0.0
 cargo run --manifest-path Tools/updater/Cargo.toml --bin hc32-updater-gui
 ```
 
-Builds read the project identity from `Config/Product/ProductIdentity.env`. Firmware
-appends the HC32F460 96-bit UQID to `HC32F460-`, so Boot and Application expose
-one stable per-chip serial. An external identity file can still override the
-public product identity, for example:
+The CLI currently uses one protocol session per process. If an immediate
+follow-up command returns `BadSequence`, wait for the advertised 5000 ms session
+timeout before retrying. The GUI keeps one serialized connection and is not
+affected by this one-shot CLI limitation.
+
+Builds read the project identity from `Config/Product/ProductIdentity.env`.
+Before provisioning, firmware appends the HC32F460 96-bit UQID to `HC32F460-`.
+After provisioning, Boot and Application use the configured device serial. An
+external identity file can still override the public product identity, for
+example:
 
 ```sh
 HC32_PRODUCT_IDENTITY_FILE=/secure/product/ProductIdentity.env \
   cargo build --manifest-path Tools/updater/Cargo.toml --release --locked
 ```
 
-`config get` reports the effective `hardware_id`, `board_id`,
-`board_revision` and whether they have been provisioned in FlashDB. `config set`
-is accepted only by Boot recovery and is write-once. Before the
-first write, the build-time product identity is reported as an unprovisioned
-default. The UQID-derived USB serial is never writable.
+`config get` reports the device serial, hardware version, Application PID and
+whether they have been provisioned in FlashDB. `config set` is accepted only by
+Boot recovery and is write-once. Device serial accepts 1-32 ASCII letters or
+digits; hardware version accepts 1-16 ASCII letters, digits or dots. The
+PID must be inside the approved range in the product identity file and cannot
+equal the fixed Boot PID. The signed-image compatibility identity remains a
+build-time constant and is not changed by provisioning.
 
 Use `artifacts/updater_signed.bin` with `install`. The slot-padded
 `updater_primary.bin` and `updater_update.bin` are not protocol-transfer inputs.
+Set the Application/MCUboot image version when configuring the firmware build,
+for example `cmake --preset Debug -DAPP_VERSION=2.0.0 -DAPP_AUTO_CONFIRM=ON`.
+The accepted form is `MAJOR.MINOR.REVISION[+BUILD]`.
 
-Boot recovery enumerates as `cafe:0001`; the Application updater enumerates as
-`cafe:0002`. Both expose interface 0 through Microsoft OS 2.0 descriptors for
-automatic WinUSB binding. CLI/GUI accept either mode, while post-install `wait`
-accepts only the Application PID. `install` requires one valid protected
-compatibility TLV and rejects a mismatch before BEGIN/erase. Both modes write
-only MCUboot Secondary; run recovery tests only after the target/backup/restore
-safety preflight.
+Boot recovery always enumerates as `cafe:0001`; the Application updater defaults
+to `cafe:0002` and loads a provisioned product PID before USB registration. Both
+expose interface 0 through Microsoft OS 2.0 descriptors for automatic WinUSB
+binding. Discovery matches VID, updater interface description and a reported serial,
+then confirms the protocol only on Connect. `install` requires one valid protected
+compatibility TLV and provisioned device parameters, rejecting either failure before
+BEGIN/erase. Both modes write only MCUboot Secondary; run recovery tests only
+after the target/backup/restore safety preflight.
 
 On Linux, install the included udev rule once so both USB modes are accessible
 without manually changing permissions after each re-enumeration:
@@ -83,7 +95,12 @@ timestamp and verifies both results. Point `HC32_WINDOWS_CLI` and
 `HC32_WINDOWS_GUI` at those signed files before building the release ZIP.
 `HC32_WINDOWS_SIGN_CA_FILE` may point at a private release CA bundle.
 
-The GUI keeps blocking USB work on a worker thread and reports progress back to
-Slint's main event loop. Use Browse or enter the signed image path, refresh the
-device, then install. The content remains mouse-wheel scrollable on small or
-high-DPI displays.
+The GUI opens on the `Firmware Update` tab; write-once manufacturing fields are
+kept on the secondary `Device Setup` tab. It has one USB worker. Refresh only
+updates the device list; select a row and Connect to claim interface 0 and
+complete HELLO plus DeviceInfo. While idle, the worker sends DeviceInfo every
+2000 ms without repeating HELLO. Configuration
+and install run on the same worker, so sequence numbers cannot race. After
+COMMIT, the GUI waits for the same serial to return in Application mode and
+keeps the reconnected client. The content remains mouse-wheel scrollable on
+small or high-DPI displays.

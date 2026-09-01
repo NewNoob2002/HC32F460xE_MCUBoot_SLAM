@@ -32,12 +32,13 @@ Verify retained HIL evidence from previous release-qualified runs:
 python3 Tests/HIL/verify_evidence.py
 ~~~
 
-Build and verify Debug images. Debug configuration creates an ephemeral development key under build/Debug/generated/keys/; it must not be committed or used for production:
+Build and verify Debug images. The Debug preset uses the external development key at
+`$HOME/Desktop/workspace/MyKey/HC32_MCUBOOT_SLAM/dev-ec-p256.pem`; it must not be committed or used for production:
 
 ~~~sh
 cmake --preset Debug -DAPP_VERSION=1.0.0 -DAPP_AUTO_CONFIRM=ON
 cmake --build build/Debug --clean-first --parallel
-cmake --build build/Debug --target verify_app_image
+cmake --build build/Debug --target verify_app_image verify_usb_loopback_image verify_updater_image verify_newlib_syscalls
 ~~~
 
 Release configuration never creates a private key. Supply an existing ECDSA-P256 key explicitly:
@@ -48,7 +49,7 @@ cmake --preset Release \
   -DAPP_VERSION=1.0.0 \
   -DAPP_AUTO_CONFIRM=ON
 cmake --build build/Release --clean-first --parallel
-cmake --build build/Release --target verify_app_image
+cmake --build build/Release --target verify_app_image verify_usb_loopback_image verify_updater_image verify_newlib_syscalls
 ~~~
 
 ## Programmable images

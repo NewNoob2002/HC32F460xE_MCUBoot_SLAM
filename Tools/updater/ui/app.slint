@@ -1,23 +1,48 @@
-import { Button, HorizontalBox, LineEdit, ScrollView, VerticalBox } from "std-widgets.slint";
+import {
+    Button,
+    ComboBox,
+    HorizontalBox,
+    LineEdit,
+    ProgressIndicator,
+    ScrollView,
+    TabWidget,
+    VerticalBox,
+} from "std-widgets.slint";
 
 export component UpdaterWindow inherits Window {
     title: "Firmware Updater";
     width: 560px;
-    height: 560px;
+    height: 740px;
 
     in-out property <string> firmware-path;
+    in property <[string]> device-model;
+    in-out property <int> selected-device: -1;
     in property <bool> device-connected: false;
+    in property <bool> can-connect: false;
+    in property <bool> can-disconnect: false;
+    in property <bool> can-configure: false;
+    in property <bool> device-provisioned: false;
     in property <string> device-serial: "—";
+    in property <string> device-hardware-version: "—";
+    in property <string> device-application-pid: "—";
     in property <string> device-version: "—";
-    in property <string> device-details: "No device information";
     in property <string> firmware-version: "Not selected";
     in property <string> firmware-sha256: "Not checked";
     in property <string> status-text: "Ready";
     in property <float> progress: 0;
     in property <string> progress-label: "0%";
     in property <bool> busy: false;
+    in-out property <string> config-device-serial;
+    in-out property <string> config-hardware-version;
+    in-out property <string> config-application-pid;
+    in property <string> product-config-status: "Not read";
+    in-out property <bool> warning-visible: false;
+    in-out property <string> warning-text;
 
     callback refresh-device();
+    callback connect-device(int);
+    callback disconnect-device();
+    callback configure-device(string, string, string);
     callback browse-firmware();
     callback install-firmware(string);
 
@@ -26,97 +51,245 @@ export component UpdaterWindow inherits Window {
             padding: 24px;
             spacing: 10px;
 
-        Text {
-            text: "Firmware Updater";
-            font-size: 24px;
-            font-weight: 700;
-        }
-
-        Rectangle { height: 1px; background: #505050; }
-
-        Text {
-            text: "Device";
-            font-size: 16px;
-            font-weight: 600;
-        }
-        HorizontalBox {
             Text {
-                text: root.device-connected ? "● Connected" : "● Disconnected";
-                color: root.device-connected ? #45c98f : #a0a0a0;
-                vertical-alignment: center;
+                text: "Firmware Updater";
+                font-size: 24px;
+                font-weight: 700;
             }
-            Button {
-                text: "Refresh";
-                width: 96px;
-                enabled: !root.busy;
-                clicked => { root.refresh-device(); }
-            }
-        }
-        Text { text: "SN: " + root.device-serial; }
-        Text { text: "Current Version: " + root.device-version; }
-        Text {
-            text: root.device-details;
-            color: #a0a0a0;
-            font-size: 12px;
-            wrap: word-wrap;
-        }
 
-        Rectangle { height: 1px; background: #505050; }
-
-        Text {
-            text: "Firmware";
-            font-size: 16px;
-            font-weight: 600;
-        }
-        HorizontalBox {
-            spacing: 8px;
-            LineEdit {
-                text <=> root.firmware-path;
-                enabled: !root.busy;
-                placeholder-text: "Path to updater_signed.bin";
-            }
-            Button {
-                text: "Browse";
-                enabled: !root.busy;
-                clicked => { root.browse-firmware(); }
-            }
-        }
-        Text { text: "Version: " + root.firmware-version; }
-        Text { text: "SHA-256: " + root.firmware-sha256; }
-
-        HorizontalBox {
-            spacing: 10px;
             Rectangle {
-                height: 12px;
-                background: #d9d9d9;
-                border-radius: 6px;
+                height: 1px;
+                background: #505050;
+            }
 
-                Rectangle {
-                    width: parent.width * max(0, min(1, root.progress));
-                    height: parent.height;
-                    background: #2d78d4;
-                    border-radius: parent.border-radius;
+            Text {
+                text: "Device";
+                font-size: 16px;
+                font-weight: 600;
+            }
+
+            HorizontalBox {
+                Text {
+                    text: root.device-connected ? "● Connected" : "● Disconnected";
+                    color: root.device-connected ? #45c98f : #a0a0a0;
+                    vertical-alignment: center;
+                }
+
+                Button {
+                    text: "Refresh";
+                    width: 96px;
+                    enabled: !root.busy && !root.device-connected;
+                    clicked => { root.refresh-device(); }
                 }
             }
-            Text {
-                width: 44px;
-                text: root.progress-label;
-                horizontal-alignment: right;
-            }
-        }
 
-        Text {
-            text: root.status-text;
-            wrap: word-wrap;
-        }
+            ComboBox {
+                model: root.device-model;
+                current-index <=> root.selected-device;
+                enabled: !root.busy && !root.device-connected && root.device-model.length > 0;
+            }
 
             HorizontalBox {
                 alignment: center;
+                spacing: 8px;
                 Button {
-                    text: "Update";
-                    width: 140px;
-                    enabled: !root.busy && root.firmware-path != "";
-                    clicked => { root.install-firmware(root.firmware-path); }
+                    text: "Connect";
+                    enabled: !root.busy && root.can-connect && root.selected-device >= 0;
+                    clicked => { root.connect-device(root.selected-device); }
+                }
+
+                Button {
+                    text: "Disconnect";
+                    enabled: !root.busy && root.can-disconnect;
+                    clicked => { root.disconnect-device(); }
+                }
+            }
+
+            Text {
+                text: "SN: " + root.device-serial;
+            }
+
+            Text {
+                text: "Hardware Version: " + root.device-hardware-version;
+            }
+
+            Text {
+                text: "App USB PID: " + root.device-application-pid;
+            }
+
+            Text {
+                text: "Current Version: " + root.device-version;
+            }
+
+            Rectangle {
+                height: 1px;
+                background: #505050;
+            }
+
+            TabWidget {
+                height: 300px;
+                current-index: 0;
+
+                Tab {
+                    title: "Firmware Update";
+                    VerticalBox {
+                        padding: 12px;
+                        spacing: 10px;
+                        Text {
+                            text: "Firmware";
+                            font-size: 16px;
+                            font-weight: 600;
+                        }
+
+                        HorizontalBox {
+                            spacing: 8px;
+                            LineEdit {
+                                text <=> root.firmware-path;
+                                enabled: !root.busy;
+                                placeholder-text: "Path to updater_signed.bin";
+                            }
+
+                            Button {
+                                text: "Browse";
+                                enabled: !root.busy;
+                                clicked => { root.browse-firmware(); }
+                            }
+                        }
+
+                        Text {
+                            text: "Version: " + root.firmware-version;
+                        }
+
+                        Text {
+                            text: "SHA-256: " + root.firmware-sha256;
+                        }
+
+                        HorizontalBox {
+                            spacing: 10px;
+                            ProgressIndicator {
+                                height: 12px;
+                                progress: root.progress;
+                            }
+
+                            Text {
+                                width: 44px;
+                                text: root.progress-label;
+                                horizontal-alignment: right;
+                            }
+                        }
+
+                        HorizontalBox {
+                            alignment: center;
+                            Button {
+                                text: "Update";
+                                width: 140px;
+                                enabled: !root.busy && root.device-connected && root.firmware-path != "";
+                                clicked => { root.install-firmware(root.firmware-path); }
+                            }
+                        }
+                    }
+                }
+
+                Tab {
+                    title: "Device Setup";
+                    VerticalBox {
+                        padding: 12px;
+                        spacing: 10px;
+                        Text {
+                            text: "Product Configuration · " + root.product-config-status;
+                            font-size: 14px;
+                            font-weight: 600;
+                        }
+
+                        Text {
+                            text: "Advanced write-once manufacturing settings.";
+                            color: #a0a0a0;
+                            font-size: 12px;
+                        }
+
+                        HorizontalBox {
+                            spacing: 8px;
+                            LineEdit {
+                                text <=> root.config-device-serial;
+                                enabled: !root.busy && root.can-configure;
+                                placeholder-text: "Device SN (letters and digits)";
+                            }
+
+                            LineEdit {
+                                text <=> root.config-hardware-version;
+                                enabled: !root.busy && root.can-configure;
+                                placeholder-text: "Hardware version (for example A1.2)";
+                            }
+                        }
+
+                        LineEdit {
+                            text <=> root.config-application-pid;
+                            enabled: !root.busy && root.can-configure;
+                            placeholder-text: "App PID in hexadecimal (for example 0x0002)";
+                        }
+
+                        Button {
+                            text: "Configure once";
+                            enabled: !root.busy && root.can-configure;
+                            clicked => {
+                                root.configure-device(root.config-device-serial, root.config-hardware-version,
+                                root.config-application-pid);
+                            }
+                        }
+                    }
+                }
+            }
+
+            Text {
+                text: root.status-text;
+                wrap: word-wrap;
+            }
+        }
+    }
+
+    if root.warning-visible: Rectangle {
+        width: 100%;
+        height: 100%;
+        background: #000000b0;
+
+        TouchArea {
+            width: 100%;
+            height: 100%;
+        }
+
+        Rectangle {
+            width: min(parent.width - 48px, 440px);
+            height: 220px;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            background: #30343b;
+            border-color: #e0a030;
+            border-width: 1px;
+            border-radius: 8px;
+
+            VerticalBox {
+                padding: 24px;
+                spacing: 16px;
+                Text {
+                    text: "Upgrade blocked";
+                    color: #f0b84b;
+                    font-size: 18px;
+                    font-weight: 700;
+                }
+
+                Text {
+                    text: root.warning-text;
+                    color: #f0f0f0;
+                    wrap: word-wrap;
+                }
+
+                HorizontalBox {
+                    alignment: center;
+                    Button {
+                        text: "OK";
+                        width: 120px;
+                        clicked => { root.warning-visible = false; }
+                    }
                 }
             }
         }

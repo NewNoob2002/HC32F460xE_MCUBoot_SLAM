@@ -1,0 +1,7 @@
+J-Link Commander V9.70, probe 63728710, SWD 4000 kHz, VTref 3.300 V.
+Erased exactly 0x00000000-0x0007FFFF.
+Loaded backup/pre_hil_a_00000000_0007ffff.bin at 0x00000000.
+verifybin read and verified 524288 bytes successfully.
+Saved snapshots/post_restore_00000000_0007ffff.bin.
+Issued reset and run.
+Result: PASS

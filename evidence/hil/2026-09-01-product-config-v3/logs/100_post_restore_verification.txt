@@ -1,0 +1,7 @@
+backup SHA256:       ca978fe5a0d17f77785efaf2552c02e95ba2b54f82c6f0164481d0f44334aa44
+readback SHA256:     ca978fe5a0d17f77785efaf2552c02e95ba2b54f82c6f0164481d0f44334aa44
+cmp exit code:       0
+Flash restore:       PASS
+USB after SW reset:  no cafe device enumerated
+USB after physical power cycle: cafe:0001 HC32 Boot Recovery Updater
+Physical power-cycle confirmation: PASS

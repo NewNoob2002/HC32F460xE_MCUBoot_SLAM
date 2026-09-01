@@ -23,6 +23,7 @@ endif()
 add_executable(app_firmware
     Core/Src/app_confirm.c
     Core/Src/main.c
+    $<TARGET_OBJECTS:hc32_newlib>
     $<TARGET_OBJECTS:hc32_startup_app>
 )
 set_target_properties(app_firmware PROPERTIES SUFFIX .elf)
@@ -52,6 +53,7 @@ add_mcuboot_signed_artifacts(app_firmware)
 add_executable(usb_vendor_bulk_loopback
     Core/Src/usb_vendor_bulk.c
     Core/Src/usb_vendor_bulk_main.c
+    $<TARGET_OBJECTS:hc32_newlib>
     $<TARGET_OBJECTS:hc32_startup_app>
 )
 set_target_properties(usb_vendor_bulk_loopback PROPERTIES SUFFIX .elf)
@@ -73,6 +75,7 @@ add_executable(usb_fw_updater
     Core/Src/app_confirm.c
     Core/Src/usb_fw_update.c
     Core/Src/usb_fw_update_main.c
+    $<TARGET_OBJECTS:hc32_newlib>
     $<TARGET_OBJECTS:hc32_startup_app>
 )
 set_target_properties(usb_fw_updater PROPERTIES SUFFIX .elf)
@@ -107,6 +110,16 @@ target_link_options(usb_fw_updater PRIVATE
 )
 add_firmware_artifacts(usb_fw_updater)
 add_mcuboot_signed_artifacts(usb_fw_updater updater)
+
+add_custom_target(verify_newlib_syscalls
+    COMMAND "${MCUBOOT_PYTHON}" "${PROJECT_SOURCE_DIR}/Tests/verify_newlib_syscalls.py"
+            "${CMAKE_BINARY_DIR}/Boot/boot_firmware.map"
+            "${CMAKE_CURRENT_BINARY_DIR}/app_firmware.map"
+            "${CMAKE_CURRENT_BINARY_DIR}/usb_vendor_bulk_loopback.map"
+            "${CMAKE_CURRENT_BINARY_DIR}/usb_fw_updater.map"
+    DEPENDS boot_firmware app_firmware usb_vendor_bulk_loopback usb_fw_updater
+    VERBATIM
+)
 
 add_custom_target(verify_winusb_descriptors
     COMMAND "${MCUBOOT_PYTHON}" "${PROJECT_SOURCE_DIR}/Tests/verify_winusb_descriptors.py"

@@ -1,0 +1,6 @@
+Temporary read-only verifier called:
+NusbTransport::open_by_serial("SN20260901A", DeviceMode::Application)
+
+Result:
+serial=SN20260901A application=1.0.0 hardware_version=A1.2 app_pid=0x0020
+Result: PASS

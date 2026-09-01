@@ -1,0 +1,2 @@
+provisioned=true device_serial=SN20260901A hardware_version=A1.2 app_pid=0x0020
+Result: PASS after physical power cycle and again after firmware upgrade

@@ -1,0 +1,9 @@
+Bus 001 Device 039: ID cafe:0020 HC32 HC32 Firmware Updater
+USB 2.10, EP0 MPS 64, bus powered 100 mA
+Manufacturer: HC32
+Product: HC32 Firmware Updater
+Serial: SN20260901A
+Interface 0: Vendor Specific, Vendor Bulk Firmware Update
+Endpoints: 0x81 Bulk IN, 0x02 Bulk OUT, MPS 64
+BOS platform capability: d8dd60df-4589-4cc7-9cd2-659d9e648a9f (Microsoft OS 2.0 / WinUSB)
+Result: PASS

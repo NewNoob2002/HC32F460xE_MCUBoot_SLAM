@@ -1,2 +1,2 @@
-SUBSYSTEM=="usb", ATTR{idVendor}=="cafe", ATTR{idProduct}=="0001", MODE="0660", TAG+="uaccess"
-SUBSYSTEM=="usb", ATTR{idVendor}=="cafe", ATTR{idProduct}=="0002", MODE="0660", TAG+="uaccess"
+SUBSYSTEM=="usb", ATTR{idVendor}=="cafe", ATTR{product}=="HC32 Boot Recovery Updater", MODE="0660", TAG+="uaccess"
+SUBSYSTEM=="usb", ATTR{idVendor}=="cafe", ATTR{product}=="HC32 Firmware Updater", MODE="0660", TAG+="uaccess"

@@ -1,0 +1,34 @@
+test_result:
+  schema_version: 1
+  source_revision: "7d9a22680b268f98afde31a7e04d41ed57af015c"
+  source_dirty: true
+  level: "hil"
+  target: "HC32F460xE, J-Link 63728710"
+  passed: true
+  result: "PASSED"
+  requirements:
+    - "Boot and App USB descriptors use the configured identity"
+    - "Product Config v3 survives physical power removal"
+    - "Upgrade re-enumeration can reconnect by the configured serial"
+    - "The exact pre-HIL 512 KiB Flash image is restored"
+  observations:
+    - "Boot changed from UQID serial to SN20260901A after physical power cycle while retaining cafe:0001"
+    - "Configuration persisted as SN20260901A, A1.2, and App PID 0x0020"
+    - "The compatible 57111-byte signed updater transferred, verified, committed, and booted as App 1.0.0"
+    - "App enumerated as cafe:0020 with the expected strings, Vendor Bulk endpoints, and BOS/WinUSB capability"
+    - "Exact serial reconnect opened SN20260901A and returned the expected DeviceInfo/Product Config"
+    - "Primary matched the signed image and had confirmed permanent MCUboot trailer state; Secondary header/trailer were erased"
+    - "Post-restore readback matched the pre-HIL backup byte-for-byte"
+    - "The target did not enumerate USB after a J-Link software reset, but returned to its original cafe:0001 Boot Recovery identity after physical power cycling"
+    - "The restored firmware predates Product Config v3, so rejection of the current config-get request as an unsupported format is expected"
+  recovery: {flash_restore: "passed", usb_runtime_confirmation: "passed_after_physical_power_cycle"}
+  logs:
+    - "logs/00_backup_summary.txt"
+    - "logs/30_app_descriptors.txt"
+    - "logs/31_app_info.txt"
+    - "logs/32_config_get.txt"
+    - "logs/33_exact_serial_reconnect.txt"
+    - "logs/40_slot_analysis.txt"
+    - "logs/99_restore.txt"
+    - "logs/100_post_restore_verification.txt"
+    - "logs/101_post_restore_usb.txt"

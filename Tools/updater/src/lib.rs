@@ -1,3 +1,4 @@
+pub mod nusb_transport;
 mod protocol;
 
 pub mod product_identity {
@@ -16,9 +17,12 @@ const IMAGE_HEADER_SIZE: usize = 32;
 const IMAGE_TLV_PROT_INFO_MAGIC: u16 = 0x6908;
 const COMPATIBILITY_TLV_TYPE: u16 = 0x00a0;
 const COMPATIBILITY_PAYLOAD_SIZE: usize = 12;
-const REQUIRED_CAPABILITIES: u32 = 0b111;
+pub const UPGRADE_CAPABILITIES: u32 = 0b111;
 const PRODUCT_CONFIG_CAPABILITY: u32 = 1 << 3;
-const PRODUCT_CONFIG_FORMAT_VERSION: u8 = 1;
+const PRODUCT_CONFIG_FORMAT_VERSION: u8 = 3;
+const PRODUCT_CONFIG_HEADER_SIZE: usize = 6;
+const DEVICE_SERIAL_MAX_LENGTH: usize = 32;
+const HARDWARE_VERSION_MAX_LENGTH: usize = 16;
 const DEFAULT_ATTEMPTS: usize = 3;
 const MAX_STALE_RESPONSES: usize = 2;
 
@@ -107,9 +111,11 @@ pub struct Compatibility {
     pub board_id: u32,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ProductConfig {
-    pub identity: Compatibility,
+    pub device_serial: String,
+    pub hardware_version: String,
+    pub application_pid: u16,
     pub provisioned: bool,
 }
 
@@ -257,7 +263,7 @@ impl UpgradeWorkflow {
         poll_interval: Duration,
         request_timeout: Duration,
         mut progress: impl FnMut(ProgressEvent),
-    ) -> Result<DeviceInfo, Error> {
+    ) -> Result<(DeviceInfo, ProtocolV1Client<T>), Error> {
         if timeout.is_zero() || poll_interval.is_zero() || request_timeout.is_zero() {
             return Err(Error::Argument(
                 "wait timeout, poll interval and request timeout must be positive",
@@ -279,7 +285,7 @@ impl UpgradeWorkflow {
                     Ok(info) => {
                         progress(ProgressEvent::Device(info.clone()));
                         if info.application_version == expected {
-                            return Ok(info);
+                            return Ok((info, client));
                         }
                     }
                     Err(Error::Transport(error)) if retryable_wait_error(&error) => {}
@@ -383,20 +389,49 @@ impl<T: Transport> ProtocolV1Client<T> {
 
     pub fn provision_product_config(
         &mut self,
-        identity: Compatibility,
+        device_serial: &str,
+        hardware_version: &str,
+        application_pid: u16,
     ) -> Result<ProductConfig, Error> {
         let hello = self.hello()?;
         if hello.capabilities & PRODUCT_CONFIG_CAPABILITY == 0 {
             return Err(Error::Capability(hello.capabilities));
         }
 
-        let mut payload = Vec::with_capacity(COMPATIBILITY_PAYLOAD_SIZE);
-        payload.extend_from_slice(&[PRODUCT_CONFIG_FORMAT_VERSION, 0]);
-        payload.extend_from_slice(&identity.board_revision.to_le_bytes());
-        payload.extend_from_slice(&identity.hardware_id.to_le_bytes());
-        payload.extend_from_slice(&identity.board_id.to_le_bytes());
+        if !valid_application_pid(application_pid) {
+            return Err(Error::ProductConfig(
+                "application PID is outside the approved range",
+            ));
+        }
+        if !valid_device_serial(device_serial) {
+            return Err(Error::ProductConfig(
+                "device serial must be 1-32 ASCII letters or digits",
+            ));
+        }
+        if !valid_hardware_version(hardware_version) {
+            return Err(Error::ProductConfig(
+                "hardware version must be 1-16 ASCII letters, digits, or dots",
+            ));
+        }
+
+        let mut payload = Vec::with_capacity(
+            PRODUCT_CONFIG_HEADER_SIZE + device_serial.len() + hardware_version.len(),
+        );
+        payload.extend_from_slice(&[
+            PRODUCT_CONFIG_FORMAT_VERSION,
+            0,
+            device_serial.len() as u8,
+            hardware_version.len() as u8,
+        ]);
+        payload.extend_from_slice(&application_pid.to_le_bytes());
+        payload.extend_from_slice(device_serial.as_bytes());
+        payload.extend_from_slice(hardware_version.as_bytes());
         let persisted = parse_product_config(&self.request(Command::ProductConfigSet, payload)?)?;
-        if !persisted.provisioned || persisted.identity != identity {
+        if !persisted.provisioned
+            || persisted.device_serial != device_serial
+            || persisted.hardware_version != hardware_version
+            || persisted.application_pid != application_pid
+        {
             return Err(Error::ProductConfig(
                 "persisted product configuration does not match request",
             ));
@@ -410,8 +445,13 @@ impl<T: Transport> ProtocolV1Client<T> {
         mut progress: impl FnMut(ProgressEvent),
     ) -> Result<DeviceInfo, Error> {
         let hello = self.hello()?;
-        if hello.capabilities & REQUIRED_CAPABILITIES != REQUIRED_CAPABILITIES {
+        if hello.capabilities & UPGRADE_CAPABILITIES != UPGRADE_CAPABILITIES {
             return Err(Error::Capability(hello.capabilities));
+        }
+        if !self.product_config()?.provisioned {
+            return Err(Error::ProductConfig(
+                "device parameters are not configured; configure them in Boot Recovery before installing",
+            ));
         }
         let device = self.info()?;
         progress(ProgressEvent::Device(device.clone()));
@@ -576,7 +616,7 @@ fn append_version(output: &mut Vec<u8>, version: Version) {
 }
 
 fn parse_product_config(body: &[u8]) -> Result<ProductConfig, Error> {
-    if body.len() != COMPATIBILITY_PAYLOAD_SIZE {
+    if body.len() < PRODUCT_CONFIG_HEADER_SIZE {
         return Err(Error::Protocol(ProtocolError::InvalidLength(body.len())));
     }
     if body[0] != PRODUCT_CONFIG_FORMAT_VERSION || body[1] & !1 != 0 {
@@ -584,14 +624,59 @@ fn parse_product_config(body: &[u8]) -> Result<ProductConfig, Error> {
             "unsupported product configuration format",
         ));
     }
+    let serial_length = usize::from(body[2]);
+    let hardware_version_length = usize::from(body[3]);
+    if serial_length > DEVICE_SERIAL_MAX_LENGTH
+        || hardware_version_length > HARDWARE_VERSION_MAX_LENGTH
+        || body.len() != PRODUCT_CONFIG_HEADER_SIZE + serial_length + hardware_version_length
+    {
+        return Err(Error::Protocol(ProtocolError::InvalidLength(body.len())));
+    }
+    let device_serial = std::str::from_utf8(
+        &body[PRODUCT_CONFIG_HEADER_SIZE..PRODUCT_CONFIG_HEADER_SIZE + serial_length],
+    )
+    .map_err(|_| Error::ProductConfig("device serial is not ASCII"))?;
+    let hardware_version = std::str::from_utf8(&body[PRODUCT_CONFIG_HEADER_SIZE + serial_length..])
+        .map_err(|_| Error::ProductConfig("hardware version is not ASCII"))?;
+    if body[1] & 1 != 0
+        && (!valid_device_serial(device_serial) || !valid_hardware_version(hardware_version))
+    {
+        return Err(Error::ProductConfig(
+            "device reported invalid product configuration strings",
+        ));
+    }
+    let application_pid = read_u16(&body[4..6]);
+    if !valid_application_pid(application_pid) {
+        return Err(Error::ProductConfig(
+            "device reported an invalid application PID",
+        ));
+    }
     Ok(ProductConfig {
         provisioned: body[1] & 1 != 0,
-        identity: Compatibility {
-            board_revision: read_u16(&body[2..4]),
-            hardware_id: read_u32(&body[4..8]),
-            board_id: read_u32(&body[8..12]),
-        },
+        application_pid,
+        device_serial: device_serial.to_owned(),
+        hardware_version: hardware_version.to_owned(),
     })
+}
+
+fn valid_device_serial(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= DEVICE_SERIAL_MAX_LENGTH
+        && value.bytes().all(|byte| byte.is_ascii_alphanumeric())
+}
+
+fn valid_hardware_version(value: &str) -> bool {
+    !value.is_empty()
+        && value.len() <= HARDWARE_VERSION_MAX_LENGTH
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || byte == b'.')
+}
+
+pub fn valid_application_pid(product_id: u16) -> bool {
+    (product_identity::USB_APPLICATION_PID_MIN..=product_identity::USB_APPLICATION_PID_MAX)
+        .contains(&product_id)
+        && product_id != product_identity::USB_BOOT_PID
 }
 
 fn read_u16(input: &[u8]) -> u16 {
@@ -738,8 +823,14 @@ mod tests {
         let transport = ScriptTransport::new([
             Ok(response(Command::Hello, 0, Status::Ok, &hello_body())),
             Ok(response(
-                Command::DeviceInfo,
+                Command::ProductConfigGet,
                 1,
+                Status::Ok,
+                &product_config_body("SN12AB34", "A1.2", 0x0020, true),
+            )),
+            Ok(response(
+                Command::DeviceInfo,
+                2,
                 Status::Ok,
                 &device_info_body(32),
             )),
@@ -750,7 +841,7 @@ mod tests {
             client.install(&image, |_| {}),
             Err(Error::Image("image exceeds device capacity"))
         ));
-        assert_eq!(client.into_transport().requests.len(), 2);
+        assert_eq!(client.into_transport().requests.len(), 3);
     }
 
     #[test]
@@ -758,8 +849,14 @@ mod tests {
         let transport = ScriptTransport::new([
             Ok(response(Command::Hello, 0, Status::Ok, &hello_body())),
             Ok(response(
-                Command::DeviceInfo,
+                Command::ProductConfigGet,
                 1,
+                Status::Ok,
+                &product_config_body("SN12AB34", "A1.2", 0x0020, true),
+            )),
+            Ok(response(
+                Command::DeviceInfo,
+                2,
                 Status::Ok,
                 &device_info_body(2048),
             )),
@@ -773,43 +870,85 @@ mod tests {
             client.install(&image, |_| {}),
             Err(Error::Image("image compatibility does not match device"))
         ));
-        assert_eq!(client.into_transport().requests.len(), 2);
+        assert_eq!(client.into_transport().requests.len(), 3);
     }
 
     #[test]
-    fn reads_and_provisions_product_config() {
-        let identity = Compatibility {
-            hardware_id: 0x0000_4601,
-            board_id: 7,
-            board_revision: 4,
-        };
+    fn rejects_install_before_begin_when_product_config_is_not_provisioned() {
         let transport = ScriptTransport::new([
             Ok(response(Command::Hello, 0, Status::Ok, &hello_body())),
             Ok(response(
                 Command::ProductConfigGet,
                 1,
                 Status::Ok,
-                &product_config_body(
-                    Compatibility {
-                        hardware_id: 0x0000_4600,
-                        board_id: 1,
-                        board_revision: 2,
-                    },
-                    false,
-                ),
+                &product_config_body("", "", product_identity::USB_APPLICATION_PID, false),
+            )),
+        ]);
+        let mut client = ProtocolV1Client::new(transport, Duration::from_millis(10));
+        let image = FirmwareImage::parse(test_image(60)).unwrap();
+        assert!(matches!(
+            client.install(&image, |_| {}),
+            Err(Error::ProductConfig(
+                "device parameters are not configured; configure them in Boot Recovery before installing"
+            ))
+        ));
+
+        let requests = client.into_transport().requests;
+        assert_eq!(requests.len(), 2);
+        assert_eq!(Frame::decode(&requests[0]).unwrap().command, Command::Hello);
+        assert_eq!(
+            Frame::decode(&requests[1]).unwrap().command,
+            Command::ProductConfigGet
+        );
+    }
+
+    #[test]
+    fn reads_and_provisions_product_config() {
+        let transport = ScriptTransport::new([
+            Ok(response(Command::Hello, 0, Status::Ok, &hello_body())),
+            Ok(response(
+                Command::ProductConfigGet,
+                1,
+                Status::Ok,
+                &product_config_body("", "", product_identity::USB_APPLICATION_PID, false),
             )),
             Ok(response(
                 Command::ProductConfigSet,
                 2,
                 Status::Ok,
-                &product_config_body(identity, true),
+                &product_config_body("SN12AB34", "A1.2", 0x0020, true),
             )),
         ]);
         let mut client = ProtocolV1Client::new(transport, Duration::from_millis(10));
-        assert!(!client.product_config().unwrap().provisioned);
+        let config = client.product_config().unwrap();
+        assert!(!config.provisioned);
         assert_eq!(
-            client.provision_product_config(identity).unwrap().identity,
-            identity
+            config.application_pid,
+            product_identity::USB_APPLICATION_PID
+        );
+        assert_eq!(
+            client
+                .provision_product_config("SN12AB34", "A1.2", 0x0020)
+                .unwrap()
+                .device_serial,
+            "SN12AB34"
+        );
+    }
+
+    #[test]
+    fn rejects_invalid_product_config_strings() {
+        let transport =
+            ScriptTransport::new([Ok(response(Command::Hello, 0, Status::Ok, &hello_body()))]);
+        let mut client = ProtocolV1Client::new(transport, Duration::from_millis(10));
+        assert!(
+            client
+                .provision_product_config("SN-1", "A1.2", 0x0020)
+                .is_err()
+        );
+        assert!(
+            client
+                .provision_product_config("SN1", "A1-2", 0x0020)
+                .is_err()
         );
     }
 
@@ -830,7 +969,7 @@ mod tests {
                 &device_info_body(2048),
             )),
         ]));
-        let info = UpgradeWorkflow::wait_for_version(
+        let (info, client) = UpgradeWorkflow::wait_for_version(
             || Ok(transport.take()),
             expected,
             Duration::from_secs(1),
@@ -840,6 +979,40 @@ mod tests {
         )
         .unwrap();
         assert_eq!(info.application_version, expected);
+        assert_eq!(client.into_transport().requests.len(), 2);
+    }
+
+    #[test]
+    fn heartbeat_reuses_hello_and_sends_device_info() {
+        let transport = ScriptTransport::new([
+            Ok(response(Command::Hello, 0, Status::Ok, &hello_body())),
+            Ok(response(
+                Command::DeviceInfo,
+                1,
+                Status::Ok,
+                &device_info_body(2048),
+            )),
+            Ok(response(
+                Command::DeviceInfo,
+                2,
+                Status::Ok,
+                &device_info_body(2048),
+            )),
+        ]);
+        let mut client = ProtocolV1Client::new(transport, Duration::from_millis(10));
+        client.info().unwrap();
+        client.info().unwrap();
+        let requests = client.into_transport().requests;
+        assert_eq!(requests.len(), 3);
+        assert_eq!(Frame::decode(&requests[0]).unwrap().command, Command::Hello);
+        assert_eq!(
+            Frame::decode(&requests[1]).unwrap().command,
+            Command::DeviceInfo
+        );
+        assert_eq!(
+            Frame::decode(&requests[2]).unwrap().command,
+            Command::DeviceInfo
+        );
     }
 
     struct ScriptTransport {
@@ -886,16 +1059,26 @@ mod tests {
     fn hello_body() -> Vec<u8> {
         let mut body = Vec::new();
         body.extend_from_slice(&512u16.to_le_bytes());
-        body.extend_from_slice(&(REQUIRED_CAPABILITIES | PRODUCT_CONFIG_CAPABILITY).to_le_bytes());
+        body.extend_from_slice(&(UPGRADE_CAPABILITIES | PRODUCT_CONFIG_CAPABILITY).to_le_bytes());
         body.extend_from_slice(&5000u32.to_le_bytes());
         body
     }
 
-    fn product_config_body(identity: Compatibility, provisioned: bool) -> Vec<u8> {
-        let mut body = vec![PRODUCT_CONFIG_FORMAT_VERSION, u8::from(provisioned)];
-        body.extend_from_slice(&identity.board_revision.to_le_bytes());
-        body.extend_from_slice(&identity.hardware_id.to_le_bytes());
-        body.extend_from_slice(&identity.board_id.to_le_bytes());
+    fn product_config_body(
+        device_serial: &str,
+        hardware_version: &str,
+        application_pid: u16,
+        provisioned: bool,
+    ) -> Vec<u8> {
+        let mut body = vec![
+            PRODUCT_CONFIG_FORMAT_VERSION,
+            u8::from(provisioned),
+            device_serial.len() as u8,
+            hardware_version.len() as u8,
+        ];
+        body.extend_from_slice(&application_pid.to_le_bytes());
+        body.extend_from_slice(device_serial.as_bytes());
+        body.extend_from_slice(hardware_version.as_bytes());
         body
     }
 

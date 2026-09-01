@@ -1,0 +1,5 @@
+application=1.0.0 bootloader=1.0.0
+hardware=0x00004600 board=1 revision=2 capacity=196608 write_alignment=4 erase_alignment=8192
+mode=application
+serial=SN20260901A
+Result: PASS

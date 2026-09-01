@@ -1,0 +1,18 @@
+post_install snapshot size: 524288 bytes
+post_install SHA256: aff190ff2227efec5eedddad353eb881d625f6b4bab202db0d5965620a0dc4e4
+
+Primary 0x00010000:
+- MCUboot image header magic: 3d b8 f3 96
+- First 57111 bytes match build/Debug/artifacts/updater_signed.bin byte-for-byte
+- Trailer swap_info=0x02, copy_done=0x01, image_ok=0x01
+- Trailer magic=77 c2 95 f3 60 d2 ef 7f 35 52 50 0f 2c b6 79 80
+
+Secondary 0x00042000:
+- Image header erased
+- Trailer erased
+
+Product Config 0x00076000:
+- FlashDB records present
+- v3 payload contains SN20260901A, A1.2, PID 0x0020
+
+Result: PASS

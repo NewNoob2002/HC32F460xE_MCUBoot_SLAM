@@ -4,6 +4,8 @@ Status: Accepted
 
 Date: 2026-08-28
 
+Amended: 2026-09-01
+
 ## Context
 
 An updater that exists only in the Application cannot recover a board when both
@@ -13,9 +15,10 @@ protocol command or manual driver selection.
 
 ## Decision
 
-- The project-owner supplied USB state identities are:
-  - Boot recovery: `cafe:0001`.
-  - Application updater: `cafe:0002`.
+- Boot recovery remains fixed at `cafe:0001`. Application defaults to
+  `cafe:0002` and may use a write-once product PID inside the approved range in
+  `Config/Product/ProductIdentity.env`. Per-device identity is always the
+  UQID-derived USB serial, never the PID.
 - Both states expose the same Protocol V1 vendor Bulk interface 0 and the same
   Microsoft OS 2.0 WinUSB interface GUID. The PID is the state discriminator.
 - Boot runs MCUboot normally first. If `boot_go()` succeeds, Boot hands over and
@@ -28,8 +31,11 @@ protocol command or manual driver selection.
 - `MCUBOOT_BOOTSTRAP` is enabled. After recovery resets, a valid Secondary image
   is copied into an invalid Primary slot and marked confirmed by MCUboot's
   bootstrap path. Normal valid-image upgrades retain scratch swap behavior.
-- CLI and GUI discover exactly one matching Boot/Application device. `info`
-  reports the mode; post-install waiting accepts only the Application PID.
+- Host discovery enumerates matching VID/interface/serial candidates without
+  opening them. GUI selection uses the current enumeration's `DeviceId`;
+  Connect then performs HELLO plus DeviceInfo. Cross-enumeration matching uses
+  the stable serial, and post-install waiting reconnects only the same serial in
+  Application mode.
 
 ## Consequences
 
@@ -38,9 +44,15 @@ protocol command or manual driver selection.
 - Boot grows because it contains CherryUSB, Protocol V1, Manager and MCUboot
   update backends. It must remain within the fixed 64 KiB Boot region.
 - Build and descriptor checks are local evidence only. Recovery enumeration,
-  Secondary installation, bootstrap copy and final `cafe:0002` enumeration
+  Secondary installation, bootstrap copy and final Application enumeration
   require an explicit destructive HIL preflight before they can be claimed.
-- Both modes derive the same stable per-chip serial from the HC32F460 96-bit UQID.
+- Before provisioning both modes derive the same stable per-chip serial from the
+  HC32F460 96-bit UQID; after provisioning both use the configured serial.
+- A connected GUI session sends DeviceInfo every 2000 ms. HELLO is sent once
+  and cached; configuration and upgrade requests serialize on the same worker.
+- Physical Product Config v3 evidence verifies `cafe:0001` recovery, configured
+  serial persistence, `cafe:0020` Application enumeration and exact serial
+  reconnect under `evidence/hil/2026-09-01-product-config-v3/`.
 
 ## Rejected alternatives
 

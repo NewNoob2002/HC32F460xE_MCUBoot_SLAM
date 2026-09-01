@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <fal.h>
+#include <flashdb.h>
 
 #include "boot_memory_map.h"
 #include "fw_update/product_config_flashdb.h"
@@ -61,10 +62,14 @@ const struct fal_flash_dev hc32_product_config_flash = {
 };
 
 static void assert_identity(const struct fw_update_product_config_state* state, uint32_t hardware_id, uint32_t board_id,
-                            uint16_t board_revision, uint8_t provisioned) {
+                            uint16_t board_revision, const char* device_serial, const char* hardware_version,
+                            uint16_t application_pid, uint8_t provisioned) {
     CHECK(state->identity.hardware_id == hardware_id);
     CHECK(state->identity.board_id == board_id);
     CHECK(state->identity.board_revision == board_revision);
+    CHECK(strcmp(state->identity.device_serial, device_serial) == 0);
+    CHECK(strcmp(state->identity.hardware_version, hardware_version) == 0);
+    CHECK(state->identity.application_pid == application_pid);
     CHECK(state->provisioned == provisioned);
 }
 
@@ -73,11 +78,15 @@ int main(void) {
         .hardware_id = UINT32_C(0x00004600),
         .board_id = 1U,
         .board_revision = 2U,
+        .application_pid = 0x0002U,
     };
     const struct fw_update_product_identity provisioned = {
         .hardware_id = UINT32_C(0x00004601),
         .board_id = 7U,
         .board_revision = 4U,
+        .application_pid = 0x0020U,
+        .device_serial = "SN12AB34",
+        .hardware_version = "A1.2",
     };
     struct fw_update_product_config config;
     struct fw_update_product_config restored;
@@ -86,15 +95,18 @@ int main(void) {
     memset(reserved_flash, 0xFF, sizeof(reserved_flash));
     CHECK(fw_update_product_config_flashdb_init(&config, &defaults) == FW_UPDATE_OK);
     CHECK(fw_update_product_config_get(&config, &state) == FW_UPDATE_OK);
-    assert_identity(&state, defaults.hardware_id, defaults.board_id, defaults.board_revision, 0U);
+    assert_identity(&state, defaults.hardware_id, defaults.board_id, defaults.board_revision, "", "",
+                    defaults.application_pid, 0U);
 
     CHECK(fw_update_product_config_set(&config, &provisioned) == FW_UPDATE_OK);
     CHECK(fw_update_product_config_get(&config, &state) == FW_UPDATE_OK);
-    assert_identity(&state, provisioned.hardware_id, provisioned.board_id, provisioned.board_revision, 1U);
+    assert_identity(&state, defaults.hardware_id, defaults.board_id, defaults.board_revision, provisioned.device_serial,
+                    provisioned.hardware_version, provisioned.application_pid, 1U);
     CHECK(fw_update_product_config_set(&config, &defaults) == FW_UPDATE_ERR_LOCKED);
 
     CHECK(fw_update_product_config_flashdb_init(&restored, &defaults) == FW_UPDATE_OK);
     CHECK(fw_update_product_config_get(&restored, &state) == FW_UPDATE_OK);
-    assert_identity(&state, provisioned.hardware_id, provisioned.board_id, provisioned.board_revision, 1U);
+    assert_identity(&state, defaults.hardware_id, defaults.board_id, defaults.board_revision, provisioned.device_serial,
+                    provisioned.hardware_version, provisioned.application_pid, 1U);
     return 0;
 }

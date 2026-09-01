@@ -5,6 +5,7 @@
 #include "bsp_reset.h"
 #include "bsp_status_led.h"
 #include "bsp_timebase.h"
+#include "cmsis_gcc.h"
 #include "usb_fw_update.h"
 #if defined(HC32_DEBUG_LOG)
 #include "elog.h"
@@ -43,10 +44,11 @@ int main(void) {
     elog_i("updater", "init=%d confirm=%d", g_usb_fw_update_init_result, g_usb_fw_update_confirm_result);
 #endif
     for (;;) {
-        bsp_delay_ms(1U);
         now_ms = bsp_millis();
         bsp_external_watchdog_poll(now_ms);
-        if (usb_fw_update_poll(now_ms) == USB_FW_UPDATE_ACTION_RESET)
+        if (usb_fw_update_poll(now_ms) == USB_FW_UPDATE_ACTION_RESET) {
             bsp_system_reset();
+        }
+        __WFI();
     }
 }

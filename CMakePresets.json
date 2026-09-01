@@ -15,7 +15,8 @@
             "name": "Debug",
             "inherits": "default",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_BUILD_TYPE": "Debug",
+                "MCUBOOT_SIGNING_KEY": "$env{HOME}/Desktop/workspace/MyKey/HC32_MCUBOOT_SLAM/dev-ec-p256.pem"
             }
         },
         {

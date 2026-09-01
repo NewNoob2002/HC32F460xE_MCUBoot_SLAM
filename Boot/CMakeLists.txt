@@ -2,6 +2,7 @@ add_executable(boot_firmware
     Core/Src/main.c
     ${PROJECT_SOURCE_DIR}/App/Core/Src/usb_fw_update.c
     $<TARGET_OBJECTS:hc32_boot_fault>
+    $<TARGET_OBJECTS:hc32_newlib>
     $<TARGET_OBJECTS:hc32_startup_boot>
 )
 set_target_properties(boot_firmware PROPERTIES SUFFIX .elf)

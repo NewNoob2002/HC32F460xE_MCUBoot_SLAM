@@ -246,6 +246,7 @@ static void test_boot_control_backend(void) {
     product_config_state.identity.hardware_id = HC32_PRODUCT_HARDWARE_ID;
     product_config_state.identity.board_id = HC32_PRODUCT_BOARD_ID;
     product_config_state.identity.board_revision = HC32_PRODUCT_BOARD_REVISION;
+    product_config_state.identity.application_pid = HC32_PRODUCT_USB_APPLICATION_PID;
     product_config_state.provisioned = 0U;
 
     fw_update_boot_control_mcuboot_init(&control, &product_config);

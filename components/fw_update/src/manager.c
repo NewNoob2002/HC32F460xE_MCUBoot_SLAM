@@ -3,7 +3,7 @@
 #include <limits.h>
 #include <string.h>
 
-#define FW_UPDATE_MANAGER_MAX_RESPONSE_PAYLOAD 40U
+#define FW_UPDATE_MANAGER_MAX_RESPONSE_PAYLOAD FW_UPDATE_PRODUCT_CONFIG_MAX_WIRE_SIZE
 #define FW_UPDATE_MANAGER_MAX_PROTOCOL_ERRORS  3U
 #define FW_UPDATE_MANAGER_CAPABILITIES                                                                                 \
     ((uint32_t)(FW_PROTOCOL_CAPABILITY_TEST_UPGRADE | FW_PROTOCOL_CAPABILITY_READBACK_CRC                              \
@@ -38,12 +38,24 @@ static void write_version(uint8_t* output, const struct fw_update_version* versi
     write_u32_le(&output[4], version->build);
 }
 
-static void write_product_config(uint8_t* output, const struct fw_update_product_config_state* state) {
+static uint16_t write_product_config(uint8_t* output, const struct fw_update_product_config_state* state) {
+    size_t serial_length = strlen(state->identity.device_serial);
+    size_t hardware_version_length = strlen(state->identity.hardware_version);
+
     output[0] = FW_UPDATE_PRODUCT_CONFIG_FORMAT_VERSION;
     output[1] = state->provisioned != 0U ? 1U : 0U;
-    write_u16_le(&output[2], state->identity.board_revision);
-    write_u32_le(&output[4], state->identity.hardware_id);
-    write_u32_le(&output[8], state->identity.board_id);
+    output[2] = (uint8_t)serial_length;
+    output[3] = (uint8_t)hardware_version_length;
+    write_u16_le(&output[4], state->identity.application_pid);
+    memcpy(&output[FW_UPDATE_PRODUCT_CONFIG_WIRE_HEADER_SIZE], state->identity.device_serial, serial_length);
+    memcpy(&output[FW_UPDATE_PRODUCT_CONFIG_WIRE_HEADER_SIZE + serial_length], state->identity.hardware_version,
+           hardware_version_length);
+    return (uint16_t)(FW_UPDATE_PRODUCT_CONFIG_WIRE_HEADER_SIZE + serial_length + hardware_version_length);
+}
+
+static int valid_application_pid(const struct fw_update_manager_config* config, uint16_t product_id) {
+    return product_id != 0U && product_id != config->usb_boot_pid && product_id >= config->usb_application_pid_min
+           && product_id <= config->usb_application_pid_max;
 }
 
 static struct fw_update_version read_version(const uint8_t* input) {
@@ -283,8 +295,7 @@ static enum fw_protocol_status handle_product_config_get(struct fw_update_manage
     if (manager->state != FW_UPDATE_MANAGER_STATE_NEGOTIATING)
         return FW_PROTOCOL_STATUS_INVALID_STATE;
 
-    write_product_config(body, &manager->product_config_state);
-    *body_length = 12U;
+    *body_length = write_product_config(body, &manager->product_config_state);
     return FW_PROTOCOL_STATUS_OK;
 }
 
@@ -293,8 +304,10 @@ static enum fw_protocol_status handle_product_config_set(struct fw_update_manage
                                                          uint16_t* body_length) {
     struct fw_update_product_identity identity;
     enum fw_update_result result;
+    size_t serial_length;
+    size_t hardware_version_length;
 
-    if (frame->payload_length != 12U)
+    if (frame->payload_length < FW_UPDATE_PRODUCT_CONFIG_WIRE_HEADER_SIZE)
         return FW_PROTOCOL_STATUS_BAD_FRAME;
     if (manager->state != FW_UPDATE_MANAGER_STATE_NEGOTIATING)
         return FW_PROTOCOL_STATUS_INVALID_STATE;
@@ -305,19 +318,33 @@ static enum fw_protocol_status handle_product_config_set(struct fw_update_manage
     if (frame->payload[0] != FW_UPDATE_PRODUCT_CONFIG_FORMAT_VERSION || frame->payload[1] != 0U)
         return FW_PROTOCOL_STATUS_INVALID_ARGUMENT;
 
-    identity.board_revision = read_u16_le(&frame->payload[2]);
-    identity.hardware_id = read_u32_le(&frame->payload[4]);
-    identity.board_id = read_u32_le(&frame->payload[8]);
+    serial_length = frame->payload[2];
+    hardware_version_length = frame->payload[3];
+    if (serial_length == 0U || serial_length > FW_UPDATE_DEVICE_SERIAL_MAX_LENGTH || hardware_version_length == 0U
+        || hardware_version_length > FW_UPDATE_HARDWARE_VERSION_MAX_LENGTH
+        || frame->payload_length != FW_UPDATE_PRODUCT_CONFIG_WIRE_HEADER_SIZE + serial_length + hardware_version_length)
+        return FW_PROTOCOL_STATUS_INVALID_ARGUMENT;
+
+    identity = manager->product_config_state.identity;
+    memset(identity.device_serial, 0, sizeof(identity.device_serial));
+    memset(identity.hardware_version, 0, sizeof(identity.hardware_version));
+    memcpy(identity.device_serial, &frame->payload[FW_UPDATE_PRODUCT_CONFIG_WIRE_HEADER_SIZE], serial_length);
+    memcpy(identity.hardware_version, &frame->payload[FW_UPDATE_PRODUCT_CONFIG_WIRE_HEADER_SIZE + serial_length],
+           hardware_version_length);
+    identity.application_pid = read_u16_le(&frame->payload[4]);
+    if (!fw_update_product_config_valid_device_serial(identity.device_serial)
+        || !fw_update_product_config_valid_hardware_version(identity.hardware_version)
+        || !valid_application_pid(&manager->config, identity.application_pid))
+        return FW_PROTOCOL_STATUS_INVALID_ARGUMENT;
     result = fw_update_product_config_set(manager->config.product_config, &identity);
     if (result == FW_UPDATE_ERR_LOCKED)
         return FW_PROTOCOL_STATUS_INVALID_STATE;
     if (result != FW_UPDATE_OK)
         return FW_PROTOCOL_STATUS_STORAGE_ERROR;
 
-    manager->product_config_state.identity = identity;
-    manager->product_config_state.provisioned = 1U;
-    write_product_config(body, &manager->product_config_state);
-    *body_length = 12U;
+    if (fw_update_product_config_get(manager->config.product_config, &manager->product_config_state) != FW_UPDATE_OK)
+        return FW_PROTOCOL_STATUS_STORAGE_ERROR;
+    *body_length = write_product_config(body, &manager->product_config_state);
     return FW_PROTOCOL_STATUS_OK;
 }
 
@@ -463,7 +490,10 @@ static enum fw_protocol_status validate_request_frame(const struct fw_protocol_f
         case FW_PROTOCOL_COMMAND_ABORT:
             return frame->payload_length == 0U ? FW_PROTOCOL_STATUS_OK : FW_PROTOCOL_STATUS_BAD_FRAME;
         case FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_SET:
-            return frame->payload_length == 12U ? FW_PROTOCOL_STATUS_OK : FW_PROTOCOL_STATUS_BAD_FRAME;
+            return frame->payload_length >= FW_UPDATE_PRODUCT_CONFIG_WIRE_HEADER_SIZE
+                           && frame->payload_length <= FW_UPDATE_PRODUCT_CONFIG_MAX_WIRE_SIZE
+                       ? FW_PROTOCOL_STATUS_OK
+                       : FW_PROTOCOL_STATUS_BAD_FRAME;
         case FW_PROTOCOL_COMMAND_BEGIN:
             return frame->payload_length == 28U ? FW_PROTOCOL_STATUS_OK : FW_PROTOCOL_STATUS_BAD_FRAME;
         case FW_PROTOCOL_COMMAND_DATA:
@@ -591,12 +621,23 @@ enum fw_update_manager_result fw_update_manager_init(struct fw_update_manager* m
     struct fw_update_product_config_state product_config_state;
 
     if (manager == NULL || config == NULL || config->storage == NULL || config->boot_control == NULL
-        || config->product_config == NULL || config->session_timeout_ms == 0U)
+        || config->product_config == NULL || config->session_timeout_ms == 0U || config->usb_boot_pid == 0U
+        || config->usb_application_pid_min == 0U || config->usb_application_pid_min > config->usb_application_pid_max
+        || (config->usb_boot_pid >= config->usb_application_pid_min
+            && config->usb_boot_pid <= config->usb_application_pid_max))
         return FW_UPDATE_MANAGER_ERR_INVALID_ARGUMENT;
     if (fw_update_storage_get_info(config->storage, &storage_info) != FW_UPDATE_OK)
         return FW_UPDATE_MANAGER_ERR_STORAGE;
     if (fw_update_product_config_get(config->product_config, &product_config_state) != FW_UPDATE_OK)
         return FW_UPDATE_MANAGER_ERR_STORAGE;
+    if (!valid_application_pid(config, product_config_state.identity.application_pid)
+        || (product_config_state.provisioned != 0U
+            && (!fw_update_product_config_valid_device_serial(product_config_state.identity.device_serial)
+                || !fw_update_product_config_valid_hardware_version(product_config_state.identity.hardware_version)))
+        || (product_config_state.provisioned == 0U
+            && (product_config_state.identity.device_serial[0] != '\0'
+                || product_config_state.identity.hardware_version[0] != '\0')))
+        return FW_UPDATE_MANAGER_ERR_INVALID_ARGUMENT;
 
     config_copy = *config;
     memset(manager, 0, sizeof(*manager));
