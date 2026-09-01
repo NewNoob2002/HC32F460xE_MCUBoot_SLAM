@@ -59,9 +59,10 @@ accepted. MCUboot trailer offsets remain derived by upstream helpers.
 
 ```text
 reset
-  -> Boot clock/timebase/log initialization
+  -> checked Boot clock/timebase/log initialization
   -> boot_go(): validate, select swap/revert/bootstrap, perform pending work
-  -> valid image: validate vectors, clear SysTick/NVIC state, hand over
+  -> valid image: require internal Primary + fixed header, validate MSP/reset
+  -> clear SysTick/NVIC state, assembly handover
   -> no valid image: start cafe:0001 recovery updater
 
 USB install
@@ -77,6 +78,13 @@ USB install
 FlashDB, Manager and USB, then confirms the running image after initialization.
 USB callbacks publish events; the cooperative poll loop owns protocol, Flash and
 reset work.
+
+Boot's frozen scope is secure image selection/swap, invalid-image USB recovery,
+recovery-only provisioning and validated handover. Successful handover never
+initializes USB; recovery exits only through system reset, so USB teardown is
+not part of the handover path. Product logic and new transports stay outside
+Boot. Protected clock, Flash, GPIO, FCG, power and SRAM register writes are
+locally unlocked by their owning BSP operation and restored before return.
 
 ## Product identity and configuration
 
@@ -129,6 +137,9 @@ Known deferred host issues for a later node:
 - Retained evidence integrity is checked by `Tests/HIL/verify_evidence.py`.
 - Product Config v3 HIL is retained under
   `evidence/hil/2026-09-01-product-config-v3/`.
+- Final Boot freeze HIL is retained under
+  `evidence/hil/2026-09-01-boot-freeze-final/`; the frozen source is tagged
+  `boot-freeze-2026-09-01`.
 - Earlier evidence covers rollback/confirmation, Secondary isolation, protocol
   corpus, USB loopback endurance, Boot recovery/bootstrap, Application upgrade,
   GUI installation and exact restoration.

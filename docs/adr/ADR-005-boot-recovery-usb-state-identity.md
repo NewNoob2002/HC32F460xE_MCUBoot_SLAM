@@ -31,11 +31,27 @@ protocol command or manual driver selection.
 - `MCUBOOT_BOOTSTRAP` is enabled. After recovery resets, a valid Secondary image
   is copied into an invalid Primary slot and marked confirmed by MCUboot's
   bootstrap path. Normal valid-image upgrades retain scratch swap behavior.
+- Handover accepts only internal Flash, the fixed Primary base and the fixed
+  512-byte MCUboot header. It validates the Application MSP and Thumb reset
+  vector, disables and clears SysTick/NVIC state and uses an assembly trampoline
+  to restore the reset execution context.
 - Host discovery enumerates matching VID/interface/serial candidates without
   opening them. GUI selection uses the current enumeration's `DeviceId`;
   Connect then performs HELLO plus DeviceInfo. Cross-enumeration matching uses
   the stable serial, and post-install waiting reconnects only the same serial in
   Application mode.
+
+## Boot freeze boundary
+
+Boot is frozen around four responsibilities: signed MCUboot selection and
+scratch swap/revert/bootstrap, fixed-PID recovery USB when no image is bootable,
+write-once Product Config provisioning in recovery, and validated Application
+handover. Product behavior, hardware-version adaptation, additional transports,
+normal update UI policy and health policy remain Application/Host concerns.
+
+After this node, Boot changes require a concrete security defect, MCU/silicon
+erratum, signing-key lifecycle requirement or demonstrated recovery/handover
+failure. Feature requests alone do not expand the 64 KiB Boot image.
 
 ## Consequences
 
@@ -43,6 +59,10 @@ protocol command or manual driver selection.
   WFI loop; they enter the Boot recovery USB path.
 - Boot grows because it contains CherryUSB, Protocol V1, Manager and MCUboot
   update backends. It must remain within the fixed 64 KiB Boot region.
+- Clock initialization fails closed if the crystal, PLL, Flash wait-state or
+  final 200 MHz clock contract cannot be established.
+- Protected peripheral registers are unlocked only around the owning BSP
+  operation and are restored symmetrically before it returns.
 - Build and descriptor checks are local evidence only. Recovery enumeration,
   Secondary installation, bootstrap copy and final Application enumeration
   require an explicit destructive HIL preflight before they can be claimed.

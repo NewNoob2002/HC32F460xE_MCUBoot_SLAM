@@ -27,7 +27,7 @@
 ## Architecture
 
 - Boot entry: `Boot/Core/Src/main.c` -> `bsp_clock_init()` -> `boot_go()` -> `boot_handover()`.
-- Handover: `Platform/HC32F460/Src/boot_handover.c` validates the vector address, MSP, and Thumb reset vector, then clears interrupt/SysTick state and sets VTOR/MSP before branching.
+- Handover: `Platform/HC32F460/Src/boot_handover.c` accepts only internal Primary with the fixed header, validates MSP/Thumb reset vectors, clears interrupt/SysTick state, then uses a small assembly trampoline to restore CONTROL/MSP and branch.
 - Default App entry: `App/Core/Src/main.c` initializes clocks and optionally calls `app_confirm_running_image()`.
 - USB diagnostic entry: `App/Core/Src/usb_vendor_bulk_main.c`; it also services the external watchdog.
 - USB updater entry: `App/Core/Src/usb_fw_update_main.c`; callbacks publish events and the cooperative poll loop owns Manager, Flash and deferred reset work.

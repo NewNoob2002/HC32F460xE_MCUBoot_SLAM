@@ -1,0 +1,16 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-09-01T06:36:49Z"
+  operation: "Flash, verify, reset/halt/run, and symbol-level Boot-to-App handover validation"
+  authorization: "User explicitly requested final real-hardware validation with J-Link MCP and Boot version freeze on 2026-09-01"
+  target:
+    board: "user-owned HC32F460xE all-IO breakout board"
+    hardware_revision: "compatibility board_revision 2; physical PCB revision not separately identified"
+    probe_or_adapter_serial: "63728710"
+    transport: "J-Link CE SWD 4 MHz"
+  tool: "SEGGER J-Link V9.70 via J-Link MCP"
+  power_state: "VTref 3.300 V"
+  artifact_or_stimulus: "Debug Boot build/Debug/Boot/boot_firmware.bin SHA256 8a235898d9b563c41a9c7ce595f7ffc9dfcb36136e49343aaaa3d4712383f6bb at 0x00000000; matching Debug Primary build/Debug/artifacts/app_primary.bin SHA256 10bef6c4f7677c021ac19f5fe2fd87bfbcd2d6c83be8e117761d374eb6280e52 at 0x00010000"
+  limits: "Capture a 524288-byte backup of 0x00000000-0x0007FFFF before writes. Direct writes are limited to Boot 0x00000000-0x0000FFFF and Primary 0x00010000-0x00041FFF. No Secondary, Scratch, Reserved, OTP, option-byte, protection, unlock/recover, mass erase, or unrelated bus operation. One infrastructure retry is allowed after the J-Link MCP flash wrapper returned no write/verify evidence; no retry is allowed after a product failure. Debug waits are bounded."
+  recovery_plan: "On deployment failure, retain target halted and restore only from the checksummed pre-flash backup after naming the exceptional artifact and verifying its SHA256. On success, leave the validated current Boot and matching Primary running."
+  approved: true

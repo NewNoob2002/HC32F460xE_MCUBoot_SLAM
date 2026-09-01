@@ -1,0 +1,14 @@
+debug_session:
+  schema_version: 1
+  created_at_utc: "2026-09-01T06:36:49Z"
+  safety_preflight: "safety_preflight.yaml"
+  target: "HC32F460xE via J-Link 63728710"
+  server: "jlink-gdb-server"
+  client: "J-Link MCP GDB client"
+  source_revision: "7a5f0c716dd273953dea1e9c6efda2ce1d5fa153+dirty"
+  symbols:
+    - "build/Debug/Boot/boot_firmware.elf SHA256 eba2c99e9ea57955ed7a93033c8ec13d4da27b7c6695b6686b1883fdc0f2bd72"
+    - "build/Debug/App/app_firmware.elf SHA256 f61f0a370415a394204ddd15d828f60f891687087b4367ab43e43d0ef04c4f25"
+  diagnosis: "Boot-to-App handover passed. One apparent fault was confirmed as retained FPB debug state (HFSR.DEBUGEVT, DFSR.BKPT), cleared, and excluded from product results."
+  transcript: "logs/jlink_mcp_summary.txt"
+  registers: "logs/jlink_mcp_summary.txt"

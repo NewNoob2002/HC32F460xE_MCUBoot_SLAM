@@ -1,4 +1,5 @@
 add_library(hc32_platform STATIC
+    HC32F460/Src/boot_handover_jump.S
     HC32F460/Src/boot_handover.c
     HC32F460/Src/bsp_clock.c
     HC32F460/Src/bsp_external_watchdog.c

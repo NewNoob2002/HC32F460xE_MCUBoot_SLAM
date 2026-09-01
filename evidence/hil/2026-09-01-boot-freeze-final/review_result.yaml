@@ -1,0 +1,19 @@
+review_result:
+  schema_version: 1
+  source_revision: "7a5f0c716dd273953dea1e9c6efda2ce1d5fa153+dirty"
+  scope:
+    - "Boot entry and handover"
+    - "HC32 clock/write-protection/USB/GPIO initialization"
+    - "matching App call sites and handover host tests"
+  toolchain_context: "GNU Arm Embedded 14.3.1, Cortex-M4F bare-metal Debug build"
+  findings: []
+  verification:
+    - "all changed shared callers traced"
+    - "git diff --check passed"
+    - "clang-format --dry-run --Werror passed on touched C/header files"
+    - "HostTests 17/17 passed"
+    - "Debug firmware and image verification targets passed"
+    - "real J-Link HIL passed"
+  residual_risks:
+    - "systematic power-loss testing, health-based confirmation, and anti-rollback policy remain separate roadmap gates"
+    - "Debug Boot has 1328 bytes of Flash headroom"

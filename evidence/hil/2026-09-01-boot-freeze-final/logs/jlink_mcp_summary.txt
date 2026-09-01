@@ -1,0 +1,31 @@
+2026-09-01 Boot freeze final HIL summary
+
+Probe: J-Link CE S/N 63728710; J-Link V9.70; HC32F460xE; SWD; VTref 3.300 V.
+Backup: 0x00000000-0x0007FFFF, 524288 bytes, SHA256 3743a1b144e5e1b07880aa67a076e0b397dbab466eda4d692196312dc42078e1.
+
+Software gates:
+- HostTests: 17/17 passed.
+- Debug signed App/USB loopback/updater image verification passed.
+- Four firmware maps use hc32_newlib.
+- Retained evidence verification: 18 bundles passed.
+
+Deployment:
+- High-level jlink MCP flash wrapper returned connection-only failure and no write/verify evidence.
+- Native J-Link MCP loadfile programmed Boot at 0x00000000; program-and-verify passed; verifybin read 64364 bytes and passed.
+- Native J-Link MCP loadfile programmed Primary at 0x00010000; program-and-verify passed; verifybin read 204800 bytes and passed.
+
+Symbol-level handover:
+- boot_handover_jump breakpoint: PC=0x0000B11C, R0=0x1FFF8C98, R1=0x00011131.
+- Boot SystemCoreClock=0x0BEBC200 (200000000).
+- Primary vectors at 0x00010200: 0x1FFF8C98, 0x00011131.
+- VTOR=0x00010200.
+- App Reset_Handler breakpoint: MSP=0x1FFF8C98; CONTROL=0; PRIMASK=0; BASEPRI=0; FAULTMASK=0.
+- App bsp_status_led_init breakpoint: SystemCoreClock=0x0BEBC200; CFSR=0; HFSR=0.
+- app_confirm_running_image(true) returned 0; g_app_confirm_result=0.
+- Primary header magic=3d b8 f3 96; image_ok=01; MCUboot magic=77 c2 95 f3 60 d2 ef 7f 35 52 50 0f 2c b6 79 80.
+
+Debug contamination and final reset:
+- An apparent App HardFault decoded as CFSR.INVSTATE plus HFSR.DEBUGEVT and DFSR.BKPT. J-Link reported a retained FPB breakpoint; this was not a product failure.
+- All six FPB comparators were cleared through J-Link MCP native commands before repeating reset.
+- Final no-breakpoint reset/run sample after 2.5 seconds: PC=0x0001184E, IPSR=0, CONTROL=4, PRIMASK=0, BASEPRI=0, FAULTMASK=0, CFSR=0, HFSR=0.
+- Target resumed after final inspection.

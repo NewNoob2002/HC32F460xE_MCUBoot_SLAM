@@ -30,12 +30,20 @@ Allowed values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIEW`, `PA
   Public key source is generated without generating private keys under `build/`.
 - `hc32_newlib` is included in all firmware ELFs and has a dedicated map-file
   verification target.
+- Boot freeze review: checked 200 MHz clock establishment, exact Primary/header
+  handover contract, MSP/reset-vector bounds, interrupt cleanup and assembly
+  context transfer. Successful handover has no active USB instance.
 - Product Config v3 hardware evidence passed on 2026-09-01 with exact full-Flash
   restoration: `evidence/hil/2026-09-01-product-config-v3/`.
-- Final local CI passed: 18 evidence bundles, Rust 21/21 plus Clippy, strict
-  ASan/UBSan HostTests 17/17, Debug and Release firmware, all signed-image
-  checks, four newlib map checks, and missing/P-384 signing-key rejection. Debug
-  Boot uses 63,996/65,536 bytes; Release Boot uses 51,676/65,536 bytes.
+- Boot freeze local verification passed: 18 evidence bundles, strict ASan/UBSan
+  HostTests 17/17, Debug and Release firmware, all signed-image, descriptor and
+  four newlib map checks. Debug Boot uses 64,208/65,536 bytes; Release Boot uses
+  51,836/65,536 bytes.
+- Final Boot freeze HIL passed on J-Link `63728710`: Boot/Primary verifybin,
+  200 MHz clock, exact vectors/VTOR, clean assembly context transfer, App
+  confirmation and a breakpoint-free reset/run all passed. Evidence:
+  `evidence/hil/2026-09-01-boot-freeze-final/`; tag:
+  `boot-freeze-2026-09-01`.
 
 Remote CI is recorded in the associated GitHub Actions run.
 
@@ -47,9 +55,9 @@ Remote CI is recorded in the associated GitHub Actions run.
 - MCUboot scratch swap plus validation takes about three seconds for the current
   57 KiB updater on the first boot after upgrade; ordinary-boot timing is not yet
   separately instrumented.
-- `boot_handover()` clears core interrupt/SysTick state. Boot USB is not active on
-  the successful handover path; broader peripheral quiescing is deferred until a
-  concrete ownership failure is demonstrated.
+- Fault-injection hardening and monotonic anti-rollback remain product security
+  policy decisions; the current baseline retains full signature validation on
+  every boot and MCUboot test-swap rollback.
 
 ## Next gate
 

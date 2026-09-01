@@ -14,7 +14,8 @@ volatile int g_usb_vendor_bulk_init_result;
 int main(void) {
     uint32_t now_ms;
 
-    bsp_clock_init();
+    if (!bsp_clock_init())
+        bsp_panic("USB loopback clock init failed");
     if (!bsp_status_led_init())
         bsp_panic("USB loopback status LED init failed");
     bsp_status_led_set_mode(BSP_STATUS_LED_MODE_APP_DIAGNOSTIC);

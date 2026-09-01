@@ -36,7 +36,8 @@ int main(void) {
     struct boot_rsp rsp = {0};
     FIH_DECLARE(rc, FIH_FAILURE);
 
-    bsp_clock_init();
+    if (!bsp_clock_init())
+        bsp_panic("boot clock init failed");
     if (!bsp_status_led_init())
         bsp_panic("boot status LED init failed");
     bsp_status_led_set_mode(BSP_STATUS_LED_MODE_BOOT);

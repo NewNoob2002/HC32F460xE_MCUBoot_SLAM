@@ -1,0 +1,23 @@
+evidence_manifest:
+  schema_version: 1
+  run_id: "2026-09-01-boot-freeze-final"
+  source_base_revision: "7a5f0c716dd273953dea1e9c6efda2ce1d5fa153"
+  source_dirty_during_run: true
+  freeze_tag: "boot-freeze-2026-09-01"
+  target: "HC32F460xE all-IO breakout board"
+  probe_serial: "63728710"
+  result: "PASSED"
+  contracts:
+    - "safety_preflight.yaml"
+    - "build_output_debug.yaml"
+    - "deployment_result.yaml"
+    - "debug_session.yaml"
+    - "hil_test_result.yaml"
+    - "review_result.yaml"
+    - "release_evidence.yaml"
+  checksum_file: "SHA256SUMS"
+  excluded_raw_flash:
+    reason: "full readback may contain device data and is retained only in ignored build output"
+    path: "build/local-evidence-backup/2026-09-01-boot-freeze-final/pre_flash_00000000_0007ffff.bin"
+    size: 524288
+    sha256: "3743a1b144e5e1b07880aa67a076e0b397dbab466eda4d692196312dc42078e1"

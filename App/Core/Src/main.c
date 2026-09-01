@@ -14,7 +14,8 @@
 volatile int g_app_confirm_result;
 
 int main(void) {
-    bsp_clock_init();
+    if (!bsp_clock_init())
+        bsp_panic("app clock init failed");
     if (!bsp_status_led_init())
         bsp_panic("app status LED init failed");
     bsp_status_led_set_mode(BSP_STATUS_LED_MODE_APP_PRIMARY);

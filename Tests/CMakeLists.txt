@@ -19,6 +19,8 @@ add_executable(boot_handover_tests
 )
 target_include_directories(boot_handover_tests PRIVATE
     "${PROJECT_SOURCE_DIR}/Platform/HC32F460/Inc"
+    "${PROJECT_SOURCE_DIR}/Platform/HC32F460/Ports/mcuboot/Inc"
+    "${CMAKE_BINARY_DIR}/generated/Config"
 )
 target_compile_definitions(boot_handover_tests PRIVATE BOOT_HOST_TEST)
 add_test(NAME boot_handover COMMAND boot_handover_tests)

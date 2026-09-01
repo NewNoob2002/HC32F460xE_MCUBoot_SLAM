@@ -1,39 +1,54 @@
 #include "boot_handover.h"
 
-uint32_t boot_handover_vector_address(uint32_t image_offset, uint16_t header_size) {
-    return image_offset + (uint32_t)header_size;
+#include "boot_memory_map.h"
+#include "flash_map_backend/flash_map_backend.h"
+
+#define HC32_MAIN_SRAM_BASE  UINT32_C(0x1FFF8000)
+#define HC32_MAIN_SRAM_LIMIT UINT32_C(0x20027000)
+
+_Static_assert(MCUBOOT_HEADER_SIZE <= UINT16_MAX, "MCUboot header size exceeds boot response width");
+_Static_assert(APP_LINK_ORIGIN == PRIMARY_SLOT_BASE + MCUBOOT_HEADER_SIZE, "Application origin mismatch");
+
+bool boot_handover_image_is_valid(uint8_t flash_device_id, uint32_t image_offset, uint16_t header_size) {
+    return flash_device_id == FLASH_DEVICE_INTERNAL_FLASH && image_offset == PRIMARY_SLOT_BASE
+           && header_size == MCUBOOT_HEADER_SIZE;
+}
+
+bool boot_handover_vectors_are_valid(uint32_t stack_pointer, uint32_t reset_vector) {
+    const uint32_t reset_address = reset_vector & ~UINT32_C(1);
+    const uint32_t app_end = APP_LINK_ORIGIN + APP_LINK_SIZE;
+
+    return stack_pointer > HC32_MAIN_SRAM_BASE && stack_pointer <= HC32_MAIN_SRAM_LIMIT
+           && (stack_pointer & UINT32_C(7)) == 0U && (reset_vector & UINT32_C(1)) != 0U
+           && reset_address >= APP_LINK_ORIGIN && reset_address < app_end;
 }
 
 #ifndef BOOT_HOST_TEST
 
 #include <stddef.h>
 
-#include "boot_memory_map.h"
 #include "bootutil/bootutil.h"
 #include "bootutil/image.h"
 #include "bsp_panic.h"
 #include "hc32f460.h"
 
-#define HC32_SRAM_END 0x20026FFFUL
+_Static_assert(HC32_MAIN_SRAM_BASE == SRAM_BASE, "HC32 SRAM base mismatch");
+_Static_assert((APP_LINK_ORIGIN & ~SCB_VTOR_TBLOFF_Msk) == 0U, "Application vector table is misaligned");
+
+_Noreturn void boot_handover_jump(uint32_t stack_pointer, uint32_t reset_vector);
 
 _Noreturn void boot_handover(const struct boot_rsp* rsp) {
     if (rsp == NULL || rsp->br_hdr == NULL)
         bsp_panic("invalid boot response");
+    if (!boot_handover_image_is_valid(rsp->br_flash_dev_id, rsp->br_image_off, rsp->br_hdr->ih_hdr_size))
+        bsp_panic("invalid boot image location");
 
-    const uint32_t vector_address = boot_handover_vector_address(rsp->br_image_off, rsp->br_hdr->ih_hdr_size);
-    const uint32_t app_end = APP_LINK_ORIGIN + APP_LINK_SIZE;
-
-    if (vector_address < APP_LINK_ORIGIN || vector_address < rsp->br_image_off
-        || (vector_address & ~SCB_VTOR_TBLOFF_Msk) != 0U || vector_address > app_end - (2U * sizeof(uint32_t)))
-        bsp_panic("invalid application vector address");
-
+    const uint32_t vector_address = APP_LINK_ORIGIN;
     const uint32_t* vectors = (const uint32_t*)(uintptr_t)vector_address;
     const uint32_t stack_pointer = vectors[0];
     const uint32_t reset_vector = vectors[1];
-    const uint32_t reset_address = reset_vector & ~1UL;
 
-    if (stack_pointer < SRAM_BASE || stack_pointer > HC32_SRAM_END || (stack_pointer & 7U) != 0U
-        || (reset_vector & 1U) == 0U || reset_address < APP_LINK_ORIGIN || reset_address >= app_end)
+    if (!boot_handover_vectors_are_valid(stack_pointer, reset_vector))
         bsp_panic("invalid application vectors");
 
     __disable_irq();
@@ -50,10 +65,7 @@ _Noreturn void boot_handover(const struct boot_rsp* rsp) {
     SCB->VTOR = vector_address;
     __DSB();
     __ISB();
-    __enable_irq();
-    __set_MSP(stack_pointer);
-    ((void (*)(void))(uintptr_t)reset_vector)();
-    bsp_panic("application returned");
+    boot_handover_jump(stack_pointer, reset_vector);
 }
 
 #endif
