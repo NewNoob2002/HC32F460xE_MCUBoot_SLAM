@@ -1,0 +1,4 @@
+I/elog     [0] App EasyLogger V2.2.99 is initialize success.
+I/app      [6] startup
+I/power    [270] i2c2=0 bq@0b=-3 mp@5c=-3 husb@08=-3
+W/bq40z50  [276] identity=-2

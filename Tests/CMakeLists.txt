@@ -47,6 +47,16 @@ target_include_directories(app_confirm_tests PRIVATE
 )
 add_test(NAME app_confirm COMMAND app_confirm_tests)
 
+add_executable(bq40z50_tests
+    bq40z50_tests.c
+    ${PROJECT_SOURCE_DIR}/App/Core/Src/bq40z50.c
+)
+target_include_directories(bq40z50_tests PRIVATE
+    ${PROJECT_SOURCE_DIR}/App/Core/Inc
+    ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Inc
+)
+add_test(NAME bq40z50 COMMAND bq40z50_tests)
+
 add_executable(fw_update_contract_tests
     fw_update_contract_tests.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/storage.c

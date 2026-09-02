@@ -1,17 +1,17 @@
+#include "core_debug.h"
 #include "elog.h"
-#include "hc32_debug_log.h"
 
 #include <stdio.h>
 
+#include "SEGGER_RTT.h"
 #include "bsp_log_uart.h"
 #include "bsp_timebase.h"
-#if defined(HC32_ELOG_RTT)
-#include "SEGGER_RTT.h"
-#endif
 
 static char g_time_buffer[16];
 
 ElogErrCode elog_port_init(void) {
+    (void)bsp_log_uart_init();
+    SEGGER_RTT_Init();
     return ELOG_NO_ERR;
 }
 
@@ -21,9 +21,7 @@ ElogErrCode elog_port_deinit(void) {
 
 void elog_port_output(const char* log, size_t size) {
     (void)bsp_log_uart_write(log, size);
-#if defined(HC32_ELOG_RTT)
     (void)SEGGER_RTT_Write(0U, log, (unsigned)size);
-#endif
 }
 
 void elog_port_output_lock(void) {}
@@ -43,14 +41,9 @@ const char* elog_port_get_t_info(void) {
     return "";
 }
 
-bool hc32_debug_log_init(void) {
-    if (!bsp_log_uart_init())
-        return false;
-#if defined(HC32_ELOG_RTT)
-    SEGGER_RTT_Init();
-#endif
+void core_debug_init(void) {
     if (elog_init() != ELOG_NO_ERR)
-        return false;
+        return;
 
     elog_set_fmt(ELOG_LVL_ASSERT, ELOG_FMT_ALL);
     elog_set_fmt(ELOG_LVL_ERROR, ELOG_FMT_LVL | ELOG_FMT_TAG | ELOG_FMT_TIME);
@@ -58,5 +51,4 @@ bool hc32_debug_log_init(void) {
     elog_set_fmt(ELOG_LVL_INFO, ELOG_FMT_LVL | ELOG_FMT_TAG | ELOG_FMT_TIME);
     elog_set_fmt(ELOG_LVL_DEBUG, ELOG_FMT_LVL | ELOG_FMT_TAG | ELOG_FMT_TIME);
     elog_start();
-    return true;
 }

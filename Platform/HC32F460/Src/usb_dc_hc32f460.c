@@ -4,8 +4,9 @@
 
 #include "bsp_board_config.h"
 #include "bsp_timebase.h"
-#include "bsp_write_protection.h"
-#include "hc32_ll.h"
+#include "hc32_ll_clk.h"
+#include "hc32_ll_fcg.h"
+#include "hc32_ll_gpio.h"
 #include "hc32_ll_interrupts.h"
 #include "hc32_ll_usb.h"
 #include "usbd_core.h"
@@ -56,11 +57,9 @@ static int usb_low_level_init(void) {
     int32_t result;
 
     g_hc32_usb_init_stage = 0x100U;
-    bsp_write_protection_unlock();
     result = CLK_PLLxStructInit(&pll);
     if (result != LL_OK) {
         g_hc32_usb_init_stage = 0xE0000000UL | ((uint32_t)result & 0xFFFFUL);
-        bsp_write_protection_restore();
         return -1;
     }
     pll.u8PLLState = CLK_PLLX_ON;
@@ -73,7 +72,6 @@ static int usb_low_level_init(void) {
     result = CLK_PLLxInit(&pll);
     if (result != LL_OK) {
         g_hc32_usb_init_stage = 0xE1000000UL | ((uint32_t)result & 0xFFFFUL);
-        bsp_write_protection_restore();
         return -1;
     }
     CLK_SetUSBClockSrc(CLK_USBCLK_PLLXP);
@@ -81,20 +79,19 @@ static int usb_low_level_init(void) {
     result = GPIO_StructInit(&gpio);
     if (result != LL_OK) {
         g_hc32_usb_init_stage = 0xE2000000UL | ((uint32_t)result & 0xFFFFUL);
-        bsp_write_protection_restore();
         return -1;
     }
     gpio.u16PinAttr = PIN_ATTR_ANALOG;
     result = GPIO_Init(BSP_USB_DATA_PORT, BSP_USB_DATA_PINS, &gpio);
     if (result != LL_OK) {
         g_hc32_usb_init_stage = 0xE2000000UL | ((uint32_t)result & 0xFFFFUL);
-        bsp_write_protection_restore();
         return -1;
     }
+#if BSP_USB_VBUS_SENSE_ENABLE != 0U
     GPIO_SetFunc(BSP_USB_VBUS_PORT, BSP_USB_VBUS_PIN, BSP_USB_VBUS_FUNCTION);
+#endif
 
     FCG_Fcg1PeriphClockCmd(FCG1_PERIPH_USBFS, ENABLE);
-    bsp_write_protection_restore();
     g_hc32_usb_init_stage = 0x200U;
     return 0;
 }
@@ -351,9 +348,7 @@ int usb_dc_deinit(uint8_t busid) {
     usb_gintdis(&g_usb.regs);
     NVIC_DisableIRQ(HC32_USB_IRQ);
     (void)INTC_IrqSignOut(HC32_USB_IRQ);
-    bsp_write_protection_unlock();
     FCG_Fcg1PeriphClockCmd(FCG1_PERIPH_USBFS, DISABLE);
-    bsp_write_protection_restore();
     return 0;
 }
 

@@ -1,0 +1,9 @@
+Attempt 1: JLinkRTTLogger default search
+Result: RTT Control Block not found.
+
+Attempt 2: JLinkRTTLogger -RTTAddress 0x1FFF8000
+Result: RTT Control Block not found.
+
+J-Link Commander subsequently read a valid SEGGER RTT control block at
+0x1FFF8000. J-Link MCP with the same explicit address captured all required
+events, classifying both standalone logger attempts as infrastructure failures.

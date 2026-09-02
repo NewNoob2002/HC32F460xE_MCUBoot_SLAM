@@ -1,0 +1,31 @@
+hil_result:
+  schema_version: 1
+  timestamp_utc: "2026-09-01T12:02:55Z"
+  status: "BLOCKED"
+  target:
+    device: "HC32F460xE"
+    probe_serial: "63728710"
+    vtref: "3.300 V"
+  artifact:
+    configuration: "Debug"
+    version: "1.0.0"
+    path_at_deployment: "build/Debug/artifacts/app-primary-1.0.0.bin"
+    address_range: "0x00010000..0x00041FFF"
+    sha256: "db4bfb0aed29c03dca84f6162b0a29bd10c2fc3644298920521ffc2f8b787645"
+    readback_sha256: "db4bfb0aed29c03dca84f6162b0a29bd10c2fc3644298920521ffc2f8b787645"
+    current_clean_build_sha256: "15b8d830b68e8f9dee6113be0ac215c754a5cddc6ba2e132fac5bc08ccb3847b"
+    payload_digest: "dfa2823f903795cdc07c55489628688ac4ff33ef1e1929310d8dffe520d2fc5c"
+  verification:
+    host_tests: "18/18 passed"
+    flash: "db4bfb0a... LoadBin completed, VerifyBin passed and 204800-byte readback matched; later 15b8d830... clean-signature deployment attempts did not write"
+    i2c2_init_result: 0
+    bq40z50_0x0b_probe_result: -3
+    mp2762a_0x5c_probe_result: -3
+    husb238_0x08_probe_result: -3
+    bq40z50_identity_result: -2
+    i2c2_ccr_after_probes: "0x00031B1A"
+    i2c2_buswait_after_probes: true
+    pin_mux: "PA9 GPIO_FUNC_51 SCL; PA8 GPIO_FUNC_50 SDA"
+    idle_levels: "PA9 high; PA8 high"
+  conclusion: "Firmware, pin mux, I2C timing and deployment are verified; no target device produced a successful address response, so physical addresses and BQ identity are not confirmed."
+  blocker: "Verify charger/gauge/USB-PD device power, board connection and I2C pull-ups, then rerun A1 without changing the probe list."

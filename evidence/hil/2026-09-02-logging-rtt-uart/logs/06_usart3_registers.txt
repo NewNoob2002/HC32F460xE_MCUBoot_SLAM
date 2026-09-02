@@ -1,0 +1,10 @@
+USART3 @ 0x40021000
+SR  = 0x000000C0: TXE=1, TC=1, RXNE=0, ORE=0, FE=0, PE=0
+TDR = 0x0000000A: last transmitted byte is newline
+BRR = 0x000035FF
+CR1 = 0xA0000008: TE=1, RE=0
+CR2 = 0x00000000: STOP=0
+CR3 = 0x00000000: CTSE=0
+
+Read through the configured HC32F460 SVD after the current Debug image reached App main loop.
+This proves firmware configured and wrote USART3; no USB-UART adapter was present to validate the external PB13 waveform.

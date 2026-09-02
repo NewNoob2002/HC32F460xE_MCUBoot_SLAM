@@ -1,8 +1,11 @@
 #include "bsp_clock.h"
 #include <stdint.h>
 #include "bsp_board_config.h"
-#include "bsp_write_protection.h"
-#include "hc32_ll.h"
+#include "hc32_ll_clk.h"
+#include "hc32_ll_efm.h"
+#include "hc32_ll_gpio.h"
+#include "hc32_ll_pwc.h"
+#include "hc32_ll_sram.h"
 
 #define BSP_SYSTEM_CLOCK_HZ UINT32_C(200000000)
 
@@ -11,7 +14,6 @@ bool bsp_clock_init(void) {
     stc_clock_pll_init_t stcMpllInit;
     bool ready = false;
 
-    bsp_write_protection_unlock();
     GPIO_AnalogCmd(BSP_XTAL_PORT, BSP_XTAL_PINS, ENABLE);
     if (CLK_XtalStructInit(&stcXtalInit) != LL_OK || CLK_PLLStructInit(&stcMpllInit) != LL_OK)
         goto out;
@@ -64,6 +66,5 @@ bool bsp_clock_init(void) {
     ready = SystemCoreClock == BSP_SYSTEM_CLOCK_HZ;
 
 out:
-    bsp_write_protection_restore();
     return ready;
 }

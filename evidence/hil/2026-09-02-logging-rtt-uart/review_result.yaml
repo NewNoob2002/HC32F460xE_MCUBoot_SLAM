@@ -1,0 +1,18 @@
+review_result:
+  schema_version: 1
+  source_revision: "d9232881fbe1237dafda6560298470d2b122bd7e+working-tree"
+  scope:
+    - "Config/Debug/core_debug.h"
+    - "Platform/HC32F460 logging, panic, syscalls and write-protection startup flow"
+    - "EasyLogger and MCUboot logging adapters"
+    - "Boot/App logging initialization and CMake linkage"
+  toolchain_context: "GNU Arm Embedded 14.3.1; Cortex-M4 hard-float; Debug"
+  findings: []
+  verification:
+    - "clang-format --dry-run --Werror on touched C/C++ files"
+    - "HostTests 18/18"
+    - "Debug clean build and firmware verification targets"
+    - "J-Link verifybin plus RTT/USART3 HIL inspection"
+  residual_risks:
+    - "Boot uses 64908/65536 bytes (99.04%), leaving 628 bytes"
+    - "USART3 external PB13 waveform was not captured because no USB-UART adapter was present"

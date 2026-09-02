@@ -1,0 +1,22 @@
+deployment_result:
+  schema_version: 1
+  created_at_utc: "2026-09-02T08:25:12Z"
+  safety_preflight: "safety_preflight.yaml"
+  target: {board: "HC32F460xE development board", hardware_revision: "not archived", probe_serial: "63728710"}
+  tool: {id: "J-Link Commander", version: "9.70"}
+  artifacts:
+    - path: "artifacts/boot_firmware.bin"
+      source_path: "build/Debug/Boot/boot_firmware.bin"
+      sha256: "3cce028035a8d82dbd9784dc9d16c4f0a964c2f586eaa5311d00493c4cc69841"
+      destination: "0x00000000"
+      verified: true
+    - path: "artifacts/app-primary-1.0.0.bin"
+      source_path: "build/Debug/artifacts/app-primary-1.0.0.bin"
+      sha256: "df806925301ac314e9383b89b6eb9f115ba8c70b6f370f3fef6fac3562a1a477"
+      destination: "0x00010000"
+      verified: true
+  reset_after_deploy: true
+  previous_state: "Boot and Primary backed up before writes; both differed from the new artifacts"
+  final_state: "matching Debug Boot and Primary verified and running"
+  rollback: {required: false, exercised: false, result: "checksummed Boot and Primary backups retained"}
+  log: "logs/01_flash_logging.txt"

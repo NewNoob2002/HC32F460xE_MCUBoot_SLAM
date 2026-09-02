@@ -1,7 +1,7 @@
 #include "bsp_external_watchdog.h"
 #include "bsp_board_config.h"
-#include "bsp_write_protection.h"
-#include "hc32_ll.h"
+#include "hc32_ll_def.h"
+#include "hc32_ll_gpio.h"
 
 void watchdog_scheduler_init(watchdog_scheduler_t* scheduler, uint32_t now_ms, uint32_t interval_ms, uint32_t pulse_ms,
                              bool active_level, watchdog_gpio_write_t write, void* context) {
@@ -78,7 +78,6 @@ bool bsp_external_watchdog_init(uint32_t now_ms) {
     stc_gpio_init_t init;
     int32_t result;
     board_ready = false;
-    bsp_write_protection_unlock();
     GPIO_ResetPins(BOOT_EXTERNAL_WATCHDOG_PORT, BOOT_EXTERNAL_WATCHDOG_PIN);
     result = GPIO_StructInit(&init);
     init.u16PinState = PIN_STAT_RST;
@@ -86,7 +85,6 @@ bool bsp_external_watchdog_init(uint32_t now_ms) {
     init.u16PinOutputType = PIN_OUT_TYPE_CMOS;
     if (result == LL_OK)
         result = GPIO_Init(BOOT_EXTERNAL_WATCHDOG_PORT, BOOT_EXTERNAL_WATCHDOG_PIN, &init);
-    bsp_write_protection_restore();
     if (result != LL_OK)
         return false;
     if (GPIO_ReadOutputPins(BOOT_EXTERNAL_WATCHDOG_PORT, BOOT_EXTERNAL_WATCHDOG_PIN) != PIN_RESET)

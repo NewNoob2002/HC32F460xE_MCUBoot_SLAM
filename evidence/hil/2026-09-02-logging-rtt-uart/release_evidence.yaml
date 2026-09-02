@@ -1,0 +1,12 @@
+release_evidence:
+  schema_version: 1
+  version: "logging-rtt-uart-2026-09-02"
+  source_revision: "d9232881fbe1237dafda6560298470d2b122bd7e+working-tree"
+  safety_preflights: ["safety_preflight.yaml", "safety_preflight_rtt_reset.yaml"]
+  build_outputs: ["build_output.yaml"]
+  deployments: ["deployment_result.yaml"]
+  debug_sessions: ["debug_session.yaml"]
+  runtime_monitors: ["runtime_monitor.yaml"]
+  bus_validations: []
+  tests: ["hil_test_result.yaml"]
+  reviews: ["review_result.yaml"]

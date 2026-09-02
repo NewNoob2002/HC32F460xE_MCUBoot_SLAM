@@ -1,0 +1,26 @@
+evidence_manifest:
+  schema_version: 1
+  run_id: "2026-09-02-logging-rtt-uart"
+  source_base_revision: "d9232881fbe1237dafda6560298470d2b122bd7e"
+  source_dirty_during_run: true
+  target: "HC32F460xE development board"
+  probe_serial: "63728710"
+  result: "PASSED_WITH_UART_WAVEFORM_LIMITATION"
+  contracts:
+    - "safety_preflight.yaml"
+    - "safety_preflight_rtt_reset.yaml"
+    - "build_output.yaml"
+    - "deployment_result.yaml"
+    - "debug_session.yaml"
+    - "runtime_monitor.yaml"
+    - "hil_test_result.yaml"
+    - "review_result.yaml"
+    - "release_evidence.yaml"
+  checksum_file: "SHA256SUMS"
+  excluded_binaries:
+    reason: "firmware images and target readbacks are reproducible or may contain device state"
+    files:
+      - {path: "artifacts/app-primary-1.0.0.bin", sha256: "df806925301ac314e9383b89b6eb9f115ba8c70b6f370f3fef6fac3562a1a477"}
+      - {path: "artifacts/boot_firmware.bin", sha256: "3cce028035a8d82dbd9784dc9d16c4f0a964c2f586eaa5311d00493c4cc69841"}
+      - {path: "backup/pre_hil_boot_00000000_0000ffff.bin", sha256: "254b03f536e53b6cbaad5d5d35fa290204ac162498ab3cec0f07bb16b16edca9"}
+      - {path: "backup/pre_hil_primary_00010000_00041fff.bin", sha256: "9596a61c101412ce8e39d66a9a737a3c1f04a90963e3e77e97c1ac05fdfe8410"}

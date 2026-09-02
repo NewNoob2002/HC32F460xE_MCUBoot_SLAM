@@ -1,0 +1,14 @@
+runtime_monitor:
+  schema_version: 1
+  created_at_utc: "2026-09-02T08:25:12Z"
+  safety_preflight: "safety_preflight_rtt_reset.yaml"
+  transport: "rtt"
+  settings: {port: "J-Link 63728710", baud: "not-applicable", channel: "0; _SEGGER_RTT=0x1FFF8000"}
+  capture: "logs/05_rtt_mcp.log"
+  required_events:
+    - "App EasyLogger V2.2.99 is initialize success"
+    - "D/core app startup"
+    - "D/core usb=0 confirm=0"
+  dropped_or_invalid_bytes: 0
+  redaction: "none"
+  passed: true

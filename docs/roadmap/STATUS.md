@@ -1,8 +1,8 @@
 # Roadmap Status
 
-Last updated: 2026-09-01
+Last updated: 2026-09-02
 
-Allowed values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIEW`, `PASSED`.
+Allowed values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIEW`, `PASSED`, `DEFERRED`.
 
 | Phase | Status | Current evidence / blocker |
 | --- | --- | --- |
@@ -11,39 +11,36 @@ Allowed values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIEW`, `PA
 | 2 — Secondary storage/boot control | PASSED | Bounds/isolation/Pending HIL and CI |
 | 3 — Protocol core | PASSED | Strict HostTests and 10,000-case malformed corpus |
 | 4 — CherryUSB/HC32 loopback | PASSED | Enumeration, recovery, 10,000 transfers and 30-minute HIL |
-| 5 — USB upgrade E2E | IN_PROGRESS | Linux and HC32 paths pass; signed Windows package/run remain |
-| 6 — Failure/recovery matrix | NOT_STARTED | Requires bounded power/reset fixture |
-| 7 — UART updater | NOT_STARTED | Starts after Phase 6 |
-| 8 — CAN/CAN-FD updater | NOT_STARTED | Starts after Phase 7 |
-| 9 — Second MCU | NOT_STARTED | Requires board selection |
+| 5 — USB upgrade E2E | PASSED | Current development scope is complete and frozen |
+| 6 — Failure/recovery matrix | DEFERRED | Expansion work explicitly paused |
+| 7 — UART updater | DEFERRED | Expansion work explicitly paused |
+| 8 — CAN/CAN-FD updater | DEFERRED | Expansion work explicitly paused |
+| 9 — Second MCU | DEFERRED | Expansion work explicitly paused |
+
+## Product Application track
+
+| Node | Status | Current evidence / blocker |
+| --- | --- | --- |
+| A1 — I2C2 bus and BQ identity | BLOCKED | Strict HostTests 18/18 and clean Debug build pass; retained target evidence has no successful response from `0x0B`, `0x08` or `0x5C` |
+| A2 — Charger/gauge telemetry | NOT_STARTED | Starts after A1 HIL |
+| A3 — IAM/IBM/PSYS ADC validation | NOT_STARTED | Starts after A2 |
+| A4 — Charging policy | BLOCKED | Requires maximum allowed pack charge current |
+| A5 — Fault and charge/discharge HIL | NOT_STARTED | Starts after A4 |
 
 ## Current reviewed node
 
-- Multi-device GUI: enumerate-only Refresh, selected-device Connect, single USB
-  worker, DeviceInfo heartbeat and configured-SN post-upgrade reconnect.
-- Product Config v3: write-once serial, hardware version and Application PID;
-  signed compatibility remains build-time-only. Installation is blocked before
-  BEGIN until the device is provisioned.
-- Boot remains `cafe:0001`; App defaults to `cafe:0002` and applies the persisted
-  PID before descriptor registration. Provisioned Boot/App use the same serial.
-- Fixed external Debug signing key; Release requires an explicit external key.
-  Public key source is generated without generating private keys under `build/`.
-- `hc32_newlib` is included in all firmware ELFs and has a dedicated map-file
-  verification target.
-- Boot freeze review: checked 200 MHz clock establishment, exact Primary/header
-  handover contract, MSP/reset-vector bounds, interrupt cleanup and assembly
-  context transfer. Successful handover has no active USB instance.
-- Product Config v3 hardware evidence passed on 2026-09-01 with exact full-Flash
-  restoration: `evidence/hil/2026-09-01-product-config-v3/`.
-- Boot freeze local verification passed: 18 evidence bundles, strict ASan/UBSan
-  HostTests 17/17, Debug and Release firmware, all signed-image, descriptor and
-  four newlib map checks. Debug Boot uses 64,208/65,536 bytes; Release Boot uses
-  51,836/65,536 bytes.
-- Final Boot freeze HIL passed on J-Link `63728710`: Boot/Primary verifybin,
-  200 MHz clock, exact vectors/VTOR, clean assembly context transfer, App
-  confirmation and a breakpoint-free reset/run all passed. Evidence:
-  `evidence/hil/2026-09-01-boot-freeze-final/`; tag:
-  `boot-freeze-2026-09-01`.
+- Debug Boot/App logs share one EasyLogger port mirrored to USART3 and SEGGER
+  RTT; Platform code remains independent of both logging frameworks.
+- Fatal startup, handover and reset failures retain the `_Noreturn bsp_panic()`
+  contract and solid-red error state.
+- App A1 owns PA9/PA8 as 100 kHz I2C2, performs only the three configured address
+  probes, and reads BQ40Z50 identity only after its address responds.
+- Local gates on 2026-09-02: strict ASan/UBSan HostTests 18/18, Rust fmt/clippy,
+  21 retained evidence bundles, clean Debug firmware, signed image, WinUSB
+  descriptors and newlib syscall verification all pass. Debug Flash usage is
+  64,860/65,536 bytes for Boot and 59,748/195,072 bytes for App.
+- Hardware evidence remains unchanged: logging HIL passed with external PB13
+  waveform capture pending, while charger A1 is blocked on powered device access.
 
 Remote CI is recorded in the associated GitHub Actions run.
 
@@ -61,6 +58,6 @@ Remote CI is recorded in the associated GitHub Actions run.
 
 ## Next gate
 
-Build and validate externally signed Windows CLI/GUI executables and complete a
-clean-Windows portable run. Power-loss testing and the PB13 capture remain
-independent follow-up work.
+Power/connect the three I2C devices on the identified charger target, verify
+their rails and pull-ups, then rerun the exact A1 image to retain successful RTT
+identity evidence for `0x0B`, `0x08` and `0x5C`. Do not start A2 before this gate.

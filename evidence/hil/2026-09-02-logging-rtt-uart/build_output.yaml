@@ -1,0 +1,25 @@
+build_output:
+  schema_version: 1
+  created_at_utc: "2026-09-02T08:07:40Z"
+  project: "HC32F460xE_MCUBoot_SLAM"
+  target: "HC32F460xE development board"
+  mcu: "HC32F460xE"
+  operating_system: "bare-metal"
+  configuration: "Debug APP_VERSION=1.0.0 APP_AUTO_CONFIRM=ON"
+  source_revision: "d9232881fbe1237dafda6560298470d2b122bd7e+working-tree"
+  toolchain: {id: "arm-none-eabi-gcc", version: "14.3.1 20250623", target: "arm-none-eabi cortex-m4 hard-float"}
+  artifacts:
+    boot_elf: "build/Debug/Boot/boot_firmware.elf"
+    boot_bin: "build/Debug/Boot/boot_firmware.bin"
+    app_elf: "build/Debug/App/app-1.0.0.elf"
+    primary_bin: "build/Debug/artifacts/app-primary-1.0.0.bin"
+    boot_map: "build/Debug/Boot/boot_firmware.map"
+    app_map: "build/Debug/App/app-1.0.0.map"
+  checksums:
+    build/Debug/Boot/boot_firmware.bin: "3cce028035a8d82dbd9784dc9d16c4f0a964c2f586eaa5311d00493c4cc69841"
+    build/Debug/Boot/boot_firmware.elf: "0cd1eec5d2c7aab51cc4519f18d2812b643bdd5cec5078e7fc0ed6da6b5b0e6b"
+    build/Debug/artifacts/app-primary-1.0.0.bin: "df806925301ac314e9383b89b6eb9f115ba8c70b6f370f3fef6fac3562a1a477"
+    build/Debug/App/app-1.0.0.elf: "8167c3aed6c4c86e7a1dfced931e88ddc26d5938d557681ffefdc407d80796d0"
+  size:
+    boot_flash: "64908/65536 bytes (99.04%)"
+    app_flash: "57156/195072 bytes (29.30%)"

@@ -22,6 +22,7 @@ endif()
 
 add_executable(app_firmware
     Core/Src/app_confirm.c
+    Core/Src/bq40z50.c
     Core/Src/main.c
     Core/Src/usb_fw_update.c
     $<TARGET_OBJECTS:hc32_newlib>
@@ -42,6 +43,7 @@ target_compile_definitions(app_firmware PRIVATE
 )
 set_source_files_properties(
     Core/Src/main.c
+    Core/Src/bq40z50.c
     Core/Src/usb_fw_update.c
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wconversion;-Wshadow;-Werror"
 )
@@ -54,7 +56,7 @@ target_link_libraries(app_firmware PRIVATE
     fw_update_mcuboot
     hc32_usb_device_port
     hc32_device
-    $<$<CONFIG:Debug>:easylogger_port_hc32_rtt>
+    $<$<CONFIG:Debug>:easylogger_port_hc32>
     mcuboot_bootutil
 )
 if(NOT APP_PHASE2_HIL_MODE STREQUAL "0")

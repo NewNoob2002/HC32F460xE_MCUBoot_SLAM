@@ -1,0 +1,19 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-09-02T08:07:40Z"
+  operation: "backup-flash-verify-reset-run-rtt"
+  authorization: "User requested logging redesign implementation and HIL closed-loop verification on 2026-09-02"
+  target:
+    board: "current user-owned HC32F460xE development board"
+    hardware_revision: "not archived"
+    probe_or_adapter_serial: "63728710"
+    transport: "SEGGER J-Link OB-Mini Plus over SWD at 4 MHz"
+  tool: "SEGGER J-Link Commander/RTT Logger V9.70"
+  power_state: "VTref 3.300 V"
+  artifact_or_stimulus: "Debug Boot build/Debug/Boot/boot_firmware.bin SHA256 3cce028035a8d82dbd9784dc9d16c4f0a964c2f586eaa5311d00493c4cc69841 at 0x00000000; matching Debug Primary build/Debug/artifacts/app-primary-1.0.0.bin SHA256 df806925301ac314e9383b89b6eb9f115ba8c70b6f370f3fef6fac3562a1a477 at 0x00010000"
+  limits: "Back up Boot 0x00000000..0x0000FFFF and Primary 0x00010000..0x00041FFF before writes. Program only the named 65240-byte Boot artifact at 0x00000000 and the named 204800-byte Primary artifact at 0x00010000. Do not write Secondary, Scratch, Reserved/Product Config, OTP, option bytes, protection state, or unrelated buses. No mass erase, unlock, or recover. Reset/run and RTT channel-0 capture are bounded to one deployment and one 15-second capture."
+  recovery_plan: "If deployment or boot verification fails, retain logs, checksum both backups, then restore only evidence/hil/2026-09-02-logging-rtt-uart/backup/pre_hil_boot_00000000_0000ffff.bin at 0x00000000 and pre_hil_primary_00010000_00041fff.bin at 0x00010000; verify both and reset/run."
+  backup_checksums:
+    pre_hil_boot_00000000_0000ffff.bin: "254b03f536e53b6cbaad5d5d35fa290204ac162498ab3cec0f07bb16b16edca9"
+    pre_hil_primary_00010000_00041fff.bin: "9596a61c101412ce8e39d66a9a737a3c1f04a90963e3e77e97c1ac05fdfe8410"
+  approved: true

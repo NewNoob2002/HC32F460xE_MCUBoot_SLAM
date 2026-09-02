@@ -16,6 +16,7 @@ add_library(hc32_ll STATIC
     ${HC32_LL_DIR}/src/hc32_ll_efm.c
     ${HC32_LL_DIR}/src/hc32_ll_fcg.c
     ${HC32_LL_DIR}/src/hc32_ll_gpio.c
+    ${HC32_LL_DIR}/src/hc32_ll_i2c.c
     ${HC32_LL_DIR}/src/hc32_ll_interrupts.c
     ${HC32_LL_DIR}/src/hc32_ll_pwc.c
     ${HC32_LL_DIR}/src/hc32_ll_sram.c

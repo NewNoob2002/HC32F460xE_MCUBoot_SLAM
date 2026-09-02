@@ -2,9 +2,7 @@
 #include <stddef.h>
 #include <sys/stat.h>
 
-#if defined(HC32_DEBUG_LOG)
 #include "bsp_log_uart.h"
-#endif
 
 int _close(int file) {
     (void)file;
@@ -24,13 +22,9 @@ int _read(int file, char* buffer, int length) {
 }
 int _write(int file, const char* buffer, int length) {
     (void)file;
-#if defined(HC32_DEBUG_LOG)
-    if (length > 0)
-        return (int)bsp_log_uart_write(buffer, (size_t)length);
-#else
-    (void)buffer;
-#endif
-    return length;
+    if (buffer == NULL || length <= 0)
+        return 0;
+    return (int)bsp_log_uart_write(buffer, (size_t)length);
 }
 int _fstat(int file, struct stat* status) {
     (void)file;

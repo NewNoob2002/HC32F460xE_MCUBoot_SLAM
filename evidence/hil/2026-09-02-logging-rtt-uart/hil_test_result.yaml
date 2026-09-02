@@ -1,0 +1,35 @@
+test_result:
+  schema_version: 1
+  source_revision: "d9232881fbe1237dafda6560298470d2b122bd7e+working-tree"
+  artifact_checksums:
+    artifacts/boot_firmware.bin: "3cce028035a8d82dbd9784dc9d16c4f0a964c2f586eaa5311d00493c4cc69841"
+    artifacts/app-primary-1.0.0.bin: "df806925301ac314e9383b89b6eb9f115ba8c70b6f370f3fef6fac3562a1a477"
+  safety_preflight: "safety_preflight.yaml"
+  level: "hil"
+  target: "HC32F460xE development board; J-Link 63728710; VTref 3.300 V"
+  command: "J-Link Commander backup/loadbin/verifybin/reset; J-Link MCP RTT and SVD register inspection"
+  timing: {started_at_utc: "2026-09-02T08:07:40Z", duration_ms: 1050000, timeout_ms: 15000}
+  attempts: 1
+  passed: true
+  counts: {total: 12, passed: 11, failed: 0, skipped: 1}
+  checks:
+    - "Host tests passed 18/18"
+    - "Application/platform logging boundary check passed"
+    - "Debug Boot and App clean build passed"
+    - "MCUboot image, WinUSB descriptors and newlib syscall verification passed"
+    - "Boot verifybin passed at 0x00000000"
+    - "Primary verifybin passed at 0x00010000"
+    - "Target reached App main loop at App/Core/Src/main.c:61"
+    - "CFSR=0 and HFSR=0"
+    - "App RTT control block at 0x1FFF8000 is valid"
+    - "RTT EasyLogger initialization and both D/core events observed"
+    - "USART3 TE/TXE/TC set and TDR contains the EasyLogger newline"
+    - "External PB13 UART waveform capture skipped: no USB-UART adapter present"
+  classified_failures:
+    - "test.infrastructure: standalone JLinkRTTLogger did not locate the non-default SRAM RTT block; explicit-address J-Link MCP capture passed"
+  log: "logs/05_rtt_mcp.log"
+  requirements:
+    - "HC32 Platform remains independent of EasyLogger and SEGGER RTT"
+    - "CORE_DEBUG_PRINTF maps to EasyLogger debug output"
+    - "EasyLogger port mirrors each upper-layer log to USART3 and RTT without a duplicate call path"
+    - "Write protection remains unlocked through startup peripheral initialization and is restored before the main loop"

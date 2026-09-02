@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-09-02T08:21:11Z"
+  operation: "reset-run-rtt-capture"
+  authorization: "User requested logging HIL closed-loop verification on 2026-09-02; deployment preflight is safety_preflight.yaml"
+  target:
+    board: "current user-owned HC32F460xE development board"
+    hardware_revision: "not archived"
+    probe_or_adapter_serial: "63728710"
+    transport: "SEGGER J-Link OB-Mini Plus over SWD at 4 MHz"
+  artifact_or_stimulus: "Reset and run the already verified Debug Boot/Primary deployment; collect App RTT channel 0 at _SEGGER_RTT=0x1FFF8000"
+  limits: "One normal reset, no flash or memory writes, no breakpoints, and a bounded RTT read. Leave the target running."
+  recovery_plan: "No storage changes occur. If the target does not resume, issue one resume command; retain the snapshot and deployment logs."
+  approved: true

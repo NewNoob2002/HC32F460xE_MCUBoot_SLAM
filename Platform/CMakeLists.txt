@@ -4,6 +4,7 @@ add_library(hc32_platform STATIC
     HC32F460/Src/bsp_clock.c
     HC32F460/Src/bsp_external_watchdog.c
     HC32F460/Src/bsp_flash.c
+    HC32F460/Src/bsp_i2c2.c
     HC32F460/Src/bsp_log_uart.c
     HC32F460/Src/bsp_panic.c
     HC32F460/Src/bsp_reset.c

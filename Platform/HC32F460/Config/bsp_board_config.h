@@ -34,9 +34,19 @@ _Static_assert(BOOT_EXTERNAL_WATCHDOG_IDLE_LEVEL != BOOT_EXTERNAL_WATCHDOG_ACTIV
 #define BSP_LOG_UART_BAUDRATE       115200UL
 #define BSP_USB_DATA_PORT           GPIO_PORT_A
 #define BSP_USB_DATA_PINS           (GPIO_PIN_11 | GPIO_PIN_12)
+#define BSP_USB_VBUS_SENSE_ENABLE   0U
 #define BSP_USB_VBUS_PORT           GPIO_PORT_A
 #define BSP_USB_VBUS_PIN            GPIO_PIN_09
 #define BSP_USB_VBUS_FUNCTION       GPIO_FUNC_10
+#define BSP_I2C2                    CM_I2C2
+#define BSP_I2C2_CLOCK              FCG1_PERIPH_I2C2
+#define BSP_I2C2_SCL_PORT           GPIO_PORT_A
+#define BSP_I2C2_SCL_PIN            GPIO_PIN_09
+#define BSP_I2C2_SCL_FUNCTION       GPIO_FUNC_51
+#define BSP_I2C2_SDA_PORT           GPIO_PORT_A
+#define BSP_I2C2_SDA_PIN            GPIO_PIN_08
+#define BSP_I2C2_SDA_FUNCTION       GPIO_FUNC_50
+#define BSP_I2C2_BAUDRATE           100000UL
 #endif
 
 #endif

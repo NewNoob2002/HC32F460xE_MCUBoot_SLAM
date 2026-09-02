@@ -8,11 +8,12 @@ set(CPU_FLAGS
 add_library(hc32_project_options INTERFACE)
 target_include_directories(hc32_project_options INTERFACE
     ${CMAKE_CURRENT_BINARY_DIR}/generated/Config
+    ${PROJECT_SOURCE_DIR}/Config/Debug
 )
 target_compile_definitions(hc32_project_options INTERFACE
     HC32F460
     USE_DDL_DRIVER
-    $<$<CONFIG:Debug>:HC32_DEBUG_LOG=1>
+    $<$<CONFIG:Debug>:BSP_DEBUG=1>
 )
 target_compile_options(hc32_project_options INTERFACE
     ${CPU_FLAGS}

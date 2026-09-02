@@ -7,8 +7,7 @@
 
 #if !defined(BOOT_HOST_TEST)
 #include "bsp_board_config.h"
-#include "bsp_write_protection.h"
-#include "hc32_ll.h"
+#include "hc32_ll_gpio.h"
 #endif
 
 static enum bsp_status_led_mode g_mode;
@@ -67,13 +66,14 @@ static void apply_channels(uint8_t channels) {
 }
 
 bool bsp_status_led_init(void) {
+    if (g_ready)
+        return true;
     g_ready = false;
     g_mode = BSP_STATUS_LED_MODE_OFF;
     g_channels = 0U;
 #if !defined(BOOT_HOST_TEST)
     stc_gpio_init_t init;
     int32_t result;
-    bsp_write_protection_unlock();
     GPIO_SetPins(BSP_STATUS_LED_PORT, BSP_STATUS_LED_PINS);
     result = GPIO_StructInit(&init);
     init.u16PinState = PIN_STAT_SET;
@@ -81,7 +81,6 @@ bool bsp_status_led_init(void) {
     init.u16PinOutputType = PIN_OUT_TYPE_CMOS;
     if (result == LL_OK)
         result = GPIO_Init(BSP_STATUS_LED_PORT, BSP_STATUS_LED_PINS, &init);
-    bsp_write_protection_restore();
     if (result != LL_OK)
         return false;
 #endif

@@ -1,6 +1,6 @@
 # Current Repository State
 
-Audit date: 2026-09-01
+Audit date: 2026-09-02
 
 This file is the compact source of truth for the implemented repository. Detailed
 history remains in Git, ADRs and retained evidence bundles.
@@ -22,6 +22,10 @@ history remains in Git, ADRs and retained evidence bundles.
   build time. Earlier development schemas are intentionally unsupported.
 - Physical Product Config v3 persistence, descriptors, install, exact-SN
   reconnect and full-Flash restoration passed on 2026-09-01.
+- The product Application charger track is active. A1 initializes PA9/PA8 shared
+  100 kHz I2C2, probes only BQ40Z50/HUSB238/MP2762A, and reads BQ40Z50 identity
+  after a successful address response. Target acceptance remains blocked because
+  the retained hardware run received no successful response from any device.
 
 ## Ownership
 
@@ -75,20 +79,30 @@ USB install
 ```
 
 The single `app_firmware` target initializes clock, status LED, timebase, debug
-logging, watchdog, FlashDB, Manager and USB, then confirms the running image.
-USB callbacks publish events; the cooperative poll loop owns protocol, Flash and
-reset work.
+logging, bounded I2C2 power-device probes, watchdog, FlashDB, Manager and USB,
+then confirms the running image. Missing power devices are reported without
+blocking USB/update startup. USB callbacks publish events; the cooperative poll
+loop owns protocol, Flash and reset work.
 
-Debug Application EasyLogger output is mirrored to the existing UART and SEGGER
-RTT channel 0. The Debug App places `_SEGGER_RTT` at `0x1FFF8000`
-for J-Link MCP reconnect across reset. Boot and Release firmware remain UART-only.
+The current development board does not route PA9 as USB VBUS sense. Firmware
+keeps that alternate function disabled and owns PA9/PA8 as I2C2 SCL/SDA at
+100 kHz. Charger/battery implementation status is tracked in
+`docs/roadmap/APP_CHARGER_PLAN.md`.
+
+Debug Boot and Application EasyLogger output is mirrored to the existing UART
+and SEGGER RTT channel 0. The Debug App places `_SEGGER_RTT` at
+`0x1FFF8000` for J-Link MCP reconnect across reset. Platform code remains
+independent of EasyLogger and writes its raw/panic output through USART3;
+Release firmware omits EasyLogger and RTT.
 
 Boot's frozen scope is secure image selection/swap, invalid-image USB recovery,
 recovery-only provisioning and validated handover. Successful handover never
 initializes USB; recovery exits only through system reset, so USB teardown is
 not part of the handover path. Product logic and new transports stay outside
-Boot. Protected clock, Flash, GPIO, FCG, power and SRAM register writes are
-locally unlocked by their owning BSP operation and restored before return.
+Boot. Boot/App startup unlock protected peripheral registers before
+initialization and restore write protection before entering boot selection or
+the cooperative main loop. BSP initialization functions do not close that
+caller-owned startup window.
 
 ## Product identity and configuration
 
@@ -146,6 +160,10 @@ Known deferred host issues for a later node:
   descriptor and RTT HIL is retained locally under
   `build/local-evidence-backup/2026-09-01-single-app-hil/`; the frozen source
   is tagged `boot-freeze-2026-09-01-v2`.
+- Debug UART/RTT logging architecture and runtime HIL is retained under
+  `evidence/hil/2026-09-02-logging-rtt-uart/`. RTT is closed-loop verified;
+  USART3 configuration/transmit state is verified, while external PB13 waveform
+  capture remains pending a USB-UART adapter.
 - Earlier evidence covers rollback/confirmation, Secondary isolation, protocol
   corpus, USB loopback endurance, Boot recovery/bootstrap, Application upgrade,
   GUI installation and exact restoration.
@@ -156,8 +174,9 @@ Known deferred host issues for a later node:
 
 ## Remaining gates
 
-- Production-signed Windows CLI/GUI executables and clean-Windows portable run.
-- Systematic update/swap power-loss and interrupted-write recovery testing.
-- Health-based confirmation and anti-rollback policy.
-- Pending PB13 debug-UART capture on the all-IO board.
-- UART updater, CAN/CAN-FD updater and second-MCU portability phases.
+- Restore powered access to the three A1 I2C devices and capture successful
+  address evidence plus BQ40Z50 identity; A2 remains gated on this result.
+- Confirm the battery pack maximum allowed continuous charge current.
+- Archive the current development-board schematic and revision.
+- Updater reliability, UART, CAN/CAN-FD and second-MCU expansion remain
+  explicitly deferred.

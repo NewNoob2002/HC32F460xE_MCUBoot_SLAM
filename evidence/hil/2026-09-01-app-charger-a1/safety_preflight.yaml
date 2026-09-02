@@ -1,0 +1,21 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-09-01T11:38:24Z"
+  operation: "flash-reset-run-rtt"
+  authorization: "User requested implementation and hardware confirmation of App charger node A1 on 2026-09-01"
+  target:
+    board: "current HC32F460xE all-IO development board"
+    hardware_revision: "not yet archived"
+    probe_or_adapter_serial: "63728710"
+    transport: "SWD with SEGGER J-Link CE; VTref 3.300 V"
+  artifact_or_stimulus: "Debug signed MCUboot Primary build/Debug/artifacts/app-primary-1.0.0.bin, SHA256 15b8d830b68e8f9dee6113be0ac215c754a5cddc6ba2e132fac5bc08ccb3847b"
+  limits: "Program exactly 204800 bytes at internal Flash 0x00010000..0x00041FFF; preserve Boot, Secondary, Scratch and Reserved/Product Config; read-only I2C identity commands at 100 kHz to 7-bit addresses 0x0B, 0x08 and 0x5C"
+  recovery_plan: "Reprogram build/local-evidence-backup/2026-09-01-rtt-smoke/pre_flash_primary_00010000_00041fff.bin (SHA256 6724085c4785ceb3d90de8586b87c069a7d4eb1ac577f1c5392aed1f88264def) at 0x00010000, then reset and run"
+  deployment_history:
+    - artifact_sha256: "bdb483725c5f5a9029b7b4261b4691fd403b0b1320c7174149e7199d005badf1"
+      result: "programmed and read back; RTT exposed I2C abort path clearing timing registers after address NACK"
+    - artifact_sha256: "db4bfb0aed29c03dca84f6162b0a29bd10c2fc3644298920521ffc2f8b787645"
+      result: "Commander LoadBin and VerifyBin passed; full Primary readback hash matched"
+    - artifact_sha256: "15b8d830b68e8f9dee6113be0ac215c754a5cddc6ba2e132fac5bc08ccb3847b"
+      result: "two bounded Commander sessions stopped before target connection; readback remained db4bfb0a... and no write occurred"
+  approved: true

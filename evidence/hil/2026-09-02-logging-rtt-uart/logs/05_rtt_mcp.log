@@ -1,0 +1,9 @@
+Device reset (running). RTT collection restarted.
+Control block at 0x1fff8000
+  ID        : "SEGGER RTT"
+  buffer    : 256 bytes
+  WrOff     : 159
+  RdOff     : 159
+I/elog     [0] App EasyLogger V2.2.99 is initialize success.
+D/core     [6] app startup
+D/core     [83] usb=0 confirm=0

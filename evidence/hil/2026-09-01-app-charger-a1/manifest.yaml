@@ -1,0 +1,13 @@
+evidence_manifest:
+  schema_version: 1
+  run_id: "2026-09-01-app-charger-a1"
+  source_base_revision: "d9232881fbe1237dafda6560298470d2b122bd7e"
+  source_dirty_during_run: true
+  target: "HC32F460xE development board"
+  probe_serial: "63728710"
+  result: "BLOCKED_NO_DEVICE_RESPONSE"
+  contracts:
+    - "safety_preflight.yaml"
+    - "result.yaml"
+  runtime_log: "rtt.log"
+  checksum_file: "SHA256SUMS"
