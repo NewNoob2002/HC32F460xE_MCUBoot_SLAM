@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-09-03T03:18:00Z"
+  operation: flash
+  authorization: "User requested the USB fix and HIL test"
+  target:
+    board: HC32F460xE SLAM target
+    hardware_revision: unknown
+    probe_or_adapter_serial: "63728769"
+    transport: swd
+  artifact_or_stimulus: "build/Debug/Boot/boot_firmware.bin sha256:0f40b9f8d18a6bc70a9ee6d52a9c98c5e88903655db9928a95bfbfe29ee8ee63"
+  limits: "Program 65200 bytes at 0x00000000-0x0000FEAF only; do not touch Primary, Secondary, Scratch, Reserved, OTP, identity, or keys"
+  recovery_plan: "Rebuild and reflash the prior Boot source at 0x00000000; Primary and provisioned data remain untouched"
+  approved: true

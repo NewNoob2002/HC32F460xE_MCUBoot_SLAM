@@ -1,0 +1,32 @@
+test_result:
+  schema_version: 1
+  source_revision: "8dc2497dd66982bd4ac6b24cafcb8f86b0f36c33+dirty"
+  artifact_checksums:
+    build/HIL/boot-freeze-20260903/v1/Boot/boot_firmware.bin: "0f40b9f8d18a6bc70a9ee6d52a9c98c5e88903655db9928a95bfbfe29ee8ee63"
+    build/HIL/boot-freeze-20260903/v1/artifacts/app-primary-1.0.0.bin: "48863a627881c66aed2f337d4add4e9559a70dc413b945b43fc1bfb0a6024fc2"
+    build/HIL/boot-freeze-20260903/v2-test/artifacts/app-update-2.0.0.bin: "f45b9e43e5f6e2c310da744533010ca4c0a17beb16f75896cc8994baa1b5e6fb"
+    build/HIL/boot-freeze-20260903/v2-confirm/artifacts/app-update-2.0.0.bin: "43beb984f70c37c7753da9667bb9f2e75dfc71e5f3d54bff7186589b67bac04d"
+  safety_preflight: safety_preflight.yaml
+  level: hil
+  target: "HC32F460xE SLAM target; J-Link 63728769; VTref 3.377-3.388 V"
+  command: "J-Link backup/erase/loadbin/verifybin/reset plus hc32-updater wait/info"
+  timing: {started_at_utc: "2026-09-03T03:47:43Z", duration_ms: 414000, timeout_ms: 900000}
+  attempts: 1
+  passed: true
+  counts: {total: 7, passed: 7, failed: 0, skipped: 0}
+  checks:
+    - "Boot-only target enumerated as cafe:0001 and answered recovery info"
+    - "signed confirmed v1 Primary booted as Application 1.0.0"
+    - "unconfirmed v2 Secondary booted once as Application 2.0.0"
+    - "next reset reverted the unconfirmed v2 to Application 1.0.0"
+    - "confirmed v2 Secondary booted as Application 2.0.0"
+    - "next reset retained confirmed Application 2.0.0"
+    - "g_app_confirm_result=0 and CFSR/HFSR=0 in the final state"
+  classified_failures: []
+  log: logs/hil_summary.txt
+  requirements:
+    - Boot invalid-image USB recovery
+    - signed Primary validation and handover
+    - scratch-swap test boot and revert
+    - application confirmation persistence
+  scope_note: "Product Config was intentionally left unprovisioned; USB install was not repeated because manufacturing fields are write-once. Prior retained evidence covers provisioned install/reconnect."

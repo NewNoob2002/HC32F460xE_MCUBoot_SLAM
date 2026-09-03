@@ -1,0 +1,12 @@
+review_result:
+  schema_version: 1
+  source_revision: 8dc2497dd66982bd4ac6b24cafcb8f86b0f36c33-plus-working-tree
+  scope:
+    - Platform/HC32F460/Src/usb_dc_hc32f460.c
+  toolchain_context: arm-none-eabi-gcc 14.3.1, bare-metal Cortex-M4
+  findings: []
+  verification:
+    - clang-format --dry-run --Werror Platform/HC32F460/Src/usb_dc_hc32f460.c
+    - cmake --build build/Debug --clean-first --parallel
+    - verify_app_image verify_winusb_descriptors verify_newlib_syscalls
+    - HC32F460xE USB HIL passed

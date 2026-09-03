@@ -1,6 +1,6 @@
 # Current Repository State
 
-Audit date: 2026-09-02
+Audit date: 2026-09-03
 
 This file is the compact source of truth for the implemented repository. Detailed
 history remains in Git, ADRs and retained evidence bundles.
@@ -86,7 +86,9 @@ loop owns protocol, Flash and reset work.
 
 The current development board does not route PA9 as USB VBUS sense. Firmware
 keeps that alternate function disabled and owns PA9/PA8 as I2C2 SCL/SDA at
-100 kHz. Charger/battery implementation status is tracked in
+100 kHz. When physical VBUS sensing is disabled, the HC32 USB device port
+asserts the controller's software VBUS-valid override after core reset and
+before device connection. Charger/battery implementation status is tracked in
 `docs/roadmap/APP_CHARGER_PLAN.md`.
 
 Debug Boot and Application EasyLogger output is mirrored to the existing UART
@@ -160,6 +162,10 @@ Known deferred host issues for a later node:
   descriptor and RTT HIL is retained locally under
   `build/local-evidence-backup/2026-09-01-single-app-hil/`; the frozen source
   is tagged `boot-freeze-2026-09-01-v2`.
+- The PA9/I2C2 USB VBUS regression fix and repeated recovery, signed-image
+  boot, unconfirmed upgrade/revert, confirmed upgrade persistence and fault-free
+  runtime HIL are retained under `evidence/hil/2026-09-03-boot-freeze-v3/`;
+  the source is tagged `boot-freeze-2026-09-03-v3`.
 - Debug UART/RTT logging architecture and runtime HIL is retained under
   `evidence/hil/2026-09-02-logging-rtt-uart/`. RTT is closed-loop verified;
   USART3 configuration/transmit state is verified, while external PB13 waveform

@@ -322,6 +322,9 @@ int usb_dc_init(uint8_t busid) {
     usb_setregaddr(&g_usb.regs, &port, &g_usb.basic);
     usb_gintdis(&g_usb.regs);
     usb_initusbcore(&g_usb.regs, &g_usb.basic);
+#if BSP_USB_VBUS_SENSE_ENABLE == 0U
+    SET_REG32_BIT(g_usb.regs.GREGS->GVBUSCFG, USBFS_GVBUSCFG_VBUSOVEN | USBFS_GVBUSCFG_VBUSVAL);
+#endif
     usb_modeset(&g_usb.regs, DEVICE_MODE);
     usb_devmodeinit(&g_usb.regs, &g_usb.basic);
     g_hc32_usb_init_stage = 0x300U;

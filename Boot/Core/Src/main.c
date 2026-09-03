@@ -8,6 +8,7 @@
 #include "bsp_status_led.h"
 #include "bsp_timebase.h"
 #include "bsp_write_protection.h"
+#include "cmsis_gcc.h"
 #include "core_debug.h"
 #include "usb_fw_update.h"
 
@@ -25,11 +26,12 @@ static _Noreturn void run_recovery_updater(void) {
         bsp_panic("recovery updater init failed");
     bsp_write_protection_restore();
     for (;;) {
-        bsp_delay_ms(1U);
         now_ms = bsp_millis();
         bsp_external_watchdog_poll(now_ms);
-        if (g_boot_recovery_init_result == 0 && usb_fw_update_poll(now_ms) == USB_FW_UPDATE_ACTION_RESET)
+        if (g_boot_recovery_init_result == 0 && usb_fw_update_poll(now_ms) == USB_FW_UPDATE_ACTION_RESET) {
             bsp_system_reset();
+        }
+        __WFI();
     }
 }
 

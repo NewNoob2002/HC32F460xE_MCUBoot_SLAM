@@ -1,0 +1,19 @@
+2026-09-03 Boot freeze v3 HIL summary
+Target: HC32F460xE, J-Link S/N 63728769, SWD 4000 kHz, VTref 3.377-3.388 V
+Backup: 0x00000000-0x00075FFF saved to ignored build output; SHA256 37ace97308d2f546d10df80e58662d5c92fc44eafb405d3222e8351603561288
+Reserved 0x00076000-0x0007FFFF and OTP were not accessed.
+Boot loadbin/verifybin at 0x00000000: PASS
+Boot only: cafe:0001, mode=boot-recovery, info response: PASS
+v1 Primary loadbin/verifybin at 0x00010000: PASS
+v1 Application enumeration and version 1.0.0: PASS
+v2-test Secondary loadbin/verifybin at 0x00042000: PASS
+v2-test first boot version 2.0.0: PASS
+v2-test next reset reverted to version 1.0.0: PASS
+v2-confirm Secondary loadbin/verifybin at 0x00042000: PASS
+v2-confirm first boot version 2.0.0: PASS
+v2-confirm next reset persisted version 2.0.0: PASS
+Final g_app_confirm_result: 0
+Final CFSR/HFSR: 0/0
+Final Primary header version major: 2
+Final Secondary header version major: 1
+Final target state: confirmed Application 2.0.0 running

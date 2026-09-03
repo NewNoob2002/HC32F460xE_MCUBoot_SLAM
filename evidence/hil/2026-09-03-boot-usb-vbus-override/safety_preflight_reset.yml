@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-09-03T03:18:00Z"
+  operation: reset
+  authorization: "User requested Boot USB HIL after flashing the fix"
+  target:
+    board: HC32F460xE SLAM target
+    hardware_revision: unknown
+    probe_or_adapter_serial: "63728769"
+    transport: swd
+  artifact_or_stimulus: "Reset and run the verified Debug Boot image at 0x00000000"
+  limits: "One target reset; passive RTT/register inspection and read-only USB updater info only"
+  recovery_plan: "Resume the CPU if halted; reflash the checksummed Boot binary if startup fails"
+  approved: true

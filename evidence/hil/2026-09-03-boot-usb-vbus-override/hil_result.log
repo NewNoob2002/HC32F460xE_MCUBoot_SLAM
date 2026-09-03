@@ -1,0 +1,15 @@
+J-Link V9.70 probe S/N 63728769, VTref 3.38 V
+verifybin build/Debug/Boot/boot_firmware.bin 0x00000000: successful
+RTT: boot startup
+RTT: no valid image found, running recovery updater
+lsusb: Bus 001 Device 038: ID cafe:0001 SingularXYZ Slam-ChargerManager Boot-Recovery
+updater info: application=0.0.0 bootloader=1.0.0
+updater info: hardware=0x00004600 board=1 revision=2 capacity=196608 write_alignment=4 erase_alignment=8192
+updater info: mode=boot-recovery
+updater info: serial=HC32F460-52353639FF0F5041FFFF4849
+g_boot_recovery_init_result=0
+g_usb_fw_update_errors=0
+is_configured=1
+g_hc32_usb_init_stage=0x400
+USBFS.GVBUSCFG=0x000900C0
+NVIC.ISER0=0x00000008

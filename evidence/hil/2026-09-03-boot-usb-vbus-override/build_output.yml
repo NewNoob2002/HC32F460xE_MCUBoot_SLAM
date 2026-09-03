@@ -1,0 +1,25 @@
+build_output:
+  schema_version: 1
+  created_at_utc: "2026-09-03T03:18:00Z"
+  project: HC32F460xE_MCUBoot_SLAM
+  target: HC32F460xE SLAM target
+  mcu: HC32F460xE
+  operating_system: bare-metal
+  configuration: Debug APP_VERSION=1.0.0 APP_AUTO_CONFIRM=ON
+  source_revision: 8dc2497dd66982bd4ac6b24cafcb8f86b0f36c33-plus-working-tree
+  toolchain:
+    id: arm-none-eabi-gcc
+    version: 14.3.1
+    target: arm-none-eabi
+  artifacts:
+    elf: build/Debug/Boot/boot_firmware.elf
+    bin: build/Debug/Boot/boot_firmware.bin
+    map: build/Debug/Boot/boot_firmware.map
+  checksums:
+    build/Debug/Boot/boot_firmware.elf: 9628b548dca73d3b557a65bd03aa231744375c0fa6f58558958a2c792915e9d3
+    build/Debug/Boot/boot_firmware.bin: 0f40b9f8d18a6bc70a9ee6d52a9c98c5e88903655db9928a95bfbfe29ee8ee63
+  verification:
+    build: passed
+    verify_app_image: passed
+    verify_winusb_descriptors: passed
+    verify_newlib_syscalls: passed

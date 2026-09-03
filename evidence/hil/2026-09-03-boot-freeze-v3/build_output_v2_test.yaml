@@ -1,0 +1,14 @@
+build_output:
+  schema_version: 1
+  created_at_utc: "2026-09-03T03:47:43Z"
+  project: HC32F460xE_MCUBoot_SLAM
+  target: HC32F460xE
+  mcu: HC32F460xE
+  operating_system: bare-metal
+  configuration: "Debug APP_VERSION=2.0.0 APP_AUTO_CONFIRM=OFF"
+  source_revision: "8dc2497dd66982bd4ac6b24cafcb8f86b0f36c33+dirty"
+  toolchain: {id: arm-none-eabi-gcc, version: "14.3.1", target: arm-none-eabi}
+  artifacts:
+    update_bin: build/HIL/boot-freeze-20260903/v2-test/artifacts/app-update-2.0.0.bin
+  checksums:
+    build/HIL/boot-freeze-20260903/v2-test/artifacts/app-update-2.0.0.bin: "f45b9e43e5f6e2c310da744533010ca4c0a17beb16f75896cc8994baa1b5e6fb"

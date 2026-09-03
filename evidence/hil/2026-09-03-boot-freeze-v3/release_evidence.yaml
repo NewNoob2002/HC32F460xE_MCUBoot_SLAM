@@ -1,0 +1,12 @@
+release_evidence:
+  schema_version: 1
+  version: boot-freeze-2026-09-03-v3
+  source_revision: "8dc2497dd66982bd4ac6b24cafcb8f86b0f36c33+dirty"
+  safety_preflights: [safety_preflight.yaml]
+  build_outputs: [build_output_v1.yaml, build_output_v2_test.yaml, build_output_v2_confirm.yaml]
+  deployments: [deployment_result.yaml]
+  debug_sessions: []
+  runtime_monitors: [logs/hil_summary.txt]
+  bus_validations: []
+  tests: [hil_test_result.yaml]
+  reviews: [review_result.yaml]

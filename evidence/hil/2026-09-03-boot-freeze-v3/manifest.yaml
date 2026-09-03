@@ -1,0 +1,24 @@
+evidence_manifest:
+  schema_version: 1
+  run_id: "2026-09-03-boot-freeze-v3"
+  source_base_revision: "8dc2497dd66982bd4ac6b24cafcb8f86b0f36c33"
+  source_dirty_during_run: true
+  freeze_tag: "boot-freeze-2026-09-03-v3"
+  target: "HC32F460xE SLAM target"
+  probe_serial: "63728769"
+  result: "PASSED"
+  contracts:
+    - safety_preflight.yaml
+    - build_output_v1.yaml
+    - build_output_v2_test.yaml
+    - build_output_v2_confirm.yaml
+    - deployment_result.yaml
+    - hil_test_result.yaml
+    - review_result.yaml
+    - release_evidence.yaml
+  checksum_file: SHA256SUMS
+  excluded_raw_flash:
+    reason: "Readback may contain existing firmware and is retained only in ignored build output"
+    path: "build/local-evidence-backup/2026-09-03-boot-freeze-v3/pre_hil_00000000_00075fff.bin"
+    size: 483328
+    sha256: "37ace97308d2f546d10df80e58662d5c92fc44eafb405d3222e8351603561288"

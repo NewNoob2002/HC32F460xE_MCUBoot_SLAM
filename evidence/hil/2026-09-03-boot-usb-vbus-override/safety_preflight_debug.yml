@@ -1,0 +1,14 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-09-03T03:23:18Z"
+  operation: debug-halt
+  authorization: "User requested HIL validation of the Boot USB fix"
+  target:
+    board: HC32F460xE SLAM target
+    hardware_revision: unknown
+    probe_or_adapter_serial: "63728769"
+    transport: swd
+  artifact_or_stimulus: "build/Debug/Boot/boot_firmware.elf sha256:9628b548dca73d3b557a65bd03aa231744375c0fa6f58558958a2c792915e9d3"
+  limits: "One bounded halt for read-only USBFS/global variable inspection, followed immediately by run"
+  recovery_plan: "Issue go after reads; reset and run the verified Boot image if the target does not resume"
+  approved: true

@@ -1,0 +1,23 @@
+deployment_result:
+  schema_version: 1
+  created_at_utc: "2026-09-03T03:23:18Z"
+  safety_preflight: safety_preflight.yml
+  target:
+    board: HC32F460xE SLAM target
+    hardware_revision: unknown
+    probe_serial: "63728769"
+  tool:
+    id: jlink
+    version: "9.70"
+  artifact: build/Debug/Boot/boot_firmware.bin
+  artifact_sha256: 0f40b9f8d18a6bc70a9ee6d52a9c98c5e88903655db9928a95bfbfe29ee8ee63
+  destination: "0x00000000-0x0000FEAF"
+  verified: true
+  reset_after_deploy: true
+  previous_state: Boot recovery without USB enumeration
+  final_state: Boot recovery enumerated as cafe:0001
+  rollback:
+    required: false
+    exercised: false
+    result: not-applicable
+  log: hil_result.log

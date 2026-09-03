@@ -1,0 +1,30 @@
+test_result:
+  schema_version: 1
+  source_revision: 8dc2497dd66982bd4ac6b24cafcb8f86b0f36c33-plus-working-tree
+  artifact_checksums:
+    build/Debug/Boot/boot_firmware.bin: 0f40b9f8d18a6bc70a9ee6d52a9c98c5e88903655db9928a95bfbfe29ee8ee63
+  safety_preflight: safety_preflight_reset.yml
+  level: hil
+  target: HC32F460xE SLAM target
+  command: "J-Link verify/reset; lsusb -d cafe:0001; hc32-updater info; read-only register inspection"
+  timing:
+    started_at_utc: "2026-09-03T03:18:00Z"
+    duration_ms: 318000
+    timeout_ms: 600000
+  attempts: 1
+  passed: true
+  counts:
+    total: 5
+    passed: 5
+    failed: 0
+    skipped: 0
+  classified_failures: []
+  log: hil_result.log
+  requirements:
+    - Boot recovery enumerates over real USB hardware
+    - Boot updater answers the read-only info command
+    - Software VBUS-valid override is active when PA9 is owned by I2C2
+  host_regression:
+    command: ctest --test-dir build/HostTests --output-on-failure
+    passed: true
+    counts: "18/18"

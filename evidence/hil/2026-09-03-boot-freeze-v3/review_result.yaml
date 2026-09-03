@@ -1,0 +1,13 @@
+review_result:
+  schema_version: 1
+  source_revision: "8dc2497dd66982bd4ac6b24cafcb8f86b0f36c33+dirty"
+  scope:
+    - Boot/Core/Src/main.c
+    - Platform/HC32F460/Src/usb_dc_hc32f460.c
+  toolchain_context: "arm-none-eabi-gcc 14.3.1, bare-metal Cortex-M4"
+  findings: []
+  verification:
+    - "clang-format --dry-run --Werror on changed C files"
+    - "three Debug firmware configurations built and signed-image checks passed"
+    - "HostTests 18/18 passed"
+    - "Boot recovery/upgrade/revert/confirmation HIL passed"

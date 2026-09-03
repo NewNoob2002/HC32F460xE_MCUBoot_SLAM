@@ -1,0 +1,20 @@
+release_evidence:
+  schema_version: 1
+  version: boot-usb-vbus-override-hil-2026-09-03
+  source_revision: 8dc2497dd66982bd4ac6b24cafcb8f86b0f36c33-plus-working-tree
+  safety_preflights:
+    - safety_preflight.yml
+    - safety_preflight_reset.yml
+    - safety_preflight_debug.yml
+  build_outputs:
+    - build_output.yml
+  deployments:
+    - deployment_result.yml
+  debug_sessions: []
+  runtime_monitors:
+    - hil_result.log
+  bus_validations: []
+  tests:
+    - test_result.yml
+  reviews:
+    - review_result.yml
