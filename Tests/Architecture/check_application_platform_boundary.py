@@ -5,7 +5,7 @@ from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
-SOURCE_DIRS = (ROOT / "App/Core", ROOT / "Boot/Core")
+SOURCE_DIRS = (ROOT / "App", ROOT / "Boot/Core")
 FORBIDDEN = ('#include "hc32f460', '#include "hc32_ll')
 PLATFORM_DIRS = (ROOT / "Platform/HC32F460/Inc", ROOT / "Platform/HC32F460/Src")
 PLATFORM_FORBIDDEN = ('#include "elog.h"', '#include <elog.h>', '#include "segger_rtt.h"')

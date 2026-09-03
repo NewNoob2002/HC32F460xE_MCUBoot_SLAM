@@ -1,0 +1,20 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-09-03T05:17:35Z"
+  operation: "program-debug-app-reset-and-read-bq40z50-identity"
+  authorization: "User confirmed the connected BQ40Z50 address is 0x0C and requested continued charger/I2C development"
+  target:
+    board: "HC32F460xE SLAM target"
+    hardware_revision: "unknown"
+    probe_or_adapter_serial: "63728769"
+    transport: "SWD at configured speed; last verified VTref 3.391 V"
+  artifact:
+    configuration: "Debug, APP_VERSION=2.1.1, APP_AUTO_CONFIRM=ON, APP_I2C2_SCAN_HIL=ON"
+    role: "MCUboot-confirmed Primary slot image"
+    path: "build/Debug/artifacts/app-primary-2.1.1.bin"
+    size: 204800
+    sha256: "50c15db78adc1b6bdf2003e1fc7dcc962bb934bb9571ea0767a561934dadb735"
+  backup: "pre_hil_primary_00010000_00041fff.bin, 204800 bytes, SHA256 e0b77deb619087418ac6b74420a1ee04173646f0f4058ddd29d16e41102d2f30"
+  limits: "Program exactly 0x32000 bytes at internal Flash 0x00010000..0x00041FFF; do not write Boot, Secondary, Scratch, Reserved/Product Config or OTP. The scan uses only address/probe transactions on 0x08..0x77. After ACK at 0x0C, permit only the existing read-only BQ40Z50 ManufacturerAccess identity subcommands 0x0001, 0x0002, 0x0003 and 0x0006."
+  recovery_plan: "Restore the captured pre-HIL Primary backup at 0x00010000 and reset/run if deployment or startup fails; stop on target/probe mismatch, low VTref, verification failure or unexpected fault."
+  approved: true

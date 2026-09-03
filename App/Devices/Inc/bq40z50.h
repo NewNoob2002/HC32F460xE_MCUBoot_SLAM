@@ -3,7 +3,8 @@
 
 #include <stdint.h>
 
-#define BQ40Z50_I2C_ADDRESS 0x0BU
+#define BQ40Z50_I2C_ADDRESS_DEFAULT   0x0BU
+#define BQ40Z50_I2C_ADDRESS_ALTERNATE 0x0CU
 
 enum bq40z50_result {
     BQ40Z50_OK = 0,
@@ -28,6 +29,6 @@ struct bq40z50_identity {
     uint16_t chemistry_id;
 };
 
-int bq40z50_read_identity(struct bq40z50_identity* identity);
+int bq40z50_read_identity(uint8_t address, struct bq40z50_identity* identity);
 
 #endif

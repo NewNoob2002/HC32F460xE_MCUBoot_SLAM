@@ -13,7 +13,7 @@
 ## Navigate before editing
 
 - This repository is indexed by CodeGraph (`.codegraph/`). Use `codegraph explore "<question or symbols>"` before `rg`, `find`, or broad file reads when locating code or tracing behavior.
-- Treat code and CMake as the source of truth. Use `docs/roadmap/CURRENT_STATE.md` for the current architectural summary; `docs/superpowers/` is historical.
+- Treat code and CMake as the source of truth. Use `docs/roadmap/CURRENT_STATE.md` for the current architectural summary; completed history remains in Git, ADRs and retained evidence.
 - Trace callers before changing shared Boot, Flash, handover, protocol, manager, or storage functions.
 
 ## Ownership boundaries
@@ -28,7 +28,7 @@
 
 - Boot entry: `Boot/Core/Src/main.c` -> `bsp_clock_init()` -> `boot_go()` -> `boot_handover()`.
 - Handover: `Platform/HC32F460/Src/boot_handover.c` accepts only internal Primary with the fixed header, validates MSP/Thumb reset vectors, clears interrupt/SysTick state, then uses a small assembly trampoline to restore CONTROL/MSP and branch.
-- Application entry: `App/Core/Src/main.c` initializes clocks, watchdog, USB updater and image confirmation; callbacks publish events and the cooperative poll loop owns Manager, Flash and deferred reset work.
+- Application entry: `App/Core/Src/main.c` sequences startup and polling; `App/Devices/` owns device contracts, `App/Services/` owns I2C device composition, and `App/Diagnostics/` owns bounded runtime status. USB callbacks publish events and the cooperative poll loop owns Manager, Flash and deferred reset work.
 - Active-low RGB status LED: PA0=red, PA1=green, PA2=blue. Boot is solid blue; recovery is slow red; firmware update is fast blue; default App is green heartbeat; updater App is blue heartbeat; USB diagnostic App is cyan heartbeat; panic/error is solid red.
 - Host updater: `Tools/updater/`; CLI and Slint GUI share `FirmwareImage`, `ProtocolV1Client` and `UpgradeWorkflow`.
 - MCUboot port: `Platform/HC32F460/Ports/mcuboot/` owns Flash areas, MCUboot configuration, assertions/logging, and the generated public-key bridge.

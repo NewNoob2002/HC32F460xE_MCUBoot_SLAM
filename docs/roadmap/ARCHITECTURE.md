@@ -30,6 +30,22 @@ Application firmware
 └── Platform services -> clock/timer/reset and MCU-specific drivers
 ```
 
+Product Application internals use the same downward-only rule:
+
+```text
+App/Core/main.c
+  -> App/Services/power_devices
+       -> App/Devices/{bq40z50, husb238, mp2762a}
+            -> Platform/HC32F460/bsp_i2c2
+  -> App/Diagnostics/app_diagnostics
+       -> bounded startup/runtime snapshot and periodic Debug report
+```
+
+Device protocol/address ownership does not belong in `main.c` or the BSP. The
+BSP exposes generic I2C transactions; the device and service layers select
+addresses and interpret responses. Diagnostics records fixed-size state without
+allocation, persistence or an RTOS.
+
 Primary and Secondary are two slots used by one Application product. Application v1 and v2 each contain the updater version compiled into that image; there is one updater source tree, not `app1/` and `app2/`.
 
 ## Dependency rules

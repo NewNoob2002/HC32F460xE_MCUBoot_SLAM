@@ -49,13 +49,39 @@ add_test(NAME app_confirm COMMAND app_confirm_tests)
 
 add_executable(bq40z50_tests
     bq40z50_tests.c
-    ${PROJECT_SOURCE_DIR}/App/Core/Src/bq40z50.c
+    ${PROJECT_SOURCE_DIR}/App/Devices/Src/bq40z50.c
 )
 target_include_directories(bq40z50_tests PRIVATE
-    ${PROJECT_SOURCE_DIR}/App/Core/Inc
+    ${PROJECT_SOURCE_DIR}/App/Devices/Inc
     ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Inc
 )
 add_test(NAME bq40z50 COMMAND bq40z50_tests)
+
+add_executable(power_devices_tests
+    power_devices_tests.c
+    ${PROJECT_SOURCE_DIR}/App/Services/Src/power_devices.c
+)
+target_include_directories(power_devices_tests PRIVATE
+    ${PROJECT_SOURCE_DIR}/App/Devices/Inc
+    ${PROJECT_SOURCE_DIR}/App/Services/Inc
+    ${PROJECT_SOURCE_DIR}/Config/Debug
+    ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Inc
+)
+add_test(NAME power_devices COMMAND power_devices_tests)
+
+add_executable(app_diagnostics_tests
+    app_diagnostics_tests.c
+    ${PROJECT_SOURCE_DIR}/App/Diagnostics/Src/app_diagnostics.c
+)
+target_include_directories(app_diagnostics_tests PRIVATE
+    ${PROJECT_SOURCE_DIR}/App/Core/Inc
+    ${PROJECT_SOURCE_DIR}/App/Devices/Inc
+    ${PROJECT_SOURCE_DIR}/App/Diagnostics/Inc
+    ${PROJECT_SOURCE_DIR}/App/Services/Inc
+    ${PROJECT_SOURCE_DIR}/Config/Debug
+    ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Inc
+)
+add_test(NAME app_diagnostics COMMAND app_diagnostics_tests)
 
 add_executable(fw_update_contract_tests
     fw_update_contract_tests.c

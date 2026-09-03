@@ -1,0 +1,19 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-09-03T04:44:50Z"
+  operation: "backup-primary-program-debug-app-reset-and-read-rtt-i2c2-address-scan"
+  authorization: "User requested App charger/I2C development and a full I2C Master address scan"
+  target:
+    board: "HC32F460xE SLAM target"
+    hardware_revision: "unknown"
+    probe_or_adapter_serial: "63728769"
+    transport: "SWD at configured speed; require VTref near 3.3 V before writes"
+  artifact:
+    configuration: "Debug, APP_VERSION=2.1.0, APP_AUTO_CONFIRM=ON, APP_I2C2_SCAN_HIL=ON"
+    role: "MCUboot-confirmed Primary slot image"
+    path: "build/Debug/artifacts/app-primary-2.1.0.bin"
+    size: 204800
+    sha256: "731e3326642bb49de24e3e07150695192605109488d58db6650b0273e5760ace"
+  limits: "Back up then program exactly 0x32000 bytes at internal Flash 0x00010000..0x00041FFF; do not write Boot, Secondary, Scratch, Reserved/Product Config or OTP. Scan only standard usable 7-bit addresses 0x08..0x77 using address/probe transactions; perform no device register writes during the scan."
+  recovery_plan: "Restore the captured pre-HIL Primary backup at 0x00010000 and reset/run if deployment or startup fails; stop on target/probe mismatch, low VTref, verification failure or unexpected fault."
+  approved: true

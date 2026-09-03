@@ -370,3 +370,17 @@ enum usb_fw_update_action usb_fw_update_poll(uint32_t now_ms) {
     return fw_update_manager_take_action(&manager) == FW_UPDATE_MANAGER_ACTION_RESET ? USB_FW_UPDATE_ACTION_RESET
                                                                                      : USB_FW_UPDATE_ACTION_NONE;
 }
+
+void usb_fw_update_get_status(struct usb_fw_update_status* status) {
+    bsp_irq_state_t irq_state;
+
+    if (status == NULL)
+        return;
+
+    status->manager_state = (int)fw_update_manager_get_state(&manager);
+    irq_state = bsp_enter_critical();
+    status->errors = g_usb_fw_update_errors;
+    status->last_result = g_usb_fw_update_last_result;
+    status->configured = is_configured;
+    bsp_exit_critical(irq_state);
+}

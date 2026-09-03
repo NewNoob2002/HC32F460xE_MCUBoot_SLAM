@@ -1,0 +1,16 @@
+evidence_manifest:
+  schema_version: 1
+  run_id: "2026-09-03-app-i2c2-scan"
+  source_base_revision: "b1c67c99d9c749905c3242293bfffb10847fe63b"
+  source_dirty_during_run: true
+  target: "HC32F460xE SLAM target"
+  probe_serial: "63728769"
+  result: "PARTIAL"
+  contracts:
+    - safety_preflight.yaml
+    - safety_preflight_bq_identity.yaml
+    - safety_preflight_bq_identity_fix.yaml
+    - safety_preflight_bq_identity_parse.yaml
+    - build_output.yaml
+    - hil_test_result.yaml
+  checksum_file: SHA256SUMS

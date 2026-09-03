@@ -1,8 +1,6 @@
 #include "app_confirm.h"
-#include "bq40z50.h"
 #include "bsp_clock.h"
 #include "bsp_external_watchdog.h"
-#include "bsp_i2c2.h"
 #include "bsp_log_uart.h"
 #include "bsp_panic.h"
 #include "bsp_reset.h"
@@ -15,30 +13,16 @@
 
 #if APP_PHASE2_HIL_MODE != 0
 #include "phase2_hil.h"
+#else
+#include "app_diagnostics.h"
+#include "power_devices.h"
 #endif
 
 volatile int g_app_confirm_result;
 volatile int g_app_usb_init_result;
 #if APP_PHASE2_HIL_MODE == 0
-volatile int g_app_i2c2_init_result;
-volatile int g_app_bq40z50_probe_result;
-volatile int g_app_husb238_probe_result;
-volatile int g_app_mp2762a_probe_result;
-volatile int g_app_bq40z50_identity_result;
-struct bq40z50_identity g_app_bq40z50_identity;
-
-static void probe_power_devices(void) {
-    g_app_i2c2_init_result = bsp_i2c2_init();
-    g_app_bq40z50_probe_result = bsp_i2c2_probe(BQ40Z50_I2C_ADDRESS);
-    g_app_husb238_probe_result = bsp_i2c2_probe(0x08U);
-    g_app_mp2762a_probe_result = bsp_i2c2_probe(0x5CU);
-    g_app_bq40z50_identity_result = g_app_bq40z50_probe_result == BSP_I2C2_OK
-                                        ? bq40z50_read_identity(&g_app_bq40z50_identity)
-                                        : g_app_bq40z50_probe_result;
-    CORE_DEBUG_PRINTF("i2c2=%d bq@0b=%d husb@08=%d mp@5c=%d bq_identity=%d", g_app_i2c2_init_result,
-                      g_app_bq40z50_probe_result, g_app_husb238_probe_result, g_app_mp2762a_probe_result,
-                      g_app_bq40z50_identity_result);
-}
+struct power_devices_status g_app_power_devices_status;
+struct app_diagnostics g_app_diagnostics;
 #endif
 
 int main(void) {
@@ -60,7 +44,7 @@ int main(void) {
     bsp_status_led_set_mode(BSP_STATUS_LED_MODE_APP_PRIMARY);
 #else
     bsp_status_led_set_mode(BSP_STATUS_LED_MODE_APP_UPDATER);
-    probe_power_devices();
+    power_devices_init(&g_app_power_devices_status);
 #endif
 #if APP_PHASE2_HIL_MODE != 0
     g_app_confirm_result = phase2_hil_run(APP_PHASE2_HIL_MODE);
@@ -72,11 +56,12 @@ int main(void) {
     if (g_app_usb_init_result != 0)
         bsp_panic("app USB init failed");
     g_app_confirm_result = app_confirm_running_image(APP_AUTO_CONFIRM != 0);
+    app_diagnostics_init(&g_app_diagnostics, bsp_millis(), &g_app_power_devices_status, g_app_usb_init_result,
+                         g_app_confirm_result);
 #endif
     if (g_app_confirm_result != 0)
         bsp_panic("app startup check failed");
 
-    CORE_DEBUG_PRINTF("usb=%d confirm=%d", g_app_usb_init_result, g_app_confirm_result);
     bsp_write_protection_restore();
     for (;;) {
 #if APP_PHASE2_HIL_MODE != 0
@@ -84,7 +69,9 @@ int main(void) {
 #else
         now_ms = bsp_millis();
         bsp_external_watchdog_poll(now_ms);
-        if (usb_fw_update_poll(now_ms) == USB_FW_UPDATE_ACTION_RESET)
+        const enum usb_fw_update_action action = usb_fw_update_poll(now_ms);
+        (void)app_diagnostics_poll(&g_app_diagnostics, now_ms);
+        if (action == USB_FW_UPDATE_ACTION_RESET)
             bsp_system_reset();
 #endif
         bsp_status_led_poll(bsp_millis());

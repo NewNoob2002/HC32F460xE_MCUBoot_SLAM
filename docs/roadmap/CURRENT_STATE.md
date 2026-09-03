@@ -23,16 +23,19 @@ history remains in Git, ADRs and retained evidence bundles.
 - Physical Product Config v3 persistence, descriptors, install, exact-SN
   reconnect and full-Flash restoration passed on 2026-09-01.
 - The product Application charger track is active. A1 initializes PA9/PA8 shared
-  100 kHz I2C2, probes only BQ40Z50/HUSB238/MP2762A, and reads BQ40Z50 identity
-  after a successful address response. Target acceptance remains blocked because
-  the retained hardware run received no successful response from any device.
+  100 kHz I2C2, probes BQ40Z50 packs at `0x0B`/`0x0C`, HUSB238 at `0x08` and
+  MP2762A at `0x5C`, and reads alternate-pack BQ identity after a successful
+  address response. The refactored two-pack image still requires target HIL.
 
 ## Ownership
 
 | Area | Responsibility |
 | --- | --- |
 | `Boot/` | MCUboot entry, recovery fallback and handover |
-| `App/` | Default App, USB loopback and production USB updater executables |
+| `App/Core/` | Application startup, confirmation and USB updater orchestration |
+| `App/Devices/` | Device addresses and device-specific protocol parsing |
+| `App/Services/` | Product device composition and fixed-address probing |
+| `App/Diagnostics/` | Fixed-size startup/runtime status and periodic Debug reports |
 | `components/fw_update/` | Portable protocol/manager plus MCUboot and FlashDB backends |
 | `Platform/HC32F460/` | HC32 BSP, USB DCD, newlib syscalls and component ports |
 | `Config/` and `cmake/` | Product identity, memory map, signing and artifact policy |
@@ -79,9 +82,12 @@ USB install
 ```
 
 The single `app_firmware` target initializes clock, status LED, timebase, debug
-logging, bounded I2C2 power-device probes, watchdog, FlashDB, Manager and USB,
-then confirms the running image. Missing power devices are reported without
-blocking USB/update startup. USB callbacks publish events; the cooperative poll
+logging, the `power_devices` service, watchdog, FlashDB, Manager and USB, then
+confirms the running image. `main.c` contains orchestration only; device
+addresses/protocols live under `App/Devices`, shared-bus composition lives under
+`App/Services`, and `App/Diagnostics` records a fixed-size status snapshot plus
+a five-second Debug report. Missing power devices remain degraded status and do
+not block USB/update startup. USB callbacks publish events; the cooperative poll
 loop owns protocol, Flash and reset work.
 
 The current development board does not route PA9 as USB VBUS sense. Firmware
@@ -170,6 +176,9 @@ Known deferred host issues for a later node:
   `evidence/hil/2026-09-02-logging-rtt-uart/`. RTT is closed-loop verified;
   USART3 configuration/transmit state is verified, while external PB13 waveform
   capture remains pending a USB-UART adapter.
+- The pre-refactor BQ40Z50 `0x0C` scan and identity HIL is retained under
+  `evidence/hil/2026-09-03-app-i2c2-scan/`. The current refactored image adds
+  the `0x0B` pack probe and runtime diagnostics but has not yet been flashed.
 - Earlier evidence covers rollback/confirmation, Secondary isolation, protocol
   corpus, USB loopback endurance, Boot recovery/bootstrap, Application upgrade,
   GUI installation and exact restoration.
@@ -180,8 +189,8 @@ Known deferred host issues for a later node:
 
 ## Remaining gates
 
-- Restore powered access to the three A1 I2C devices and capture successful
-  address evidence plus BQ40Z50 identity; A2 remains gated on this result.
+- Deploy the refactored App and retain successful address evidence for both
+  BQ40Z50 packs plus HUSB238/MP2762A; A2 remains gated on this result.
 - Confirm the battery pack maximum allowed continuous charge current.
 - Archive the current development-board schematic and revision.
 - Updater reliability, UART, CAN/CAN-FD and second-MCU expansion remain

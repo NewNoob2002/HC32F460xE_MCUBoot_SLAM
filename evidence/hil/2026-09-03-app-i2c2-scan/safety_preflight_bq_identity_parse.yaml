@@ -1,0 +1,16 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-09-03T05:52:49Z"
+  operation: "program-debug-app-reset-and-verify-bq40z50-firmware-field-parsing"
+  authorization: "User requested continued BQ40Z50/I2C development using local register definitions and online corroboration"
+  target: {board: "HC32F460xE SLAM target", hardware_revision: "unknown", probe_or_adapter_serial: "63728769", transport: "SWD; VTref previously verified 3.387-3.393 V"}
+  artifact:
+    configuration: "Debug, APP_VERSION=2.1.3, APP_AUTO_CONFIRM=ON, APP_I2C2_SCAN_HIL=ON"
+    role: "MCUboot-confirmed Primary slot image"
+    path: "build/Debug/artifacts/app-primary-2.1.3.bin"
+    size: 204800
+    sha256: "5f8e78a59eefce14932a01da071e089afa11b872b1da56cfe60cfe2acb6ea499"
+  backup: "pre_hil_primary_00010000_00041fff.bin, 204800 bytes, SHA256 e0b77deb619087418ac6b74420a1ee04173646f0f4058ddd29d16e41102d2f30"
+  limits: "Program exactly 0x32000 bytes at 0x00010000..0x00041FFF only. Do not write Boot, Secondary, Scratch, Reserved/Product Config or OTP. Permit I2C address probes and read-only BQ40Z50 ManufacturerAccess identity subcommands 0x0001, 0x0002, 0x0003 and 0x0006 at 7-bit address 0x0C."
+  recovery_plan: "Restore the pre-HIL Primary backup at 0x00010000 and reset/run if deployment or startup fails; stop on target/probe mismatch, low VTref, invalid image header, unexpected fault or identity transaction error."
+  approved: true

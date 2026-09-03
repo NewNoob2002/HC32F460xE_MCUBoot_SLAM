@@ -22,9 +22,11 @@ endif()
 
 add_executable(app_firmware
     Core/Src/app_confirm.c
-    Core/Src/bq40z50.c
     Core/Src/main.c
     Core/Src/usb_fw_update.c
+    Devices/Src/bq40z50.c
+    Diagnostics/Src/app_diagnostics.c
+    Services/Src/power_devices.c
     $<TARGET_OBJECTS:hc32_newlib>
     $<TARGET_OBJECTS:hc32_startup_app>
 )
@@ -32,7 +34,12 @@ set_target_properties(app_firmware PROPERTIES
     OUTPUT_NAME "app-${APP_VERSION}"
     SUFFIX .elf
 )
-target_include_directories(app_firmware PRIVATE Core/Inc)
+target_include_directories(app_firmware PRIVATE
+    Core/Inc
+    Devices/Inc
+    Diagnostics/Inc
+    Services/Inc
+)
 target_compile_definitions(app_firmware PRIVATE
     APP_AUTO_CONFIRM=$<BOOL:${APP_AUTO_CONFIRM}>
     APP_PHASE2_HIL_MODE=${APP_PHASE2_HIL_MODE}
@@ -43,8 +50,10 @@ target_compile_definitions(app_firmware PRIVATE
 )
 set_source_files_properties(
     Core/Src/main.c
-    Core/Src/bq40z50.c
     Core/Src/usb_fw_update.c
+    Devices/Src/bq40z50.c
+    Diagnostics/Src/app_diagnostics.c
+    Services/Src/power_devices.c
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wconversion;-Wshadow;-Werror"
 )
 target_include_directories(app_firmware SYSTEM PRIVATE
