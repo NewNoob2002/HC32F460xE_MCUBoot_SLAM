@@ -11,7 +11,7 @@ void logCharger(const dp::ChargerState& charger) {
 } // namespace
 namespace app {
 void Diagnostics::pullAll() {
-    // pull 失败时保留最后成功值；缺失订阅在初始化时记录。
+    // Failed pulls preserve the last successful value; missing subscriptions are logged at init.
     (void)dp::Power::pull(*this, snapshot_.power);
     (void)dp::System::pull(*this, snapshot_.system);
     (void)dp::Update::pull(*this, snapshot_.update);
@@ -59,7 +59,7 @@ int Diagnostics::onEvent(EventParam* event) {
     return dp::System::receive(event, snapshot_.system);
 }
 bool Diagnostics::init(DataBroker& broker, uint32_t now_ms) {
-    // 必须先注册；重复初始化不得覆盖仍在使用的关系、快照和定时器。
+    // Register first; duplicate init must preserve live links, the snapshot and the timer.
     if (DataNode::init(broker, dp::names::Diagnostics, EVENT_PUBLISH | EVENT_TIMER) != RES_OK)
         return false;
     started_ms_ = now_ms;

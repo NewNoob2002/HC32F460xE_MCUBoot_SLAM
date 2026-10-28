@@ -23,7 +23,7 @@
 #pragma once
 #include <cstdint>
 
-/** 节点内嵌定时器；无符号时间差支持毫秒计数回绕，不追赶遗漏周期。 */
+/** Embedded node timer; unsigned elapsed time handles millisecond wraparound without catching up missed periods. */
 class DataTimer {
   public:
     void start(uint32_t period_ms, uint32_t now_ms) {

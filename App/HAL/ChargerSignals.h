@@ -4,7 +4,7 @@ struct ChargerSample {
     bool interrupt_asserted = false;
     bool power_good = false;
 };
-/** PA4=INT#，PA5=PG（反相 ACOK#）；初始化失败时不得采样浮空引脚。 */
+/** PA4=INT#, PA5=PG (inverted ACOK#); do not sample floating pins after initialization fails. */
 class ChargerSignals {
   public:
     virtual bool init() = 0;

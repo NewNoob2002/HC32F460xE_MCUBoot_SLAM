@@ -1,7 +1,7 @@
 #include <cassert>
 #include "Diagnostics.h"
 
-// 用类型化 provider 驱动真实 Diagnostics；不替换 BSP 符号。
+// Drive real Diagnostics with typed providers, without replacing BSP symbols.
 template <class State> class Provider final : public dp::ValueNode<State> {
   public:
     State& state() {
@@ -32,7 +32,7 @@ int main() {
     assert(snapshot.system.loop_count == 3U);
     assert(snapshot.charger.interrupt_asserted);
     assert(snapshot.update.usb.manager_state == 1);
-    // 不同时间的重复初始化不得重置计时起点、快照、关系或 timer。
+    // Repeated init at a different time must preserve the start time, snapshot, links and timer.
     assert(!diagnostics.init(broker, 4000U));
     assert(diagnostics.publisherCount() == 4U);
     assert(snapshot.system.loop_count == 3U);
@@ -59,7 +59,7 @@ int main() {
     update.state().usb.configured = 0U;
     assert(update.publish(&update.state(), sizeof(update.state())) == DataNode::RES_OK);
     assert(snapshot.update.usb.configured == 0U);
-    // 失去订阅后，周期 pull 失败必须保留最后一次成功值。
+    // After unsubscribing, failed periodic pulls must preserve the last successful value.
     assert(diagnostics.unsubscribe(dp::names::Charger) == DataNode::RES_OK);
     assert(broker.handleTimers(11000U) == app::DiagnosticsPeriodMs);
     assert(snapshot.charger.change_count == 2U && snapshot.report_count == 2U);

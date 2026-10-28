@@ -28,7 +28,7 @@ class Observer final : public DataNode {
     }
 };
 } // namespace
-// 仅共享 C 运行时边界使用链接替身；I2C/GPIO 的测试通过 HAL 假对象注入。
+// Only shared C runtime boundaries use link-time fakes; I2C/GPIO tests inject HAL fakes.
 extern "C" {
 bool bsp_external_watchdog_init(uint32_t now_ms) {
     last_watchdog_ms = now_ms;

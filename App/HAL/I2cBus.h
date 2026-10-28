@@ -3,7 +3,7 @@
 #include "bsp_i2c2.h"
 
 namespace hal {
-/** 返回 BSP_I2C2_* 结果；调用者持有总线及设备，无基类删除。 */
+/** Returns BSP_I2C2_* results; callers own the bus and devices and must not delete through the base class. */
 class I2cBus {
   public:
     virtual int init() = 0;

@@ -51,7 +51,7 @@ template <class State> int readPayload(const DataNode::EventParam* event, State&
     std::memcpy(&value, event->data, sizeof(State));
     return DataNode::RES_OK;
 }
-/** 类型化同步接口；首次值必须 pull，不能保留回调载荷指针。 */
+/** Typed synchronous interface; pull the initial value and never retain callback payload pointers. */
 template <const char* Id, class State> struct Reader {
     static int subscribe(DataNode& caller) {
         return caller.subscribe(Id);

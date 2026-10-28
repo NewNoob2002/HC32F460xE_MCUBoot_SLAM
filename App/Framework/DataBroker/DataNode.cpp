@@ -133,7 +133,7 @@ int DataNode::publish(const void* data, std::size_t size) {
     for (const auto& entry : snapshot) {
         if (!broker_->alive(entry) || !contains(subscribers_, entry.node))
             continue;
-        // 过滤 PUBLISH 的订阅者只使用 pull；回调主动返回的错误仍需传给调用方。
+        // Subscribers filtering PUBLISH only pull; explicit callback errors still propagate to the caller.
         if ((entry.node->filter_ & EVENT_PUBLISH) == 0U)
             continue;
         const int delivered = sendEvent(*entry.node, EVENT_PUBLISH, const_cast<void*>(data), size);

@@ -2,14 +2,14 @@
 #include "DataProc.h"
 #include "Diagnostics.h"
 
-/** 只负责静态资源组装、启动顺序与协作循环；领域行为由节点持有。 */
+/** Assembles static resources and sequences startup and the cooperative loop; nodes own domain behavior. */
 class App final {
   public:
     [[noreturn]] void run();
 
   private:
 #if APP_PHASE2_HIL_MODE == 0
-    // 成员按声明顺序构造、逆序析构；broker 比所有节点长寿。
+    // Members construct in declaration order and destruct in reverse; the broker outlives all nodes.
     DataBroker broker_{};
     hal::Hc32I2cBus bus_{};
     hal::Hc32ChargerSignals signals_{};

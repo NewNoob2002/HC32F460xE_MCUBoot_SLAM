@@ -4,7 +4,7 @@
 #include <cstring>
 #include "BQ40Z50.h"
 
-/** 与设备协议交互的假总线；没有 BSP 链接替身。 */
+/** Fake bus for device protocol tests; no BSP link-time replacements. */
 class FakeI2cBus final : public hal::I2cBus {
   public:
     int init_result = BSP_I2C2_OK;

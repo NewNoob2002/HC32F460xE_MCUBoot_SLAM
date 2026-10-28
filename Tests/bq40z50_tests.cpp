@@ -28,7 +28,7 @@ int main() {
     assert(bus.reads == reads);
     bus.write_result = BSP_I2C2_OK;
     bus.read_result = BSP_I2C2_ERR_RX_STOP_TIMEOUT;
-    // 每个读取阶段失败都不得将部分 identity 提交给调用方。
+    // Failure at any read stage must not commit a partial identity to the caller.
     for (unsigned stage = 1U; stage <= 4U; ++stage) {
         bus.reads = 0U;
         bus.fail_read_at = stage;

@@ -23,7 +23,7 @@
 #pragma once
 #include "DataNode.h"
 
-/** 固定容量同步路由，不隐式建立订阅；只在应用主循环中调用。 */
+/** Fixed-capacity synchronous routing with explicit subscriptions; call only from the main loop. */
 class DataBroker {
   public:
     static constexpr std::size_t MaxNodes = 16U;
@@ -32,7 +32,7 @@ class DataBroker {
     DataBroker& operator=(const DataBroker&) = delete;
     DataNode* search(const char* id) const;
     std::size_t nodeCount() const;
-    /** 每个节点每轮最多到期一次；嵌套调用返回 0，未运行定时器返回 UINT32_MAX。 */
+    /** Expires each node at most once per pass; returns 0 on reentry or UINT32_MAX when no timers are active. */
     uint32_t handleTimers(uint32_t now_ms);
 
   private:

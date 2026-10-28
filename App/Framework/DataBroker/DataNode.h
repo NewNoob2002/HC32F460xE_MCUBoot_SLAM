@@ -27,8 +27,8 @@
 #include "DataTimer.h"
 
 class DataBroker;
-/** 应用主循环独占。载荷仅在同步调用期间有效；禁止销毁当前发布者或 broker。
- * 对象由调用方持有，broker 必须比节点长寿；不允许经基类指针销毁节点。
+/** Main loop only. Payloads are valid only during synchronous calls; do not destroy the active publisher or broker.
+ * Callers own nodes; the broker must outlive them. Do not destroy nodes through base-class pointers.
  */
 class DataNode {
   public:
@@ -66,7 +66,7 @@ class DataNode {
     ~DataNode();
     DataNode(const DataNode&) = delete;
     DataNode& operator=(const DataNode&) = delete;
-    /** id 字符串必须比节点长寿。失败不改变已有节点或关系。 */
+    /** The id string must outlive the node. Failure preserves existing nodes and links. */
     int init(DataBroker& broker, const char* id, uint32_t filter = EVENT_ALL, Callback callback = nullptr,
              void* user_data = nullptr);
     bool isRegistered() const {

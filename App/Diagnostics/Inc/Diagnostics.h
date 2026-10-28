@@ -24,5 +24,5 @@ class Diagnostics final : public DataNode {
     void report(uint32_t now_ms);
 };
 } // namespace app
-// 保持未修饰符号，供 J-Link 按名称读取完整运行快照。
+// Keep an unmangled symbol so J-Link can inspect the full runtime snapshot by name.
 extern "C" app::DiagnosticsSnapshot g_app_diagnostics;

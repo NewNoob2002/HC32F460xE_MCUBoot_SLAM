@@ -187,7 +187,7 @@ static void test_timers(void) {
     assert(fast_probe.timer_count == 3U);
 }
 
-// 回调中改变关系时按快照分发；新订阅不能插入本轮。
+// Dispatch from the snapshot when callbacks change links; new subscriptions wait until the next publish.
 static void test_snapshot_and_errors() {
     DataBroker broker;
     DataNode publisher;
@@ -227,7 +227,7 @@ static void test_snapshot_and_errors() {
     added_probe.publish_result = DataNode::RES_UNKNOWN;
     assert(removed.subscribe("pub") == DataNode::RES_OK);
     assert(publisher.publish(&value, sizeof(value)) == DataNode::RES_NO_DATA);
-    // 过滤标志与回调返回 UNSUPPORTED_REQUEST 具有不同含义。
+    // Filtering an event differs from a callback returning UNSUPPORTED_REQUEST.
     removed_probe.publish_result = DataNode::RES_UNSUPPORTED_REQUEST;
     assert(publisher.publish(&value, sizeof(value)) == DataNode::RES_UNSUPPORTED_REQUEST);
     assert(publisher.notify("removed", &value, sizeof(value)) == DataNode::RES_NOT_FOUND);
@@ -284,7 +284,7 @@ static void test_nested_timers() {
     assert(broker.handleTimers(100U) == UINT32_MAX && nested.calls == 1U);
 }
 
-// 同地址重建的节点不能接收旧快照中的发布或 TIMER。
+// Nodes rebuilt at the same address must not receive PUBLISH or TIMER events from an old snapshot.
 static void test_recreated_node_snapshots() {
     DataBroker broker;
     DataNode publisher;

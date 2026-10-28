@@ -69,9 +69,10 @@ preserved; see [ADR-007](../adr/ADR-007-app-cpp-databroker.md).
   parsing and failure atomicity, fixed probe order/failure handling, charger
   change detection, typed diagnostics and direct watchdog/USB scheduling.
   Debug, Release and Phase2 builds pass; this is compile/host evidence only.
-- Historical verification: The 2026-09-03 local CI run passed strict ASan/UBSan HostTests
-  20/20, Rust checks, Debug/Release firmware and all image/descriptor/syscall/
-  signing-policy gates. Target HIL remains required for final two-pack acceptance.
+- Historical verification: The 2026-09-03 local CI run passed strict ASan/UBSan
+  HostTests 20/20, Rust checks, Debug/Release firmware and all image/descriptor/
+  syscall/signing-policy gates. Target HIL remains required for final two-pack
+  acceptance.
 
 ## Next nodes
 

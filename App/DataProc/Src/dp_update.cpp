@@ -13,7 +13,7 @@ usb_fw_update_action UpdateNode::poll(uint32_t now_ms) {
     const auto action = usb_fw_update_poll(now_ms);
     usb_fw_update_status next{};
     usb_fw_update_get_status(&next);
-    // last_result 每包都可能变化，保留为 pull 值，避免每包广播。
+    // last_result may change per packet; expose it through pull to avoid broadcasting every packet.
     const bool changed = next.configured != state_.usb.configured || next.manager_state != state_.usb.manager_state
                          || next.errors != state_.usb.errors;
     state_.usb = next;
