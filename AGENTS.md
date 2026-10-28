@@ -28,8 +28,10 @@
 
 - Boot entry: `Boot/Core/Src/main.c` -> `bsp_clock_init()` -> `boot_go()` -> `boot_handover()`.
 - Handover: `Platform/HC32F460/Src/boot_handover.c` accepts only internal Primary with the fixed header, validates MSP/Thumb reset vectors, clears interrupt/SysTick state, then uses a small assembly trampoline to restore CONTROL/MSP and branch.
-- Application entry: `App/Core/Src/main.c` sequences startup and polling; `App/Devices/` owns device contracts, `App/Services/` owns I2C device composition, and `App/Diagnostics/` owns bounded runtime status. USB callbacks publish events and the cooperative poll loop owns Manager, Flash and deferred reset work.
-- Active-low RGB status LED: PA0=red, PA1=green, PA2=blue. Boot is solid blue; recovery is slow red; firmware update is fast blue; default App is green heartbeat; updater App is blue heartbeat; USB diagnostic App is cyan heartbeat; panic/error is solid red.
+- Application entry: `App/Core/Src/main.cpp` delegates to the statically owned `App` in `App/App.{h,cpp}`. `App/DataProc/` owns typed Power, Charger, Update and System nodes; `App/HAL/` owns device contracts/decoding and HC32 BSP adapters; `App/Diagnostics/` subscribes and retains the J-Link snapshot. USB callbacks publish transport events and the cooperative poll loop owns Manager, Flash and deferred reset work.
+- `App/Framework/DataBroker/` is an MIT-derived C++17 synchronous broker with 16 caller-owned nodes, eight links per direction and an embedded timer per node. Framework dependencies are limited to its own headers and the C/C++ standard library. DataProc must never depend on Diagnostics. No App heap, exceptions, RTTI, guarded local statics or interrupt dispatch.
+- Boot, components, shared BSP sources, `App/Core/Src/{usb_fw_update,app_confirm}.c` and `Tests/HIL/phase2_hil.c` stay C. Project-owned C headers may expose C linkage for C++ callers; vendored headers remain untouched.
+- V1.1 active-low status LEDs: PB6=red and PB5=blue only. Boot is solid blue; recovery is slow red; firmware update is fast blue; APP_PRIMARY is red+blue heartbeat; updater App is blue heartbeat; panic/error is solid red. The cyan diagnostic mode was removed.
 - Host updater: `Tools/updater/`; CLI and Slint GUI share `FirmwareImage`, `ProtocolV1Client` and `UpgradeWorkflow`.
 - MCUboot port: `Platform/HC32F460/Ports/mcuboot/` owns Flash areas, MCUboot configuration, assertions/logging, and the generated public-key bridge.
 - Update core: `components/fw_update/src/` must remain host-buildable and platform-independent. Hardware/MCUboot access belongs in `components/fw_update/backends/`.
@@ -90,7 +92,7 @@ Verify retained evidence when changing HIL assets, evidence manifests, or releas
 python3 Tests/HIL/verify_evidence.py
 ```
 
-- Match `.clang-format`; format only touched project-owned C/C++ files.
+- Match `.clang-format`; format only touched project-owned C/C++ files. App C++ uses C++17, `-fno-exceptions -fno-rtti -fno-threadsafe-statics -fno-use-cxa-atexit` and `-Wall -Wextra -Wconversion -Wshadow -Werror`; `verify_newlib_syscalls` also rejects linked App allocation operators, guard functions and exception/RTTI support.
 - Add or update one focused host test for non-trivial logic. Keep portable dependency and USB boundary checks passing.
 - Hardware flashing/HIL is required for claims about physical swapping, rollback, reset, USB enumeration, or power-loss behavior; host tests and builds do not prove those behaviors.
 

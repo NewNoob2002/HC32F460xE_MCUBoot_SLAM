@@ -1,6 +1,6 @@
 # Roadmap Status
 
-Last updated: 2026-09-03
+Last updated: 2026-10-28
 
 Allowed values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIEW`, `PASSED`, `DEFERRED`.
 
@@ -21,9 +21,9 @@ Allowed values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIEW`, `PA
 
 | Node | Status | Current evidence / blocker |
 | --- | --- | --- |
-| A1 — I2C2 bus and BQ identity | READY_FOR_REVIEW | Layered fixed-address probes and runtime diagnostics pass HostTests 20/20; refactored two-pack image still needs HIL |
+| A1 — I2C2 bus and BQ identity | READY_FOR_REVIEW | C++ typed nodes/HAL fakes and bounded broker pass host/build gates; V1.1 two-pack image still needs HIL |
 | A2 — Charger/gauge telemetry | NOT_STARTED | Starts after A1 HIL |
-| A3 — IAM/IBM/PSYS ADC validation | NOT_STARTED | Starts after A2 |
+| A3 — Register telemetry validation | NOT_STARTED | Starts after A2 |
 | A4 — Charging policy | BLOCKED | Requires maximum allowed pack charge current |
 | A5 — Fault and charge/discharge HIL | NOT_STARTED | Starts after A4 |
 
@@ -33,11 +33,30 @@ Allowed values: `NOT_STARTED`, `IN_PROGRESS`, `BLOCKED`, `READY_FOR_REVIEW`, `PA
   RTT; Platform code remains independent of both logging frameworks.
 - Fatal startup, handover and reset failures retain the `_Noreturn bsp_panic()`
   contract and solid-red error state.
-- App A1 owns PA9/PA8 as 100 kHz I2C2 and probes BQ40Z50 `0x0B`/`0x0C`,
-  HUSB238 `0x08` and MP2762A `0x5C` through `App/Services/power_devices`.
+- App A1 uses V1.1 PA3/SCL and PA2/SDA as 100 kHz I2C2 and probes BQ40Z50
+  `0x0B`/`0x0C`, HUSB238 `0x08` and MP2762A `0x5C` through the C++ Power
+  node and injected HAL bus. PA9 is tied to 3V3 through 0 Ohm and must never
+  be driven. PA4=INT#, PA5=PG (inverted ACOK#); ADC telemetry on PA7/PB0/PB1
+  is removed. A3 now validates MP2762A/BQ40Z50 register telemetry.
+- `main.cpp` and `App` preserve startup/loop ordering. The C++17 bounded
+  DataBroker uses fixed arrays, embedded timers and typed DataProc readers.
+  Watchdog/USB poll directly every pass; Charger uses 100 ms and Diagnostics
+  5000 ms timers. Boot/components/shared BSP and shared App C sources stay C.
+- V1.1 has red PB6/blue PB5 LEDs only; APP_PRIMARY uses red+blue heartbeat.
+  The cyan diagnostic mode was removed.
 - `App/Diagnostics` retains power-device startup results, uptime, loop/report
   counts, watchdog state and USB runtime state without heap, persistence or RTOS.
-- Local gates on 2026-09-03 pass: strict ASan/UBSan HostTests 20/20, Rust
+- The C++ rewrite passes HostTests 24/24, Debug image/WinUSB/syscall gates, Phase2
+  HIL-mode compilation and Release image/syscall gates, including the new
+  allocation-operator/guard/exception/RTTI map gate. Release uses the specified
+  development key for compile proof only. No hardware was flashed.
+- `arm-none-eabi-size build/Debug/App/app-1.0.0.elf` after the rewrite reports
+  text=64,784, data=1,080, bss=8,284 bytes. Local `8446d9b` before editing
+  measured 63,064/152/8,920: Flash (text+data) increases 2,648 bytes and RAM
+  (data+bss) increases 292 bytes. Against the supplied reference baseline
+  63,008/152/8,920, Flash increases 2,704 bytes; local baseline text differs
+  by 56 bytes. These sizes exclude the MCUboot image header/signature/trailer.
+- Historical local gates on 2026-09-03 passed: strict ASan/UBSan HostTests 20/20, Rust
   fmt/clippy/fake E2E, 23 retained evidence bundles, Debug/Release firmware,
   signed-image, WinUSB descriptor, newlib syscall and signing-key policy checks.
   Debug App uses 60,560/195,072 bytes Flash; Release App uses 47,580/195,072.

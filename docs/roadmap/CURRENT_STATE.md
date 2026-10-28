@@ -1,6 +1,6 @@
 # Current Repository State
 
-Audit date: 2026-09-03
+Audit date: 2026-10-28
 
 This file is the compact source of truth for the implemented repository. Detailed
 history remains in Git, ADRs and retained evidence bundles.
@@ -22,7 +22,7 @@ history remains in Git, ADRs and retained evidence bundles.
   build time. Earlier development schemas are intentionally unsupported.
 - Physical Product Config v3 persistence, descriptors, install, exact-SN
   reconnect and full-Flash restoration passed on 2026-09-01.
-- The product Application charger track is active. A1 initializes PA9/PA8 shared
+- The product Application charger track is active. A1 initializes V1.1 PA3/SCL and PA2/SDA shared
   100 kHz I2C2, probes BQ40Z50 packs at `0x0B`/`0x0C`, HUSB238 at `0x08` and
   MP2762A at `0x5C`, and reads alternate-pack BQ identity after a successful
   address response. The refactored two-pack image still requires target HIL.
@@ -32,9 +32,10 @@ history remains in Git, ADRs and retained evidence bundles.
 | Area | Responsibility |
 | --- | --- |
 | `Boot/` | MCUboot entry, recovery fallback and handover |
-| `App/Core/` | Application startup, confirmation and USB updater orchestration |
-| `App/Devices/` | Device addresses and device-specific protocol parsing |
-| `App/Services/` | Product device composition and fixed-address probing |
+| `App/App.{h,cpp}`, `App/Core/` | C++ startup/loop sequencing; shared confirmation and USB remain C |
+| `App/Framework/DataBroker/` | Bounded C++ DataNode, DataBroker and embedded DataTimer |
+| `App/HAL/` | Injected I2cBus/ChargerSignals, device addresses/decoding and HC32 C BSP adapters |
+| `App/DataProc/` | Typed Power, Charger, Update and System provider nodes |
 | `App/Diagnostics/` | Fixed-size startup/runtime status and periodic Debug reports |
 | `components/fw_update/` | Portable protocol/manager plus MCUboot and FlashDB backends |
 | `Platform/HC32F460/` | HC32 BSP, USB DCD, newlib syscalls and component ports |
@@ -81,21 +82,38 @@ USB install
   -> Application enumeration and version/SN verification
 ```
 
-The single `app_firmware` target initializes clock, status LED, timebase, debug
-logging, the `power_devices` service, watchdog, FlashDB, Manager and USB, then
-confirms the running image. `main.c` contains orchestration only; device
-addresses/protocols live under `App/Devices`, shared-bus composition lives under
-`App/Services`, and `App/Diagnostics` records a fixed-size status snapshot plus
-a five-second Debug report. Missing power devices remain degraded status and do
-not block USB/update startup. USB callbacks publish events; the cooperative poll
-loop owns protocol, Flash and reset work.
+The single `app_firmware` target uses C++17 in the Application orchestration,
+HAL and domain nodes, following the GNSS_Panel DataBroker/typed-reader design.
+`main.cpp` delegates to the statically owned `App`. Startup remains: unlock,
+SWD, clock, timebase, UART/logging, LED, Power, Charger, watchdog, USB,
+confirmation, Diagnostics, then restore write protection before the loop.
+Power probes `0x0B`, `0x0C`, `0x08`, `0x5C` in order and reads BQ identity
+only at `0x0C` after ACK; missing devices are degraded status.
 
-The current development board does not route PA9 as USB VBUS sense. Firmware
-keeps that alternate function disabled and owns PA9/PA8 as I2C2 SCL/SDA at
-100 kHz. When physical VBUS sensing is disabled, the HC32 USB device port
-asserts the controller's software VBUS-valid override after core reset and
-before device connection. Charger/battery implementation status is tracked in
-`docs/roadmap/APP_CHARGER_PLAN.md`.
+The cooperative loop polls watchdog and USB directly on every pass, handles
+node timers, performs any deferred USB reset, polls the LED, then executes WFI.
+Charger samples PA4 INT#/PA5 PG at init and every 100 ms, publishing changes;
+GPIO initialization failure leaves an invalid, untimed node. Update publishes
+only configured/manager-state/error changes. System and Power are pull-only.
+Diagnostics subscribes to all four nodes, pulls their typed states every five
+seconds, logs charger changes and retains `g_app_diagnostics` for J-Link.
+Duplicate initialization preserves the live diagnostics node.
+
+DataBroker has 16 caller-owned nodes and eight links per direction, embedded
+timers and synchronous snapshot fan-out. It uses no heap, exceptions, RTTI or
+thread-safe static guards. No callbacks may dispatch from an ISR or retain
+payload pointers. Boot, components, shared BSP and the shared App confirmation/
+USB sources remain C; C++ crosses their boundary through C linkage. See
+[ADR-007](../adr/ADR-007-app-cpp-databroker.md).
+
+V1.1 I2C2 uses PA3/SCL and PA2/SDA at 100 kHz. PA9 is hard-tied to 3V3 through
+0 Ohm and must never be driven; USB physical VBUS sensing remains disabled.
+The HC32 USB device port asserts software VBUS-valid after core reset and
+before connection. PA4 is MP2762A INT#, and PA5 is PG (inverted ACOK#).
+PA7/PB0/PB1 ADC telemetry no longer exists; future telemetry comes from
+MP2762A/BQ40Z50 registers. LEDs are active-low red PB6 and blue PB5;
+APP_PRIMARY uses a red+blue heartbeat and the cyan mode has been removed.
+Implementation gates remain in `APP_CHARGER_PLAN.md`.
 
 Debug Boot and Application EasyLogger output is mirrored to the existing UART
 and SEGGER RTT channel 0. The Debug App places `_SEGGER_RTT` at
@@ -156,9 +174,18 @@ Known deferred host issues for a later node:
   the repository build tree.
 - Generated public-key C source lives under `build/<preset>/generated/`.
 - `hc32_newlib` supplies the project syscall implementations to every firmware
-  ELF; `verify_newlib_syscalls` rejects libnosys fallbacks.
+  ELF; `verify_newlib_syscalls` rejects libnosys fallbacks and linked App C++
+  allocation operators, guards, exception and RTTI support.
 
 ## Verification state
+
+- The C++ rewrite passes HostTests 24/24 (including typed HAL fakes and runtime
+  scheduling), Debug firmware/image/WinUSB/syscall checks, Phase2 HIL-mode
+  compilation and Release firmware/image/syscall checks. Release was compiled
+  with the explicitly supplied development key for compile proof only.
+- This rewrite has not been flashed. Its USB, reset, watchdog timing, LED,
+  GPIO, I2C and swap/rollback behavior still need target validation; earlier
+  retained evidence is not proof of the rewritten image.
 
 - Retained evidence integrity is checked by `Tests/HIL/verify_evidence.py`.
 - Product Config v3 HIL is retained under
