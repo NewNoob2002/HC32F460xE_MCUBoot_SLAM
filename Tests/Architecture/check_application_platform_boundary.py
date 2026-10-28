@@ -29,6 +29,22 @@ for directory in PLATFORM_DIRS:
             if token in text:
                 violations.append(f"{path.relative_to(ROOT)}: forbidden logging dependency '{token}'")
 
+# The DataBroker framework stays portable: only its own header and the C library.
+FRAMEWORK_DIR = ROOT / "App/Framework"
+FRAMEWORK_ALLOWED = ('"data_broker.h"', "<stdbool.h>", "<stddef.h>", "<stdint.h>", "<string.h>")
+for path in sorted(FRAMEWORK_DIR.rglob("*")):
+    if not path.is_file():
+        continue
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("#include") and not stripped.endswith(FRAMEWORK_ALLOWED):
+            violations.append(f"{path.relative_to(ROOT)}: framework include '{stripped}'")
+
+# Domain nodes publish; consumers such as Diagnostics subscribe. Never the reverse.
+for path in sorted((ROOT / "App/DataProc").rglob("*")):
+    if path.is_file() and '#include "app_diagnostics.h"' in path.read_text(encoding="utf-8"):
+        violations.append(f"{path.relative_to(ROOT)}: DataProc must not depend on Diagnostics")
+
 if violations:
     print("\n".join(violations), file=sys.stderr)
     raise SystemExit(1)

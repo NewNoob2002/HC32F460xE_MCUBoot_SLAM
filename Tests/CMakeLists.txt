@@ -69,18 +69,38 @@ target_include_directories(power_devices_tests PRIVATE
 )
 add_test(NAME power_devices COMMAND power_devices_tests)
 
-add_executable(app_diagnostics_tests
-    app_diagnostics_tests.c
-    ${PROJECT_SOURCE_DIR}/App/Diagnostics/Src/app_diagnostics.c
+add_executable(data_broker_tests
+    data_broker_tests.c
+    ${PROJECT_SOURCE_DIR}/App/Framework/Src/data_broker.c
 )
-target_include_directories(app_diagnostics_tests PRIVATE
+target_include_directories(data_broker_tests PRIVATE ${PROJECT_SOURCE_DIR}/App/Framework/Inc)
+add_test(NAME data_broker COMMAND data_broker_tests)
+
+set(APP_DATA_PROC_TEST_INCLUDES
     ${PROJECT_SOURCE_DIR}/App/Core/Inc
+    ${PROJECT_SOURCE_DIR}/App/DataProc/Inc
     ${PROJECT_SOURCE_DIR}/App/Devices/Inc
     ${PROJECT_SOURCE_DIR}/App/Diagnostics/Inc
+    ${PROJECT_SOURCE_DIR}/App/Framework/Inc
     ${PROJECT_SOURCE_DIR}/App/Services/Inc
     ${PROJECT_SOURCE_DIR}/Config/Debug
     ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Inc
 )
+
+add_executable(dp_charger_tests
+    dp_charger_tests.c
+    ${PROJECT_SOURCE_DIR}/App/DataProc/Src/dp_charger.c
+    ${PROJECT_SOURCE_DIR}/App/Framework/Src/data_broker.c
+)
+target_include_directories(dp_charger_tests PRIVATE ${APP_DATA_PROC_TEST_INCLUDES})
+add_test(NAME dp_charger COMMAND dp_charger_tests)
+
+add_executable(app_diagnostics_tests
+    app_diagnostics_tests.c
+    ${PROJECT_SOURCE_DIR}/App/Diagnostics/Src/app_diagnostics.c
+    ${PROJECT_SOURCE_DIR}/App/Framework/Src/data_broker.c
+)
+target_include_directories(app_diagnostics_tests PRIVATE ${APP_DATA_PROC_TEST_INCLUDES})
 add_test(NAME app_diagnostics COMMAND app_diagnostics_tests)
 
 add_executable(fw_update_contract_tests
@@ -211,7 +231,7 @@ add_test(
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Architecture/check_application_platform_boundary.py
 )
 add_test(
-    NAME usb_evaluation_boundary
+    NAME usb_device_port_boundary
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Architecture/check_usb_boundary.py
 )
 add_test(

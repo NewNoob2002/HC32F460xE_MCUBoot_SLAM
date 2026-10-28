@@ -24,8 +24,13 @@ add_executable(app_firmware
     Core/Src/app_confirm.c
     Core/Src/main.c
     Core/Src/usb_fw_update.c
+    DataProc/Src/dp_charger.c
+    DataProc/Src/dp_power.c
+    DataProc/Src/dp_system.c
+    DataProc/Src/dp_update.c
     Devices/Src/bq40z50.c
     Diagnostics/Src/app_diagnostics.c
+    Framework/Src/data_broker.c
     Services/Src/power_devices.c
     $<TARGET_OBJECTS:hc32_newlib>
     $<TARGET_OBJECTS:hc32_startup_app>
@@ -36,8 +41,10 @@ set_target_properties(app_firmware PROPERTIES
 )
 target_include_directories(app_firmware PRIVATE
     Core/Inc
+    DataProc/Inc
     Devices/Inc
     Diagnostics/Inc
+    Framework/Inc
     Services/Inc
 )
 target_compile_definitions(app_firmware PRIVATE
@@ -51,8 +58,13 @@ target_compile_definitions(app_firmware PRIVATE
 set_source_files_properties(
     Core/Src/main.c
     Core/Src/usb_fw_update.c
+    DataProc/Src/dp_charger.c
+    DataProc/Src/dp_power.c
+    DataProc/Src/dp_system.c
+    DataProc/Src/dp_update.c
     Devices/Src/bq40z50.c
     Diagnostics/Src/app_diagnostics.c
+    Framework/Src/data_broker.c
     Services/Src/power_devices.c
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wconversion;-Wshadow;-Werror"
 )
