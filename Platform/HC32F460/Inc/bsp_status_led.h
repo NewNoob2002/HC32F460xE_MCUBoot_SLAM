@@ -6,7 +6,6 @@
 
 enum bsp_status_led_channel {
     BSP_STATUS_LED_RED = 1U << 0,
-    BSP_STATUS_LED_GREEN = 1U << 1,
     BSP_STATUS_LED_BLUE = 1U << 2,
 };
 
@@ -17,7 +16,6 @@ enum bsp_status_led_mode {
     BSP_STATUS_LED_MODE_UPDATE,
     BSP_STATUS_LED_MODE_APP_PRIMARY,
     BSP_STATUS_LED_MODE_APP_UPDATER,
-    BSP_STATUS_LED_MODE_APP_DIAGNOSTIC,
     BSP_STATUS_LED_MODE_ERROR,
 };
 

@@ -23,13 +23,11 @@ uint8_t bsp_status_led_sample(enum bsp_status_led_mode mode, uint32_t now_ms) {
         case BSP_STATUS_LED_MODE_UPDATE:
             return (now_ms / STATUS_LED_FAST_HALF_PERIOD_MS) % 2U == 0U ? BSP_STATUS_LED_BLUE : 0U;
         case BSP_STATUS_LED_MODE_APP_PRIMARY:
-            return now_ms % STATUS_LED_SLOW_PERIOD_MS < STATUS_LED_HEARTBEAT_ON_MS ? BSP_STATUS_LED_GREEN : 0U;
+            return now_ms % STATUS_LED_SLOW_PERIOD_MS < STATUS_LED_HEARTBEAT_ON_MS
+                       ? BSP_STATUS_LED_RED | BSP_STATUS_LED_BLUE
+                       : 0U;
         case BSP_STATUS_LED_MODE_APP_UPDATER:
             return now_ms % STATUS_LED_SLOW_PERIOD_MS < STATUS_LED_HEARTBEAT_ON_MS ? BSP_STATUS_LED_BLUE : 0U;
-        case BSP_STATUS_LED_MODE_APP_DIAGNOSTIC:
-            return now_ms % STATUS_LED_SLOW_PERIOD_MS < STATUS_LED_HEARTBEAT_ON_MS
-                       ? BSP_STATUS_LED_GREEN | BSP_STATUS_LED_BLUE
-                       : 0U;
         case BSP_STATUS_LED_MODE_ERROR:
             return BSP_STATUS_LED_RED;
         case BSP_STATUS_LED_MODE_OFF:
@@ -48,12 +46,6 @@ static void apply_channels(uint8_t channels) {
             GPIO_ResetPins(BSP_STATUS_LED_PORT, BSP_STATUS_LED_RED_PIN);
         else
             GPIO_SetPins(BSP_STATUS_LED_PORT, BSP_STATUS_LED_RED_PIN);
-    }
-    if ((changed & BSP_STATUS_LED_GREEN) != 0U) {
-        if ((channels & BSP_STATUS_LED_GREEN) != 0U)
-            GPIO_ResetPins(BSP_STATUS_LED_PORT, BSP_STATUS_LED_GREEN_PIN);
-        else
-            GPIO_SetPins(BSP_STATUS_LED_PORT, BSP_STATUS_LED_GREEN_PIN);
     }
     if ((changed & BSP_STATUS_LED_BLUE) != 0U) {
         if ((channels & BSP_STATUS_LED_BLUE) != 0U)

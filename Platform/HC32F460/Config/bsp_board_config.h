@@ -21,11 +21,11 @@ _Static_assert(BOOT_EXTERNAL_WATCHDOG_IDLE_LEVEL != BOOT_EXTERNAL_WATCHDOG_ACTIV
 #define BSP_XTAL_PINS    (GPIO_PIN_00 | GPIO_PIN_01)
 #define BOOT_EXTERNAL_WATCHDOG_PORT GPIO_PORT_A
 #define BOOT_EXTERNAL_WATCHDOG_PIN  GPIO_PIN_06
-#define BSP_STATUS_LED_PORT         GPIO_PORT_A
-#define BSP_STATUS_LED_RED_PIN      GPIO_PIN_00
-#define BSP_STATUS_LED_GREEN_PIN    GPIO_PIN_01
-#define BSP_STATUS_LED_BLUE_PIN     GPIO_PIN_02
-#define BSP_STATUS_LED_PINS         (BSP_STATUS_LED_RED_PIN | BSP_STATUS_LED_GREEN_PIN | BSP_STATUS_LED_BLUE_PIN)
+/* SLAMRTK Charge Board V1.1: common-anode red/blue LEDs, active low, no green channel. */
+#define BSP_STATUS_LED_PORT         GPIO_PORT_B
+#define BSP_STATUS_LED_RED_PIN      GPIO_PIN_06
+#define BSP_STATUS_LED_BLUE_PIN     GPIO_PIN_05
+#define BSP_STATUS_LED_PINS         (BSP_STATUS_LED_RED_PIN | BSP_STATUS_LED_BLUE_PIN)
 #define BSP_LOG_UART                CM_USART3
 #define BSP_LOG_UART_CLOCK          FCG1_PERIPH_USART3
 #define BSP_LOG_UART_TX_PORT        GPIO_PORT_B
@@ -34,6 +34,7 @@ _Static_assert(BOOT_EXTERNAL_WATCHDOG_IDLE_LEVEL != BOOT_EXTERNAL_WATCHDOG_ACTIV
 #define BSP_LOG_UART_BAUDRATE       115200UL
 #define BSP_USB_DATA_PORT           GPIO_PORT_A
 #define BSP_USB_DATA_PINS           (GPIO_PIN_11 | GPIO_PIN_12)
+/* V1.1 ties PA9 to VCC_3V3 through R320 0 Ohm: keep it an undriven input and use the software VBUS override. */
 #define BSP_USB_VBUS_SENSE_ENABLE   0U
 #define BSP_USB_VBUS_PORT           GPIO_PORT_A
 #define BSP_USB_VBUS_PIN            GPIO_PIN_09
@@ -41,12 +42,16 @@ _Static_assert(BOOT_EXTERNAL_WATCHDOG_IDLE_LEVEL != BOOT_EXTERNAL_WATCHDOG_ACTIV
 #define BSP_I2C2                    CM_I2C2
 #define BSP_I2C2_CLOCK              FCG1_PERIPH_I2C2
 #define BSP_I2C2_SCL_PORT           GPIO_PORT_A
-#define BSP_I2C2_SCL_PIN            GPIO_PIN_09
+#define BSP_I2C2_SCL_PIN            GPIO_PIN_03
 #define BSP_I2C2_SCL_FUNCTION       GPIO_FUNC_51
 #define BSP_I2C2_SDA_PORT           GPIO_PORT_A
-#define BSP_I2C2_SDA_PIN            GPIO_PIN_08
+#define BSP_I2C2_SDA_PIN            GPIO_PIN_02
 #define BSP_I2C2_SDA_FUNCTION       GPIO_FUNC_50
 #define BSP_I2C2_BAUDRATE           100000UL
+/* MP2762A INT# (CHARGE_STAT1) and inverted ACOK# (PG); both have external 100 kOhm pull-ups. */
+#define BSP_CHARGER_SIGNAL_PORT     GPIO_PORT_A
+#define BSP_CHARGER_INT_PIN         GPIO_PIN_04
+#define BSP_CHARGER_PG_PIN          GPIO_PIN_05
 #endif
 
 #endif
