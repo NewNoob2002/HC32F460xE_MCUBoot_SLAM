@@ -1,6 +1,10 @@
 #ifndef BSP_STATUS_LED_H
 #define BSP_STATUS_LED_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -23,5 +27,9 @@ bool bsp_status_led_init(void);
 void bsp_status_led_set_mode(enum bsp_status_led_mode mode);
 void bsp_status_led_poll(uint32_t now_ms);
 uint8_t bsp_status_led_sample(enum bsp_status_led_mode mode, uint32_t now_ms);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

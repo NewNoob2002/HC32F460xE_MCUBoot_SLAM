@@ -1,6 +1,10 @@
 #ifndef USB_FW_UPDATE_H
 #define USB_FW_UPDATE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 enum usb_fw_update_action {
@@ -18,5 +22,9 @@ struct usb_fw_update_status {
 int usb_fw_update_init(void);
 enum usb_fw_update_action usb_fw_update_poll(uint32_t now_ms);
 void usb_fw_update_get_status(struct usb_fw_update_status* status);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

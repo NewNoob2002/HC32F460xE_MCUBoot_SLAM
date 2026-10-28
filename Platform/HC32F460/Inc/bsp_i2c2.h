@@ -1,6 +1,10 @@
 #ifndef BSP_I2C2_H
 #define BSP_I2C2_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 enum bsp_i2c2_result {
@@ -29,5 +33,9 @@ int bsp_i2c2_init(void);
 int bsp_i2c2_probe(uint8_t address);
 int bsp_i2c2_write(uint8_t address, const uint8_t* data, uint32_t length);
 int bsp_i2c2_read_reg(uint8_t address, uint8_t reg, uint8_t* data, uint32_t length);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

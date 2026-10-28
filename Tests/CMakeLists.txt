@@ -47,61 +47,63 @@ target_include_directories(app_confirm_tests PRIVATE
 )
 add_test(NAME app_confirm COMMAND app_confirm_tests)
 
-add_executable(bq40z50_tests
-    bq40z50_tests.c
-    ${PROJECT_SOURCE_DIR}/App/Devices/Src/bq40z50.c
-)
-target_include_directories(bq40z50_tests PRIVATE
-    ${PROJECT_SOURCE_DIR}/App/Devices/Inc
-    ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Inc
-)
-add_test(NAME bq40z50 COMMAND bq40z50_tests)
-
-add_executable(power_devices_tests
-    power_devices_tests.c
-    ${PROJECT_SOURCE_DIR}/App/Services/Src/power_devices.c
-)
-target_include_directories(power_devices_tests PRIVATE
-    ${PROJECT_SOURCE_DIR}/App/Devices/Inc
-    ${PROJECT_SOURCE_DIR}/App/Services/Inc
-    ${PROJECT_SOURCE_DIR}/Config/Debug
-    ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Inc
-)
-add_test(NAME power_devices COMMAND power_devices_tests)
-
-add_executable(data_broker_tests
-    data_broker_tests.c
-    ${PROJECT_SOURCE_DIR}/App/Framework/Src/data_broker.c
-)
-target_include_directories(data_broker_tests PRIVATE ${PROJECT_SOURCE_DIR}/App/Framework/Inc)
-add_test(NAME data_broker COMMAND data_broker_tests)
-
-set(APP_DATA_PROC_TEST_INCLUDES
+set(APP_CPP_TEST_INCLUDES
     ${PROJECT_SOURCE_DIR}/App/Core/Inc
     ${PROJECT_SOURCE_DIR}/App/DataProc/Inc
-    ${PROJECT_SOURCE_DIR}/App/Devices/Inc
     ${PROJECT_SOURCE_DIR}/App/Diagnostics/Inc
-    ${PROJECT_SOURCE_DIR}/App/Framework/Inc
-    ${PROJECT_SOURCE_DIR}/App/Services/Inc
+    ${PROJECT_SOURCE_DIR}/App/Framework/DataBroker
+    ${PROJECT_SOURCE_DIR}/App/HAL
     ${PROJECT_SOURCE_DIR}/Config/Debug
     ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Inc
 )
+function(app_cpp_options target)
+    set_target_properties(${target} PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS NO)
+    target_compile_options(${target} PRIVATE
+        -fno-exceptions -fno-rtti -fno-threadsafe-statics -fno-use-cxa-atexit
+        -Wall -Wextra -Wconversion -Wshadow -Werror)
+    target_include_directories(${target} PUBLIC ${APP_CPP_TEST_INCLUDES})
+endfunction()
+add_library(app_test_framework STATIC
+    ${PROJECT_SOURCE_DIR}/App/Framework/DataBroker/DataBroker.cpp
+    ${PROJECT_SOURCE_DIR}/App/Framework/DataBroker/DataNode.cpp)
+app_cpp_options(app_test_framework)
+add_library(app_test_hal STATIC ${PROJECT_SOURCE_DIR}/App/HAL/BQ40Z50.cpp)
+app_cpp_options(app_test_hal)
 
-add_executable(dp_charger_tests
-    dp_charger_tests.c
-    ${PROJECT_SOURCE_DIR}/App/DataProc/Src/dp_charger.c
-    ${PROJECT_SOURCE_DIR}/App/Framework/Src/data_broker.c
-)
-target_include_directories(dp_charger_tests PRIVATE ${APP_DATA_PROC_TEST_INCLUDES})
+add_executable(bq40z50_tests bq40z50_tests.cpp)
+app_cpp_options(bq40z50_tests)
+target_link_libraries(bq40z50_tests PRIVATE app_test_hal)
+add_test(NAME bq40z50 COMMAND bq40z50_tests)
+
+add_executable(power_devices_tests power_devices_tests.cpp
+    ${PROJECT_SOURCE_DIR}/App/DataProc/Src/dp_power.cpp)
+app_cpp_options(power_devices_tests)
+target_link_libraries(power_devices_tests PRIVATE app_test_framework app_test_hal)
+add_test(NAME power_devices COMMAND power_devices_tests)
+
+add_executable(data_broker_tests data_broker_tests.cpp)
+app_cpp_options(data_broker_tests)
+target_link_libraries(data_broker_tests PRIVATE app_test_framework)
+add_test(NAME data_broker COMMAND data_broker_tests)
+
+add_executable(dp_charger_tests dp_charger_tests.cpp
+    ${PROJECT_SOURCE_DIR}/App/DataProc/Src/dp_charger.cpp)
+app_cpp_options(dp_charger_tests)
+target_link_libraries(dp_charger_tests PRIVATE app_test_framework)
 add_test(NAME dp_charger COMMAND dp_charger_tests)
 
-add_executable(app_diagnostics_tests
-    app_diagnostics_tests.c
-    ${PROJECT_SOURCE_DIR}/App/Diagnostics/Src/app_diagnostics.c
-    ${PROJECT_SOURCE_DIR}/App/Framework/Src/data_broker.c
-)
-target_include_directories(app_diagnostics_tests PRIVATE ${APP_DATA_PROC_TEST_INCLUDES})
+add_executable(app_diagnostics_tests app_diagnostics_tests.cpp
+    ${PROJECT_SOURCE_DIR}/App/Diagnostics/Src/Diagnostics.cpp)
+app_cpp_options(app_diagnostics_tests)
+target_link_libraries(app_diagnostics_tests PRIVATE app_test_framework)
 add_test(NAME app_diagnostics COMMAND app_diagnostics_tests)
+
+add_executable(dp_runtime_tests dp_runtime_tests.cpp
+    ${PROJECT_SOURCE_DIR}/App/DataProc/Src/dp_system.cpp
+    ${PROJECT_SOURCE_DIR}/App/DataProc/Src/dp_update.cpp)
+app_cpp_options(dp_runtime_tests)
+target_link_libraries(dp_runtime_tests PRIVATE app_test_framework)
+add_test(NAME dp_runtime COMMAND dp_runtime_tests)
 
 add_executable(fw_update_contract_tests
     fw_update_contract_tests.c
@@ -237,4 +239,9 @@ add_test(
 add_test(
     NAME usb_loopback_host_self_test
     COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/Tools/host/usb_loopback.py self-test
+)
+
+add_test(
+    NAME app_cpp_runtime_gate
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/verify_cpp_runtime_tests.py
 )

@@ -1,5 +1,9 @@
 #ifndef BSP_EXTERNAL_WATCHDOG_H
 #define BSP_EXTERNAL_WATCHDOG_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <stdbool.h>
 #include <stdint.h>
 typedef void (*watchdog_gpio_write_t)(bool level, void* context);
@@ -26,4 +30,8 @@ bool bsp_external_watchdog_force_feed(uint32_t now_ms);
 bool bsp_external_watchdog_is_ready(void);
 bool bsp_external_watchdog_is_pulse_active(void);
 void bsp_external_watchdog_prepare_handover(void);
+#ifdef __cplusplus
+}
+#endif
+
 #endif

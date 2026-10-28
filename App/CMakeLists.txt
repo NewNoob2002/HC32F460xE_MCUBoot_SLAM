@@ -22,16 +22,18 @@ endif()
 
 add_executable(app_firmware
     Core/Src/app_confirm.c
-    Core/Src/main.c
+    Core/Src/main.cpp
     Core/Src/usb_fw_update.c
-    DataProc/Src/dp_charger.c
-    DataProc/Src/dp_power.c
-    DataProc/Src/dp_system.c
-    DataProc/Src/dp_update.c
-    Devices/Src/bq40z50.c
-    Diagnostics/Src/app_diagnostics.c
-    Framework/Src/data_broker.c
-    Services/Src/power_devices.c
+    App.cpp
+    DataProc/Src/dp_charger.cpp
+    DataProc/Src/dp_power.cpp
+    DataProc/Src/dp_system.cpp
+    DataProc/Src/dp_update.cpp
+    Diagnostics/Src/Diagnostics.cpp
+    Framework/DataBroker/DataBroker.cpp
+    Framework/DataBroker/DataNode.cpp
+    HAL/BQ40Z50.cpp
+    HAL/Hc32.cpp
     $<TARGET_OBJECTS:hc32_newlib>
     $<TARGET_OBJECTS:hc32_startup_app>
 )
@@ -40,12 +42,12 @@ set_target_properties(app_firmware PROPERTIES
     SUFFIX .elf
 )
 target_include_directories(app_firmware PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
     Core/Inc
     DataProc/Inc
-    Devices/Inc
+    HAL
     Diagnostics/Inc
-    Framework/Inc
-    Services/Inc
+    Framework/DataBroker
 )
 target_compile_definitions(app_firmware PRIVATE
     APP_AUTO_CONFIRM=$<BOOL:${APP_AUTO_CONFIRM}>
@@ -55,19 +57,12 @@ target_compile_definitions(app_firmware PRIVATE
     APP_VERSION_REVISION=${APP_VERSION_REVISION_VALUE}
     APP_VERSION_BUILD=${APP_VERSION_BUILD_VALUE}
 )
-set_source_files_properties(
-    Core/Src/main.c
-    Core/Src/usb_fw_update.c
-    DataProc/Src/dp_charger.c
-    DataProc/Src/dp_power.c
-    DataProc/Src/dp_system.c
-    DataProc/Src/dp_update.c
-    Devices/Src/bq40z50.c
-    Diagnostics/Src/app_diagnostics.c
-    Framework/Src/data_broker.c
-    Services/Src/power_devices.c
-    PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wconversion;-Wshadow;-Werror"
+set_target_properties(app_firmware PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS NO)
+target_compile_options(app_firmware PRIVATE
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions;-fno-rtti;-fno-threadsafe-statics;-fno-use-cxa-atexit;-Wall;-Wextra;-Wconversion;-Wshadow;-Werror>
 )
+set_source_files_properties(Core/Src/usb_fw_update.c PROPERTIES
+    COMPILE_OPTIONS "-Wall;-Wextra;-Wconversion;-Wshadow;-Werror")
 target_include_directories(app_firmware SYSTEM PRIVATE
     ${PROJECT_SOURCE_DIR}/components/cherryusb/common
     ${PROJECT_SOURCE_DIR}/components/cherryusb/core

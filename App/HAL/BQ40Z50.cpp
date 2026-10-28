@@ -1,10 +1,7 @@
-#include "bq40z50.h"
+#include "BQ40Z50.h"
+#include <cstring>
 
-#include <stddef.h>
-#include <string.h>
-
-#include "bsp_i2c2.h"
-
+namespace hal {
 #define BQ40Z50_MANUFACTURER_ACCESS_REG 0x00U
 #define BQ40Z50_MANUFACTURER_DATA_REG   0x23U
 #define BQ40Z50_FIRMWARE_VERSION_SIZE   11U
@@ -17,7 +14,7 @@ static uint16_t read_u16_be(const uint8_t* data) {
     return (uint16_t)(((uint16_t)data[0] << 8U) | data[1]);
 }
 
-static int read_manufacturer_block(uint8_t address, uint16_t command, uint8_t* payload, uint8_t payload_size) {
+int BQ40Z50::readManufacturerBlock(uint16_t command, uint8_t* payload, uint8_t payload_size) {
     const uint8_t request[] = {
         BQ40Z50_MANUFACTURER_ACCESS_REG,
         (uint8_t)command,
@@ -25,13 +22,13 @@ static int read_manufacturer_block(uint8_t address, uint16_t command, uint8_t* p
     };
     uint8_t response[BQ40Z50_FIRMWARE_VERSION_SIZE + 1U];
 
-    if (payload == NULL || payload_size == 0U || payload_size > BQ40Z50_FIRMWARE_VERSION_SIZE)
+    if (payload == nullptr || payload_size == 0U || payload_size > BQ40Z50_FIRMWARE_VERSION_SIZE)
         return BQ40Z50_ERR_ARGUMENT;
 
-    int result = bsp_i2c2_write(address, request, sizeof(request));
+    int result = bus_.write(address_, request, sizeof(request));
     if (result != BSP_I2C2_OK)
         return result;
-    result = bsp_i2c2_read_reg(address, BQ40Z50_MANUFACTURER_DATA_REG, response, (uint32_t)payload_size + 1U);
+    result = bus_.readReg(address_, BQ40Z50_MANUFACTURER_DATA_REG, response, (uint32_t)payload_size + 1U);
     if (result != BSP_I2C2_OK)
         return result;
     if (response[0] != payload_size)
@@ -41,25 +38,25 @@ static int read_manufacturer_block(uint8_t address, uint16_t command, uint8_t* p
     return BQ40Z50_OK;
 }
 
-int bq40z50_read_identity(uint8_t address, struct bq40z50_identity* identity) {
+int BQ40Z50::readIdentity(BqIdentity* identity) {
     uint8_t device_type[2];
     uint8_t firmware[BQ40Z50_FIRMWARE_VERSION_SIZE];
     uint8_t hardware_version[2];
     uint8_t chemistry_id[2];
 
-    if (address > 0x7FU || identity == NULL)
+    if (address_ > 0x7FU || identity == nullptr)
         return BQ40Z50_ERR_ARGUMENT;
 
-    int result = read_manufacturer_block(address, 0x0001U, device_type, sizeof(device_type));
+    int result = readManufacturerBlock(0x0001U, device_type, sizeof(device_type));
     if (result != BQ40Z50_OK)
         return result;
-    result = read_manufacturer_block(address, 0x0002U, firmware, sizeof(firmware));
+    result = readManufacturerBlock(0x0002U, firmware, sizeof(firmware));
     if (result != BQ40Z50_OK)
         return result;
-    result = read_manufacturer_block(address, 0x0003U, hardware_version, sizeof(hardware_version));
+    result = readManufacturerBlock(0x0003U, hardware_version, sizeof(hardware_version));
     if (result != BQ40Z50_OK)
         return result;
-    result = read_manufacturer_block(address, 0x0006U, chemistry_id, sizeof(chemistry_id));
+    result = readManufacturerBlock(0x0006U, chemistry_id, sizeof(chemistry_id));
     if (result != BQ40Z50_OK)
         return result;
 
@@ -75,3 +72,5 @@ int bq40z50_read_identity(uint8_t address, struct bq40z50_identity* identity) {
     identity->chemistry_id = read_u16_le(chemistry_id);
     return BQ40Z50_OK;
 }
+
+} // namespace hal
