@@ -211,6 +211,39 @@ target_include_directories(fw_update_fake_device PRIVATE
     ${PROJECT_SOURCE_DIR}/components/fw_update/include
 )
 
+add_executable(usb_fw_update_tests
+    usb_fw_update_tests.c
+    ${PROJECT_SOURCE_DIR}/App/Core/Src/usb_fw_update.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/manager.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/protocol.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/storage.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/boot_control.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/product_config.c
+)
+target_include_directories(usb_fw_update_tests PRIVATE
+    ${PROJECT_SOURCE_DIR}/App/Core/Inc
+    ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Inc
+    ${PROJECT_SOURCE_DIR}/Config/Application
+    ${PROJECT_SOURCE_DIR}/components/fw_update/include
+    ${PROJECT_SOURCE_DIR}/components/fw_update/backends/mcuboot/include
+    ${PROJECT_SOURCE_DIR}/components/fw_update/backends/flashdb/include
+    ${CMAKE_BINARY_DIR}/generated/Config
+)
+target_include_directories(usb_fw_update_tests SYSTEM PRIVATE
+    ${PROJECT_SOURCE_DIR}/components/cherryusb/common
+    ${PROJECT_SOURCE_DIR}/components/cherryusb/core
+)
+target_compile_definitions(usb_fw_update_tests PRIVATE
+    BOOT_HOST_TEST
+    APP_VERSION_MAJOR=1
+    APP_VERSION_MINOR=0
+    APP_VERSION_REVISION=0
+    APP_VERSION_BUILD=0
+)
+set_source_files_properties(${PROJECT_SOURCE_DIR}/App/Core/Src/usb_fw_update.c TARGET_DIRECTORY usb_fw_update_tests
+    PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wconversion;-Wshadow;-Werror")
+add_test(NAME usb_fw_update COMMAND usb_fw_update_tests)
+
 find_program(CARGO_EXECUTABLE cargo REQUIRED)
 add_test(
     NAME rust_updater

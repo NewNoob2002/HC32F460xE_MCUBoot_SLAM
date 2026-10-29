@@ -156,6 +156,8 @@ static volatile uint8_t configure_pending;
 static volatile uint8_t is_configured;
 static volatile uint8_t disconnected;
 static uint8_t tx_active;
+static uint32_t rx_offset;
+static uint32_t rx_size;
 
 volatile uint32_t g_usb_fw_update_errors;
 volatile int g_usb_fw_update_last_result;
@@ -205,7 +207,9 @@ static void usb_event(uint8_t busid, uint8_t event) {
     if (event == USBD_EVENT_CONFIGURED) {
         is_configured = 1U;
         configure_pending = 1U;
-    } else if (event == USBD_EVENT_DISCONNECTED) {
+    } else if (event == USBD_EVENT_RESET || event == USBD_EVENT_DISCONNECTED) {
+        /* VBUS sensing is disabled, so bus reset is the only link-loss signal. Reset flushes the TX FIFO and a
+         * queued IN transfer never completes. */
         is_configured = 0U;
         disconnected = 1U;
     }
@@ -228,12 +232,55 @@ static int start_manager_tx(void) {
     return 0;
 }
 
-static void recover_transport(void) {
-    ++g_usb_fw_update_errors;
+static void restart_transport(void) {
     g_usb_fw_update_last_result = fw_update_manager_notify_disconnect(&manager);
     tx_active = 0U;
+    rx_offset = 0U;
+    rx_size = 0U;
     if (is_configured != 0U && arm_receive() != 0)
         ++g_usb_fw_update_errors;
+}
+
+static void recover_transport(void) {
+    ++g_usb_fw_update_errors;
+    restart_transport();
+}
+
+/* Feed retained OUT bytes until a response is queued or the buffer is drained. Bytes after a complete frame stay in
+ * rx_buffer while the response is sent; OUT is re-armed only once nothing is retained and TX is idle. */
+static void process_rx(uint32_t now_ms) {
+    while (rx_offset < rx_size && tx_active == 0U) {
+        const size_t remaining = (size_t)(rx_size - rx_offset);
+        size_t consumed = 0U;
+        g_usb_fw_update_last_result =
+            fw_update_manager_feed(&manager, &rx_buffer[rx_offset], remaining, now_ms, &consumed);
+        if (consumed > remaining) {
+            recover_transport();
+            return;
+        }
+        rx_offset += (uint32_t)consumed;
+        if (g_usb_fw_update_last_result == FW_UPDATE_MANAGER_RESPONSE_READY) {
+            if (start_manager_tx() != 0) {
+                recover_transport();
+                return;
+            }
+        } else if (g_usb_fw_update_last_result == FW_UPDATE_MANAGER_ERR_PROTOCOL) {
+            /* The Manager counts bad frames and ends the session at its limit; keep the transport alive so a
+             * retransmission can still be answered from the duplicate cache. */
+            ++g_usb_fw_update_errors;
+            if (consumed == 0U)
+                rx_offset = rx_size;
+        } else if (g_usb_fw_update_last_result != FW_UPDATE_MANAGER_NEED_MORE || consumed == 0U) {
+            recover_transport();
+            return;
+        }
+    }
+    if (tx_active == 0U) {
+        rx_offset = 0U;
+        rx_size = 0U;
+        if (arm_receive() != 0)
+            recover_transport();
+    }
 }
 
 int usb_fw_update_init(void) {
@@ -313,16 +360,14 @@ enum usb_fw_update_action usb_fw_update_poll(uint32_t now_ms) {
     }
     bsp_exit_critical(irq_state);
 
-    if (was_disconnected != 0U) {
-        g_usb_fw_update_last_result = fw_update_manager_notify_disconnect(&manager);
-        tx_active = 0U;
+    if (was_disconnected != 0U || was_configured != 0U) {
+        /* SET_CONFIGURATION reopens both endpoints, so any queued transfer and event captured with it is stale. */
         have_rx = 0U;
         have_tx_complete = 0U;
+        restart_transport();
     }
-    if (was_configured != 0U && tx_active == 0U && arm_receive() != 0)
-        recover_transport();
 
-    if (have_tx_complete != 0U) {
+    if (have_tx_complete != 0U && tx_active != 0U) {
         tx_active = 0U;
         g_usb_fw_update_last_result = fw_update_manager_consume_tx(&manager, sent);
         if (g_usb_fw_update_last_result != FW_UPDATE_MANAGER_OK) {
@@ -338,30 +383,21 @@ enum usb_fw_update_action usb_fw_update_poll(uint32_t now_ms) {
                     recover_transport();
             } else {
                 g_usb_fw_update_last_result = fw_update_manager_notify_tx_idle(&manager);
-                if (g_usb_fw_update_last_result != FW_UPDATE_MANAGER_OK || arm_receive() != 0)
+                if (g_usb_fw_update_last_result != FW_UPDATE_MANAGER_OK)
                     recover_transport();
+                else
+                    process_rx(now_ms);
             }
         }
     }
 
     if (have_rx != 0U) {
-        if (received == 0U) {
-            if (arm_receive() != 0)
-                recover_transport();
-        } else if (received > sizeof(rx_buffer) || tx_active != 0U) {
+        if (received > sizeof(rx_buffer) || tx_active != 0U || rx_offset != rx_size) {
             recover_transport();
         } else {
-            size_t consumed = 0U;
-            g_usb_fw_update_last_result = fw_update_manager_feed(&manager, rx_buffer, received, now_ms, &consumed);
-            if (g_usb_fw_update_last_result == FW_UPDATE_MANAGER_RESPONSE_READY && consumed == received) {
-                if (start_manager_tx() != 0)
-                    recover_transport();
-            } else if (g_usb_fw_update_last_result == FW_UPDATE_MANAGER_NEED_MORE && consumed == received) {
-                if (arm_receive() != 0)
-                    recover_transport();
-            } else {
-                recover_transport();
-            }
+            rx_offset = 0U;
+            rx_size = received;
+            process_rx(now_ms);
         }
     }
 

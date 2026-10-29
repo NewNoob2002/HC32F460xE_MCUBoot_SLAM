@@ -251,9 +251,30 @@ static void usb_handle_out_ep(void) {
     }
 }
 
+/* A bus reset does not always clear EPENA on a non-control IN endpoint (observed on HC32F460 USBFS with libusb
+ * port reset while a response packet was queued). Flushing its FIFO alone leaves PKTCNT pointing at a packet that no
+ * longer exists, so the next transfer sends corrupted data. Disable the endpoint before the FIFO flush, as the
+ * DWC2-style programming sequence and hc32_ll_usb usb_devepdis() do. */
+static void usb_disable_in_endpoints(void) {
+    for (uint8_t i = 1U; i < g_usb.basic.dev_epnum; ++i) {
+        if (READ_REG32_BIT(g_usb.regs.INEP_REGS[i]->DIEPCTL, USBFS_DIEPCTL_EPENA) != 0UL) {
+            SET_REG32_BIT(g_usb.regs.INEP_REGS[i]->DIEPCTL, USBFS_DIEPCTL_SNAK | USBFS_DIEPCTL_EPDIS);
+            for (uint32_t spin = 0UL; spin < 20000UL; ++spin) {
+                if (READ_REG32_BIT(g_usb.regs.INEP_REGS[i]->DIEPINT, USBFS_DIEPINT_EPDISD) != 0UL) {
+                    break;
+                }
+            }
+        }
+        WRITE_REG32(g_usb.regs.INEP_REGS[i]->DIEPTSIZ, 0UL);
+        g_usb.in_ep[i].xfer_len = 0UL;
+        g_usb.in_ep[i].xfer_count = 0UL;
+    }
+}
+
 static void usb_handle_reset(void) {
     CLR_REG32_BIT(g_usb.regs.DREGS->DCTL, USBFS_DCTL_RWUSIG);
     WRITE_REG32(g_usb.regs.DREGS->DIEPEMPMSK, 0UL);
+    usb_disable_in_endpoints();
     usb_txfifoflush(&g_usb.regs, 0x10UL);
     usb_rxfifoflush(&g_usb.regs);
     for (uint8_t i = 0U; i < g_usb.basic.dev_epnum; ++i) {
