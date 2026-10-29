@@ -25,6 +25,10 @@ target_include_directories(boot_handover_tests PRIVATE
 target_compile_definitions(boot_handover_tests PRIVATE BOOT_HOST_TEST)
 add_test(NAME boot_handover COMMAND boot_handover_tests)
 
+add_executable(uart_brr_tests uart_brr_tests.c)
+target_include_directories(uart_brr_tests PRIVATE "${PROJECT_SOURCE_DIR}/Platform/HC32F460/Inc")
+add_test(NAME uart_brr COMMAND uart_brr_tests)
+
 add_executable(status_led_tests
     status_led_tests.c
     ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Src/bsp_status_led.c
