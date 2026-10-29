@@ -2,17 +2,18 @@
 
 #include <stdio.h>
 
-/* Literal 64-bit transcription of UART_CalculateBrr() in hc32_ll_usart.c with OVER8 = 0. */
+/* Literal 64-bit transcription of UART_CalculateBrr() in hc32_ll_usart.c with OVER8 = 0. The driver's UL suffixes
+ * are 32-bit on the Cortex-M4 target, so they are written as U here to keep that width on 64-bit hosts. */
 static bool reference_brr(uint32_t C, uint32_t B, uint32_t* integer, uint32_t* fraction) {
-    uint32_t div_integer = (C / (B * 16UL)) - 1U;
+    uint32_t div_integer = (C / (B * 16U)) - 1U;
     bool fraction_flag = true;
     *fraction = BSP_UART_BRR_NO_FRACTION;
     if (div_integer <= 0xFFUL) {
         *integer = div_integer;
-        if ((C % (B * 16UL)) == 0UL)
+        if ((C % (B * 16U)) == 0U)
             return true;
         const uint64_t temp0 = ((uint64_t)16UL * ((uint64_t)div_integer + 1U) * (uint64_t)B) << 8U;
-        const uint32_t div_fraction = (uint32_t)((temp0 + ((uint64_t)C >> 1)) / C) - 128UL;
+        const uint32_t div_fraction = (uint32_t)((temp0 + ((uint64_t)C >> 1)) / C) - 128U;
         if (div_fraction <= 0x7FUL) {
             *fraction = div_fraction;
             return true;
@@ -20,7 +21,7 @@ static bool reference_brr(uint32_t C, uint32_t B, uint32_t* integer, uint32_t* f
         fraction_flag = false;
     }
     if (!fraction_flag) {
-        div_integer = ((((C * 10UL) / (B * 16UL)) + 5UL) / 10UL) - 1UL;
+        div_integer = ((((C * 10U) / (B * 16U)) + 5U) / 10U) - 1U;
         if (div_integer <= 0xFFUL) {
             *integer = div_integer;
             return true;
