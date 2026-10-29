@@ -155,6 +155,9 @@ SECTIONS
         __data_end_ret_ram__ = .;
     } >RET_RAM
 
+    /* .data and .ret_ram_data are loaded from Flash through AT(); keep their load images inside the region. */
+    ASSERT(__etext_ret_ram + SIZEOF(.ret_ram_data) <= ORIGIN(FLASH) + LENGTH(FLASH), "Flash load image overflows region FLASH")
+
     .bss (NOLOAD):
     {
         . = ALIGN(4);

@@ -22,6 +22,8 @@ target_compile_options(hc32_project_options INTERFACE
     -Wall
     -Wextra
     -Werror=return-type
+    # Keep __FILE__ strings independent of the checkout path; Boot has only a small margin in its 64 KiB region.
+    -fmacro-prefix-map=${PROJECT_SOURCE_DIR}/=
     $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
     $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
     $<$<CONFIG:Debug>:-Og -g3>
