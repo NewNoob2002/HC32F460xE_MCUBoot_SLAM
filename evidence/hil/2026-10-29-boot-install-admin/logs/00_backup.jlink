@@ -1,0 +1,8 @@
+device HC32F460xE
+si SWD
+speed 4000
+connect
+halt
+savebin build/local-evidence-backup/2026-10-29-boot-install-admin/pre_hil_00000000_00075fff.bin 0x00000000 0x76000
+go
+exit

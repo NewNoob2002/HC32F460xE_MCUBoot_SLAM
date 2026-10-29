@@ -1,0 +1,19 @@
+entering Boot recovery
+wait re-enumeration
+device application=0.0.0
+factory erase accepted; the device restarts unprovisioned in Boot recovery
+exit=0
+re-enumerated after 13.092502940 s
+Bus 001 Device 117: ID cafe:0001 SingularXYZ Slam-ChargerManager Boot-Recovery
+application=0.0.0 bootloader=1.0.0
+hardware=0x00004600 board=1 revision=2 capacity=196608 write_alignment=4 erase_alignment=8192
+mode=boot-recovery
+serial=HC32F460-53503938FF165043FFFF6091
+provisioned=false device_serial= hardware_version= app_pid=0x0002
+## slot readback
+00010000 = FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF 
+00041FF0 = FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF 
+00042000 = FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF 
+00073FF0 = FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF 
+00074000 = FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF 
+00075FF0 = FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF 

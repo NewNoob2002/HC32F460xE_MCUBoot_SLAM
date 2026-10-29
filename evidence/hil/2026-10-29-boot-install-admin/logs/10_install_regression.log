@@ -1,0 +1,25 @@
+## cycle 1 07:28:32
+entering Boot recovery
+wait re-enumeration
+device application=0.0.0
+device application=0.0.0
+verify
+commit
+wait re-enumeration
+install_exit=
+hardware=0x00004600 board=1 revision=2 capacity=196608 write_alignment=4 erase_alignment=8192
+wait_exit=
+## cycle 2 07:28:39
+entering Boot recovery
+wait re-enumeration
+device application=0.0.0
+device application=0.0.0
+verify
+commit
+wait re-enumeration
+install_exit=
+hardware=0x00004600 board=1 revision=2 capacity=196608 write_alignment=4 erase_alignment=8192
+wait_exit=
+application=1.0.5 bootloader=1.0.0
+mode=application
+serial=SN202061028

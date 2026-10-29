@@ -1,0 +1,25 @@
+2026-10-29 Boot-side install, REBOOT request and administrator HIL summary
+Target: HC32F460xE, J-Link S/N 63728769, SWD 4000 kHz, VTref 3.409 V
+Pre-state: Application 1.0.3, SN202061028, hardware_version 1.1, app_pid 0x0002 (provisioned)
+Backup: 0x00000000-0x00075FFF to ignored build output; SHA256 cdb98d3540768645ff831421691206651bfafde77df57bf33d428916c270af51
+DEVIATION: J-Link "erase 0x00042000 0x00076000" treats the end address as inclusive and also erased
+  the first product_kv sector 0x00076000-0x00077FFF. Product Config read back unprovisioned afterwards.
+  It was re-provisioned with the recorded pre-state values (T6). app_kv (0x0007A000+) was not erased.
+T1 Boot + Primary 1.0.4 loadbin/verifybin at 0x00000000 / 0x00010000: PASS
+T2 new Boot hands over to Application 1.0.4 (cafe:0002): PASS
+T3 REBOOT(recovery) from Application -> cafe:0001 Boot recovery, same serial: PASS
+T4 REBOOT(application) from Boot -> Application 1.0.4: PASS
+T5 request slot 0x200F0FF0 reads zero inside Boot; external reset returns to Application: PASS
+T6 PRODUCT_CONFIG_SET in requested recovery (SN202061028/1.1/0x0002); App enumerates SN202061028: PASS
+T7 CLI install app-signed-1.0.5 from Application mode (auto REBOOT, Boot install, swap): PASS
+T7b reset keeps confirmed Application 1.0.5: PASS
+T8 FACTORY_ERASE with a wrong administrator key -> VerifyError, Product Config and image kept: PASS
+T9 FACTORY_ERASE with the development administrator key -> cafe:0001, factory serial, unprovisioned;
+   first/last 16 bytes of Primary, Secondary and Scratch read 0xFF: PASS
+T10 re-provision + install 1.0.5 in Boot recovery (no valid image): PASS (device state)
+    Host wait failed once with errno 13: udev ACL not yet applied to the new node. Fixed in host
+    (PermissionDenied retried during reconnect waits) with a unit test.
+T11 two further App-mode install cycles with the fixed host: PASS
+Final CFSR/HFSR: 0/0
+Final target state: confirmed Application 1.0.5, SN202061028, provisioned
+Not covered: GUI against hardware; TRNG challenge distinctness; exact erase duration; power loss during erase.

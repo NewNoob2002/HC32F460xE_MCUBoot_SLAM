@@ -1,0 +1,13 @@
+device HC32F460xE
+si SWD
+speed 4000
+connect
+halt
+erase 0x00042000 0x00076000
+loadbin build/HIL/2026-10-29/v1.0.4/Boot/boot_firmware.bin 0x00000000
+verifybin build/HIL/2026-10-29/v1.0.4/Boot/boot_firmware.bin 0x00000000
+loadbin build/HIL/2026-10-29/v1.0.4/artifacts/app-primary-1.0.4.bin 0x00010000
+verifybin build/HIL/2026-10-29/v1.0.4/artifacts/app-primary-1.0.4.bin 0x00010000
+r
+go
+exit

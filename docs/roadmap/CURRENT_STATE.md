@@ -10,9 +10,15 @@ history remains in Git, ADRs and retained evidence bundles.
 - Bare-metal HC32F460xE Boot and Application firmware use MCUboot 2.4.0,
   ECDSA-P256 verification, Primary/Secondary slots, 8 KiB scratch swap, rollback
   and application confirmation.
-- Boot enters `cafe:0001` USB recovery only when `boot_go()` finds no bootable
-  image. Application USB uses the configured product PID, defaulting to
-  `cafe:0002`.
+- Boot enters `cafe:0001` USB recovery when `boot_go()` finds no bootable
+  image, or after `boot_go()` when the Application requested it with Protocol V1
+  REBOOT (one-shot retention-SRAM flag, honoured only after a software reset).
+  Images are installed only by Boot recovery; the Application rejects BEGIN.
+  Application USB uses the configured product PID, defaulting to `cafe:0002`.
+- Boot built with `HC32_ADMIN_PUBLIC_KEY` offers administrator challenge-response
+  (TRNG challenge, ECDSA-P256 via tinycrypt, key separate from image signing) and
+  FACTORY_ERASE of Secondary, Scratch, Primary and Product Config so a device can
+  be provisioned again. Boot self-update is intentionally not implemented.
 - `components/fw_update/` provides a bounded, caller-allocated Protocol V1
   Manager with Secondary-only storage and MCUboot boot-control backends.
 - `Tools/updater/` provides a shared Rust image/parser/client/workflow, a CLI and
@@ -84,7 +90,12 @@ reset
   -> clear SysTick/NVIC state, assembly handover
   -> no valid image: start cafe:0001 recovery updater
 
-USB install
+USB install from the Application
+  -> HELLO, REBOOT(recovery) -> App writes the request flag, software reset
+  -> boot_go() completes any pending swap/revert, then recovery starts
+  -> host reconnects to the same serial in Boot mode and continues below
+
+USB install in Boot recovery
   -> HELLO once
   -> PRODUCT_CONFIG_GET must report provisioned=true
   -> DEVICE_INFO and compatibility/capacity checks
@@ -123,7 +134,11 @@ The HC32 USB device port asserts software VBUS-valid after core reset and
 before connection. PA4 is MP2762A INT#, and PA5 is PG (inverted ACOK#).
 PA7/PB0/PB1 ADC telemetry no longer exists; future telemetry comes from
 MP2762A/BQ40Z50 registers. LEDs are active-low red PB6 and blue PB5;
-APP_PRIMARY uses a red+blue heartbeat and the cyan mode has been removed.
+the production App shows charging/full/low-battery patterns selected by
+`dp::batteryLedMode()` (BQ40Z50 current, FC flag and lowest pack SOC, plus
+charger PG), while update progress and errors keep priority. APP_PRIMARY's
+red+blue heartbeat is only used by the Phase 2 HIL build, and the cyan mode has
+been removed.
 Implementation gates remain in `APP_CHARGER_PLAN.md`.
 
 Debug Boot and Application EasyLogger output is mirrored to the existing UART
@@ -132,8 +147,10 @@ and SEGGER RTT channel 0. The Debug App places `_SEGGER_RTT` at
 independent of EasyLogger and writes its raw/panic output through USART3;
 Release firmware omits EasyLogger and RTT.
 
-Boot's frozen scope is secure image selection/swap, invalid-image USB recovery,
-recovery-only provisioning and validated handover. Successful handover never
+Boot's scope is secure image selection/swap, USB recovery (invalid image or
+Application request), recovery-only provisioning, optional administrator factory
+erase and validated handover. This extends the 2026-09-03 freeze tag and needs new
+Boot HIL. Successful handover never
 initializes USB; recovery exits only through system reset, so USB teardown is
 not part of the handover path. Product logic and new transports stay outside
 Boot. Boot/App startup unlock protected peripheral registers before
@@ -189,6 +206,16 @@ Known deferred host issues for a later node:
   allocation operators, guards, exception and RTTI support.
 
 ## Verification state
+
+- Boot-side install, REBOOT and administrator mode (2026-10-28) pass HostTests
+  29/29, including Manager REBOOT/admin/erase tests and an ECDSA vector that the
+  Rust host signs and tinycrypt verifies; Debug Boot is 59 880 B text of 64 KiB.
+  Rust fmt, clippy and tests pass; Debug and Release firmware build and verify.
+  HIL on 2026-10-29 (`evidence/hil/2026-10-29-boot-install-admin/`) passed
+  REBOOT both ways, the one-shot request, Application-mode install via Boot,
+  wrong-key rejection, factory erase and re-provisioning, ending on confirmed
+  1.0.5. Not yet covered: the GUI against hardware, TRNG output distinctness,
+  erase duration and power loss during erase.
 
 - Debug Link V1 passes HostTests 27/27 (including DBG1 codec/dispatch, settings,
   USB queue/reset and updater regressions) and the Debug clean build plus image,

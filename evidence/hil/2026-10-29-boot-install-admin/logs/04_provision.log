@@ -1,0 +1,9 @@
+reboot requested
+provisioned=true device_serial=SN202061028 hardware_version=1.1 app_pid=0x0002
+reboot requested
+Bus 001 Device 110: ID cafe:0002 SingularXYZ Slam-ChargerManager USB
+application=1.0.4 bootloader=1.0.0
+hardware=0x00004600 board=1 revision=2 capacity=196608 write_alignment=4 erase_alignment=8192
+mode=application
+serial=SN202061028
+provisioned=true device_serial=SN202061028 hardware_version=1.1 app_pid=0x0002

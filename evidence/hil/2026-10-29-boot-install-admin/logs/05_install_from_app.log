@@ -1,0 +1,16 @@
+07:26:30
+entering Boot recovery
+wait re-enumeration
+device application=0.0.0
+device application=0.0.0
+verify
+commit
+wait re-enumeration
+exit=0
+07:26:33
+wait re-enumeration
+device application=1.0.5
+application=1.0.5 bootloader=1.0.0
+hardware=0x00004600 board=1 revision=2 capacity=196608 write_alignment=4 erase_alignment=8192
+mode=application
+serial=SN202061028

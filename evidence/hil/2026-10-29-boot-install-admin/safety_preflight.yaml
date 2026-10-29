@@ -1,0 +1,15 @@
+safety_preflight:
+  schema_version: 1
+  timestamp_utc: "2026-10-29T07:24:42Z"
+  operation: flash
+  authorization: "User-requested HIL of Boot-side install, REBOOT request flag, administrator auth and factory erase (2026-10-29)"
+  target:
+    board: HC32F460xE SLAM target
+    hardware_revision: "1.1 (Product Config)"
+    probe_or_adapter_serial: "63728769"
+    transport: swd
+  pre_state: "Application 1.0.3, SN202061028, hardware_version 1.1, app_pid 0x0002, provisioned"
+  artifact_or_stimulus: "Boot e543b8764ecc318003c207ce53e9ccab6f6c40caf4acd686f3e6d519ddc62175 -> 0x00000000; Primary app-primary-1.0.4 8900f96fedb47f58aa26eacd751e2bcbf434d91ac8d514717388712c0e15eef0 -> 0x00010000; USB install app-signed-1.0.5 94757b38702cdeffa5b6c49b11e44fb71c9a3ee85ba29726ea8e73ef4b2756b5 (protocol-controlled, Secondary only)"
+  limits: "J-Link reads/writes only 0x00000000-0x00075FFF (range erase of Secondary+Scratch 0x00042000-0x00075FFF allowed); never Reserved 0x00076000-0x0007FFFF or OTP via J-Link; no mass erase, unlock or protection change; SWD 4000 kHz. Firmware FACTORY_ERASE intentionally erases product_kv; it is re-provisioned with the recorded pre_state values."
+  recovery_plan: "Restore build/local-evidence-backup/2026-10-29-boot-install-admin/pre_hil_00000000_00075fff.bin to 0x00000000 and verify; re-provision SN202061028 / 1.1 / 0x0002 in Boot recovery if product_kv was erased"
+  approved: true

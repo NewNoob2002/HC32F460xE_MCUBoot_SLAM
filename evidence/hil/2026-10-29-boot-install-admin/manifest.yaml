@@ -1,0 +1,15 @@
+evidence_manifest:
+  schema_version: 1
+  run_id: "2026-10-29-boot-install-admin"
+  source_base_revision: "efcfd80805c0ec6cad08819d747147c6be83eb97"
+  source_dirty_during_run: true
+  target: "HC32F460xE SLAM target"
+  probe_serial: "63728769"
+  result: "PASSED_WITH_DEVIATION"
+  contracts: [safety_preflight.yaml, deployment_result.yaml, hil_test_result.yaml]
+  checksum_file: SHA256SUMS
+  excluded_raw_flash:
+    reason: "Readback contains existing firmware and is retained only in ignored build output"
+    path: "build/local-evidence-backup/2026-10-29-boot-install-admin/pre_hil_00000000_00075fff.bin"
+    size: 483328
+    sha256: "cdb98d3540768645ff831421691206651bfafde77df57bf33d428916c270af51"

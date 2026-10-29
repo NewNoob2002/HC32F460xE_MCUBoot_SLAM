@@ -1,0 +1,34 @@
+deployment_result:
+  schema_version: 1
+  created_at_utc: "2026-10-29T07:29:32Z"
+  safety_preflight: safety_preflight.yaml
+  target: {board: HC32F460xE SLAM target, hardware_revision: "1.1", probe_serial: "63728769"}
+  tool: {id: jlink, version: "9.84", probe_hardware_version: "9.70"}
+  artifacts:
+    - artifact: build/HIL/2026-10-29/v1.0.4/Boot/boot_firmware.bin
+      artifact_sha256: "e543b8764ecc318003c207ce53e9ccab6f6c40caf4acd686f3e6d519ddc62175"
+      destination: "0x00000000"
+      verified: true
+    - artifact: build/HIL/2026-10-29/v1.0.4/artifacts/app-primary-1.0.4.bin
+      artifact_sha256: "8900f96fedb47f58aa26eacd751e2bcbf434d91ac8d514717388712c0e15eef0"
+      destination: "0x00010000"
+      verified: true
+    - artifact: build/HIL/2026-10-29/v1.0.5/artifacts/app-signed-1.0.5.bin
+      artifact_sha256: "94757b38702cdeffa5b6c49b11e44fb71c9a3ee85ba29726ea8e73ef4b2756b5"
+      destination: "USB Protocol V1, Secondary only (Boot recovery)"
+      verified: true
+    - artifact: build/HIL/2026-10-29/v1.0.7/Boot/boot_firmware.bin
+      artifact_sha256: "5fd627d8d172979c2b365ff3978f0b2e7ad1f3afa55da71ed12163c9800e2d29"
+      destination: "0x00000000"
+      verified: true
+      note: "Boot 1.1.0 follow-up (log 13); built before the review fixes to erase order, TRNG timeout and REBOOT/FACTORY_ERASE disconnect handling"
+    - artifact: build/HIL/2026-10-29/v1.0.7/artifacts/app-signed-1.0.7.bin
+      artifact_sha256: "badf576b5a688dc9b3fa4a138af14e19a5c8b2785ddd1b81db6cf6dcd3ffe93b"
+      destination: "USB Protocol V1, Secondary only (Boot recovery)"
+      verified: true
+      note: "installed by the operator through the GUI; observed as Application 1.0.7"
+  deviation: "J-Link range erase end address was inclusive and erased product_kv sector 0x00076000; re-provisioned with recorded values"
+  reset_after_deploy: true
+  previous_state: "Application 1.0.3, provisioned SN202061028"
+  final_state: "confirmed Application 1.0.5, provisioned SN202061028"
+  log: logs/hil_summary.txt

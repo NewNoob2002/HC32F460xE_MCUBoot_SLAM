@@ -1,0 +1,11 @@
+device HC32F460xE
+si SWD
+speed 4000
+connect
+halt
+loadbin build/HIL/2026-10-29/v1.0.7/Boot/boot_firmware.bin 0x00000000
+verifybin build/HIL/2026-10-29/v1.0.7/Boot/boot_firmware.bin 0x00000000
+mem32 0x00000420 4
+r
+go
+exit

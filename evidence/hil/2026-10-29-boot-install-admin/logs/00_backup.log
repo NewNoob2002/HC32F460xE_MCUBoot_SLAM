@@ -1,0 +1,74 @@
+SEGGER J-Link Commander V9.84 (Compiled Oct  7 2026 14:39:34)
+DLL version V9.84, compiled Oct  7 2026 14:38:44
+
+
+J-Link Command File read successfully.
+Processing script file...
+J-Link>device HC32F460xE
+J-Link connection not established yet but required for command.
+Connecting to J-Link ...O.K.
+Firmware: J-Link V9 compiled May  7 2021 16:26:12
+Hardware version: V9.70
+J-Link uptime (since boot): N/A (Not supported by this model)
+S/N: 63728769
+License(s): RDI,FlashBP,FlashDL,JFlash,GDB
+VTref=3.409V
+J-Link>si SWD
+Selecting SWD as current target interface.
+J-Link>speed 4000
+Selecting 4000 kHz as target interface speed
+J-Link>connect
+Device "HC32F460XE" selected.
+
+
+Connecting to target via SWD
+Found SW-DP with ID 0x2BA01477
+DPIDR: 0x2BA01477
+CoreSight SoC-400 or earlier
+Scanning AP map to find all available APs
+AP[1]: Stopped AP scan as end of AP map has been reached
+AP[0]: AHB-AP (IDR: 0x24770011, ADDR: 0x00000000)
+Iterating through AP map to find AHB-AP to use
+AP[0]: Core found
+AP[0]: AHB-AP ROM base: 0xE00FF000
+CPUID register: 0x410FC241. Implementer code: 0x41 (ARM)
+Found Cortex-M4 r0p1, Little endian.
+FPUnit: 6 code (BP) slots and 2 literal slots
+CoreSight components:
+ROMTbl[0] @ E00FF000
+[0][0]: E000E000 CID B105E00D PID 000BB00C SCS-M7
+[0][1]: E0001000 CID B105E00D PID 003BB002 DWT
+[0][2]: E0002000 CID B105E00D PID 002BB003 FPB
+[0][3]: E0000000 CID B105E00D PID 003BB001 ITM
+[0][4]: E0040000 CID B105900D PID 000BB9A1 TPIU
+Memory zones:
+  Zone: "Default" Description: Default access mode
+Cortex-M4 identified.
+J-Link>halt
+PC = 000126A2, CycleCnt = 33FA8AE7
+R0 = 00000000, R1 = 008B00BA, R2 = 000003E8, R3 = 1FFFBAF8
+R4 = 1FFF80A8, R5 = 008B00BA, R6 = 00000000, R7 = 1FFF9578
+R8 = 1FFF95F0, R9 = 1FFF8250, R10= FD98B7CD, R11= FF7FAE37
+R12= 00000000
+SP(R13)= 1FFFC630, MSP= 1FFFC630, PSP= 639BF3FC, R14(LR) = 0001C011
+XPSR = 61000000: APSR = nZCvq, EPSR = 01000000, IPSR = 000 (NoException)
+CFBP = 04000000, CONTROL = 04, FAULTMASK = 00, BASEPRI = 00, PRIMASK = 00
+
+FPS0 = 1A3E363B, FPS1 = 7BBA3720, FPS2 = EF7B0E48, FPS3 = DB3FD451
+FPS4 = F5D0F934, FPS5 = 801F22EF, FPS6 = B25144A0, FPS7 = 745DFBF4
+FPS8 = 0B1FB403, FPS9 = D809F6C4, FPS10= 3F000000, FPS11= 42560000
+FPS12= 44468000, FPS13= 3F800000, FPS14= 3C032150, FPS15= 00000035
+FPS16= 7F3296FA, FPS17= 159E1F25, FPS18= CBA751D6, FPS19= 709BC7F2
+FPS20= D0FF9DCF, FPS21= 42A25DE2, FPS22= 2A2263FD, FPS23= 12C2062D
+FPS24= F2FB4DFF, FPS25= 4DF1B446, FPS26= 0579CCBC, FPS27= 68EADFC3
+FPS28= 47E21849, FPS29= 20DB2CF3, FPS30= E299A8CD, FPS31= F4A27F2E
+FPSCR= 80000010
+J-Link>savebin build/local-evidence-backup/2026-10-29-boot-install-admin/pre_hil_00000000_00075fff.bin 0x00000000 0x76000
+Opening binary file for writing... [build/local-evidence-backup/2026-10-29-boot-install-admin/pre_hil_00000000_00075fff.bin]
+Reading 483328 bytes from addr 0x00000000 into file...O.K.
+J-Link>go
+Memory map 'after startup completion point' is active
+J-Link>exit
+
+Script processing completed.
+

@@ -1,0 +1,9 @@
+entering Boot recovery
+wait re-enumeration
+device application=0.0.0
+FAIL: device returned VerifyError
+exit=1
+Bus 001 Device 114: ID cafe:0001 SingularXYZ Slam-ChargerManager Boot-Recovery
+provisioned=true device_serial=SN202061028 hardware_version=1.1 app_pid=0x0002
+reboot requested
+application=1.0.5 bootloader=1.0.0

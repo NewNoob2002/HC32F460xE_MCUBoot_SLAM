@@ -1,0 +1,4 @@
+application=0.0.0 bootloader=1.1.0
+hardware=0x00004600 board=1 revision=2 capacity=196608 write_alignment=4 erase_alignment=8192
+mode=boot-recovery
+serial=HC32F460-53503938FF165043FFFF6091

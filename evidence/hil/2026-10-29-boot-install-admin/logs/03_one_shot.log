@@ -1,0 +1,8 @@
+## enter Boot
+reboot requested
+Bus 001 Device 107: ID cafe:0001 SingularXYZ Slam-ChargerManager Boot-Recovery
+## J-Link: read flag slot + RSTF0 in Boot, then reset
+200F0FF0 = 00000000 00000000 00000000 00000000 
+40054000 = 00000001 
+Bus 001 Device 108: ID cafe:0002 SingularXYZ Slam-ChargerManager USB
+mode=application

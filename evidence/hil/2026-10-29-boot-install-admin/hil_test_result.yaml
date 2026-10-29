@@ -1,0 +1,22 @@
+test_result:
+  schema_version: 1
+  source_revision: "efcfd80805c0ec6cad08819d747147c6be83eb97+dirty"
+  safety_preflight: safety_preflight.yaml
+  level: hil
+  target: "HC32F460xE SLAM target; J-Link 63728769; VTref 3.409 V"
+  command: "J-Link backup/erase/loadbin/verifybin/mem32/reset plus hc32-updater info/config/reboot/install/wait/factory-erase"
+  attempts: 1
+  passed: true
+  counts: {total: 12, passed: 12, failed: 0, skipped: 0}
+  classified_failures:
+    - "procedure: J-Link inclusive erase end address erased product_kv sector (recovered by re-provisioning)"
+    - "host: reconnect wait treated udev PermissionDenied as fatal (fixed, unit test added, re-verified in T11)"
+  log: logs/hil_summary.txt
+  requirements:
+    - Application REBOOT into Boot recovery through retention-SRAM request
+    - one-shot request, Boot returns to Application on other resets
+    - Boot-only image install from an Application-mode host request
+    - administrator challenge-response rejects a wrong key
+    - factory erase of image slots, scratch and Product Config allows re-provisioning
+  operator_followup: "Boot 1.1.0 programmed and verified (logs 13-14); operator GUI provisioning, App 1.0.7 install, Boot version and BQ40Z50 battery card observed. App 1.0.8/1.0.9 telemetry and LED patterns not verified."
+  scope_note: "CLI cases T1-T12 are the counted tests; GUI checks are operator observations; TRNG output distinctness, erase duration and power loss during erase were not measured."

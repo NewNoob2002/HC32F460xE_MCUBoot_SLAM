@@ -1,0 +1,16 @@
+provisioned=true device_serial=SN202061028 hardware_version=1.1 app_pid=0x0002
+device application=0.0.0
+verify
+commit
+wait re-enumeration
+FAIL: transport error: failed to open device (errno 13)
+wait re-enumeration
+Bus 001 Device 118: ID cafe:0002 SingularXYZ Slam-ChargerManager USB
+FAIL: failed to open device (errno 13)
+provisioned=true device_serial=SN202061028 hardware_version=1.1 app_pid=0x0002
+application=1.0.5 bootloader=1.0.0
+hardware=0x00004600 board=1 revision=2 capacity=196608 write_alignment=4 erase_alignment=8192
+mode=application
+serial=SN202061028
+provisioned=true device_serial=SN202061028 hardware_version=1.1 app_pid=0x0002
+crw-rw----+ 1 root root 189, 117 Oct 29 00:27 /dev/bus/usb/001/118
