@@ -1,3 +1,4 @@
+pub mod debug_link;
 pub mod nusb_transport;
 mod protocol;
 

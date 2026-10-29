@@ -1,3 +1,5 @@
+mod debug_gui;
+
 use hc32_updater::nusb_transport::{DeviceMode, NusbTransport, UpdaterDevice};
 use hc32_updater::{
     DeviceInfo, FirmwareImage, HelloInfo, ProductConfig, ProgressEvent, ProtocolV1Client,
@@ -9,7 +11,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Receiver, RecvTimeoutError};
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(2);
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(2);
@@ -59,6 +61,7 @@ enum WorkerCommand {
         application_pid: String,
     },
     Install(PathBuf),
+    Debug(debug_gui::Command),
 }
 
 fn main() -> Result<(), slint::PlatformError> {
@@ -66,6 +69,7 @@ fn main() -> Result<(), slint::PlatformError> {
     let (commands, receiver) = mpsc::channel();
     let worker_ui = ui.as_weak();
     thread::spawn(move || worker_loop(receiver, worker_ui));
+    debug_gui::register(&ui, commands.clone());
 
     let weak = ui.as_weak();
     let sender = commands.clone();
@@ -169,100 +173,128 @@ fn main() -> Result<(), slint::PlatformError> {
 fn worker_loop(receiver: Receiver<WorkerCommand>, ui: slint::Weak<UpdaterWindow>) {
     let mut devices = Vec::new();
     let mut connected: Option<ConnectedDevice> = None;
+    let mut debug = debug_gui::State::default();
+    let mut last_heartbeat = Instant::now();
 
     loop {
         let command = if connected.is_some() {
-            match receiver.recv_timeout(HEARTBEAT_INTERVAL) {
+            let wait = HEARTBEAT_INTERVAL.saturating_sub(last_heartbeat.elapsed());
+            let wait = if debug.streaming() {
+                wait.min(Duration::from_millis(20))
+            } else {
+                wait
+            };
+            match receiver.recv_timeout(wait) {
                 Ok(command) => Some(command),
-                Err(RecvTimeoutError::Timeout) => {
-                    if heartbeat(&mut connected, &ui).is_err() {
-                        connected = None;
-                    }
-                    None
+                Err(RecvTimeoutError::Timeout) => None,
+                Err(RecvTimeoutError::Disconnected) => {
+                    debug.close(&ui, "Debug closed");
+                    return;
                 }
-                Err(RecvTimeoutError::Disconnected) => return,
             }
         } else {
             match receiver.recv() {
                 Ok(command) => Some(command),
-                Err(_) => return,
+                Err(_) => {
+                    debug.close(&ui, "Debug closed");
+                    return;
+                }
             }
-        };
-        let Some(command) = command else {
-            continue;
         };
 
-        match command {
-            WorkerCommand::Refresh => match NusbTransport::enumerate() {
-                Ok(found) => {
-                    let labels = found.iter().map(UpdaterDevice::label).collect();
-                    devices = found;
-                    post_devices(&ui, labels);
-                }
-                Err(error) => post_error(&ui, format!("Refresh failed: {error}"), false),
-            },
-            WorkerCommand::Connect(index) => {
-                let result = usize::try_from(index)
-                    .ok()
-                    .and_then(|index| devices.get(index))
-                    .ok_or_else(|| "Select a device from the current list".to_owned())
-                    .and_then(connect_device);
-                match result {
-                    Ok(device) => {
-                        let snapshot = device.snapshot();
-                        connected = Some(device);
-                        post_connected(&ui, snapshot, "Connected", false);
+        if let Some(command) = command {
+            match command {
+                WorkerCommand::Refresh => match NusbTransport::enumerate() {
+                    Ok(found) => {
+                        let labels = found.iter().map(UpdaterDevice::label).collect();
+                        devices = found;
+                        post_devices(&ui, labels);
                     }
-                    Err(error) => post_error(&ui, format!("Connect failed: {error}"), false),
+                    Err(error) => post_error(&ui, format!("Refresh failed: {error}"), false),
+                },
+                WorkerCommand::Connect(index) => {
+                    debug.close(&ui, "Open Debug on the connected Application device");
+                    connected = None;
+                    let result = usize::try_from(index)
+                        .ok()
+                        .and_then(|index| devices.get(index))
+                        .ok_or_else(|| "Select a device from the current list".to_owned())
+                        .and_then(connect_device);
+                    match result {
+                        Ok(device) => {
+                            let snapshot = device.snapshot();
+                            connected = Some(device);
+                            last_heartbeat = Instant::now();
+                            post_connected(&ui, snapshot, "Connected", false);
+                        }
+                        Err(error) => post_error(&ui, format!("Connect failed: {error}"), false),
+                    }
                 }
-            }
-            WorkerCommand::Disconnect => {
-                connected = None;
-                post_disconnected(&ui, "Disconnected");
-            }
-            WorkerCommand::Configure {
-                device_serial,
-                hardware_version,
-                application_pid,
-            } => {
-                let result = configure_device(
-                    connected.as_mut(),
-                    &device_serial,
-                    &hardware_version,
-                    &application_pid,
-                );
-                match result {
-                    Ok(device) => post_connected(
-                        &ui,
-                        device,
-                        "Product configuration saved; App PID applies after Application restart",
-                        false,
-                    ),
-                    Err(error) => post_error(&ui, format!("Configuration failed: {error}"), true),
+                WorkerCommand::Disconnect => {
+                    debug.close(&ui, "Debug disconnected");
+                    connected = None;
+                    post_disconnected(&ui, "Disconnected");
                 }
-            }
-            WorkerCommand::Install(path) => {
-                if let Some(message) = connected.as_ref().and_then(|device| {
-                    upgrade_block_reason(device.mode, device.product_config.as_ref())
-                }) {
-                    post_warning(&ui, message);
-                    continue;
-                }
-                let result = install_image(connected.take(), &path, &ui);
-                match result {
-                    Ok(device) => {
-                        let snapshot = device.snapshot();
-                        let version = device.info.application_version;
-                        connected = Some(device);
-                        post_connected(
+                WorkerCommand::Configure {
+                    device_serial,
+                    hardware_version,
+                    application_pid,
+                } => {
+                    let result = configure_device(
+                        connected.as_mut(),
+                        &device_serial,
+                        &hardware_version,
+                        &application_pid,
+                    );
+                    match result {
+                        Ok(device) => post_connected(
                             &ui,
-                            snapshot,
-                            &format!("Upgrade complete: application {version}"),
-                            true,
-                        );
+                            device,
+                            "Product configuration saved; App PID applies after Application restart",
+                            false,
+                        ),
+                        Err(error) => {
+                            post_error(&ui, format!("Configuration failed: {error}"), true)
+                        }
                     }
-                    Err(error) => post_disconnected(&ui, &format!("Install failed: {error}")),
                 }
+                WorkerCommand::Install(path) => {
+                    if let Some(message) = connected.as_ref().and_then(|device| {
+                        upgrade_block_reason(device.mode, device.product_config.as_ref())
+                    }) {
+                        post_warning(&ui, message);
+                        continue;
+                    }
+                    debug.close(
+                        &ui,
+                        "Debug closed for firmware installation; reopen after reconnect",
+                    );
+                    let result = install_image(connected.take(), &path, &ui);
+                    match result {
+                        Ok(device) => {
+                            let snapshot = device.snapshot();
+                            let version = device.info.application_version;
+                            connected = Some(device);
+                            last_heartbeat = Instant::now();
+                            post_connected(
+                                &ui,
+                                snapshot,
+                                &format!("Upgrade complete: application {version}"),
+                                true,
+                            );
+                        }
+                        Err(error) => post_disconnected(&ui, &format!("Install failed: {error}")),
+                    }
+                }
+                WorkerCommand::Debug(command) => debug.handle(command, connected.as_ref(), &ui),
+            }
+        }
+        debug.poll(&ui);
+        if connected.is_some() && last_heartbeat.elapsed() >= HEARTBEAT_INTERVAL {
+            last_heartbeat = Instant::now();
+            if heartbeat(&mut connected, &ui).is_err() {
+                debug.close(&ui, "Debug closed: updater connection lost");
+                connected = None;
             }
         }
     }
@@ -435,6 +467,7 @@ fn post_connected(
             .is_some_and(|config| config.provisioned);
         ui.set_busy(false);
         ui.set_device_connected(true);
+        ui.set_debug_available(device.mode == DeviceMode::Application);
         ui.set_device_provisioned(provisioned);
         ui.set_can_connect(false);
         ui.set_can_disconnect(true);
@@ -470,6 +503,7 @@ fn post_disconnected(ui: &slint::Weak<UpdaterWindow>, status: &str) {
     let _ = ui.upgrade_in_event_loop(move |ui| {
         ui.set_busy(false);
         ui.set_device_connected(false);
+        ui.set_debug_available(false);
         ui.set_device_provisioned(false);
         ui.set_can_connect(ui.get_selected_device() >= 0);
         ui.set_can_disconnect(false);
@@ -483,6 +517,7 @@ fn post_error(ui: &slint::Weak<UpdaterWindow>, status: String, keep_connection: 
         ui.set_busy(false);
         if !keep_connection {
             ui.set_device_connected(false);
+            ui.set_debug_available(false);
             ui.set_device_provisioned(false);
             ui.set_can_connect(ui.get_selected_device() >= 0);
             ui.set_can_disconnect(false);

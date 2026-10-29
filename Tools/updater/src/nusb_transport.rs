@@ -94,6 +94,57 @@ impl NusbTransport {
         Self::open_info(&device.info, device.mode)
     }
 
+    /// Opens Application debug interface 1 on the device with this unique USB serial.
+    pub fn open_debug(serial_number: &str) -> io::Result<Option<Self>> {
+        let devices: Vec<_> = Self::enumerate()?
+            .into_iter()
+            .filter(|device| {
+                device.mode == DeviceMode::Application && device.serial_number() == serial_number
+            })
+            .collect();
+        let Some(device) = devices.first() else {
+            return Ok(None);
+        };
+        if devices.len() != 1 {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "multiple Application devices report the same serial number",
+            ));
+        }
+        if !device.info.interfaces().any(|interface| {
+            interface.interface_number() == 1
+                && interface.class() == 0xff
+                && interface.subclass() == 0
+                && interface.protocol() == 0
+                && interface.interface_string() == Some("Vendor Bulk Debug")
+        }) {
+            return Err(io::Error::new(
+                io::ErrorKind::NotFound,
+                "Application does not expose Vendor Bulk Debug interface 1",
+            ));
+        }
+        let opened = device.info.clone().open().wait()?;
+        let interface = opened.claim_interface(1).wait()?;
+        let out_endpoint = interface.endpoint::<Bulk, Out>(0x04)?;
+        let in_endpoint = interface.endpoint::<Bulk, In>(0x83)?;
+        let out_max_packet = out_endpoint.max_packet_size();
+        let in_max_packet = in_endpoint.max_packet_size();
+        if out_max_packet != 64 || in_max_packet != 64 {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Debug endpoints must have 64-byte max packets",
+            ));
+        }
+        Ok(Some(Self {
+            out_endpoint,
+            in_endpoint,
+            out_max_packet,
+            in_max_packet,
+            serial_number: Some(device.serial_number().to_owned()),
+            mode: DeviceMode::Application,
+        }))
+    }
+
     pub fn open_unique_updater() -> io::Result<Option<Self>> {
         let devices = Self::enumerate()?;
         match devices.as_slice() {
@@ -252,6 +303,10 @@ fn append_chunk(
     requested: usize,
     expected_length: &mut Option<usize>,
 ) -> io::Result<bool> {
+    // A ZLP that terminated the previous max-packet-multiple frame arrives before the next frame.
+    if chunk.is_empty() && response.is_empty() {
+        return Ok(false);
+    }
     if chunk.is_empty() {
         return Err(io::Error::new(
             io::ErrorKind::UnexpectedEof,
@@ -313,6 +368,14 @@ mod tests {
         assert!(!append_chunk(&mut response, &frame[..64], 64, &mut expected).unwrap());
         assert!(append_chunk(&mut response, &frame[64..], 64, &mut expected).unwrap());
         assert_eq!(response, frame);
+    }
+
+    #[test]
+    fn skips_a_terminating_zlp_before_the_next_frame() {
+        let mut response = Vec::new();
+        let mut expected = None;
+        assert!(!append_chunk(&mut response, &[], 64, &mut expected).unwrap());
+        assert!(response.is_empty() && expected.is_none());
     }
 
     #[test]

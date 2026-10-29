@@ -9,10 +9,23 @@ import {
     VerticalBox,
 } from "std-widgets.slint";
 
+export struct DebugValueRow {
+    name: string,
+    value: string,
+}
+
+export struct DebugSettingRow {
+    key: int,
+    name: string,
+    current: string,
+    edit-value: string,
+    detail: string,
+}
+
 export component UpdaterWindow inherits Window {
     title: "Firmware Updater";
-    width: 560px;
-    height: 740px;
+    width: 780px;
+    height: 940px;
 
     in-out property <string> firmware-path;
     in property <[string]> device-model;
@@ -38,6 +51,19 @@ export component UpdaterWindow inherits Window {
     in property <string> product-config-status: "Not read";
     in-out property <bool> warning-visible: false;
     in-out property <string> warning-text;
+    in property <bool> debug-available: false;
+    in property <bool> debug-connected: false;
+    in property <bool> debug-busy: false;
+    in property <bool> debug-streaming: false;
+    in property <string> debug-status: "Open Debug on a connected Application device";
+    in property <[DebugValueRow]> debug-telemetry;
+    in property <[DebugValueRow]> debug-stats;
+    in property <[DebugSettingRow]> debug-settings;
+    in property <[string]> debug-logs;
+    in-out property <string> debug-period: "1000";
+    in-out property <bool> debug-include-logs: true;
+    in-out property <bool> debug-confirm-visible: false;
+    in property <string> debug-confirm-text;
 
     callback refresh-device();
     callback connect-device(int);
@@ -45,6 +71,14 @@ export component UpdaterWindow inherits Window {
     callback configure-device(string, string, string);
     callback browse-firmware();
     callback install-firmware(string);
+    callback debug-open();
+    callback debug-refresh();
+    callback debug-start(string, bool);
+    callback debug-stop();
+    callback debug-edit-setting(int, string);
+    callback debug-apply-setting(int);
+    callback debug-reset();
+    callback debug-confirm();
 
     ScrollView {
         VerticalBox {
@@ -78,7 +112,7 @@ export component UpdaterWindow inherits Window {
                 Button {
                     text: "Refresh";
                     width: 96px;
-                    enabled: !root.busy && !root.device-connected;
+                    enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && !root.device-connected;
                     clicked => { root.refresh-device(); }
                 }
             }
@@ -86,7 +120,7 @@ export component UpdaterWindow inherits Window {
             ComboBox {
                 model: root.device-model;
                 current-index <=> root.selected-device;
-                enabled: !root.busy && !root.device-connected && root.device-model.length > 0;
+                enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && !root.device-connected && root.device-model.length > 0;
             }
 
             HorizontalBox {
@@ -94,13 +128,13 @@ export component UpdaterWindow inherits Window {
                 spacing: 8px;
                 Button {
                     text: "Connect";
-                    enabled: !root.busy && root.can-connect && root.selected-device >= 0;
+                    enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && root.can-connect && root.selected-device >= 0;
                     clicked => { root.connect-device(root.selected-device); }
                 }
 
                 Button {
                     text: "Disconnect";
-                    enabled: !root.busy && root.can-disconnect;
+                    enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && root.can-disconnect;
                     clicked => { root.disconnect-device(); }
                 }
             }
@@ -127,7 +161,7 @@ export component UpdaterWindow inherits Window {
             }
 
             TabWidget {
-                height: 300px;
+                height: 500px;
                 current-index: 0;
 
                 Tab {
@@ -145,13 +179,13 @@ export component UpdaterWindow inherits Window {
                             spacing: 8px;
                             LineEdit {
                                 text <=> root.firmware-path;
-                                enabled: !root.busy;
+                                enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible;
                                 placeholder-text: "Path to app-signed-<version>.bin";
                             }
 
                             Button {
                                 text: "Browse";
-                                enabled: !root.busy;
+                                enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible;
                                 clicked => { root.browse-firmware(); }
                             }
                         }
@@ -183,7 +217,7 @@ export component UpdaterWindow inherits Window {
                             Button {
                                 text: "Update";
                                 width: 140px;
-                                enabled: !root.busy && root.device-connected && root.firmware-path != "";
+                                enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && root.device-connected && root.firmware-path != "";
                                 clicked => { root.install-firmware(root.firmware-path); }
                             }
                         }
@@ -211,29 +245,123 @@ export component UpdaterWindow inherits Window {
                             spacing: 8px;
                             LineEdit {
                                 text <=> root.config-device-serial;
-                                enabled: !root.busy && root.can-configure;
+                                enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && root.can-configure;
                                 placeholder-text: "Device SN (letters and digits)";
                             }
 
                             LineEdit {
                                 text <=> root.config-hardware-version;
-                                enabled: !root.busy && root.can-configure;
+                                enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && root.can-configure;
                                 placeholder-text: "Hardware version (for example A1.2)";
                             }
                         }
 
                         LineEdit {
                             text <=> root.config-application-pid;
-                            enabled: !root.busy && root.can-configure;
+                            enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && root.can-configure;
                             placeholder-text: "App PID in hexadecimal (for example 0x0002)";
                         }
 
                         Button {
                             text: "Configure once";
-                            enabled: !root.busy && root.can-configure;
+                            enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && root.can-configure;
                             clicked => {
                                 root.configure-device(root.config-device-serial, root.config-hardware-version,
                                 root.config-application-pid);
+                            }
+                        }
+                    }
+                }
+
+                Tab {
+                    title: "Debug";
+                    ScrollView {
+                        VerticalBox {
+                            padding: 12px;
+                            spacing: 8px;
+                            HorizontalBox {
+                                Button {
+                                    text: "Open Debug";
+                                    enabled: root.debug-available && !root.busy && !root.debug-busy && !root.debug-confirm-visible && !root.debug-connected;
+                                    clicked => { root.debug-open(); }
+                                }
+                                Button {
+                                    text: "Refresh snapshot / settings / stats";
+                                    enabled: root.debug-connected && !root.busy && !root.debug-busy && !root.debug-confirm-visible;
+                                    clicked => { root.debug-refresh(); }
+                                }
+                            }
+                            Text { text: root.debug-status; wrap: word-wrap; }
+                            HorizontalBox {
+                                Text { text: "Period (100–5000 ms)"; vertical-alignment: center; }
+                                LineEdit {
+                                    text <=> root.debug-period;
+                                    enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && !root.debug-streaming;
+                                    width: 90px;
+                                }
+                                Button {
+                                    text: root.debug-include-logs ? "Logs: on" : "Logs: off";
+                                    enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && !root.debug-streaming;
+                                    clicked => { root.debug-include-logs = !root.debug-include-logs; }
+                                }
+                                Button {
+                                    text: "Start";
+                                    enabled: root.debug-connected && !root.debug-streaming && !root.busy && !root.debug-busy && !root.debug-confirm-visible;
+                                    clicked => { root.debug-start(root.debug-period, root.debug-include-logs); }
+                                }
+                                Button {
+                                    text: "Stop";
+                                    enabled: root.debug-streaming && !root.busy && !root.debug-busy && !root.debug-confirm-visible;
+                                    clicked => { root.debug-stop(); }
+                                }
+                            }
+                            Text { text: "Live telemetry"; font-weight: 600; }
+                            for field in root.debug-telemetry: HorizontalBox {
+                                Text { text: field.name; horizontal-stretch: 1; }
+                                Text { text: field.value; horizontal-stretch: 1; wrap: word-wrap; }
+                            }
+                            Text { text: "Logs · latest 200 entries"; font-weight: 600; }
+                            ScrollView {
+                                height: 140px;
+                                VerticalBox {
+                                    for line in root.debug-logs: Text {
+                                        text: line;
+                                        wrap: word-wrap;
+                                        font-size: 12px;
+                                    }
+                                }
+                            }
+                            HorizontalBox {
+                                Text { text: "Settings · stored value / edit"; font-weight: 600; }
+                                Button {
+                                    text: "Reset all to defaults…";
+                                    enabled: root.debug-connected && !root.busy && !root.debug-busy && !root.debug-confirm-visible;
+                                    clicked => { root.debug-reset(); }
+                                }
+                            }
+                            for setting[index] in root.debug-settings: VerticalBox {
+                                spacing: 2px;
+                                HorizontalBox {
+                                    Text { text: setting.name; horizontal-stretch: 1; vertical-alignment: center; }
+                                    Text { text: setting.current; width: 70px; vertical-alignment: center; }
+                                    LineEdit {
+                                        text: setting.edit-value;
+                                        width: 100px;
+                                        enabled: root.debug-connected && !root.busy && !root.debug-busy && !root.debug-confirm-visible;
+                                        edited(value) => { root.debug-edit-setting(index, value); }
+                                    }
+                                    Button {
+                                        text: "Apply…";
+                                        enabled: root.debug-connected && !root.busy && !root.debug-busy && !root.debug-confirm-visible;
+                                        clicked => { root.debug-apply-setting(index); }
+                                    }
+                                }
+                                Text { text: setting.detail; wrap: word-wrap; font-size: 11px; color: #a0a0a0; }
+                            }
+                            Text { text: "Statistics"; font-weight: 600; }
+                            for field in root.debug-stats: HorizontalBox {
+                                Text { text: field.name; horizontal-stretch: 1; }
+                                Text { text: field.value; horizontal-stretch: 1; wrap: word-wrap; }
                             }
                         }
                     }
@@ -289,6 +417,40 @@ export component UpdaterWindow inherits Window {
                         text: "OK";
                         width: 120px;
                         clicked => { root.warning-visible = false; }
+                    }
+                }
+            }
+        }
+    }
+
+    if root.debug-confirm-visible: Rectangle {
+        width: 100%;
+        height: 100%;
+        background: #000000b0;
+        TouchArea { width: 100%; height: 100%; }
+        Rectangle {
+            width: min(parent.width - 48px, 500px);
+            height: 250px;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            background: #30343b;
+            border-color: #e0a030;
+            border-width: 1px;
+            border-radius: 8px;
+            VerticalBox {
+                padding: 24px;
+                spacing: 16px;
+                Text { text: "Confirm persistent settings change"; font-size: 18px; font-weight: 700; color: #f0b84b; }
+                Text { text: root.debug-confirm-text; wrap: word-wrap; color: #f0f0f0; }
+                HorizontalBox {
+                    Button {
+                        text: "Cancel";
+                        clicked => { root.debug-confirm-visible = false; }
+                    }
+                    Button {
+                        text: "Confirm";
+                        enabled: root.debug-connected && !root.busy && !root.debug-busy;
+                        clicked => { root.debug-confirm-visible = false; root.debug-confirm(); }
                     }
                 }
             }

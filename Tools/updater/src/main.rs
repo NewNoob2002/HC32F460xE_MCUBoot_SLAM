@@ -1,3 +1,5 @@
+mod debug_cli;
+
 use hc32_updater::nusb_transport::NusbTransport;
 use hc32_updater::{
     FirmwareImage, ProductConfig, ProgressEvent, ProtocolV1Client, UpgradeWorkflow, Version,
@@ -17,6 +19,7 @@ enum CliCommand {
     ConfigSet(String, String, u16),
     Install(PathBuf),
     Wait { version: Version, timeout: Duration },
+    Debug(debug_cli::Arguments),
 }
 
 fn main() -> ExitCode {
@@ -86,6 +89,7 @@ fn run(command: CliCommand) -> Result<(), Box<dyn std::error::Error>> {
             )?;
             print_info(&info);
         }
+        CliCommand::Debug(arguments) => debug_cli::run(arguments)?,
     }
     Ok(())
 }
@@ -143,6 +147,7 @@ fn parse_command(args: impl Iterator<Item = String>) -> Result<Option<CliCommand
             }
             Ok(Some(CliCommand::Install(path)))
         }
+        "debug" => debug_cli::parse(args).map(CliCommand::Debug).map(Some),
         "wait" => parse_wait(args).map(Some),
         _ => Err(()),
     }
@@ -222,11 +227,33 @@ fn usage() {
     );
     eprintln!("  hc32-updater install <signed-image>");
     eprintln!("  hc32-updater wait --version <version> [--timeout <seconds>]");
+    debug_cli::usage();
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn routes_debug_arguments_without_changing_update_commands() {
+        assert!(matches!(
+            parse_command(
+                ["debug", "info", "--serial", "SN"]
+                    .map(String::from)
+                    .into_iter()
+            ),
+            Ok(Some(CliCommand::Debug(_)))
+        ));
+        assert!(parse_command(["debug", "info"].map(String::from).into_iter()).is_err());
+        assert!(matches!(
+            parse_command(["info"].map(String::from).into_iter()),
+            Ok(Some(CliCommand::Info))
+        ));
+        assert!(matches!(
+            parse_command(["install", "image.bin"].map(String::from).into_iter()),
+            Ok(Some(CliCommand::Install(_)))
+        ));
+    }
 
     #[test]
     fn validates_wait_arguments() {

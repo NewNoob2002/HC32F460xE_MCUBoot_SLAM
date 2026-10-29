@@ -104,3 +104,56 @@ and install run on the same worker, so sequence numbers cannot race. After
 COMMIT, the GUI waits for the same serial to return in Application mode and
 keeps the reconnected client. The content remains mouse-wheel scrollable on
 small or high-DPI displays.
+
+## Application Debug Link
+
+Debug Link V1 uses Application interface 1 (`Vendor Bulk Debug`, OUT `0x04`,
+IN `0x83`), independently of the existing interface 0 updater. Boot Recovery
+does not expose Debug. Select the Application by its exact USB serial:
+
+```sh
+Tools/updater/target/debug/hc32-updater debug --serial SN12AB34 info
+Tools/updater/target/debug/hc32-updater debug --serial SN12AB34 monitor \
+  --period 500 --log --csv debug.csv --duration 30
+Tools/updater/target/debug/hc32-updater debug --serial SN12AB34 config list
+Tools/updater/target/debug/hc32-updater debug --serial SN12AB34 config get charge_enable
+Tools/updater/target/debug/hc32-updater debug --serial SN12AB34 config set charge_enable 1 --yes
+Tools/updater/target/debug/hc32-updater debug --serial SN12AB34 config reset
+Tools/updater/target/debug/hc32-updater debug --serial SN12AB34 reg-read 0 0x10 4
+Tools/updater/target/debug/hc32-updater debug --serial SN12AB34 stats
+Tools/updater/target/debug/hc32-updater debug --serial SN12AB34 reboot
+```
+
+Keys accept CONFIG_LIST names, decimal IDs or `0x` hexadecimal IDs. Values
+accept signed decimal or hexadecimal integers; boolean values are `0`/`1`.
+Set, reset and reboot ask for confirmation unless `--yes` is supplied, then
+UNLOCK with the opened device's actual USB serial. These three commands are
+never automatically resent: a timeout leaves their outcome unknown. Only
+idempotent requests retry timeout/interrupted I/O, with at most three sends.
+
+Monitor defaults to 1000 ms; valid periods are 100–5000 ms. Duration is a
+positive integer number of seconds; omitting it streams continuously. CSV
+contains one row per telemetry field or log event, with host elapsed time,
+event sequence and log metadata; quoted fields preserve commas and newlines.
+Normal completion and returned errors attempt to stop streaming. Abrupt process
+termination cannot send that request; another HELLO or USB reset stops the device
+stream. The client queues up to 256 events that arrive before responses, dropping
+the oldest on overflow and exposing `events_dropped` to library callers.
+
+In the GUI, connect an Application device and select **Debug → Open Debug**.
+The page shows live telemetry and the latest 200 log entries. Set the period,
+toggle logs, and use Start/Stop to control streaming. Refresh reloads telemetry,
+settings and statistics. Edit and Apply one setting at a time, or reset all
+settings; both operations require the confirmation dialog and serial UNLOCK.
+Debug uses the existing background worker, so USB requests never block the UI.
+Disconnect, reconnect, installation and connection failure close the Debug
+session; reopen it after reconnecting.
+
+The host decodes BQ identity using the contract's explicit 17-byte layout and
+retains unknown TLV values as bytes (displayed as hex). The wire contract leaves
+log text encoding unspecified; the host displays UTF-8 with replacement for invalid
+sequences. Per-setting Apply and explicit statistics refresh are the GUI choices.
+
+Host verification uses scripted transports and software-rendered GUI snapshots;
+real interface claiming, USB framing, streaming and device mutations still require
+hardware validation. No new dependencies are required.
