@@ -69,8 +69,13 @@ jobs:
 
       - name: Build Debug firmware
         run: |
+          # The Debug preset points both keys outside the repository; CI builds Boot with generated throwaway keys.
+          .venv/bin/python components/mcuboot-2.4.0/scripts/imgtool.py keygen \
+            -t ecdsa-p256 -k build/ci-keys/admin.pem
+          openssl pkey -in build/ci-keys/admin.pem -pubout -out build/ci-keys/admin.pub.pem
           cmake --preset Debug \
-            -DMCUBOOT_SIGNING_KEY=${{ github.workspace }}/build/ci-keys/debug.pem
+            -DMCUBOOT_SIGNING_KEY=${{ github.workspace }}/build/ci-keys/debug.pem \
+            -DHC32_ADMIN_PUBLIC_KEY=${{ github.workspace }}/build/ci-keys/admin.pub.pem
           cmake --build build/Debug --parallel
           cmake --build build/Debug --target verify_app_image
           cmake --build build/Debug --target verify_winusb_descriptors
