@@ -19,7 +19,14 @@ enum bsp_status_led_mode {
     BSP_STATUS_LED_MODE_RECOVERY,
     BSP_STATUS_LED_MODE_UPDATE,
     BSP_STATUS_LED_MODE_APP_PRIMARY,
+    /** App on battery above the low threshold, or battery state not known yet. */
     BSP_STATUS_LED_MODE_APP_UPDATER,
+    BSP_STATUS_LED_MODE_APP_CHARGING,
+    BSP_STATUS_LED_MODE_APP_FULL,
+    BSP_STATUS_LED_MODE_APP_LOW,
+    BSP_STATUS_LED_MODE_APP_CRITICAL,
+    BSP_STATUS_LED_MODE_APP_NO_PACK,
+    /** Must stay last: set_mode() clamps unknown values to it. */
     BSP_STATUS_LED_MODE_ERROR,
 };
 

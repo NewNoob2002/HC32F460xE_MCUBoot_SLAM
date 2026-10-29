@@ -88,6 +88,10 @@ template <class State> class ValueNode : public DataNode {
         return replyPull(event, &state_, sizeof(state_));
     }
 
+    const State& state() const {
+        return state_;
+    }
+
   protected:
     State state_{};
     void publishState() {
@@ -95,6 +99,9 @@ template <class State> class ValueNode : public DataNode {
         (void)publish(&snapshot, sizeof(snapshot));
     }
 };
+
+/** App idle LED pattern from the last battery refresh and the charger PG pin (DEBUG_LINK_V1.md has the units). */
+bsp_status_led_mode batteryLedMode(const PowerState& power, const ChargerState& charger);
 
 class PowerNode final : public ValueNode<PowerState> {
   public:

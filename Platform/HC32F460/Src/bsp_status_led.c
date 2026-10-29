@@ -4,6 +4,8 @@
 #define STATUS_LED_SLOW_ON_MS          250U
 #define STATUS_LED_FAST_HALF_PERIOD_MS 100U
 #define STATUS_LED_HEARTBEAT_ON_MS     100U
+#define STATUS_LED_CHARGING_ON_MS      500U
+#define STATUS_LED_DOUBLE_GAP_MS       200U
 
 #if !defined(BOOT_HOST_TEST)
 #include "bsp_board_config.h"
@@ -28,6 +30,23 @@ uint8_t bsp_status_led_sample(enum bsp_status_led_mode mode, uint32_t now_ms) {
                        : 0U;
         case BSP_STATUS_LED_MODE_APP_UPDATER:
             return now_ms % STATUS_LED_SLOW_PERIOD_MS < STATUS_LED_HEARTBEAT_ON_MS ? BSP_STATUS_LED_BLUE : 0U;
+        case BSP_STATUS_LED_MODE_APP_CHARGING:
+            return now_ms % STATUS_LED_SLOW_PERIOD_MS < STATUS_LED_CHARGING_ON_MS ? BSP_STATUS_LED_BLUE : 0U;
+        case BSP_STATUS_LED_MODE_APP_FULL:
+            return BSP_STATUS_LED_BLUE;
+        case BSP_STATUS_LED_MODE_APP_LOW:
+            return now_ms % STATUS_LED_SLOW_PERIOD_MS < STATUS_LED_HEARTBEAT_ON_MS ? BSP_STATUS_LED_RED : 0U;
+        case BSP_STATUS_LED_MODE_APP_CRITICAL:
+            return (now_ms / STATUS_LED_FAST_HALF_PERIOD_MS) % 2U == 0U ? BSP_STATUS_LED_RED : 0U;
+        case BSP_STATUS_LED_MODE_APP_NO_PACK: {
+            /* Two 100 ms red flashes per second, distinct from the recovery slow blink. */
+            const uint32_t phase = now_ms % STATUS_LED_SLOW_PERIOD_MS;
+            return phase < STATUS_LED_HEARTBEAT_ON_MS
+                           || (phase >= STATUS_LED_DOUBLE_GAP_MS
+                               && phase < STATUS_LED_DOUBLE_GAP_MS + STATUS_LED_HEARTBEAT_ON_MS)
+                       ? BSP_STATUS_LED_RED
+                       : 0U;
+        }
         case BSP_STATUS_LED_MODE_ERROR:
             return BSP_STATUS_LED_RED;
         case BSP_STATUS_LED_MODE_OFF:

@@ -213,9 +213,15 @@ static uint32_t rx_size;
 volatile uint32_t g_usb_fw_update_errors;
 volatile int g_usb_fw_update_last_result;
 
+static enum bsp_status_led_mode idle_led_mode =
+    USB_FW_UPDATE_BOOT_RECOVERY != 0 ? BSP_STATUS_LED_MODE_RECOVERY : BSP_STATUS_LED_MODE_APP_UPDATER;
+
+void usb_fw_update_set_idle_led_mode(enum bsp_status_led_mode mode) {
+    idle_led_mode = mode;
+}
+
 static void update_status_led(uint32_t now_ms) {
-    enum bsp_status_led_mode mode =
-        USB_FW_UPDATE_BOOT_RECOVERY != 0 ? BSP_STATUS_LED_MODE_RECOVERY : BSP_STATUS_LED_MODE_APP_UPDATER;
+    enum bsp_status_led_mode mode = idle_led_mode;
     const enum fw_update_manager_state state = fw_update_manager_get_state(&manager);
     if (state == FW_UPDATE_MANAGER_STATE_PREPARING || state == FW_UPDATE_MANAGER_STATE_RECEIVING
         || state == FW_UPDATE_MANAGER_STATE_VERIFYING || state == FW_UPDATE_MANAGER_STATE_READY_TO_COMMIT

@@ -77,7 +77,38 @@ static void batteryRefresh() {
     assert(dp::Power::pull(sub, state) == DataNode::RES_OK);
     assert(state.mp2762a_status_result == BSP_I2C2_ERR_ADDR_NACK && state.mp2762a_status.status == 0x08U);
 }
+/* LED pattern priorities: unknown -> heartbeat, input power -> charging/full, then the lowest pack SOC. */
+static void batteryLed() {
+    dp::PowerState power{};
+    dp::ChargerState charger{};
+    power.i2c_init_result = BSP_I2C2_OK;
+    assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_UPDATER);
+    power.bq_status_result[0] = BSP_I2C2_ERR_ADDR_NACK;
+    power.bq_status_result[1] = BSP_I2C2_ERR_ADDR_NACK;
+    assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_NO_PACK);
+    power.bq_status_result[0] = hal::BQ40Z50_OK;
+    power.bq_status[0].relative_soc_percent = 21U;
+    assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_UPDATER);
+    power.bq_status[0].relative_soc_percent = 20U;
+    assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_LOW);
+    power.bq_status[0].relative_soc_percent = 9U;
+    assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_CRITICAL);
+    power.bq_status[0].current_ma = 21;
+    assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_CHARGING);
+    power.bq_status[0].current_ma = 0;
+    charger.valid = true;
+    charger.power_good = true;
+    assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_CHARGING);
+    power.bq_status[0].battery_status = 0x0020U;
+    assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_FULL);
+    // A second pack that is not full keeps the charging pattern.
+    power.bq_status_result[1] = hal::BQ40Z50_OK;
+    assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_CHARGING);
+    power.i2c_init_result = BSP_I2C2_ERR_INIT;
+    assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_NO_PACK);
+}
 int main() {
+    batteryLed();
     batteryRefresh();
     check(BSP_I2C2_OK, BSP_I2C2_OK);
     check(BSP_I2C2_ERR_ADDR_NACK, BSP_I2C2_OK);

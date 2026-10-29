@@ -69,6 +69,7 @@ app::DiagnosticsSnapshot g_app_diagnostics{};
     for (;;) {
         const uint32_t now_ms = bsp_millis();
         system_.poll(now_ms);
+        usb_fw_update_set_idle_led_mode(dp::batteryLedMode(power_.state(), charger_.state()));
         const auto action = update_.poll(now_ms);
         (void)broker_.handleTimers(now_ms);
         const bool debug_reset = debug_.poll(now_ms);
