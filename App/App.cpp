@@ -12,6 +12,19 @@ extern "C" {
 #include "cmsis_gcc.h"
 }
 
+#if defined(BSP_DEBUG)
+namespace {
+debug::Service* g_log_sink = nullptr;
+}
+
+/* Copies each EasyLogger line into the Debug Link log ring, like the UART/RTT console. */
+extern "C" void core_debug_forward(const char* line, size_t size) {
+    // EasyLogger may be called from an interrupt handler, but the Debug Service ring is main-loop only.
+    if (g_log_sink != nullptr && __get_IPSR() == 0U)
+        g_log_sink->log_line(line, size, bsp_millis());
+}
+#endif
+
 #if APP_PHASE2_HIL_MODE != 0
 #include "phase2_hil.h"
 volatile int g_app_confirm_result;
@@ -50,7 +63,7 @@ app::DiagnosticsSnapshot g_app_diagnostics{};
 
     if (!debug_.init(broker_, usb_fw_update_serial(), bsp_reset_capture()))
         bsp_panic("app debug init failed");
-    debug_.log(1U, bsp_millis(), "app startup complete");
+    debug_.log(3U, bsp_millis(), "app startup complete");
     bsp_write_protection_restore();
     for (;;) {
         const uint32_t now_ms = bsp_millis();
@@ -74,6 +87,10 @@ app::DiagnosticsSnapshot g_app_diagnostics{};
     if (!bsp_timebase_init())
         bsp_panic("app timebase init failed");
     (void)bsp_log_uart_init();
+#if defined(BSP_DEBUG)
+    // The log ring is valid before Service::init(), so startup lines are kept until a host streams them.
+    g_log_sink = &debug_;
+#endif
     CORE_DEBUG_INIT();
     CORE_DEBUG_PRINTF("app startup");
     if (!bsp_status_led_init())

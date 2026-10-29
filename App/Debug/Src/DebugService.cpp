@@ -290,44 +290,88 @@ void Service::dispatch(const Frame& r, uint32_t now_ms) {
     if (!send(r.command, status == Status::Ok ? 1U : 3U, r.sequence, payload, length))
         reboot_ = false;
 }
-void Service::log(uint8_t level, uint32_t now_ms, const char* text) {
-    if (!text)
-        return;
+Service::Log* Service::push_log(uint8_t level, uint32_t now_ms) {
     if (log_count_ == logs_.size()) {
         ++log_dropped_;
-        return;
+        return nullptr;
     }
     auto& entry = logs_[(log_head_ + log_count_) % logs_.size()];
     entry.time = now_ms;
     entry.level = level;
     entry.length = 0U;
-    while (entry.length < entry.text.size() && text[entry.length] != '\0') {
-        entry.text[entry.length] = static_cast<uint8_t>(text[entry.length]);
-        ++entry.length;
-    }
     ++log_count_;
+    return &entry;
+}
+void Service::log(uint8_t level, uint32_t now_ms, const char* text) {
+    if (!text)
+        return;
+    auto* entry = push_log(level, now_ms);
+    if (!entry)
+        return;
+    while (entry->length < entry->text.size() && text[entry->length] != '\0') {
+        entry->text[entry->length] = static_cast<uint8_t>(text[entry->length]);
+        ++entry->length;
+    }
+}
+void Service::log_line(const char* line, std::size_t length, uint32_t now_ms) {
+    if (!line)
+        return;
+    static constexpr char levels[] = "AEWIDV";
+    uint8_t level = 3U;
+    bool level_known = false;
+    Log* entry = nullptr;
+    for (std::size_t i = 0U; i < length; ++i) {
+        const char c = line[i];
+        if (c == '\033') {
+            // CSI color sequence: ESC '[' parameters, ended by a byte in '@'..'~'.
+            for (++i; i < length && (line[i] < '@' || line[i] > '~' || line[i] == '['); ++i) {}
+            continue;
+        }
+        if (c == '\r' || c == '\n')
+            continue;
+        if (!entry) {
+            if (!level_known && i + 1U < length && line[i + 1U] == '/') {
+                for (uint8_t index = 0U; index < sizeof(levels) - 1U; ++index) {
+                    if (levels[index] == c)
+                        level = index;
+                }
+            }
+            level_known = true;
+            entry = push_log(level, now_ms);
+            if (!entry)
+                return;
+        }
+        if (entry->length == entry->text.size())
+            break;
+        entry->text[entry->length++] = static_cast<uint8_t>(c);
+    }
 }
 bool Service::poll(uint32_t now_ms) {
     usb_debug_link_poll(now_ms);
     expire(now_ms);
     if (reboot_)
         return !usb_debug_link_response_pending();
-    if (period_ == 0U || now_ms - last_stream_ < period_)
+    if (period_ == 0U)
         return false;
-    last_stream_ = now_ms;
     uint8_t payload[MaxPayload]{};
-    if ((stream_mask_ & 1U) != 0U) {
-        const auto length = snapshot(payload, now_ms);
-        (void)send(0x80U, 4U, event_sequence_++, payload, length);
+    if (now_ms - last_stream_ >= period_) {
+        last_stream_ = now_ms;
+        if ((stream_mask_ & 1U) != 0U) {
+            const auto length = snapshot(payload, now_ms);
+            (void)send(0x80U, 4U, event_sequence_++, payload, length);
+        }
     }
-    // At most one log per period keeps USB work bounded even when the ring is full.
-    if ((stream_mask_ & 2U) != 0U && log_count_ != 0U) {
+    // Logs stream like a console: drain whenever IN event slots are free instead of one per period.
+    // One slot stays reserved so the next telemetry event is never starved by a log burst.
+    const uint8_t reserved = (stream_mask_ & 1U) != 0U ? 1U : 0U;
+    while ((stream_mask_ & 2U) != 0U && log_count_ != 0U && usb_debug_link_event_slots_free() > reserved) {
         const auto& entry = logs_[log_head_];
         payload[0] = entry.level;
         write32(payload + 1U, entry.time);
         payload[5] = entry.length;
         std::memcpy(payload + 6U, entry.text.data(), entry.length);
-        (void)send(0x81U, 4U, event_sequence_++, payload, 6U + entry.length);
+        if (!send(0x81U, 4U, event_sequence_++, payload, 6U + entry.length))
+            break;
         log_head_ = static_cast<uint8_t>((log_head_ + 1U) % logs_.size());
         --log_count_;
     }

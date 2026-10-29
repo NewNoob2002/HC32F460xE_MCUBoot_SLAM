@@ -15,6 +15,7 @@ void* service_context;
 usb_debug_reset_fn reset_callback;
 bool link_reset = false;
 uint32_t events = 0U;
+uint8_t event_slots = 3U;
 class Store final : public hal::SettingsStore {
   public:
     std::array<uint8_t, dp::SettingsNode::BlobSize> blob{};
@@ -313,6 +314,33 @@ void dispatchTests() {
     assert(!f.service.poll(110U));
     assert(debug::decode(event.data(), event_size, telemetry) && telemetry.command == 0x81U);
     assert(telemetry.payload[0] == 2U && telemetry.payload[5] == 5U && telemetry.payload[6] == 'h');
+    // EasyLogger lines lose color codes and CRLF, keep their level, and drain without waiting a period.
+    static const char colored[] = "\033[32;22mD/core [130] hello\033[0m\r\n";
+    f.service.log_line(colored, sizeof(colored) - 1U, 130U);
+    static const char plain[] = "no level\r\n";
+    f.service.log_line(plain, sizeof(plain) - 1U, 131U);
+    static const char blank[] = "\r\n";
+    f.service.log_line(blank, sizeof(blank) - 1U, 132U);
+    const auto before = events;
+    assert(!f.service.poll(111U) && events == before + 2U);
+    assert(debug::decode(event.data(), event_size, telemetry) && telemetry.command == 0x81U);
+    assert(telemetry.payload[0] == 3U && telemetry.payload[5] == 8U);
+    assert(std::memcmp(telemetry.payload + 6U, "no level", 8U) == 0);
+    // No free slot: logs stay queued; telemetry keeps one reserved slot when both streams are on.
+    f.service.log_line(colored, sizeof(colored) - 1U, 133U);
+    event_slots = 0U;
+    assert(!f.service.poll(112U) && events == before + 2U);
+    debug::write32(stream + 2U, 3U);
+    f.request(3U, stream, sizeof(stream));
+    // With one free slot the due telemetry is sent and the log waits for the reserved slot to clear.
+    event_slots = 1U;
+    assert(!f.service.poll(1000U) && events == before + 3U);
+    assert(debug::decode(event.data(), event_size, telemetry) && telemetry.command == 0x80U);
+    event_slots = 3U;
+    assert(!f.service.poll(1001U) && events == before + 4U);
+    assert(debug::decode(event.data(), event_size, telemetry) && telemetry.command == 0x81U);
+    assert(telemetry.payload[0] == 4U && telemetry.payload[5] == 18U);
+    assert(std::memcmp(telemetry.payload + 6U, "D/core [130] hello", 18U) == 0);
     f.unlock();
     link_reset = true;
     assert(!f.service.poll(120U));
@@ -365,6 +393,9 @@ bool usb_debug_link_response_pending(void) {
 }
 uint32_t usb_debug_link_dropped(void) {
     return 0U;
+}
+uint8_t usb_debug_link_event_slots_free(void) {
+    return event_slots;
 }
 bool usb_debug_link_send(const uint8_t* frame, size_t length, bool is_response) {
     assert(length <= debug::MaxFrame);

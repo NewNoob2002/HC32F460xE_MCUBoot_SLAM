@@ -69,6 +69,11 @@ bool usb_debug_link_response_available(void) {
 bool usb_debug_link_response_pending(void) {
     return response_used;
 }
+uint8_t usb_debug_link_event_slots_free(void) {
+    if (configured == 0U || link_changed != 0U)
+        return 0U;
+    return (uint8_t)(SLOTS - 1U - event_count);
+}
 uint32_t usb_debug_link_dropped(void) {
     return dropped;
 }

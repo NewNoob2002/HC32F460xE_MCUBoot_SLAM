@@ -19,9 +19,15 @@ ElogErrCode elog_port_deinit(void) {
     return ELOG_NO_ERR;
 }
 
+__attribute__((weak)) void core_debug_forward(const char* line, size_t size) {
+    (void)line;
+    (void)size;
+}
+
 void elog_port_output(const char* log, size_t size) {
     (void)bsp_log_uart_write(log, size);
     (void)SEGGER_RTT_Write(0U, log, (unsigned)size);
+    core_debug_forward(log, size);
 }
 
 void elog_port_output_lock(void) {}

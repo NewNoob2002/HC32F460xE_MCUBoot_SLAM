@@ -20,6 +20,8 @@ void usb_debug_link_poll(uint32_t now_ms);
 bool usb_debug_link_send(const uint8_t* frame, size_t length, bool response);
 bool usb_debug_link_response_available(void);
 bool usb_debug_link_response_pending(void);
+/** Free event slots in the IN queue; 0 while the link is not configured. */
+uint8_t usb_debug_link_event_slots_free(void);
 uint32_t usb_debug_link_dropped(void);
 #ifdef __cplusplus
 }

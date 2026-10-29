@@ -98,7 +98,10 @@ Status codes: `0 OK`, `1 BAD_FRAME`, `2 UNKNOWN_COMMAND`, `3 LOCKED`,
 - HELLO stops streaming and leaves maintenance mode. Capability bits: `0`
   telemetry, `1` logs, `2` config, `3` register read, `4` reboot, `5` stats.
 - STREAM_SET: `period_ms` is `0` (off) or `100..5000`; `mask` bit0 telemetry,
-  bit1 logs; other bits must be zero.
+  bit1 logs; other bits must be zero. The period paces telemetry; logs are sent
+  as soon as they are queued while streaming is on.
+- EVT_LOG `level` follows EasyLogger: `0` assert, `1` error, `2` warn, `3` info,
+  `4` debug, `5` verbose.
 - CONFIG_LIST entry: `u16 key, u8 type (0=i32, 1=bool), u8 flags (bit0 persisted,
   bit1 requires unlock, bit2 applied-to-hardware), i32 min, i32 max, i32 default,
   i32 current, u8 unit (0 none, 1 mA, 2 mV, 3 ms, 4 0.1 degC), u8 name_len,
@@ -155,11 +158,17 @@ them to hardware.
   `u16 hardware_version`, `u16 chemistry_id`. All words are little-endian;
   compiler structure padding is never transmitted. INT# telemetry is `1` when
   asserted. STATS currently returns the same complete TLV snapshot as telemetry.
-- Logs use twelve fixed records (72 text bytes maximum per record), supplied
-  through the explicit `Service::log` application hook. At most one log event
-  is emitted each stream period; CORE_DEBUG_PRINTF forwarding is not enabled.
-  Records survive USB reset/HELLO, while streaming and maintenance mode stop.
-  Tag `0x40` includes both IN event drops and log-ring overflows.
+- Logs use twenty fixed records (200 text bytes maximum per record; longer lines
+  are truncated). Sources are the explicit `Service::log` hook and, in Debug
+  builds, every EasyLogger line (`CORE_DEBUG_PRINTF`/`elog_*`) after its UART
+  and RTT output, with ANSI color codes and line endings removed and the level
+  taken from the `X/` prefix. Lines logged from an interrupt are not forwarded.
+  Release builds have no EasyLogger, so only `Service::log` records exist.
+- While log streaming is on, queued records are sent whenever an IN event slot is
+  free; one slot stays reserved for telemetry when both streams are enabled.
+  A full ring drops new records. Records survive USB reset/HELLO, while
+  streaming and maintenance mode stop. Tag `0x40` includes both IN event drops
+  and log-ring overflows.
 - The telemetry_period setting is persisted and listed; STREAM_SET explicitly
   controls the active period and does not persist it or implicitly enable a stream.
 - No DCD change is needed: HC32 configures six endpoints in each direction;

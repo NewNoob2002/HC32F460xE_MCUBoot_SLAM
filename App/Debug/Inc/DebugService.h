@@ -23,15 +23,19 @@ class Service final : public DataNode {
     void receive(const uint8_t* data, std::size_t length, uint32_t now_ms);
     void reset();
     bool poll(uint32_t now_ms);
-    /** Application log hook; copies bounded text into a fixed ring. Never call from ISR. */
+    /** Application log hook; copies bounded text into a fixed ring. Never call from ISR.
+     *  Levels follow EasyLogger: 0 assert, 1 error, 2 warn, 3 info, 4 debug, 5 verbose. */
     void log(uint8_t level, uint32_t now_ms, const char* text);
+    /** Queues one formatted EasyLogger line: drops ANSI color sequences and line endings and
+     *  takes the level from its "X/" prefix (info when absent). Never call from ISR. */
+    void log_line(const char* line, std::size_t length, uint32_t now_ms);
 
   private:
     struct Log {
         uint32_t time = 0U;
         uint8_t level = 0U;
         uint8_t length = 0U;
-        std::array<uint8_t, 72> text{};
+        std::array<uint8_t, 200> text{};
     };
     dp::SettingsNode& settings_;
     hal::I2cBus& bus_;
@@ -45,10 +49,11 @@ class Service final : public DataNode {
     uint32_t stream_mask_ = 0U;
     bool unlocked_ = false;
     bool reboot_ = false;
-    std::array<Log, 12> logs_{};
+    std::array<Log, 20> logs_{};
     uint8_t log_head_ = 0U;
     uint8_t log_count_ = 0U;
     uint32_t log_dropped_ = 0U;
+    Log* push_log(uint8_t level, uint32_t now_ms);
     void expire(uint32_t now_ms);
     void dispatch(const Frame& request, uint32_t now_ms);
     std::size_t snapshot(uint8_t* output, uint32_t now_ms);
