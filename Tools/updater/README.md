@@ -98,8 +98,10 @@ timestamp and verifies both results. Point `HC32_WINDOWS_CLI` and
 `HC32_WINDOWS_GUI` at those signed files before building the release ZIP.
 `HC32_WINDOWS_SIGN_CA_FILE` may point at a private release CA bundle.
 
-The GUI opens on the `Firmware Update` tab; write-once manufacturing fields are
-kept on the secondary `Device Setup` tab. It has one USB worker. Refresh only
+The GUI has a device toolbar, a device summary with page navigation on the
+left, and card-based pages on the right; it follows the system light/dark
+scheme. It opens on `Firmware Update`; write-once manufacturing fields are kept
+on `Device Setup`. It has one USB worker. Refresh only
 updates the device list; select a row and Connect to claim interface 0 and
 complete HELLO plus DeviceInfo. While idle, the worker sends DeviceInfo every
 2000 ms without repeating HELLO. Configuration
@@ -143,8 +145,11 @@ termination cannot send that request; another HELLO or USB reset stops the devic
 stream. The client queues up to 256 events that arrive before responses, dropping
 the oldest on overflow and exposing `events_dropped` to library callers.
 
-In the GUI, connect an Application device and select **Debug → Open Debug**.
-The page shows live telemetry and the latest 200 log entries. Set the period,
+In the GUI, connect an Application device, select the **Debug** page and click
+**Open Debug**.
+The page shows live telemetry and the latest 500 log lines, colored by level.
+In Debug firmware the log view mirrors the EasyLogger UART/RTT console. Follow
+keeps the newest line visible; Clear empties the view only. Set the period,
 toggle logs, and use Start/Stop to control streaming. Refresh reloads telemetry,
 settings and statistics. Edit and Apply one setting at a time, or reset all
 settings; both operations require the confirmation dialog and serial UNLOCK.

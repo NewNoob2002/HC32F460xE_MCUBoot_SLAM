@@ -1,13 +1,15 @@
-use super::{ConnectedDevice, DebugSettingRow, DebugValueRow, UpdaterWindow, WorkerCommand};
+use super::{
+    ConnectedDevice, DebugLogRow, DebugSettingRow, DebugValueRow, UpdaterWindow, WorkerCommand,
+};
 use hc32_updater::debug_link::{ConfigEntry, DebugClient, Error, Event, Tlv, ValueType};
 use hc32_updater::nusb_transport::{DeviceMode, NusbTransport};
-use slint::{ComponentHandle, Model, ModelRc, SharedString, VecModel};
+use slint::{ComponentHandle, Model, ModelRc, VecModel};
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::mpsc::Sender;
 use std::time::Duration;
 
-const LOG_LIMIT: usize = 200;
+const LOG_LIMIT: usize = 500;
 const MAX_EVENTS_PER_POLL: usize = 64;
 const TELEMETRY: u32 = 1;
 const LOGS: u32 = 1 << 1;
@@ -39,6 +41,14 @@ pub struct State {
 
 pub fn register(ui: &UpdaterWindow, sender: Sender<WorkerCommand>) {
     let pending = Rc::new(RefCell::new(None));
+    // poll() appends to this VecModel; Clear swaps in a new empty one.
+    ui.set_debug_logs(ModelRc::new(VecModel::<DebugLogRow>::default()));
+    let weak = ui.as_weak();
+    ui.on_debug_clear_logs(move || {
+        if let Some(ui) = weak.upgrade() {
+            ui.set_debug_logs(ModelRc::new(VecModel::<DebugLogRow>::default()));
+        }
+    });
     let weak = ui.as_weak();
     let commands = sender.clone();
     ui.on_debug_open(move || send(&weak, &commands, Command::Open));
@@ -160,7 +170,7 @@ impl State {
             ui.set_debug_telemetry(ModelRc::default());
             ui.set_debug_stats(ModelRc::default());
             ui.set_debug_settings(ModelRc::default());
-            ui.set_debug_logs(ModelRc::new(VecModel::<SharedString>::default()));
+            ui.set_debug_logs(ModelRc::new(VecModel::<DebugLogRow>::default()));
             ui.set_debug_status(status.into());
         });
     }
@@ -327,13 +337,11 @@ impl State {
             match session.client.poll_event(Duration::from_millis(1)) {
                 Ok(Some(Event::Telemetry { fields, .. })) => telemetry = Some(value_rows(fields)),
                 Ok(Some(Event::Log {
-                    sequence,
                     level,
                     uptime_ms,
                     text,
-                })) => lines.push(SharedString::from(format!(
-                    "[{sequence} / {uptime_ms} ms / level {level}] {text}"
-                ))),
+                    ..
+                })) => lines.push(log_line(level, uptime_ms, &text)),
                 Ok(None) => break,
                 // A malformed frame is skipped; only a USB failure ends the session.
                 Err(Error::Io(error)) => {
@@ -357,7 +365,7 @@ impl State {
                     ui.set_debug_telemetry(ModelRc::new(VecModel::from(rows)));
                 }
                 let model = ui.get_debug_logs();
-                if let Some(logs) = model.as_any().downcast_ref::<VecModel<SharedString>>() {
+                if let Some(logs) = model.as_any().downcast_ref::<VecModel<DebugLogRow>>() {
                     for line in lines {
                         if logs.row_count() >= LOG_LIMIT {
                             logs.remove(0);
@@ -399,6 +407,19 @@ impl Session {
             ui.set_debug_stats(ModelRc::new(VecModel::from(stats)));
         });
         Ok(())
+    }
+}
+
+/// Level numbers follow EasyLogger: 0 assert, 1 error, 2 warn, 3 info, 4 debug, 5 verbose.
+fn log_line(level: u8, uptime_ms: u32, text: &str) -> DebugLogRow {
+    let letter = ["A", "E", "W", "I", "D", "V"]
+        .get(usize::from(level))
+        .copied()
+        .unwrap_or("?");
+    DebugLogRow {
+        time: format!("{:>9.3}", f64::from(uptime_ms) / 1000.0).into(),
+        level: letter.into(),
+        text: text.trim_end().into(),
     }
 }
 
@@ -484,8 +505,17 @@ fn value_rows(fields: Vec<Tlv>) -> Vec<DebugValueRow> {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_period, validate_setting};
+    use super::{log_line, parse_period, validate_setting};
     use hc32_updater::debug_link::{ConfigEntry, Unit, ValueType};
+
+    #[test]
+    fn log_rows_use_easylogger_level_letters() {
+        let row = log_line(1, 12_345, "E/core [12345] fault\r\n");
+        assert_eq!(row.level.as_str(), "E");
+        assert_eq!(row.time.as_str(), "   12.345");
+        assert_eq!(row.text.as_str(), "E/core [12345] fault");
+        assert_eq!(log_line(9, 0, "x").level.as_str(), "?");
+    }
 
     #[test]
     fn stream_period_accepts_only_wire_range() {

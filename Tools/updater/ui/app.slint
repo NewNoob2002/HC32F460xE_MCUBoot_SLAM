@@ -1,17 +1,23 @@
 import {
     Button,
     ComboBox,
-    HorizontalBox,
     LineEdit,
+    Palette,
     ProgressIndicator,
     ScrollView,
-    TabWidget,
-    VerticalBox,
+    Spinner,
+    Switch,
 } from "std-widgets.slint";
 
 export struct DebugValueRow {
     name: string,
     value: string,
+}
+
+export struct DebugLogRow {
+    time: string,
+    level: string,
+    text: string,
 }
 
 export struct DebugSettingRow {
@@ -22,10 +28,283 @@ export struct DebugSettingRow {
     detail: string,
 }
 
+// Colors follow the platform light/dark scheme so the std widgets and custom surfaces stay consistent.
+global Theme {
+    out property <bool> dark: Palette.color-scheme == ColorScheme.dark;
+    out property <color> window: dark ? #131519 : #f3f4f6;
+    out property <color> surface: dark ? #1d2026 : #ffffff;
+    out property <color> surface-alt: dark ? #23272e : #f7f8fa;
+    out property <color> border: dark ? #2d323b : #e4e7ec;
+    out property <color> text: dark ? #e7e9ed : #1b1f27;
+    out property <color> muted: dark ? #9099a6 : #667085;
+    out property <color> accent: dark ? #5b93ff : #2563eb;
+    out property <color> accent-soft: dark ? #1f2c46 : #e9f0ff;
+    out property <color> hover: dark ? #262a32 : #eef0f3;
+    out property <color> success: dark ? #3ccf86 : #16a34a;
+    out property <color> success-soft: dark ? #173326 : #e7f6ec;
+    out property <color> warning: dark ? #f0b84b : #b45309;
+    out property <color> warning-soft: dark ? #3a2e17 : #fff4e0;
+    out property <color> console: #0f1218;
+    out property <color> console-text: #c9d1d9;
+}
+
+component Card inherits Rectangle {
+    background: Theme.surface;
+    border-radius: 12px;
+    border-width: 1px;
+    border-color: Theme.border;
+
+    VerticalLayout {
+        padding: 18px;
+        spacing: 12px;
+        @children
+    }
+}
+
+component SectionHeader inherits VerticalLayout {
+    in property <string> title;
+    in property <string> subtitle;
+    spacing: 3px;
+    alignment: center;
+
+    Text {
+        text: root.title;
+        color: Theme.text;
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+    if root.subtitle != "": Text {
+        text: root.subtitle;
+        color: Theme.muted;
+        font-size: 12px;
+        wrap: word-wrap;
+    }
+}
+
+component Badge inherits Rectangle {
+    in property <string> text;
+    in property <color> tint: Theme.muted;
+    in property <color> fill: Theme.hover;
+    border-radius: 11px;
+    background: root.fill;
+
+    HorizontalLayout {
+        padding-left: 10px;
+        padding-right: 10px;
+        padding-top: 3px;
+        padding-bottom: 3px;
+        spacing: 6px;
+
+        VerticalLayout {
+            alignment: center;
+            Rectangle {
+                width: 7px;
+                height: 7px;
+                border-radius: 3.5px;
+                background: root.tint;
+            }
+        }
+
+        Text {
+            text: root.text;
+            color: root.tint;
+            font-size: 12px;
+            font-weight: 600;
+            vertical-alignment: center;
+        }
+    }
+}
+
+component KeyValueRow inherits Rectangle {
+    in property <string> name;
+    in property <string> value;
+    in property <bool> shaded;
+    border-radius: 6px;
+    background: root.shaded ? Theme.surface-alt : transparent;
+
+    HorizontalLayout {
+        padding-left: 10px;
+        padding-right: 10px;
+        padding-top: 7px;
+        padding-bottom: 7px;
+        spacing: 16px;
+
+        Text {
+            text: root.name;
+            color: Theme.muted;
+            min-width: 150px;
+            horizontal-stretch: 0;
+            vertical-alignment: center;
+        }
+
+        Text {
+            text: root.value;
+            color: Theme.text;
+            font-family: "monospace";
+            horizontal-stretch: 1;
+            horizontal-alignment: right;
+            vertical-alignment: center;
+            wrap: word-wrap;
+        }
+    }
+}
+
+component InfoItem inherits VerticalLayout {
+    in property <string> label;
+    in property <string> value;
+    spacing: 2px;
+
+    Text {
+        text: root.label;
+        color: Theme.muted;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    Text {
+        text: root.value;
+        color: Theme.text;
+        font-size: 14px;
+        font-weight: 600;
+        overflow: elide;
+    }
+}
+
+component NavItem inherits Rectangle {
+    in property <string> text;
+    in property <string> hint;
+    in property <bool> active;
+    callback clicked;
+    border-radius: 8px;
+    background: root.active ? Theme.accent-soft : touch.has-hover ? Theme.hover : transparent;
+
+    HorizontalLayout {
+        padding-top: 8px;
+        padding-bottom: 8px;
+        padding-right: 10px;
+        spacing: 10px;
+
+        Rectangle {
+            width: 3px;
+            border-radius: 1.5px;
+            background: root.active ? Theme.accent : transparent;
+        }
+
+        VerticalLayout {
+            spacing: 1px;
+            Text {
+                text: root.text;
+                color: root.active ? Theme.accent : Theme.text;
+                font-size: 14px;
+                font-weight: root.active ? 600 : 500;
+            }
+
+            Text {
+                text: root.hint;
+                color: Theme.muted;
+                font-size: 11px;
+                overflow: elide;
+            }
+        }
+    }
+
+    touch := TouchArea {
+        mouse-cursor: pointer;
+        clicked => {
+            root.clicked();
+        }
+    }
+}
+
+component FormField inherits VerticalLayout {
+    in property <string> label;
+    spacing: 6px;
+
+    Text {
+        text: root.label;
+        color: Theme.muted;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    @children
+}
+
+component Divider inherits Rectangle {
+    height: 1px;
+    background: Theme.border;
+}
+
+component EmptyHint inherits Text {
+    color: Theme.muted;
+    font-size: 12px;
+    horizontal-alignment: center;
+}
+
+component Dialog inherits Rectangle {
+    in property <string> heading;
+    in property <string> body;
+    in property <length> dialog-width: 460px;
+    background: #000000a0;
+
+    TouchArea { }
+
+    Rectangle {
+        width: min(parent.width - 48px, root.dialog-width);
+        height: content.preferred-height;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        background: Theme.surface;
+        border-color: Theme.border;
+        border-width: 1px;
+        border-radius: 14px;
+        drop-shadow-blur: 24px;
+        drop-shadow-color: #00000060;
+
+        content := VerticalLayout {
+            padding: 24px;
+            spacing: 14px;
+
+            HorizontalLayout {
+                spacing: 10px;
+                Rectangle {
+                    width: 4px;
+                    border-radius: 2px;
+                    background: Theme.warning;
+                }
+
+                Text {
+                    text: root.heading;
+                    color: Theme.text;
+                    font-size: 17px;
+                    font-weight: 700;
+                    wrap: word-wrap;
+                }
+            }
+
+            Text {
+                text: root.body;
+                color: Theme.muted;
+                wrap: word-wrap;
+            }
+
+            HorizontalLayout {
+                alignment: end;
+                spacing: 8px;
+                @children
+            }
+        }
+    }
+}
+
 export component UpdaterWindow inherits Window {
-    title: "Firmware Updater";
-    width: 780px;
-    height: 940px;
+    title: "HC32 Firmware Updater";
+    preferred-width: 1040px;
+    preferred-height: 780px;
+    min-width: 860px;
+    min-height: 600px;
+    background: Theme.window;
 
     in-out property <string> firmware-path;
     in property <[string]> device-model;
@@ -59,9 +338,10 @@ export component UpdaterWindow inherits Window {
     in property <[DebugValueRow]> debug-telemetry;
     in property <[DebugValueRow]> debug-stats;
     in property <[DebugSettingRow]> debug-settings;
-    in property <[string]> debug-logs;
+    in property <[DebugLogRow]> debug-logs;
     in-out property <string> debug-period: "1000";
     in-out property <bool> debug-include-logs: true;
+    in-out property <bool> debug-follow-logs: true;
     in-out property <bool> debug-confirm-visible: false;
     in property <string> debug-confirm-text;
 
@@ -79,380 +359,779 @@ export component UpdaterWindow inherits Window {
     callback debug-apply-setting(int);
     callback debug-reset();
     callback debug-confirm();
+    callback debug-clear-logs();
 
-    ScrollView {
-        VerticalBox {
-            padding: 24px;
-            spacing: 10px;
+    // Every action is disabled while a USB operation or a confirmation is pending.
+    property <bool> idle: !root.busy && !root.debug-busy && !root.debug-confirm-visible;
+    in-out property <int> page: 0;
 
-            Text {
-                text: "Firmware Updater";
-                font-size: 24px;
-                font-weight: 700;
-            }
+    VerticalLayout {
+        // Header
+        Rectangle {
+            background: Theme.surface;
 
-            Rectangle {
-                height: 1px;
-                background: #505050;
-            }
+            HorizontalLayout {
+                padding-left: 24px;
+                padding-right: 24px;
+                padding-top: 14px;
+                padding-bottom: 14px;
+                spacing: 12px;
 
-            Text {
-                text: "Device";
-                font-size: 16px;
-                font-weight: 600;
-            }
-
-            HorizontalBox {
-                Text {
-                    text: root.device-connected ? "● Connected" : "● Disconnected";
-                    color: root.device-connected ? #45c98f : #a0a0a0;
-                    vertical-alignment: center;
+                Rectangle {
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 10px;
+                    background: Theme.accent;
+                    Text {
+                        text: "HC";
+                        color: #ffffff;
+                        font-size: 14px;
+                        font-weight: 700;
+                    }
                 }
 
-                Button {
-                    text: "Refresh";
-                    width: 96px;
-                    enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && !root.device-connected;
-                    clicked => { root.refresh-device(); }
+                VerticalLayout {
+                    alignment: center;
+                    spacing: 1px;
+                    Text {
+                        text: "Firmware Updater";
+                        color: Theme.text;
+                        font-size: 18px;
+                        font-weight: 700;
+                    }
+
+                    Text {
+                        text: "HC32F460 · MCUboot · USB";
+                        color: Theme.muted;
+                        font-size: 12px;
+                    }
+                }
+
+                Rectangle {
+                    horizontal-stretch: 1;
+                }
+
+                VerticalLayout {
+                    alignment: center;
+                    horizontal-stretch: 0;
+                    Badge {
+                        text: root.device-connected ? "Connected" : "Disconnected";
+                        tint: root.device-connected ? Theme.success : Theme.muted;
+                        fill: root.device-connected ? Theme.success-soft : Theme.hover;
+                    }
                 }
             }
+        }
+
+        Divider { }
+
+        // Device selection toolbar
+        HorizontalLayout {
+            padding-left: 24px;
+            padding-right: 24px;
+            padding-top: 16px;
+            spacing: 8px;
 
             ComboBox {
+                horizontal-stretch: 1;
                 model: root.device-model;
                 current-index <=> root.selected-device;
-                enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && !root.device-connected && root.device-model.length > 0;
+                enabled: root.idle && !root.device-connected && root.device-model.length > 0;
             }
 
-            HorizontalBox {
-                alignment: center;
-                spacing: 8px;
-                Button {
-                    text: "Connect";
-                    enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && root.can-connect && root.selected-device >= 0;
-                    clicked => { root.connect-device(root.selected-device); }
-                }
-
-                Button {
-                    text: "Disconnect";
-                    enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && root.can-disconnect;
-                    clicked => { root.disconnect-device(); }
+            Button {
+                text: "Refresh";
+                enabled: root.idle && !root.device-connected;
+                clicked => {
+                    root.refresh-device();
                 }
             }
 
-            Text {
-                text: "SN: " + root.device-serial;
+            Button {
+                text: "Connect";
+                primary: true;
+                enabled: root.idle && root.can-connect && root.selected-device >= 0;
+                clicked => {
+                    root.connect-device(root.selected-device);
+                }
             }
 
-            Text {
-                text: "Hardware Version: " + root.device-hardware-version;
+            Button {
+                text: "Disconnect";
+                enabled: root.idle && root.can-disconnect;
+                clicked => {
+                    root.disconnect-device();
+                }
             }
+        }
 
-            Text {
-                text: "App USB PID: " + root.device-application-pid;
-            }
+        // Body: device summary and navigation on the left, page content on the right
+        HorizontalLayout {
+            vertical-stretch: 1;
+            padding: 24px;
+            padding-top: 16px;
+            spacing: 20px;
 
-            Text {
-                text: "Current Version: " + root.device-version;
-            }
+            VerticalLayout {
+                width: 230px;
+                spacing: 16px;
 
-            Rectangle {
-                height: 1px;
-                background: #505050;
-            }
+                Card {
+                    Text {
+                        text: "DEVICE";
+                        color: Theme.muted;
+                        font-size: 11px;
+                        font-weight: 700;
+                    }
 
-            TabWidget {
-                height: 500px;
-                current-index: 0;
+                    InfoItem {
+                        label: "Serial number";
+                        value: root.device-serial;
+                    }
 
-                Tab {
-                    title: "Firmware Update";
-                    VerticalBox {
-                        padding: 12px;
-                        spacing: 10px;
-                        Text {
-                            text: "Firmware";
-                            font-size: 16px;
-                            font-weight: 600;
+                    InfoItem {
+                        label: "Firmware version";
+                        value: root.device-version;
+                    }
+
+                    InfoItem {
+                        label: "Hardware version";
+                        value: root.device-hardware-version;
+                    }
+
+                    InfoItem {
+                        label: "App USB PID";
+                        value: root.device-application-pid;
+                    }
+                }
+
+                VerticalLayout {
+                    spacing: 4px;
+
+                    NavItem {
+                        text: "Firmware Update";
+                        hint: "Install a signed image";
+                        active: root.page == 0;
+                        clicked => {
+                            root.page = 0;
                         }
+                    }
 
-                        HorizontalBox {
-                            spacing: 8px;
-                            LineEdit {
-                                text <=> root.firmware-path;
-                                enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible;
-                                placeholder-text: "Path to app-signed-<version>.bin";
-                            }
-
-                            Button {
-                                text: "Browse";
-                                enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible;
-                                clicked => { root.browse-firmware(); }
-                            }
+                    NavItem {
+                        text: "Debug";
+                        hint: "Telemetry, logs, settings";
+                        active: root.page == 1;
+                        clicked => {
+                            root.page = 1;
                         }
+                    }
 
-                        Text {
-                            text: "Version: " + root.firmware-version;
-                        }
-
-                        Text {
-                            text: "SHA-256: " + root.firmware-sha256;
-                        }
-
-                        HorizontalBox {
-                            spacing: 10px;
-                            ProgressIndicator {
-                                height: 12px;
-                                progress: root.progress;
-                            }
-
-                            Text {
-                                width: 44px;
-                                text: root.progress-label;
-                                horizontal-alignment: right;
-                            }
-                        }
-
-                        HorizontalBox {
-                            alignment: center;
-                            Button {
-                                text: "Update";
-                                width: 140px;
-                                enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && root.device-connected && root.firmware-path != "";
-                                clicked => { root.install-firmware(root.firmware-path); }
-                            }
+                    NavItem {
+                        text: "Device Setup";
+                        hint: "Write-once manufacturing";
+                        active: root.page == 2;
+                        clicked => {
+                            root.page = 2;
                         }
                     }
                 }
 
-                Tab {
-                    title: "Device Setup";
-                    VerticalBox {
-                        padding: 12px;
-                        spacing: 10px;
-                        Text {
-                            text: "Product Configuration · " + root.product-config-status;
-                            font-size: 14px;
-                            font-weight: 600;
-                        }
-
-                        Text {
-                            text: "Advanced write-once manufacturing settings.";
-                            color: #a0a0a0;
-                            font-size: 12px;
-                        }
-
-                        HorizontalBox {
-                            spacing: 8px;
-                            LineEdit {
-                                text <=> root.config-device-serial;
-                                enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && root.can-configure;
-                                placeholder-text: "Device SN (letters and digits)";
-                            }
-
-                            LineEdit {
-                                text <=> root.config-hardware-version;
-                                enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && root.can-configure;
-                                placeholder-text: "Hardware version (for example A1.2)";
-                            }
-                        }
-
-                        LineEdit {
-                            text <=> root.config-application-pid;
-                            enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && root.can-configure;
-                            placeholder-text: "App PID in hexadecimal (for example 0x0002)";
-                        }
-
-                        Button {
-                            text: "Configure once";
-                            enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && root.can-configure;
-                            clicked => {
-                                root.configure-device(root.config-device-serial, root.config-hardware-version,
-                                root.config-application-pid);
-                            }
-                        }
-                    }
+                Rectangle {
+                    vertical-stretch: 1;
                 }
+            }
 
-                Tab {
-                    title: "Debug";
-                    ScrollView {
-                        VerticalBox {
-                            padding: 12px;
-                            spacing: 8px;
-                            HorizontalBox {
-                                Button {
-                                    text: "Open Debug";
-                                    enabled: root.debug-available && !root.busy && !root.debug-busy && !root.debug-confirm-visible && !root.debug-connected;
-                                    clicked => { root.debug-open(); }
-                                }
-                                Button {
-                                    text: "Refresh snapshot / settings / stats";
-                                    enabled: root.debug-connected && !root.busy && !root.debug-busy && !root.debug-confirm-visible;
-                                    clicked => { root.debug-refresh(); }
-                                }
+            ScrollView {
+                horizontal-stretch: 1;
+
+                VerticalLayout {
+                    alignment: start;
+                    spacing: 16px;
+                    padding-right: 12px;
+
+                    if root.page == 0: VerticalLayout {
+                        spacing: 16px;
+
+                        Card {
+                            SectionHeader {
+                                title: "Firmware image";
+                                subtitle: "Select artifacts/app-signed-<version>.bin. Slot-padded primary/update images are rejected.";
                             }
-                            Text { text: root.debug-status; wrap: word-wrap; }
-                            HorizontalBox {
-                                Text { text: "Period (100–5000 ms)"; vertical-alignment: center; }
+
+                            HorizontalLayout {
+                                spacing: 8px;
                                 LineEdit {
-                                    text <=> root.debug-period;
-                                    enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && !root.debug-streaming;
-                                    width: 90px;
+                                    horizontal-stretch: 1;
+                                    text <=> root.firmware-path;
+                                    enabled: root.idle;
+                                    placeholder-text: "Path to app-signed-<version>.bin";
                                 }
+
                                 Button {
-                                    text: root.debug-include-logs ? "Logs: on" : "Logs: off";
-                                    enabled: !root.busy && !root.debug-busy && !root.debug-confirm-visible && !root.debug-streaming;
-                                    clicked => { root.debug-include-logs = !root.debug-include-logs; }
+                                    text: "Browse…";
+                                    enabled: root.idle;
+                                    clicked => {
+                                        root.browse-firmware();
+                                    }
                                 }
+                            }
+
+                            VerticalLayout {
+                                KeyValueRow {
+                                    name: "Image version";
+                                    value: root.firmware-version;
+                                    shaded: true;
+                                }
+
+                                KeyValueRow {
+                                    name: "SHA-256";
+                                    value: root.firmware-sha256;
+                                }
+                            }
+                        }
+
+                        Card {
+                            HorizontalLayout {
+                                spacing: 12px;
+                                SectionHeader {
+                                    horizontal-stretch: 1;
+                                    title: "Install";
+                                    subtitle: "The image is written to the Secondary slot only; the device verifies the signature, swaps and restarts.";
+                                }
+
+                                VerticalLayout {
+                                    alignment: center;
+                                    Button {
+                                        text: "Install update";
+                                        primary: true;
+                                        enabled: root.idle && root.device-connected && root.firmware-path != "";
+                                        clicked => {
+                                            root.install-firmware(root.firmware-path);
+                                        }
+                                    }
+                                }
+                            }
+
+                            HorizontalLayout {
+                                spacing: 12px;
+                                VerticalLayout {
+                                    alignment: center;
+                                    horizontal-stretch: 1;
+                                    ProgressIndicator {
+                                        height: 8px;
+                                        progress: root.progress;
+                                    }
+                                }
+
+                                Text {
+                                    width: 48px;
+                                    text: root.progress-label;
+                                    color: Theme.text;
+                                    font-family: "monospace";
+                                    horizontal-alignment: right;
+                                    vertical-alignment: center;
+                                }
+                            }
+                        }
+                    }
+
+                    if root.page == 1: VerticalLayout {
+                        spacing: 16px;
+
+                        Card {
+                            HorizontalLayout {
+                                spacing: 8px;
+                                SectionHeader {
+                                    horizontal-stretch: 1;
+                                    title: "Debug session";
+                                    subtitle: root.debug-status;
+                                }
+
+                                VerticalLayout {
+                                    alignment: center;
+                                    Button {
+                                        text: "Open Debug";
+                                        primary: !root.debug-connected;
+                                        enabled: root.debug-available && root.idle && !root.debug-connected;
+                                        clicked => {
+                                            root.debug-open();
+                                        }
+                                    }
+                                }
+
+                                VerticalLayout {
+                                    alignment: center;
+                                    Button {
+                                        text: "Refresh";
+                                        enabled: root.debug-connected && root.idle;
+                                        clicked => {
+                                            root.debug-refresh();
+                                        }
+                                    }
+                                }
+                            }
+
+                            Divider { }
+
+                            HorizontalLayout {
+                                spacing: 10px;
+
+                                Text {
+                                    text: "Period";
+                                    color: Theme.muted;
+                                    vertical-alignment: center;
+                                }
+
+                                LineEdit {
+                                    width: 90px;
+                                    text <=> root.debug-period;
+                                    enabled: root.idle && !root.debug-streaming;
+                                    input-type: number;
+                                }
+
+                                Text {
+                                    text: "ms (100–5000)";
+                                    color: Theme.muted;
+                                    vertical-alignment: center;
+                                }
+
+                                VerticalLayout {
+                                    alignment: center;
+                                    Switch {
+                                        text: "Logs";
+                                        checked <=> root.debug-include-logs;
+                                        enabled: root.idle && !root.debug-streaming;
+                                    }
+                                }
+
+                                Rectangle {
+                                    horizontal-stretch: 1;
+                                }
+
                                 Button {
                                     text: "Start";
-                                    enabled: root.debug-connected && !root.debug-streaming && !root.busy && !root.debug-busy && !root.debug-confirm-visible;
-                                    clicked => { root.debug-start(root.debug-period, root.debug-include-logs); }
+                                    primary: true;
+                                    enabled: root.debug-connected && !root.debug-streaming && root.idle;
+                                    clicked => {
+                                        root.debug-start(root.debug-period, root.debug-include-logs);
+                                    }
                                 }
+
                                 Button {
                                     text: "Stop";
-                                    enabled: root.debug-streaming && !root.busy && !root.debug-busy && !root.debug-confirm-visible;
-                                    clicked => { root.debug-stop(); }
-                                }
-                            }
-                            Text { text: "Live telemetry"; font-weight: 600; }
-                            for field in root.debug-telemetry: HorizontalBox {
-                                Text { text: field.name; horizontal-stretch: 1; }
-                                Text { text: field.value; horizontal-stretch: 1; wrap: word-wrap; }
-                            }
-                            Text { text: "Logs · latest 200 entries"; font-weight: 600; }
-                            ScrollView {
-                                height: 140px;
-                                VerticalBox {
-                                    for line in root.debug-logs: Text {
-                                        text: line;
-                                        wrap: word-wrap;
-                                        font-size: 12px;
+                                    enabled: root.debug-streaming && root.idle;
+                                    clicked => {
+                                        root.debug-stop();
                                     }
                                 }
                             }
-                            HorizontalBox {
-                                Text { text: "Settings · stored value / edit"; font-weight: 600; }
-                                Button {
-                                    text: "Reset all to defaults…";
-                                    enabled: root.debug-connected && !root.busy && !root.debug-busy && !root.debug-confirm-visible;
-                                    clicked => { root.debug-reset(); }
+                        }
+
+                        Card {
+                            HorizontalLayout {
+                                SectionHeader {
+                                    horizontal-stretch: 1;
+                                    title: "Live telemetry";
+                                }
+
+                                VerticalLayout {
+                                    alignment: center;
+                                    horizontal-stretch: 0;
+                                    Badge {
+                                        text: root.debug-streaming ? "Live" : "Paused";
+                                        tint: root.debug-streaming ? Theme.success : Theme.muted;
+                                        fill: root.debug-streaming ? Theme.success-soft : Theme.hover;
+                                    }
                                 }
                             }
-                            for setting[index] in root.debug-settings: VerticalBox {
-                                spacing: 2px;
-                                HorizontalBox {
-                                    Text { text: setting.name; horizontal-stretch: 1; vertical-alignment: center; }
-                                    Text { text: setting.current; width: 70px; vertical-alignment: center; }
-                                    LineEdit {
-                                        text: setting.edit-value;
-                                        width: 100px;
-                                        enabled: root.debug-connected && !root.busy && !root.debug-busy && !root.debug-confirm-visible;
-                                        edited(value) => { root.debug-edit-setting(index, value); }
+
+                            VerticalLayout {
+                                for field[index] in root.debug-telemetry: KeyValueRow {
+                                    name: field.name;
+                                    value: field.value;
+                                    shaded: Math.mod(index, 2) == 0;
+                                }
+                            }
+
+                            if root.debug-telemetry.length == 0: EmptyHint {
+                                text: "No telemetry yet. Open Debug, then Refresh or Start.";
+                            }
+                        }
+
+                        Card {
+                            HorizontalLayout {
+                                spacing: 12px;
+                                SectionHeader {
+                                    horizontal-stretch: 1;
+                                    title: "Logs";
+                                    subtitle: "Device log and EasyLogger console (Debug builds) · latest 500 lines";
+                                }
+
+                                VerticalLayout {
+                                    alignment: center;
+                                    Switch {
+                                        text: "Follow";
+                                        checked <=> root.debug-follow-logs;
                                     }
+                                }
+
+                                VerticalLayout {
+                                    alignment: center;
                                     Button {
-                                        text: "Apply…";
-                                        enabled: root.debug-connected && !root.busy && !root.debug-busy && !root.debug-confirm-visible;
-                                        clicked => { root.debug-apply-setting(index); }
+                                        text: "Clear";
+                                        enabled: root.debug-logs.length > 0;
+                                        clicked => {
+                                            root.debug-clear-logs();
+                                        }
                                     }
                                 }
-                                Text { text: setting.detail; wrap: word-wrap; font-size: 11px; color: #a0a0a0; }
                             }
-                            Text { text: "Statistics"; font-weight: 600; }
-                            for field in root.debug-stats: HorizontalBox {
-                                Text { text: field.name; horizontal-stretch: 1; }
-                                Text { text: field.value; horizontal-stretch: 1; wrap: word-wrap; }
+
+                            Rectangle {
+                                height: 260px;
+                                border-radius: 8px;
+                                background: Theme.console;
+
+                                // Keep the newest line visible while Follow is on, like a serial terminal.
+                                log-view := ScrollView {
+                                    property <int> line-count: root.debug-logs.length;
+                                    changed line-count => {
+                                        follow-timer.running = true;
+                                    }
+
+                                    // Scrolls after layout settles; reading viewport-height during init recurses.
+                                    follow-timer := Timer {
+                                        interval: 1ms;
+                                        running: true;
+                                        triggered => {
+                                            self.running = false;
+                                            if root.debug-follow-logs {
+                                                log-view.viewport-y = min(0px, log-view.visible-height - log-view.viewport-height);
+                                            }
+                                        }
+                                    }
+
+                                    VerticalLayout {
+                                        padding: 10px;
+                                        spacing: 2px;
+                                        alignment: start;
+                                        for line in root.debug-logs: HorizontalLayout {
+                                            spacing: 10px;
+                                            Text {
+                                                text: line.time;
+                                                color: #6e7681;
+                                                font-family: "monospace";
+                                                font-size: 12px;
+                                                horizontal-stretch: 0;
+                                            }
+
+                                            Text {
+                                                text: line.level;
+                                                font-family: "monospace";
+                                                font-size: 12px;
+                                                font-weight: 700;
+                                                horizontal-stretch: 0;
+                                                color: line.level == "A" || line.level == "E" ? #ff7b72
+                                                    : line.level == "W" ? #e3b341
+                                                    : line.level == "I" ? #79c0ff
+                                                    : line.level == "D" ? #7ee787 : #8b949e;
+                                            }
+
+                                            Text {
+                                                text: line.text;
+                                                color: Theme.console-text;
+                                                font-family: "monospace";
+                                                font-size: 12px;
+                                                horizontal-stretch: 1;
+                                                wrap: word-wrap;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if root.debug-logs.length == 0: Text {
+                                    text: "No log entries";
+                                    color: #6e7681;
+                                    font-size: 12px;
+                                }
+                            }
+                        }
+
+                        Card {
+                            HorizontalLayout {
+                                spacing: 8px;
+                                SectionHeader {
+                                    horizontal-stretch: 1;
+                                    title: "Settings";
+                                    subtitle: "Stored in the device app_kv partition. Each change needs confirmation.";
+                                }
+
+                                VerticalLayout {
+                                    alignment: center;
+                                    Button {
+                                        text: "Reset all…";
+                                        enabled: root.debug-connected && root.idle;
+                                        clicked => {
+                                            root.debug-reset();
+                                        }
+                                    }
+                                }
+                            }
+
+                            VerticalLayout {
+                                for setting[index] in root.debug-settings: Rectangle {
+                                    border-radius: 8px;
+                                    background: Math.mod(index, 2) == 0 ? Theme.surface-alt : transparent;
+
+                                    HorizontalLayout {
+                                        padding: 10px;
+                                        spacing: 10px;
+
+                                        VerticalLayout {
+                                            horizontal-stretch: 1;
+                                            alignment: center;
+                                            spacing: 2px;
+                                            Text {
+                                                text: setting.name;
+                                                color: Theme.text;
+                                                font-weight: 600;
+                                            }
+
+                                            Text {
+                                                text: setting.detail;
+                                                color: Theme.muted;
+                                                font-size: 11px;
+                                                wrap: word-wrap;
+                                            }
+                                        }
+
+                                        VerticalLayout {
+                                            alignment: center;
+                                            Rectangle {
+                                                border-radius: 6px;
+                                                background: Theme.accent-soft;
+                                                min-width: 64px;
+                                                HorizontalLayout {
+                                                    padding-left: 8px;
+                                                    padding-right: 8px;
+                                                    padding-top: 4px;
+                                                    padding-bottom: 4px;
+                                                    Text {
+                                                        text: setting.current;
+                                                        color: Theme.accent;
+                                                        font-family: "monospace";
+                                                        horizontal-alignment: center;
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        LineEdit {
+                                            width: 96px;
+                                            text: setting.edit-value;
+                                            enabled: root.debug-connected && root.idle;
+                                            edited(value) => {
+                                                root.debug-edit-setting(index, value);
+                                            }
+                                        }
+
+                                        VerticalLayout {
+                                            alignment: center;
+                                            Button {
+                                                text: "Apply…";
+                                                enabled: root.debug-connected && root.idle;
+                                                clicked => {
+                                                    root.debug-apply-setting(index);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            if root.debug-settings.length == 0: EmptyHint {
+                                text: "Settings load after Open Debug.";
+                            }
+                        }
+
+                        Card {
+                            SectionHeader {
+                                title: "Statistics";
+                            }
+
+                            VerticalLayout {
+                                for field[index] in root.debug-stats: KeyValueRow {
+                                    name: field.name;
+                                    value: field.value;
+                                    shaded: Math.mod(index, 2) == 0;
+                                }
+                            }
+
+                            if root.debug-stats.length == 0: EmptyHint {
+                                text: "No statistics yet.";
+                            }
+                        }
+                    }
+
+                    if root.page == 2: VerticalLayout {
+                        spacing: 16px;
+
+                        Card {
+                            HorizontalLayout {
+                                spacing: 8px;
+                                SectionHeader {
+                                    horizontal-stretch: 1;
+                                    title: "Product configuration";
+                                    subtitle: "Accepted only in Boot Recovery, and only once per device.";
+                                }
+
+                                VerticalLayout {
+                                    alignment: center;
+                                    horizontal-stretch: 0;
+                                    Badge {
+                                        text: root.product-config-status;
+                                        tint: root.device-provisioned ? Theme.success : Theme.warning;
+                                        fill: root.device-provisioned ? Theme.success-soft : Theme.warning-soft;
+                                    }
+                                }
+                            }
+
+                            GridLayout {
+                                spacing: 12px;
+                                Row {
+                                    FormField {
+                                        horizontal-stretch: 1;
+                                        label: "Device serial";
+                                        LineEdit {
+                                            text <=> root.config-device-serial;
+                                            enabled: root.idle && root.can-configure;
+                                            placeholder-text: "Letters and digits, up to 32";
+                                        }
+                                    }
+
+                                    FormField {
+                                        horizontal-stretch: 1;
+                                        label: "Hardware version";
+                                        LineEdit {
+                                            text <=> root.config-hardware-version;
+                                            enabled: root.idle && root.can-configure;
+                                            placeholder-text: "For example A1.2";
+                                        }
+                                    }
+                                }
+
+                                Row {
+                                    FormField {
+                                        horizontal-stretch: 1;
+                                        label: "App USB PID";
+                                        LineEdit {
+                                            text <=> root.config-application-pid;
+                                            enabled: root.idle && root.can-configure;
+                                            placeholder-text: "Hexadecimal, for example 0x0002";
+                                        }
+                                    }
+
+                                    Rectangle {
+                                        horizontal-stretch: 1;
+                                    }
+                                }
+                            }
+
+                            Divider { }
+
+                            HorizontalLayout {
+                                spacing: 12px;
+                                Text {
+                                    horizontal-stretch: 1;
+                                    text: "These values cannot be changed after they are written.";
+                                    color: Theme.warning;
+                                    font-size: 12px;
+                                    vertical-alignment: center;
+                                    wrap: word-wrap;
+                                }
+
+                                Button {
+                                    text: "Configure once";
+                                    primary: true;
+                                    enabled: root.idle && root.can-configure;
+                                    clicked => {
+                                        root.configure-device(root.config-device-serial, root.config-hardware-version,
+                                        root.config-application-pid);
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
-
-            Text {
-                text: root.status-text;
-                wrap: word-wrap;
-            }
         }
-    }
 
-    if root.warning-visible: Rectangle {
-        width: 100%;
-        height: 100%;
-        background: #000000b0;
-
-        TouchArea {
-            width: 100%;
-            height: 100%;
-        }
+        // Status bar
+        Divider { }
 
         Rectangle {
-            width: min(parent.width - 48px, 440px);
-            height: 220px;
-            x: (parent.width - self.width) / 2;
-            y: (parent.height - self.height) / 2;
-            background: #30343b;
-            border-color: #e0a030;
-            border-width: 1px;
-            border-radius: 8px;
+            background: Theme.surface;
 
-            VerticalBox {
-                padding: 24px;
-                spacing: 16px;
-                Text {
-                    text: "Upgrade blocked";
-                    color: #f0b84b;
-                    font-size: 18px;
-                    font-weight: 700;
+            HorizontalLayout {
+                padding-left: 24px;
+                padding-right: 24px;
+                padding-top: 8px;
+                padding-bottom: 8px;
+                spacing: 10px;
+
+                if root.busy || root.debug-busy: Spinner {
+                    width: 16px;
+                    height: 16px;
+                    indeterminate: true;
                 }
 
                 Text {
-                    text: root.warning-text;
-                    color: #f0f0f0;
-                    wrap: word-wrap;
-                }
-
-                HorizontalBox {
-                    alignment: center;
-                    Button {
-                        text: "OK";
-                        width: 120px;
-                        clicked => { root.warning-visible = false; }
-                    }
+                    text: root.status-text;
+                    color: Theme.muted;
+                    font-size: 12px;
+                    vertical-alignment: center;
+                    overflow: elide;
                 }
             }
         }
     }
 
-    if root.debug-confirm-visible: Rectangle {
+    if root.warning-visible: Dialog {
         width: 100%;
         height: 100%;
-        background: #000000b0;
-        TouchArea { width: 100%; height: 100%; }
-        Rectangle {
-            width: min(parent.width - 48px, 500px);
-            height: 250px;
-            x: (parent.width - self.width) / 2;
-            y: (parent.height - self.height) / 2;
-            background: #30343b;
-            border-color: #e0a030;
-            border-width: 1px;
-            border-radius: 8px;
-            VerticalBox {
-                padding: 24px;
-                spacing: 16px;
-                Text { text: "Confirm persistent settings change"; font-size: 18px; font-weight: 700; color: #f0b84b; }
-                Text { text: root.debug-confirm-text; wrap: word-wrap; color: #f0f0f0; }
-                HorizontalBox {
-                    Button {
-                        text: "Cancel";
-                        clicked => { root.debug-confirm-visible = false; }
-                    }
-                    Button {
-                        text: "Confirm";
-                        enabled: root.debug-connected && !root.busy && !root.debug-busy;
-                        clicked => { root.debug-confirm-visible = false; root.debug-confirm(); }
-                    }
-                }
+        heading: "Upgrade blocked";
+        body: root.warning-text;
+
+        Button {
+            text: "OK";
+            primary: true;
+            clicked => {
+                root.warning-visible = false;
+            }
+        }
+    }
+
+    if root.debug-confirm-visible: Dialog {
+        width: 100%;
+        height: 100%;
+        dialog-width: 500px;
+        heading: "Confirm persistent settings change";
+        body: root.debug-confirm-text;
+
+        Button {
+            text: "Cancel";
+            clicked => {
+                root.debug-confirm-visible = false;
+            }
+        }
+
+        Button {
+            text: "Confirm";
+            primary: true;
+            enabled: root.debug-connected && !root.busy && !root.debug-busy;
+            clicked => {
+                root.debug-confirm-visible = false;
+                root.debug-confirm();
             }
         }
     }
