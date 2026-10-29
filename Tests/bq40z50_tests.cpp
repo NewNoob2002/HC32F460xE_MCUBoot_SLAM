@@ -39,5 +39,35 @@ int main() {
     assert(device.readIdentity(nullptr) == hal::BQ40Z50_ERR_ARGUMENT);
     hal::BQ40Z50 invalid(bus, 0x80U);
     assert(invalid.readIdentity(&identity) == hal::BQ40Z50_ERR_ARGUMENT);
+
+    // SBS status: little-endian words, signed current, all-or-nothing update.
+    bus.sbs = true;
+    bus.read_result = BSP_I2C2_ERR_ADDR_NACK;
+    bus.sbs_words[0x03] = 0x6001U;
+    bus.sbs_words[0x08] = 3015U;
+    bus.sbs_words[0x09] = 7920U;
+    bus.sbs_words[0x0A] = 0xFB50U; // -1200 mA
+    bus.sbs_words[0x0D] = 76U;
+    bus.sbs_words[0x0F] = 2340U;
+    bus.sbs_words[0x10] = 3100U;
+    bus.sbs_words[0x14] = 2000U;
+    bus.sbs_words[0x15] = 8400U;
+    bus.sbs_words[0x16] = 0x00C0U;
+    bus.sbs_words[0x17] = 12U;
+    hal::BqStatus status{};
+    bus.reads = 0U;
+    assert(device.readStatus(&status) == hal::BQ40Z50_OK && bus.reads == 11U);
+    assert(status.battery_mode == 0x6001U && status.voltage_mv == 7920U && status.current_ma == -1200);
+    assert(status.temperature_dk == 3015U && status.relative_soc_percent == 76U);
+    assert(status.remaining_capacity == 2340U && status.full_charge_capacity == 3100U);
+    assert(status.charging_voltage_mv == 8400U && status.charging_current_ma == 2000U);
+    assert(status.battery_status == 0x00C0U && status.cycle_count == 12U);
+    const auto saved_status = status;
+    for (const int reg : {0x03, 0x10, 0x0A}) {
+        bus.sbs_fail_reg = reg;
+        assert(device.readStatus(&status) == BSP_I2C2_ERR_ADDR_NACK);
+        assert(std::memcmp(&status, &saved_status, sizeof(status)) == 0);
+    }
+    assert(device.readStatus(nullptr) == hal::BQ40Z50_ERR_ARGUMENT);
     return 0;
 }

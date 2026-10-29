@@ -18,6 +18,21 @@ struct BqFirmwareVersion {
     uint8_t execution_context;
 };
 
+/** Smart Battery Data words as reported; capacities are mAh unless battery_mode bit 15 (CAPM) selects 10 mWh. */
+struct BqStatus {
+    uint16_t battery_mode;
+    uint16_t voltage_mv;
+    int16_t current_ma;      // positive while charging
+    uint16_t temperature_dk; // 0.1 K
+    uint16_t relative_soc_percent;
+    uint16_t remaining_capacity;
+    uint16_t full_charge_capacity;
+    uint16_t charging_voltage_mv; // value the pack requests from the charger
+    uint16_t charging_current_ma;
+    uint16_t battery_status;
+    uint16_t cycle_count;
+};
+
 struct BqIdentity {
     uint16_t device_type;
     struct BqFirmwareVersion firmware;
@@ -34,10 +49,16 @@ class BQ40Z50 {
         return bus_.probe(address_);
     }
     int readIdentity(BqIdentity* identity);
+    /** Read-only SBS word reads; *status is written only if every read succeeds. */
+    int readStatus(BqStatus* status);
+    uint8_t address() const {
+        return address_;
+    }
 
   private:
     I2cBus& bus_;
     uint8_t address_;
     int readManufacturerBlock(uint16_t command, uint8_t* payload, uint8_t payload_size);
+    int readWord(uint8_t command, uint16_t* value);
 };
 } // namespace hal

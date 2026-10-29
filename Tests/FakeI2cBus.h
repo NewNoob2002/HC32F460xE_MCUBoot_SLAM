@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cstring>
 #include "BQ40Z50.h"
+#include "ChargerDevices.h"
 
 /** Fake bus for device protocol tests; no BSP link-time replacements. */
 class FakeI2cBus final : public hal::I2cBus {
@@ -22,6 +23,14 @@ class FakeI2cBus final : public hal::I2cBus {
     uint8_t expected_reg = 0x23U;
     uint8_t expected_address = hal::BQ40Z50::AlternateAddress;
     uint16_t command = 0U;
+    // SBS mode answers 2-byte register reads from sbs_words instead of ManufacturerData blocks.
+    bool sbs = false;
+    std::array<uint16_t, 0x20> sbs_words{};
+    int sbs_fail_reg = -1;
+    uint8_t sbs_absent_address = 0U;
+    // MP2762A byte registers, answered in SBS mode for address 0x5C.
+    std::array<uint8_t, 0x20> mp_regs{};
+    int mp_result = BSP_I2C2_OK;
     int init() override {
         ++init_count;
         return init_result;
@@ -38,6 +47,22 @@ class FakeI2cBus final : public hal::I2cBus {
         return write_result;
     }
     int readReg(uint8_t address, uint8_t reg, uint8_t* data, uint32_t length) override {
+        if (sbs && address == hal::MP2762A::Address) {
+            assert(data && length >= 1U && reg + length <= mp_regs.size());
+            ++reads;
+            std::memcpy(data, mp_regs.data() + reg, length);
+            return mp_result;
+        }
+        if (sbs) {
+            assert((address == expected_address || address == sbs_absent_address) && reg < sbs_words.size() && data
+                   && length == 2U);
+            ++reads;
+            if (static_cast<int>(reg) == sbs_fail_reg || address == sbs_absent_address)
+                return read_result;
+            data[0] = static_cast<uint8_t>(sbs_words[reg]);
+            data[1] = static_cast<uint8_t>(sbs_words[reg] >> 8U);
+            return BSP_I2C2_OK;
+        }
         if (raw_read) {
             assert(address == expected_address && reg == expected_reg && data && length >= 1U && length <= 32U);
             ++reads;

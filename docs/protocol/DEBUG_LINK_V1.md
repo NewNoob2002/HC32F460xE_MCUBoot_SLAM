@@ -115,9 +115,11 @@ Status codes: `0 OK`, `1 BAD_FRAME`, `2 UNKNOWN_COMMAND`, `3 LOCKED`,
 - Telemetry and stats are TLV sequences `u8 tag, u8 len, value`, so new fields
   are additive. Hosts ignore unknown tags. Initial tags: `0x01 uptime_ms u32`,
   `0x02 loop_count u32`, `0x10 power probe mask u8` (bit per device in REG_READ
-  order), `0x11 BQ identity block` (as retained by the Power node), `0x20
+  order), `0x11 BQ identity block` (as retained by the Power node), `0x12
+  MP2762A registers`, `0x20
   charger PG u8`, `0x21 charger INT# u8`, `0x22 charger change count u32`,
-  `0x30 update manager state u8`, `0x31 usb update errors u32`, `0x40 debug
+  `0x50`/`0x51 BQ SBS status` (packs `0x0B`/`0x0C`), `0x30 update manager
+  state u8`, `0x31 usb update errors u32`, `0x40 debug
   events dropped u32`, `0x41 last reset cause u32`.
 
 ## Settings table (initial)
@@ -157,7 +159,24 @@ them to hardware.
   `u16 impedance_track_version`, `u8 reserved`, `u8 execution_context`,
   `u16 hardware_version`, `u16 chemistry_id`. All words are little-endian;
   compiler structure padding is never transmitted. INT# telemetry is `1` when
-  asserted. STATS currently returns the same complete TLV snapshot as telemetry.
+  asserted. Tags `0x50 + slot` (slot 0 = `0x0B`, 1 = `0x0C`) carry 22 bytes,
+  eleven little-endian SBS words read once per second: `BatteryMode 0x03`,
+  `Voltage 0x09 mV`, `Current 0x0A mA` (signed, positive while charging),
+  `Temperature 0x08 0.1 K`, `RelativeStateOfCharge 0x0D %`,
+  `RemainingCapacity 0x0F`, `FullChargeCapacity 0x10`, `ChargingVoltage 0x15
+  mV`, `ChargingCurrent 0x14 mA`, `BatteryStatus 0x16`, `CycleCount 0x17`.
+  Capacities are mAh, or 10 mWh when BatteryMode bit 15 (CAPM) is set. A tag
+  is emitted only when every word of that pack's last refresh was read; a
+  missing tag means the pack is absent or unreadable. Tag `0x12` carries 12 raw
+  MP2762A bytes read once per second (read-only): `u8 status 0x13`, `u8 fault
+  0x14`, then little-endian words `0x16` battery voltage, `0x18` system voltage,
+  `0x1A` charge current, `0x1C` input voltage, `0x1E` input current. Each word
+  holds a 10-bit ADC value in bits 15:6; the host scales it by 12.5 mV, 12.5 mV,
+  12.5 mA, 25 mV and 6.25 mA and reads the charge state from status bits 3:2
+  (0 not charging, 1 pre-charge, 2 fast charge, 3 done). These weights come from
+  the earlier `Libraries/Mp2762a` driver and must still be confirmed against the
+  datasheet and the BQ40Z50 readings on V1.1. `0x41` is the raw `RMU_RSTF0`
+  value; the flags stay latched until cleared, so several may be set. STATS currently returns the same complete TLV snapshot as telemetry.
 - Logs use twenty fixed records (200 text bytes maximum per record; longer lines
   are truncated). Sources are the explicit `Service::log` hook and, in Debug
   builds, every EasyLogger line (`CORE_DEBUG_PRINTF`/`elog_*`) after its UART

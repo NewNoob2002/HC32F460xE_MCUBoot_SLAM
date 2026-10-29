@@ -76,7 +76,10 @@ preserved; see [ADR-007](../adr/ADR-007-app-cpp-databroker.md).
 
 ## Next nodes
 
-- A2: read-only MP2762A/BQ40Z50 status and register telemetry.
+- A2: read-only MP2762A/BQ40Z50 status and register telemetry. BQ40Z50 SBS
+  status for both packs is polled at 1 Hz and exported as Debug Link tags
+  `0x50`/`0x51`; MP2762A raw status/ADC registers are exported as tag `0x12`
+  with host-side scaling that A3 must validate.
 - A3: validate MP2762A/BQ40Z50 register telemetry, units, freshness and
   cross-device consistency on V1.1; the former ADC node is removed.
 - A4: bounded charging policy using BQ recommendations, an 8.4 V hard ceiling,

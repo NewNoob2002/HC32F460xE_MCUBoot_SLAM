@@ -51,7 +51,7 @@ app::DiagnosticsSnapshot g_app_diagnostics{};
     (void)settings_store_.init();
     if (!settings_.init(broker_))
         bsp_panic("app settings init failed");
-    (void)power_.init(broker_);
+    (void)power_.init(broker_, bsp_millis());
     (void)charger_.init(broker_, bsp_millis());
     if (!system_.init(broker_, bsp_millis()))
         bsp_panic("app watchdog init failed");

@@ -129,6 +129,36 @@ std::size_t Service::snapshot(uint8_t* output, uint32_t now_ms) {
         word(id.hardware_version);
         word(id.chemistry_id);
     }
+    // 0x50 + slot: one SBS block per pack that answered its last refresh (DEBUG_LINK_V1.md).
+    for (unsigned slot = 0U; have_power && slot < dp::BatteryCount; ++slot) {
+        if (power.bq_status_result[slot] != hal::BQ40Z50_OK)
+            continue;
+        const auto& battery = power.bq_status[slot];
+        const uint16_t words[] = {
+            battery.battery_mode,         battery.voltage_mv,           static_cast<uint16_t>(battery.current_ma),
+            battery.temperature_dk,       battery.relative_soc_percent, battery.remaining_capacity,
+            battery.full_charge_capacity, battery.charging_voltage_mv,  battery.charging_current_ma,
+            battery.battery_status,       battery.cycle_count};
+        output[n++] = static_cast<uint8_t>(0x50U + slot);
+        output[n++] = static_cast<uint8_t>(sizeof(words));
+        for (const uint16_t word : words) {
+            write16(output + n, word);
+            n += 2U;
+        }
+    }
+    // 0x12: raw MP2762A registers from the last refresh, decoded by the host (DEBUG_LINK_V1.md).
+    if (have_power && power.mp2762a_status_result == BSP_I2C2_OK) {
+        const auto& mp = power.mp2762a_status;
+        output[n++] = 0x12U;
+        output[n++] = 12U;
+        output[n++] = mp.status;
+        output[n++] = mp.fault;
+        for (const uint16_t word :
+             {mp.battery_voltage, mp.system_voltage, mp.charge_current, mp.input_voltage, mp.input_current}) {
+            write16(output + n, word);
+            n += 2U;
+        }
+    }
     u8(0x20U, charger.power_good ? 1U : 0U);
     u8(0x21U, charger.interrupt_asserted ? 1U : 0U);
     u32(0x22U, charger.change_count);

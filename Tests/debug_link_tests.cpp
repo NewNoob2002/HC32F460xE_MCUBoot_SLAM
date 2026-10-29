@@ -411,9 +411,47 @@ bool usb_debug_link_send(const uint8_t* frame, size_t length, bool is_response) 
     return true;
 }
 }
+void batteryTelemetryTests() {
+    Fixture f;
+    auto& power = f.power.value();
+    power.i2c_init_result = BSP_I2C2_OK;
+    power.bq_status_result[0] = BSP_I2C2_ERR_ADDR_NACK;
+    power.bq_status_result[1] = hal::BQ40Z50_OK;
+    power.bq_status[1] = {0x6001U, 7920U, -1200, 3015U, 76U, 2340U, 3100U, 8400U, 2000U, 0x00C0U, 12U};
+    power.mp2762a_status_result = BSP_I2C2_OK;
+    power.mp2762a_status = {0x08U, 0x40U, 0x1111U, 0x2222U, 0x3333U, 0x4444U, 0x5555U};
+    const auto r = f.request(2U);
+    // TLVs follow the two-byte status; only the answering 0x0C pack (slot 1) is encoded.
+    std::size_t at = 2U;
+    bool found = false;
+    bool charger_found = false;
+    while (at < r.length) {
+        const uint8_t tag = r.payload[at];
+        const uint8_t length = r.payload[at + 1U];
+        assert(tag != 0x50U);
+        if (tag == 0x12U) {
+            const uint8_t* v = r.payload + at + 2U;
+            assert(length == 12U && v[0] == 0x08U && v[1] == 0x40U);
+            assert(debug::read16(v + 2U) == 0x1111U && debug::read16(v + 10U) == 0x5555U);
+            charger_found = true;
+        }
+        if (tag == 0x51U) {
+            assert(length == 22U);
+            const uint8_t* v = r.payload + at + 2U;
+            assert(debug::read16(v) == 0x6001U && debug::read16(v + 2U) == 7920U);
+            assert(static_cast<int16_t>(debug::read16(v + 4U)) == -1200);
+            assert(debug::read16(v + 8U) == 76U && debug::read16(v + 12U) == 3100U);
+            assert(debug::read16(v + 14U) == 8400U && debug::read16(v + 20U) == 12U);
+            found = true;
+        }
+        at += 2U + length;
+    }
+    assert(found && charger_found && at == r.length);
+}
 int main() {
     codecTests();
     settingsTests();
     dispatchTests();
+    batteryTelemetryTests();
     return 0;
 }

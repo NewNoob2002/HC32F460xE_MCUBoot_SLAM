@@ -3,8 +3,8 @@
 #include "core_debug.h"
 
 namespace dp {
-bool PowerNode::init(DataBroker& broker) {
-    if (DataNode::init(broker, names::Power, EVENT_PULL) != RES_OK)
+bool PowerNode::init(DataBroker& broker, uint32_t now_ms) {
+    if (DataNode::init(broker, names::Power, EVENT_PULL | EVENT_TIMER) != RES_OK)
         return false;
     state_.i2c_init_result = bus_.init();
     hal::BQ40Z50 default_pack(bus_, hal::BQ40Z50::DefaultAddress);
@@ -21,6 +21,25 @@ bool PowerNode::init(DataBroker& broker) {
     CORE_DEBUG_PRINTF("i2c2=%d bq@0b=%d bq@0c=%d husb@08=%d mp@5c=%d bq_identity=%d", state_.i2c_init_result,
                       state_.bq_default_probe_result, state_.bq_alternate_probe_result, state_.husb238_probe_result,
                       state_.mp2762a_probe_result, state_.bq_alternate_identity_result);
+    // Packs may be inserted after startup, so both addresses are polled regardless of the init probe.
+    if (state_.i2c_init_result == BSP_I2C2_OK)
+        startTimer(BatteryPeriodMs, now_ms);
     return true;
+}
+void PowerNode::refreshDevices() {
+    const uint8_t addresses[BatteryCount] = {hal::BQ40Z50::DefaultAddress, hal::BQ40Z50::AlternateAddress};
+    for (unsigned i = 0U; i < BatteryCount; ++i) {
+        hal::BQ40Z50 pack(bus_, addresses[i]);
+        state_.bq_status_result[i] = pack.readStatus(&state_.bq_status[i]);
+    }
+    hal::MP2762A charger(bus_);
+    state_.mp2762a_status_result = charger.readStatus(&state_.mp2762a_status);
+}
+int PowerNode::onEvent(EventParam* event) {
+    if (event && event->event == EVENT_TIMER) {
+        refreshDevices();
+        return RES_OK;
+    }
+    return ValueNode::onEvent(event);
 }
 } // namespace dp

@@ -2,6 +2,7 @@
 #include <cstring>
 #include <type_traits>
 #include "BQ40Z50.h"
+#include "ChargerDevices.h"
 #include "ChargerSignals.h"
 #include "DataBroker.h"
 #include "Settings.h"
@@ -16,6 +17,9 @@ inline constexpr char System[] = "System";
 inline constexpr char Diagnostics[] = "Diagnostics";
 } // namespace names
 inline constexpr uint32_t ChargerPeriodMs = 100U;
+inline constexpr uint32_t BatteryPeriodMs = 1000U;
+/** Battery slot 0 is the default 0x0B pack, slot 1 the alternate 0x0C pack. */
+inline constexpr unsigned BatteryCount = 2U;
 
 struct PowerState {
     int i2c_init_result = 0;
@@ -25,6 +29,11 @@ struct PowerState {
     int mp2762a_probe_result = 0;
     int bq_alternate_identity_result = 0;
     hal::BqIdentity bq_alternate_identity{};
+    // Not read until the first BatteryPeriodMs tick; nonzero result keeps the previous status invalid.
+    int bq_status_result[BatteryCount] = {BSP_I2C2_ERR_NOT_READY, BSP_I2C2_ERR_NOT_READY};
+    hal::BqStatus bq_status[BatteryCount]{};
+    int mp2762a_status_result = BSP_I2C2_ERR_NOT_READY;
+    hal::Mp2762aStatus mp2762a_status{};
 };
 struct ChargerState {
     bool valid = false;
@@ -90,10 +99,12 @@ template <class State> class ValueNode : public DataNode {
 class PowerNode final : public ValueNode<PowerState> {
   public:
     explicit constexpr PowerNode(hal::I2cBus& bus) : bus_(bus) {}
-    bool init(DataBroker& broker);
+    bool init(DataBroker& broker, uint32_t now_ms);
+    int onEvent(EventParam* event) override;
 
   private:
     hal::I2cBus& bus_;
+    void refreshDevices();
 };
 class ChargerNode final : public ValueNode<ChargerState> {
   public:
