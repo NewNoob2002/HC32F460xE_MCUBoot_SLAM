@@ -62,6 +62,9 @@ pub struct NusbTransport {
     in_max_packet: usize,
     serial_number: Option<String>,
     mode: DeviceMode,
+    // Bytes of an IN frame whose transfer was cancelled by a receive timeout.
+    pending: Vec<u8>,
+    pending_length: Option<usize>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -142,6 +145,8 @@ impl NusbTransport {
             in_max_packet,
             serial_number: Some(device.serial_number().to_owned()),
             mode: DeviceMode::Application,
+            pending: Vec::new(),
+            pending_length: None,
         }))
     }
 
@@ -208,6 +213,8 @@ impl NusbTransport {
             in_max_packet,
             serial_number,
             mode,
+            pending: Vec::new(),
+            pending_length: None,
         })
     }
 
@@ -274,37 +281,63 @@ impl Transport for NusbTransport {
     }
 
     fn receive(&mut self, timeout: Duration) -> io::Result<Vec<u8>> {
-        let mut response = Vec::with_capacity(MAX_RESPONSE_SIZE);
-        let mut expected_length = None;
         loop {
-            let remaining = expected_length
-                .map(|length| length - response.len())
+            let remaining = self
+                .pending_length
+                .map(|length| length - self.pending.len())
                 .unwrap_or(self.in_max_packet);
             let request_length = remaining.div_ceil(self.in_max_packet) * self.in_max_packet;
             let completion = self
                 .in_endpoint
                 .transfer_blocking(Buffer::new(request_length), timeout);
-            completion.status.map_err(transfer_error)?;
-            if append_chunk(
-                &mut response,
+            // A transfer cancelled by the timeout may already hold the first packets of a frame.
+            // Keep them so the next receive continues the same frame instead of starting mid-frame.
+            let appended = append_chunk(
+                &mut self.pending,
                 &completion.buffer[..completion.actual_len],
                 request_length,
-                &mut expected_length,
-            )? {
-                return Ok(response);
+                &mut self.pending_length,
+                completion.status.is_ok(),
+            );
+            let complete = match appended {
+                Ok(complete) => complete,
+                Err(error) => {
+                    self.discard_pending();
+                    return Err(error);
+                }
+            };
+            if complete {
+                self.pending_length = None;
+                return Ok(std::mem::take(&mut self.pending));
+            }
+            if let Err(error) = completion.status {
+                if !matches!(error, TransferError::Cancelled) {
+                    self.discard_pending();
+                }
+                return Err(transfer_error(error));
             }
         }
     }
 }
 
+impl NusbTransport {
+    fn discard_pending(&mut self) {
+        self.pending.clear();
+        self.pending_length = None;
+    }
+}
+
+/// Appends one IN transfer to the frame being assembled and returns whether the frame is complete.
+/// `finished` is false for a transfer cancelled on timeout: its short length is not an end of frame.
 fn append_chunk(
     response: &mut Vec<u8>,
     chunk: &[u8],
     requested: usize,
     expected_length: &mut Option<usize>,
+    finished: bool,
 ) -> io::Result<bool> {
     // A ZLP that terminated the previous max-packet-multiple frame arrives before the next frame.
-    if chunk.is_empty() && response.is_empty() {
+    if chunk.is_empty() && (response.is_empty() || !finished) {
         return Ok(false);
     }
     if chunk.is_empty() {
@@ -325,17 +358,18 @@ fn append_chunk(
         }
         *expected_length = Some(length);
     }
+    let ended = finished && chunk.len() < requested;
     if let Some(length) = *expected_length {
         if response.len() == length {
             return Ok(true);
         }
-        if response.len() > length || chunk.len() < requested {
+        if response.len() > length || ended {
             return Err(io::Error::new(
                 io::ErrorKind::UnexpectedEof,
                 format!("USB response ended at {}/{} bytes", response.len(), length),
             ));
         }
-    } else if chunk.len() < requested {
+    } else if ended {
         return Err(io::Error::new(
             io::ErrorKind::UnexpectedEof,
             "USB response ended before the protocol header",
@@ -365,8 +399,8 @@ mod tests {
         frame[12..14].copy_from_slice(&64u16.to_le_bytes());
         let mut response = Vec::new();
         let mut expected = None;
-        assert!(!append_chunk(&mut response, &frame[..64], 64, &mut expected).unwrap());
-        assert!(append_chunk(&mut response, &frame[64..], 64, &mut expected).unwrap());
+        assert!(!append_chunk(&mut response, &frame[..64], 64, &mut expected, true).unwrap());
+        assert!(append_chunk(&mut response, &frame[64..], 64, &mut expected, true).unwrap());
         assert_eq!(response, frame);
     }
 
@@ -374,8 +408,21 @@ mod tests {
     fn skips_a_terminating_zlp_before_the_next_frame() {
         let mut response = Vec::new();
         let mut expected = None;
-        assert!(!append_chunk(&mut response, &[], 64, &mut expected).unwrap());
+        assert!(!append_chunk(&mut response, &[], 64, &mut expected, true).unwrap());
         assert!(response.is_empty() && expected.is_none());
+    }
+
+    #[test]
+    fn keeps_a_frame_prefix_from_a_cancelled_transfer() {
+        let mut frame = vec![0u8; 84];
+        frame[12..14].copy_from_slice(&64u16.to_le_bytes());
+        let mut response = Vec::new();
+        let mut expected = None;
+        // Timeout after the first packet of a two-packet frame: not an error, not complete.
+        assert!(!append_chunk(&mut response, &frame[..64], 128, &mut expected, false).unwrap());
+        assert!(!append_chunk(&mut response, &[], 64, &mut expected, false).unwrap());
+        assert!(append_chunk(&mut response, &frame[64..], 64, &mut expected, true).unwrap());
+        assert_eq!(response, frame);
     }
 
     #[test]
@@ -383,7 +430,7 @@ mod tests {
         let mut response = Vec::new();
         let mut expected = None;
         assert_eq!(
-            append_chunk(&mut response, &[0; 8], 64, &mut expected)
+            append_chunk(&mut response, &[0; 8], 64, &mut expected, true)
                 .unwrap_err()
                 .kind(),
             io::ErrorKind::UnexpectedEof

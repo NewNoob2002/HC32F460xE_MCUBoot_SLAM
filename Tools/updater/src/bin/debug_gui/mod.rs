@@ -1,5 +1,5 @@
 use super::{ConnectedDevice, DebugSettingRow, DebugValueRow, UpdaterWindow, WorkerCommand};
-use hc32_updater::debug_link::{ConfigEntry, DebugClient, Event, Tlv, ValueType};
+use hc32_updater::debug_link::{ConfigEntry, DebugClient, Error, Event, Tlv, ValueType};
 use hc32_updater::nusb_transport::{DeviceMode, NusbTransport};
 use slint::{ComponentHandle, Model, ModelRc, SharedString, VecModel};
 use std::cell::RefCell;
@@ -8,6 +8,7 @@ use std::sync::mpsc::Sender;
 use std::time::Duration;
 
 const LOG_LIMIT: usize = 200;
+const MAX_EVENTS_PER_POLL: usize = 64;
 const TELEMETRY: u32 = 1;
 const LOGS: u32 = 1 << 1;
 const CONFIG: u32 = 1 << 2;
@@ -28,6 +29,7 @@ struct Session {
     capabilities: u32,
     settings: Vec<ConfigEntry>,
     streaming: bool,
+    skipped: u64,
 }
 
 #[derive(Default)]
@@ -302,6 +304,7 @@ impl State {
             capabilities: hello.capabilities,
             settings: Vec::new(),
             streaming: false,
+            skipped: 0,
         };
         session.refresh(ui)?;
         let status = format!(
@@ -316,33 +319,56 @@ impl State {
         let Some(session) = self.session.as_mut().filter(|session| session.streaming) else {
             return;
         };
-        match session.client.poll_event(Duration::from_millis(1)) {
-            Ok(Some(Event::Telemetry { fields, .. })) => {
-                let rows = value_rows(fields);
-                let _ = ui.upgrade_in_event_loop(move |ui| {
-                    ui.set_debug_telemetry(ModelRc::new(VecModel::from(rows)))
-                });
+        let mut telemetry = None;
+        let mut lines = Vec::new();
+        let mut failure = None;
+        // Drain everything already queued so log bursts do not fall behind the 20 ms worker tick.
+        for _ in 0..MAX_EVENTS_PER_POLL {
+            match session.client.poll_event(Duration::from_millis(1)) {
+                Ok(Some(Event::Telemetry { fields, .. })) => telemetry = Some(value_rows(fields)),
+                Ok(Some(Event::Log {
+                    sequence,
+                    level,
+                    uptime_ms,
+                    text,
+                })) => lines.push(SharedString::from(format!(
+                    "[{sequence} / {uptime_ms} ms / level {level}] {text}"
+                ))),
+                Ok(None) => break,
+                // A malformed frame is skipped; only a USB failure ends the session.
+                Err(Error::Io(error)) => {
+                    failure = Some(error.to_string());
+                    break;
+                }
+                Err(error) => {
+                    session.skipped += 1;
+                    let status = format!(
+                        "Skipped {} malformed debug frame(s); last: {error}",
+                        session.skipped
+                    );
+                    let _ = ui.upgrade_in_event_loop(move |ui| ui.set_debug_status(status.into()));
+                    break;
+                }
             }
-            Ok(Some(Event::Log {
-                sequence,
-                level,
-                uptime_ms,
-                text,
-            })) => {
-                let line: SharedString =
-                    format!("[{sequence} / {uptime_ms} ms / level {level}] {text}").into();
-                let _ = ui.upgrade_in_event_loop(move |ui| {
-                    let model = ui.get_debug_logs();
-                    if let Some(logs) = model.as_any().downcast_ref::<VecModel<SharedString>>() {
+        }
+        if telemetry.is_some() || !lines.is_empty() {
+            let _ = ui.upgrade_in_event_loop(move |ui| {
+                if let Some(rows) = telemetry {
+                    ui.set_debug_telemetry(ModelRc::new(VecModel::from(rows)));
+                }
+                let model = ui.get_debug_logs();
+                if let Some(logs) = model.as_any().downcast_ref::<VecModel<SharedString>>() {
+                    for line in lines {
                         if logs.row_count() >= LOG_LIMIT {
                             logs.remove(0);
                         }
                         logs.push(line);
                     }
-                });
-            }
-            Ok(None) => {}
-            Err(error) => self.close(ui, &format!("Debug stream failed: {error}")),
+                }
+            });
+        }
+        if let Some(error) = failure {
+            self.close(ui, &format!("Debug stream failed: {error}"));
         }
     }
 }
