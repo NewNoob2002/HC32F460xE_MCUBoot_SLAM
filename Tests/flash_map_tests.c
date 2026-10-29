@@ -48,6 +48,10 @@ static void test_areas_and_slots(void) {
     assert(area->fa_off == SCRATCH_BASE);
     assert(flash_area_open(FLASH_AREA_ID_PRODUCT_CONFIG, &area) == 0);
     assert(area->fa_off == RESERVED_BASE && area->fa_size == RESERVED_SIZE);
+    /* The physical FAL device covers both disjoint KV partitions. */
+    assert(RESERVED_BASE + APP_KV_OFFSET == 0x7A000U);
+    assert(APP_KV_OFFSET >= PRODUCT_KV_SIZE);
+    assert(APP_KV_OFFSET + APP_KV_SIZE == area->fa_size);
     assert(flash_area_open(FLASH_AREA_BOOTLOADER, &area) != 0);
     assert(area == NULL);
     assert(flash_area_id_from_image_slot(0) == FLASH_AREA_ID_PRIMARY);

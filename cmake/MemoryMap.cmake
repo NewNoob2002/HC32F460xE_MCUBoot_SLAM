@@ -11,6 +11,10 @@ set(SCRATCH_BASE            0x00074000)
 set(SCRATCH_SIZE            0x00002000)
 set(RESERVED_BASE           0x00076000)
 set(RESERVED_SIZE           0x0000A000)
+set(PRODUCT_KV_OFFSET       0x00000000)
+set(PRODUCT_KV_SIZE         0x00004000)
+set(APP_KV_OFFSET           0x00004000)
+set(APP_KV_SIZE             0x00006000)
 set(MCUBOOT_HEADER_SIZE     0x00000200)
 set(MCUBOOT_TLV_RESERVE     0x00000400)
 set(MCUBOOT_TRAILER_RESERVE 0x00002000)
@@ -27,6 +31,14 @@ math(EXPR expected_app       "${PRIMARY_SLOT_BASE} + ${MCUBOOT_HEADER_SIZE}")
 math(EXPR expected_app_size  "${PRIMARY_SLOT_SIZE} - ${MCUBOOT_HEADER_SIZE} - ${MCUBOOT_TLV_RESERVE} - ${MCUBOOT_TRAILER_RESERVE}")
 math(EXPR minimum_reserved_size "${FLASH_SECTOR_SIZE} * 2")
 
+math(EXPR kv_end "${APP_KV_OFFSET} + ${APP_KV_SIZE}")
+math(EXPR product_kv_end "${PRODUCT_KV_OFFSET} + ${PRODUCT_KV_SIZE}")
+if(NOT PRODUCT_KV_OFFSET EQUAL 0 OR NOT APP_KV_OFFSET EQUAL product_kv_end OR
+   NOT kv_end EQUAL RESERVED_SIZE OR PRODUCT_KV_SIZE LESS minimum_reserved_size OR
+   APP_KV_SIZE LESS minimum_reserved_size)
+    message(FATAL_ERROR "Invalid FlashDB partition layout")
+endif()
+
 if(NOT PRIMARY_SLOT_BASE EQUAL expected_primary OR
    NOT SECONDARY_SLOT_BASE EQUAL expected_secondary OR
    NOT SCRATCH_BASE EQUAL expected_scratch OR
@@ -40,7 +52,7 @@ endif()
 
 foreach(value IN ITEMS BOOT_FLASH_BASE BOOT_FLASH_SIZE PRIMARY_SLOT_BASE PRIMARY_SLOT_SIZE
                        SECONDARY_SLOT_BASE SECONDARY_SLOT_SIZE SCRATCH_BASE SCRATCH_SIZE
-                       RESERVED_BASE RESERVED_SIZE)
+                       RESERVED_BASE RESERVED_SIZE PRODUCT_KV_OFFSET PRODUCT_KV_SIZE APP_KV_OFFSET APP_KV_SIZE)
     math(EXPR remainder "${${value}} % ${FLASH_SECTOR_SIZE}")
     if(NOT remainder EQUAL 0)
         message(FATAL_ERROR "${value} must be ${FLASH_SECTOR_SIZE}-byte aligned")

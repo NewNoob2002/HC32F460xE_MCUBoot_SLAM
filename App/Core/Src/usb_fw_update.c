@@ -28,7 +28,7 @@
     (USB_SERIAL_FALLBACK_BUFFER_SIZE > USB_SERIAL_CONFIG_BUFFER_SIZE ? USB_SERIAL_FALLBACK_BUFFER_SIZE                 \
                                                                      : USB_SERIAL_CONFIG_BUFFER_SIZE)
 #define USB_DEVICE_PID_OFFSET 10U
-#define MSOS_DESCRIPTOR_SET_TOTAL_LENGTH                                                                               \
+#define BOOT_MSOS_DESCRIPTOR_SET_TOTAL_LENGTH                                                                          \
     (WINUSB_DESCRIPTOR_SET_HEADER_SIZE + USB_MSOSV2_COMP_ID_FUNCTION_WINUSB_SINGLE_DESCRIPTOR_LEN)
 #define BOS_DESCRIPTOR_TOTAL_LENGTH (5U + USB_BOS_CAP_PLATFORM_WINUSB_DESCRIPTOR_LEN)
 
@@ -37,31 +37,57 @@
 #endif
 
 #if USB_FW_UPDATE_BOOT_RECOVERY
-#define UPDATE_USB_PID     HC32_PRODUCT_USB_BOOT_PID
-#define UPDATE_USB_PRODUCT HC32_PRODUCT_USB_BOOT_PRODUCT
+#define UPDATE_USB_PID                   HC32_PRODUCT_USB_BOOT_PID
+#define UPDATE_USB_PRODUCT               HC32_PRODUCT_USB_BOOT_PRODUCT
+#define MSOS_DESCRIPTOR_SET_TOTAL_LENGTH BOOT_MSOS_DESCRIPTOR_SET_TOTAL_LENGTH
+#define UPDATE_CONFIG_LENGTH             (9 + 9 + 7 + 7)
+#define UPDATE_INTERFACE_COUNT           1
 #else
 #define UPDATE_USB_PID     HC32_PRODUCT_USB_APPLICATION_PID
 #define UPDATE_USB_PRODUCT HC32_PRODUCT_USB_APPLICATION_PRODUCT
+#include "usb_debug_link.h"
+#define MSOS_DESCRIPTOR_SET_TOTAL_LENGTH (10 + 8 + 2 * USB_MSOSV2_COMP_ID_FUNCTION_WINUSB_MULTI_DESCRIPTOR_LEN)
+#define UPDATE_CONFIG_LENGTH             (9 + 2 * (9 + 7 + 7))
+#define UPDATE_INTERFACE_COUNT           2
 #endif
 
 static uint8_t device_descriptor[] = {
     USB_DEVICE_DESCRIPTOR_INIT(USB_2_1, 0x00, 0x00, 0x00, HC32_PRODUCT_USB_VID, UPDATE_USB_PID, 0x0001, 0x01)};
 
 static const uint8_t config_descriptor[] = {
-    USB_CONFIG_DESCRIPTOR_INIT(9 + 9 + 7 + 7, 1, 1, USB_CONFIG_BUS_POWERED, 100),
+    USB_CONFIG_DESCRIPTOR_INIT(UPDATE_CONFIG_LENGTH, UPDATE_INTERFACE_COUNT, 1, USB_CONFIG_BUS_POWERED, 100),
     USB_INTERFACE_DESCRIPTOR_INIT(0, 0, 2, 0xFF, 0x00, 0x00, 4),
     USB_ENDPOINT_DESCRIPTOR_INIT(UPDATE_IN_EP, USB_ENDPOINT_TYPE_BULK, UPDATE_MPS, 0),
     USB_ENDPOINT_DESCRIPTOR_INIT(UPDATE_OUT_EP, USB_ENDPOINT_TYPE_BULK, UPDATE_MPS, 0),
+#if !USB_FW_UPDATE_BOOT_RECOVERY
+    USB_INTERFACE_DESCRIPTOR_INIT(1, 0, 2, 0xFF, 0x00, 0x00, 5),
+    USB_ENDPOINT_DESCRIPTOR_INIT(USB_DEBUG_IN_EP, USB_ENDPOINT_TYPE_BULK, UPDATE_MPS, 0),
+    USB_ENDPOINT_DESCRIPTOR_INIT(USB_DEBUG_OUT_EP, USB_ENDPOINT_TYPE_BULK, UPDATE_MPS, 0),
+#endif
 };
 
 static const char* string_descriptors[] = {
     (const char[]){0x09, 0x04}, HC32_PRODUCT_USB_MANUFACTURER, UPDATE_USB_PRODUCT, NULL, "Vendor Bulk Firmware Update",
+#if !USB_FW_UPDATE_BOOT_RECOVERY
+    "Vendor Bulk Debug",
+#endif
 };
 static char usb_serial[USB_SERIAL_BUFFER_SIZE];
 
 static const uint8_t msosv2_descriptor_set[] = {
     USB_MSOSV2_COMP_ID_SET_HEADER_DESCRIPTOR_INIT(MSOS_DESCRIPTOR_SET_TOTAL_LENGTH),
+#if USB_FW_UPDATE_BOOT_RECOVERY
     USB_MSOSV2_COMP_ID_FUNCTION_WINUSB_SINGLE_DESCRIPTOR_INIT(),
+#else
+    /* CherryUSB provides function subsets, but no configuration subset initializer. */
+    WBVAL(8),
+    WBVAL(WINUSB_SUBSET_HEADER_CONFIGURATION_TYPE),
+    0,
+    0,
+    WBVAL(MSOS_DESCRIPTOR_SET_TOTAL_LENGTH - 10),
+    USB_MSOSV2_COMP_ID_FUNCTION_WINUSB_MULTI_DESCRIPTOR_INIT(0),
+    USB_MSOSV2_COMP_ID_FUNCTION_WINUSB_MULTI_DESCRIPTOR_INIT(1),
+#endif
 };
 
 static const uint8_t bos_descriptor_bytes[] = {
@@ -69,8 +95,11 @@ static const uint8_t bos_descriptor_bytes[] = {
     USB_BOS_CAP_PLATFORM_WINUSB_DESCRIPTOR_INIT(WINUSB_VENDOR_CODE, MSOS_DESCRIPTOR_SET_TOTAL_LENGTH),
 };
 
+_Static_assert(sizeof(config_descriptor) == UPDATE_CONFIG_LENGTH, "USB configuration length mismatch");
 _Static_assert(sizeof(msosv2_descriptor_set) == MSOS_DESCRIPTOR_SET_TOTAL_LENGTH,
                "Microsoft OS 2.0 descriptor length mismatch");
+_Static_assert(sizeof(msosv2_descriptor_set) <= CONFIG_USBDEV_REQUEST_BUFFER_LEN,
+               "Microsoft OS 2.0 descriptor set exceeds EP0 buffer");
 _Static_assert(sizeof(bos_descriptor_bytes) == BOS_DESCRIPTOR_TOTAL_LENGTH, "BOS descriptor length mismatch");
 _Static_assert((sizeof(usb_serial) * 2U) <= CONFIG_USBDEV_REQUEST_BUFFER_LEN,
                "USB serial exceeds CherryUSB request buffer");
@@ -204,6 +233,9 @@ static struct usbd_interface vendor_interface;
 
 static void usb_event(uint8_t busid, uint8_t event) {
     (void)busid;
+#if !USB_FW_UPDATE_BOOT_RECOVERY
+    usb_debug_link_event(event);
+#endif
     if (event == USBD_EVENT_CONFIGURED) {
         is_configured = 1U;
         configure_pending = 1U;
@@ -329,6 +361,9 @@ int usb_fw_update_init(void) {
     usbd_add_interface(UPDATE_BUS_ID, &vendor_interface);
     usbd_add_endpoint(UPDATE_BUS_ID, &out_endpoint);
     usbd_add_endpoint(UPDATE_BUS_ID, &in_endpoint);
+#if !USB_FW_UPDATE_BOOT_RECOVERY
+    usb_debug_link_register();
+#endif
     return usbd_initialize(UPDATE_BUS_ID, bsp_usb_device_base(), usb_event);
 }
 
@@ -419,4 +454,8 @@ void usb_fw_update_get_status(struct usb_fw_update_status* status) {
     status->last_result = g_usb_fw_update_last_result;
     status->configured = is_configured;
     bsp_exit_critical(irq_state);
+}
+
+const char* usb_fw_update_serial(void) {
+    return usb_serial;
 }

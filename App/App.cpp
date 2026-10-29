@@ -34,6 +34,9 @@ app::DiagnosticsSnapshot g_app_diagnostics{};
 
 [[noreturn]] void App::runApplication() {
     bsp_status_led_set_mode(BSP_STATUS_LED_MODE_APP_UPDATER);
+    (void)settings_store_.init();
+    if (!settings_.init(broker_))
+        bsp_panic("app settings init failed");
     (void)power_.init(broker_);
     (void)charger_.init(broker_, bsp_millis());
     if (!system_.init(broker_, bsp_millis()))
@@ -45,13 +48,17 @@ app::DiagnosticsSnapshot g_app_diagnostics{};
     if (!diagnostics_.init(broker_, bsp_millis()))
         bsp_panic("app diagnostics init failed");
 
+    if (!debug_.init(broker_, usb_fw_update_serial(), bsp_reset_capture()))
+        bsp_panic("app debug init failed");
+    debug_.log(1U, bsp_millis(), "app startup complete");
     bsp_write_protection_restore();
     for (;;) {
         const uint32_t now_ms = bsp_millis();
         system_.poll(now_ms);
         const auto action = update_.poll(now_ms);
         (void)broker_.handleTimers(now_ms);
-        if (action == USB_FW_UPDATE_ACTION_RESET)
+        const bool debug_reset = debug_.poll(now_ms);
+        if (action == USB_FW_UPDATE_ACTION_RESET || debug_reset)
             bsp_system_reset();
         bsp_status_led_poll(bsp_millis());
         __WFI();

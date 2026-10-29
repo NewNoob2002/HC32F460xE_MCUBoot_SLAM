@@ -18,6 +18,8 @@ class FakeI2cBus final : public hal::I2cBus {
     int read_result = BSP_I2C2_OK;
     unsigned fail_read_at = 0U;
     bool bad_count = false;
+    bool raw_read = false;
+    uint8_t expected_reg = 0x23U;
     uint8_t expected_address = hal::BQ40Z50::AlternateAddress;
     uint16_t command = 0U;
     int init() override {
@@ -36,6 +38,12 @@ class FakeI2cBus final : public hal::I2cBus {
         return write_result;
     }
     int readReg(uint8_t address, uint8_t reg, uint8_t* data, uint32_t length) override {
+        if (raw_read) {
+            assert(address == expected_address && reg == expected_reg && data && length >= 1U && length <= 32U);
+            ++reads;
+            std::memset(data, 0x5A, length);
+            return read_result;
+        }
         static constexpr uint8_t firmware[] = {0x45U, 0x00U, 0x01U, 0x06U, 0x00U, 0x24U,
                                                0x00U, 0x03U, 0x85U, 0x02U, 0x00U};
         assert(address == expected_address && reg == 0x23U && data);

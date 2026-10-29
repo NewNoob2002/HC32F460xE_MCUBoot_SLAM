@@ -24,7 +24,12 @@ add_executable(app_firmware
     Core/Src/app_confirm.c
     Core/Src/main.cpp
     Core/Src/usb_fw_update.c
+    Core/Src/usb_debug_link.c
     App.cpp
+    DataProc/Src/dp_settings.cpp
+    Debug/Src/DebugCodec.cpp
+    Debug/Src/DebugService.cpp
+    HAL/Hc32SettingsStore.cpp
     DataProc/Src/dp_charger.cpp
     DataProc/Src/dp_power.cpp
     DataProc/Src/dp_system.cpp
@@ -46,6 +51,7 @@ target_include_directories(app_firmware PRIVATE
     Core/Inc
     DataProc/Inc
     HAL
+    Debug/Inc
     Diagnostics/Inc
     Framework/DataBroker
 )
@@ -61,7 +67,7 @@ set_target_properties(app_firmware PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUI
 target_compile_options(app_firmware PRIVATE
     $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions;-fno-rtti;-fno-threadsafe-statics;-fno-use-cxa-atexit;-Wall;-Wextra;-Wconversion;-Wshadow;-Werror>
 )
-set_source_files_properties(Core/Src/usb_fw_update.c PROPERTIES
+set_source_files_properties(Core/Src/usb_fw_update.c Core/Src/usb_debug_link.c PROPERTIES
     COMPILE_OPTIONS "-Wall;-Wextra;-Wconversion;-Wshadow;-Werror")
 target_include_directories(app_firmware SYSTEM PRIVATE
     ${PROJECT_SOURCE_DIR}/components/cherryusb/common
@@ -69,6 +75,7 @@ target_include_directories(app_firmware SYSTEM PRIVATE
 )
 target_link_libraries(app_firmware PRIVATE
     cherryusb_device
+    flashdb_port_hc32
     fw_update_mcuboot
     hc32_usb_device_port
     hc32_device

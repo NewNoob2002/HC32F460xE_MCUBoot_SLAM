@@ -15,8 +15,10 @@ void ChargerNode::sample() {
     publishState();
 }
 bool ChargerNode::init(DataBroker& broker, uint32_t now_ms) {
-    if (DataNode::init(broker, names::Charger, EVENT_PULL | EVENT_TIMER) != RES_OK)
+    if (DataNode::init(broker, names::Charger, EVENT_PULL | EVENT_TIMER | EVENT_PUBLISH) != RES_OK)
         return false;
+    if (subscribe(SettingsName) == RES_OK)
+        (void)pull(SettingsName, &state_.settings, sizeof(state_.settings));
     if (!signals_.init())
         return true;
     sample();
@@ -27,6 +29,12 @@ int ChargerNode::onEvent(EventParam* event) {
     if (event && event->event == EVENT_TIMER) {
         sample();
         return RES_OK;
+    }
+    if (event && event->event == EVENT_PUBLISH && event->tran && std::strcmp(event->tran->getID(), SettingsName) == 0) {
+        const int result = readPayload(event, state_.settings);
+        if (result == RES_OK)
+            publishState();
+        return result;
     }
     return ValueNode::onEvent(event);
 }

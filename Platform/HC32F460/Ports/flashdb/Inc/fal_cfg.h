@@ -13,7 +13,8 @@ extern const struct fal_flash_dev hc32_product_config_flash;
 #define FAL_PART_HAS_TABLE_CFG
 #define FAL_PART_TABLE                                                                                                 \
     {                                                                                                                  \
-        {FAL_PART_MAGIC_WORD, "product_kv", "hc32_config", 0, RESERVED_SIZE, 0},                                       \
+        {FAL_PART_MAGIC_WORD, "product_kv", "hc32_config", PRODUCT_KV_OFFSET, PRODUCT_KV_SIZE, 0},                     \
+        {FAL_PART_MAGIC_WORD, "app_kv", "hc32_config", APP_KV_OFFSET, APP_KV_SIZE, 0},                                 \
     }
 
 #endif

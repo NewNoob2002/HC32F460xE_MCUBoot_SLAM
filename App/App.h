@@ -1,5 +1,6 @@
 #pragma once
 #include "DataProc.h"
+#include "DebugService.h"
 #include "Diagnostics.h"
 
 /** Assembles static resources and sequences startup and the cooperative loop; nodes own domain behavior. */
@@ -13,6 +14,9 @@ class App final {
     DataBroker broker_{};
     hal::Hc32I2cBus bus_{};
     hal::Hc32ChargerSignals signals_{};
+    hal::Hc32SettingsStore settings_store_{};
+    dp::SettingsNode settings_{settings_store_};
+    debug::Service debug_{settings_, bus_};
     dp::PowerNode power_{bus_};
     dp::ChargerNode charger_{signals_};
     dp::SystemNode system_{};

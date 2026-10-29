@@ -50,6 +50,7 @@ add_test(NAME app_confirm COMMAND app_confirm_tests)
 set(APP_CPP_TEST_INCLUDES
     ${PROJECT_SOURCE_DIR}/App/Core/Inc
     ${PROJECT_SOURCE_DIR}/App/DataProc/Inc
+    ${PROJECT_SOURCE_DIR}/App/Debug/Inc
     ${PROJECT_SOURCE_DIR}/App/Diagnostics/Inc
     ${PROJECT_SOURCE_DIR}/App/Framework/DataBroker
     ${PROJECT_SOURCE_DIR}/App/HAL
@@ -214,6 +215,7 @@ target_include_directories(fw_update_fake_device PRIVATE
 add_executable(usb_fw_update_tests
     usb_fw_update_tests.c
     ${PROJECT_SOURCE_DIR}/App/Core/Src/usb_fw_update.c
+    ${PROJECT_SOURCE_DIR}/App/Core/Src/usb_debug_link.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/manager.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/protocol.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/storage.c
@@ -278,3 +280,27 @@ add_test(
     NAME app_cpp_runtime_gate
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/verify_cpp_runtime_tests.py
 )
+
+add_library(debug_crc STATIC ${PROJECT_SOURCE_DIR}/components/fw_update/src/protocol.c)
+target_include_directories(debug_crc PUBLIC ${PROJECT_SOURCE_DIR}/components/fw_update/include)
+add_library(app_debug_logic STATIC
+    ${PROJECT_SOURCE_DIR}/App/Debug/Src/DebugCodec.cpp
+    ${PROJECT_SOURCE_DIR}/App/Debug/Src/DebugService.cpp
+    ${PROJECT_SOURCE_DIR}/App/DataProc/Src/dp_settings.cpp)
+app_cpp_options(app_debug_logic)
+target_link_libraries(app_debug_logic PUBLIC debug_crc app_test_framework)
+add_executable(debug_link_tests debug_link_tests.cpp
+    ${PROJECT_SOURCE_DIR}/App/DataProc/Src/dp_charger.cpp)
+app_cpp_options(debug_link_tests)
+target_link_libraries(debug_link_tests PRIVATE app_debug_logic)
+add_test(NAME debug_link COMMAND debug_link_tests)
+add_executable(usb_debug_link_tests usb_debug_link_tests.c
+    ${PROJECT_SOURCE_DIR}/App/Core/Src/usb_debug_link.c)
+target_include_directories(usb_debug_link_tests PRIVATE
+    ${PROJECT_SOURCE_DIR}/App/Core/Inc ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Inc
+    ${PROJECT_SOURCE_DIR}/Config/Application)
+target_include_directories(usb_debug_link_tests SYSTEM PRIVATE
+    ${PROJECT_SOURCE_DIR}/components/cherryusb/common ${PROJECT_SOURCE_DIR}/components/cherryusb/core)
+target_compile_definitions(usb_debug_link_tests PRIVATE BOOT_HOST_TEST)
+target_compile_options(usb_debug_link_tests PRIVATE -Wall -Wextra -Wconversion -Wshadow -Werror)
+add_test(NAME usb_debug_link COMMAND usb_debug_link_tests)

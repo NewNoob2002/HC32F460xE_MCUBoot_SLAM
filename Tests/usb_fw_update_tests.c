@@ -36,6 +36,8 @@ void usbd_add_interface(uint8_t busid, struct usbd_interface* intf) {
 
 void usbd_add_endpoint(uint8_t busid, struct usbd_endpoint* ep) {
     (void)busid;
+    if (ep->ep_addr == 0x04U || ep->ep_addr == 0x83U)
+        return;
     if (USB_EP_DIR_IS_OUT(ep->ep_addr))
         out_callback = ep->ep_cb;
     else

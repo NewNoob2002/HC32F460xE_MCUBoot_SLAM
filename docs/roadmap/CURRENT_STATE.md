@@ -27,6 +27,16 @@ history remains in Git, ADRs and retained evidence bundles.
   MP2762A at `0x5C`, and reads alternate-pack BQ identity after a successful
   address response. The refactored two-pack image still requires target HIL.
 
+- Application Debug Link V1 adds interface 1 (OUT `0x04`, IN `0x83`), with a
+  bounded DBG1 parser, telemetry/log events, serial unlock, read-only I2C device
+  whitelist, settings and deferred normal reboot. Boot recovery stays single-interface.
+  ISR callbacks only record flags; broker, FlashDB and I2C work runs in poll context.
+- Reserved now contains `product_kv` (offset `0`, `0x4000`) and Application-only
+  `app_kv` (offset `0x4000`, `0x6000`). Settings persist as one versioned CRC blob;
+  Charger stores published limits without writing MP2762A registers. See
+  [ADR-008](../adr/ADR-008-app-settings-partition.md) for migration/rollback risks.
+  These USB and FlashDB changes still require hardware validation.
+
 ## Ownership
 
 | Area | Responsibility |
@@ -35,7 +45,8 @@ history remains in Git, ADRs and retained evidence bundles.
 | `App/App.{h,cpp}`, `App/Core/` | C++ startup/loop sequencing; shared confirmation and USB remain C |
 | `App/Framework/DataBroker/` | Bounded C++ DataNode, DataBroker and embedded DataTimer |
 | `App/HAL/` | Injected I2cBus/ChargerSignals, device addresses/decoding and HC32 C BSP adapters |
-| `App/DataProc/` | Typed Power, Charger, Update and System provider nodes |
+| `App/DataProc/` | Typed Power, Charger, Update, System and Settings provider nodes |
+| `App/Debug/` | DBG1 codec, command service and fixed application log ring |
 | `App/Diagnostics/` | Fixed-size startup/runtime status and periodic Debug reports |
 | `components/fw_update/` | Portable protocol/manager plus MCUboot and FlashDB backends |
 | `Platform/HC32F460/` | HC32 BSP, USB DCD, newlib syscalls and component ports |
@@ -57,7 +68,7 @@ MCU-specific adaptation stays under `Platform/<MCU>/Ports/`.
 | Primary | `0x00010000` | `0x32000` | Active MCUboot image |
 | Secondary | `0x00042000` | `0x32000` | Candidate/previous image |
 | Scratch | `0x00074000` | `0x2000` | Scratch-swap sector |
-| Reserved | `0x00076000` | `0xA000` | FlashDB Product Config |
+| Reserved | `0x00076000` | `0xA000` | FlashDB: 16 KiB Product Config + 24 KiB App settings |
 
 The App links at `0x00010200`. Updater writes are logical Secondary offsets,
 aligned and bounded to `0x30000`; Host-provided physical addresses are never
@@ -179,6 +190,10 @@ Known deferred host issues for a later node:
 
 ## Verification state
 
+- Debug Link V1 passes HostTests 27/27 (including DBG1 codec/dispatch, settings,
+  USB queue/reset and updater regressions) and the Debug clean build plus image,
+  Boot/App WinUSB descriptor and bounded C++ runtime checks. No hardware was
+  programmed; composite USB, settings FlashDB persistence and debug reboot need HIL.
 - The C++ rewrite passes HostTests 24/24 (including typed HAL fakes and runtime
   scheduling), Debug firmware/image/WinUSB/syscall checks, Phase2 HIL-mode
   compilation and Release firmware/image/syscall checks. Release was compiled

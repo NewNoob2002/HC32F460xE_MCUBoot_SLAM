@@ -4,6 +4,7 @@
 #include "BQ40Z50.h"
 #include "ChargerSignals.h"
 #include "DataBroker.h"
+#include "Settings.h"
 #include "usb_fw_update.h"
 
 namespace dp {
@@ -30,6 +31,7 @@ struct ChargerState {
     bool interrupt_asserted = false;
     bool power_good = false;
     uint32_t change_count = 0U;
+    SettingsState settings{};
 };
 struct UpdateState {
     int init_result = 0;

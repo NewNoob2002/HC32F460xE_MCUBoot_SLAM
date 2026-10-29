@@ -20,6 +20,7 @@ struct usb_fw_update_status {
 };
 
 int usb_fw_update_init(void);
+const char* usb_fw_update_serial(void);
 enum usb_fw_update_action usb_fw_update_poll(uint32_t now_ms);
 void usb_fw_update_get_status(struct usb_fw_update_status* status);
 

@@ -40,13 +40,17 @@ for path in sources(FRAMEWORK):
         if include not in STANDARD and not (local.is_relative_to(FRAMEWORK) and local.is_file()):
             violations.append(f"{path.relative_to(ROOT)}: framework include '{include}'")
 
-# Catch full, relative and bare diagnostic header names in domain nodes.
-DIAGNOSTIC_HEADERS = {p.name.lower() for p in sources(ROOT / "App/Diagnostics")}
+# Catch full, relative and bare presentation/service headers in domain nodes.
+SERVICE_HEADERS = {
+    p.name.lower()
+    for directory in ("App/Diagnostics", "App/Debug")
+    for p in sources(ROOT / directory)
+}
 for path in sources(ROOT / "App/DataProc"):
     for include in INCLUDE.findall(path.read_text(encoding="utf-8")):
         parts = include.replace("\\", "/").lower().split("/")
-        if "diagnostics" in parts or parts[-1] in DIAGNOSTIC_HEADERS:
-            violations.append(f"{path.relative_to(ROOT)}: DataProc must not depend on Diagnostics")
+        if "diagnostics" in parts or "debug" in parts or parts[-1] in SERVICE_HEADERS:
+            violations.append(f"{path.relative_to(ROOT)}: DataProc must not depend on Diagnostics/Debug")
 
 # App ownership is static/caller-owned; '= delete' only forbids copying.
 for path in sources(ROOT / "App"):

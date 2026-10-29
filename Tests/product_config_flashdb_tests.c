@@ -18,6 +18,8 @@
 static uint8_t reserved_flash[RESERVED_SIZE];
 
 static int fake_init(void) {
+    for (size_t i = APP_KV_OFFSET; i < RESERVED_SIZE; ++i)
+        CHECK(reserved_flash[i] == 0xFFU);
     return 0;
 }
 
@@ -94,6 +96,14 @@ int main(void) {
 
     memset(reserved_flash, 0xFF, sizeof(reserved_flash));
     CHECK(fw_update_product_config_flashdb_init(&config, &defaults) == FW_UPDATE_OK);
+    const struct fal_partition* product_part = fal_partition_find("product_kv");
+    const struct fal_partition* app_part = fal_partition_find("app_kv");
+    CHECK(product_part && app_part);
+    CHECK(product_part->offset == PRODUCT_KV_OFFSET && product_part->len == PRODUCT_KV_SIZE);
+    CHECK(app_part->offset == APP_KV_OFFSET && app_part->len == APP_KV_SIZE);
+    CHECK(fal_partition_erase(product_part, PRODUCT_KV_SIZE, FLASH_SECTOR_SIZE) < 0);
+    for (size_t i = APP_KV_OFFSET; i < RESERVED_SIZE; ++i)
+        CHECK(reserved_flash[i] == 0xFFU);
     CHECK(fw_update_product_config_get(&config, &state) == FW_UPDATE_OK);
     assert_identity(&state, defaults.hardware_id, defaults.board_id, defaults.board_revision, "", "",
                     defaults.application_pid, 0U);
@@ -108,5 +118,7 @@ int main(void) {
     CHECK(fw_update_product_config_get(&restored, &state) == FW_UPDATE_OK);
     assert_identity(&state, defaults.hardware_id, defaults.board_id, defaults.board_revision, provisioned.device_serial,
                     provisioned.hardware_version, provisioned.application_pid, 1U);
+    for (size_t i = APP_KV_OFFSET; i < RESERVED_SIZE; ++i)
+        CHECK(reserved_flash[i] == 0xFFU);
     return 0;
 }
