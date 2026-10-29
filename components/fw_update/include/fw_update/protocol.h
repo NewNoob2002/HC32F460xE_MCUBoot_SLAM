@@ -21,11 +21,21 @@ enum fw_protocol_command {
     FW_PROTOCOL_COMMAND_DEVICE_INFO = 0x02,
     FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_GET = 0x03,
     FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_SET = 0x04,
+    FW_PROTOCOL_COMMAND_REBOOT = 0x05,
     FW_PROTOCOL_COMMAND_BEGIN = 0x10,
     FW_PROTOCOL_COMMAND_DATA = 0x11,
     FW_PROTOCOL_COMMAND_END = 0x12,
     FW_PROTOCOL_COMMAND_COMMIT = 0x13,
     FW_PROTOCOL_COMMAND_ABORT = 0x14,
+    FW_PROTOCOL_COMMAND_ADMIN_CHALLENGE = 0x20,
+    FW_PROTOCOL_COMMAND_ADMIN_AUTH = 0x21,
+    FW_PROTOCOL_COMMAND_FACTORY_ERASE = 0x22,
+};
+
+/** REBOOT payload: the single byte selects where the device starts after reset. */
+enum fw_protocol_reboot_target {
+    FW_PROTOCOL_REBOOT_APPLICATION = 0,
+    FW_PROTOCOL_REBOOT_RECOVERY = 1,
 };
 
 /** Protocol V1 frame flags. */
@@ -58,6 +68,8 @@ enum fw_protocol_capability {
     FW_PROTOCOL_CAPABILITY_READBACK_CRC = 1U << 1U,
     FW_PROTOCOL_CAPABILITY_STRICT_DATA = 1U << 2U,
     FW_PROTOCOL_CAPABILITY_PRODUCT_CONFIG = 1U << 3U,
+    FW_PROTOCOL_CAPABILITY_REBOOT = 1U << 4U,
+    FW_PROTOCOL_CAPABILITY_ADMIN = 1U << 5U,
 };
 
 /** Results returned by the Protocol codec and incremental parser. */

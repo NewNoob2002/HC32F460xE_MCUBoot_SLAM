@@ -69,11 +69,15 @@ A successful response uses `RESPONSE`. An unsuccessful response uses
 | ---: | --- | --- | --- |
 | `0x01` | HELLO | Empty | max payload, capability bits and timeout |
 | `0x02` | DEVICE_INFO | Empty | bounded numeric device/update information |
+| `0x05` | REBOOT | `target:u8` | Empty |
 | `0x10` | BEGIN | image metadata | Empty |
 | `0x11` | DATA | logical offset and bytes | next expected logical offset |
 | `0x12` | END | Empty | verified logical size and image CRC |
 | `0x13` | COMMIT | Empty | Empty |
 | `0x14` | ABORT | Empty | Empty |
+| `0x20` | ADMIN_CHALLENGE | Empty | 32-byte random challenge |
+| `0x21` | ADMIN_AUTH | 64-byte ECDSA-P256 `r‖s` | Empty |
+| `0x22` | FACTORY_ERASE | Empty | Empty |
 
 Every response payload starts with a two-byte wire status. Separate ACK/NACK
 commands are not needed: status zero is ACK and nonzero status is NACK.
@@ -100,7 +104,17 @@ V1 capability bits:
 
 - bit 0: MCUboot test-upgrade request supported;
 - bit 1: full-image readback CRC supported;
-- bit 2: DATA is strict and sequential.
+- bit 2: DATA is strict and sequential;
+- bit 3: PRODUCT_CONFIG_GET/SET supported;
+- bit 4: REBOOT supported;
+- bit 5: administrator commands (ADMIN_CHALLENGE, ADMIN_AUTH, FACTORY_ERASE)
+  supported.
+
+Only Boot Recovery advertises bits 0–2. The Application advertises bits 3 and 4
+and answers BEGIN with `UNSUPPORTED_COMMAND`: a host installs an image by sending
+REBOOT to recovery, reconnecting to the same serial in Boot mode and installing
+there. Bit 5 is advertised only by a Boot built with `HC32_ADMIN_PUBLIC_KEY` whose
+TRNG and key checks passed at recovery start.
 
 HELLO must use sequence zero and is accepted only in IDLE. A successful HELLO
 starts a protocol session and sets the next expected sequence to one.
@@ -205,6 +219,57 @@ Partial candidate bytes may remain but are not pending because BEGIN erased
 stale trailer state. ABORT is rejected after Boot Control has successfully
 marked the image pending.
 
+### REBOOT
+
+Request payload: one byte, `0` = start normally (Application if valid), `1` =
+start in Boot Recovery. Other values return `INVALID_ARGUMENT`.
+
+REBOOT is accepted only in NEGOTIATING, so never during a transfer. Like COMMIT it
+ends the session in COMPLETED and emits its reset action only after the response
+was consumed and TX is idle; ABORT is then rejected. Unlike COMMIT, a disconnect
+before that point cancels the REBOOT and returns to IDLE. For target `1` the platform
+writes a one-shot request (magic, value and inverse) to a fixed retention-SRAM
+slot before a software reset. Boot clears the slot on every start and honours it
+only after a software reset. Boot always runs `boot_go()` first, so a pending swap
+or revert completes before recovery may erase Secondary.
+
+### ADMIN_CHALLENGE
+
+Request payload: empty. Response body: 32 bytes from the device TRNG.
+
+Accepted only in NEGOTIATING. Every challenge revokes earlier administrator rights
+and any unanswered challenge. An exact retransmission receives the cached
+response, not a new challenge.
+
+### ADMIN_AUTH
+
+Request payload: the raw 64-byte `r‖s` ECDSA-P256 signature over
+`SHA-256("HC32-FWUP-ADMIN-V1" ‖ challenge)`, made with the administrator private
+key. Boot verifies it with the public key compiled from `HC32_ADMIN_PUBLIC_KEY`,
+which is separate from the image-signing key.
+
+Each challenge permits exactly one verification attempt. Without an outstanding
+challenge the request returns `INVALID_STATE`; a wrong signature returns
+`VERIFY_ERROR` and spends the challenge. Success grants rights until the session
+ends (ABORT, timeout, disconnect, a new HELLO, BEGIN or a new challenge).
+
+### FACTORY_ERASE
+
+Request payload: empty. Requires rights from ADMIN_AUTH in the same session, else
+`INVALID_STATE`.
+
+The response ends the session like COMMIT; a disconnect before TX idle cancels
+the erase and its rights, so a new session must authenticate again. After TX
+idle, Boot erases Secondary (header first), Scratch, Primary and then the
+Product Config FlashDB partition, feeding the watchdog per sector, and resets.
+Secondary goes first because MCUboot bootstrap restores an invalid Primary from
+a valid Secondary: a power loss before Primary is touched leaves the current
+image running, and a later one leaves recovery with Product Config intact so the
+erase can be repeated. With no valid image the device stays in recovery
+with the factory USB serial and an unprovisioned Product Config, so
+PRODUCT_CONFIG_SET and a new install are possible again. The Application settings
+partition (`app_kv`) is kept.
+
 ## Wire status values
 
 | Value | Name | Meaning |
@@ -243,8 +308,9 @@ numeric values of, internal `enum fw_update_result`.
 - Host retry count is bounded by the host implementation; the device does not
   implement a retransmission window.
 
-Disconnect/timeout before successful COMMIT returns the volatile session to
-IDLE and leaves no pending request. After successful COMMIT, disconnect or
+Disconnect/timeout before successful COMMIT, and disconnect before a REBOOT or
+FACTORY_ERASE response is delivered, returns the volatile session to IDLE and
+leaves no pending request. After successful COMMIT, disconnect or
 timeout cannot undo MCUboot trailer state; V1 emits no automatic RESET unless
 the successful response was fully consumed and TX idle was reported.
 

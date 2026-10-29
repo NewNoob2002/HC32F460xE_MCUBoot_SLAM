@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "fw_update/admin_auth.h"
 #include "fw_update/boot_control.h"
 #include "fw_update/product_config.h"
 #include "fw_update/protocol.h"
@@ -26,7 +27,11 @@ struct fw_update_manager_config {
     const struct fw_update_storage* storage;
     const struct fw_update_boot_control* boot_control;
     const struct fw_update_product_config* product_config;
+    /** Optional administrator backend; NULL disables ADMIN_CHALLENGE, ADMIN_AUTH and FACTORY_ERASE. */
+    const struct fw_update_admin_auth* admin_auth;
     uint8_t product_config_writable;
+    /** Nonzero rejects BEGIN so images are installed only by a recovery instance (after REBOOT to recovery). */
+    uint8_t image_install_disabled;
     uint16_t usb_boot_pid;
     uint16_t usb_application_pid_min;
     uint16_t usb_application_pid_max;
@@ -53,6 +58,10 @@ enum fw_update_manager_state {
 enum fw_update_manager_action {
     FW_UPDATE_MANAGER_ACTION_NONE = 0,
     FW_UPDATE_MANAGER_ACTION_RESET,
+    /** Reset and stay in Boot recovery instead of handing over to the Application. */
+    FW_UPDATE_MANAGER_ACTION_RESET_TO_RECOVERY,
+    /** Erase both image slots, scratch and Product Config, then reset. Emitted only after ADMIN_AUTH. */
+    FW_UPDATE_MANAGER_ACTION_ERASE_AND_RESET,
 };
 
 /** Results returned by Manager ingress/egress operations. */
@@ -89,9 +98,11 @@ struct fw_update_manager {
     uint32_t expected_sequence;
     uint32_t last_activity_ms;
     struct fw_update_version candidate_version;
+    uint8_t admin_challenge[FW_UPDATE_ADMIN_CHALLENGE_SIZE];
     enum fw_update_manager_state state;
     enum fw_protocol_status last_status;
     enum fw_update_manager_action pending_action;
+    enum fw_update_manager_action completion_action;
     uint8_t protocol_error_count;
     uint8_t session_active;
     uint8_t tx_uses_parser_buffer;
@@ -101,9 +112,13 @@ struct fw_update_manager {
     uint8_t cached_commit_success;
     uint8_t tx_is_successful_commit;
     uint8_t commit_succeeded;
+    /* Only a successful COMMIT survives disconnect: its MCUboot trailer change cannot be undone. */
+    uint8_t completion_survives_disconnect;
     uint8_t commit_response_consumed;
     uint8_t tx_idle_seen;
     uint8_t reset_action_taken;
+    uint8_t admin_challenge_valid;
+    uint8_t admin_authenticated;
 };
 
 /** Initialize one Manager instance and cache validated Storage geometry. */
@@ -134,7 +149,10 @@ enum fw_update_manager_result fw_update_manager_notify_disconnect(struct fw_upda
 /** Report that the Transport has physically completed the currently queued transmission. */
 enum fw_update_manager_result fw_update_manager_notify_tx_idle(struct fw_update_manager* manager);
 
-/** Take one pending lifecycle action. RESET is emitted at most once per successful COMMIT. */
+/**
+ * Take one pending lifecycle action. A reset-class action is emitted at most once per successful COMMIT, REBOOT
+ * or FACTORY_ERASE, and only after its response has been fully transmitted.
+ */
 enum fw_update_manager_action fw_update_manager_take_action(struct fw_update_manager* manager);
 
 /** Return the current session state. */

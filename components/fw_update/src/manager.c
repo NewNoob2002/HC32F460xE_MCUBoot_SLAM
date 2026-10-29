@@ -5,11 +5,13 @@
 
 #define FW_UPDATE_MANAGER_MAX_RESPONSE_PAYLOAD FW_UPDATE_PRODUCT_CONFIG_MAX_WIRE_SIZE
 #define FW_UPDATE_MANAGER_MAX_PROTOCOL_ERRORS  3U
-#define FW_UPDATE_MANAGER_CAPABILITIES                                                                                 \
+#define FW_UPDATE_MANAGER_INSTALL_CAPABILITIES                                                                         \
     ((uint32_t)(FW_PROTOCOL_CAPABILITY_TEST_UPGRADE | FW_PROTOCOL_CAPABILITY_READBACK_CRC                              \
-                | FW_PROTOCOL_CAPABILITY_STRICT_DATA | FW_PROTOCOL_CAPABILITY_PRODUCT_CONFIG))
+                | FW_PROTOCOL_CAPABILITY_STRICT_DATA))
 
 _Static_assert(sizeof(struct fw_update_manager) <= 2048U, "Manager exceeds the Phase 3 memory limit");
+_Static_assert(FW_UPDATE_ADMIN_CHALLENGE_SIZE <= FW_UPDATE_MANAGER_MAX_RESPONSE_PAYLOAD - 2U,
+               "Administrator challenge exceeds the response payload");
 
 static uint16_t read_u16_le(const uint8_t* input) {
     return (uint16_t)((uint16_t)input[0] | ((uint16_t)input[1] << 8U));
@@ -69,6 +71,10 @@ static struct fw_update_version read_version(const uint8_t* input) {
 }
 
 static void clear_session(struct fw_update_manager* manager) {
+    /* Administrator rights never outlive the session state that granted them. */
+    memset(manager->admin_challenge, 0, sizeof(manager->admin_challenge));
+    manager->admin_challenge_valid = 0U;
+    manager->admin_authenticated = 0U;
     manager->staging_length = 0U;
     manager->image_size = 0U;
     manager->image_crc32 = 0U;
@@ -94,7 +100,9 @@ static void clear_tx(struct fw_update_manager* manager) {
 
 static void clear_commit_lifecycle(struct fw_update_manager* manager) {
     manager->pending_action = FW_UPDATE_MANAGER_ACTION_NONE;
+    manager->completion_action = FW_UPDATE_MANAGER_ACTION_NONE;
     manager->commit_succeeded = 0U;
+    manager->completion_survives_disconnect = 0U;
     manager->commit_response_consumed = 0U;
     manager->tx_idle_seen = 0U;
     manager->reset_action_taken = 0U;
@@ -122,7 +130,35 @@ static int timeout_is_active(const struct fw_update_manager* manager) {
 static void schedule_reset_if_ready(struct fw_update_manager* manager) {
     if (manager->commit_succeeded != 0U && manager->commit_response_consumed != 0U && manager->tx_idle_seen != 0U
         && manager->reset_action_taken == 0U)
-        manager->pending_action = FW_UPDATE_MANAGER_ACTION_RESET;
+        manager->pending_action = manager->completion_action;
+}
+
+/* COMMIT, REBOOT and FACTORY_ERASE share one lifecycle: the session ends in COMPLETED and the reset-class action is
+ * released only after the response was consumed and the transport reported TX idle. REBOOT and FACTORY_ERASE have not
+ * changed anything yet, so a disconnect before delivery cancels them instead of keeping a stale (authorized) action. */
+static void complete_with_reset(struct fw_update_manager* manager, enum fw_update_manager_action action,
+                                uint8_t survives_disconnect) {
+    manager->completion_action = action;
+    manager->commit_succeeded = 1U;
+    manager->completion_survives_disconnect = survives_disconnect;
+    manager->commit_response_consumed = 0U;
+    manager->tx_idle_seen = 0U;
+    manager->pending_action = FW_UPDATE_MANAGER_ACTION_NONE;
+    manager->state = FW_UPDATE_MANAGER_STATE_COMPLETED;
+}
+
+static int command_completes_session(uint8_t command) {
+    return command == FW_PROTOCOL_COMMAND_COMMIT || command == FW_PROTOCOL_COMMAND_REBOOT
+           || command == FW_PROTOCOL_COMMAND_FACTORY_ERASE;
+}
+
+static uint32_t manager_capabilities(const struct fw_update_manager* manager) {
+    uint32_t capabilities = FW_PROTOCOL_CAPABILITY_PRODUCT_CONFIG | FW_PROTOCOL_CAPABILITY_REBOOT;
+    if (manager->config.image_install_disabled == 0U)
+        capabilities |= FW_UPDATE_MANAGER_INSTALL_CAPABILITIES;
+    if (manager->config.admin_auth != NULL)
+        capabilities |= FW_PROTOCOL_CAPABILITY_ADMIN;
+    return capabilities;
 }
 
 static void finish_tx(struct fw_update_manager* manager) {
@@ -259,7 +295,7 @@ static enum fw_protocol_status handle_hello(struct fw_update_manager* manager, c
         return FW_PROTOCOL_STATUS_BAD_SEQUENCE;
 
     write_u16_le(&body[0], FW_PROTOCOL_MAX_PAYLOAD);
-    write_u32_le(&body[2], FW_UPDATE_MANAGER_CAPABILITIES);
+    write_u32_le(&body[2], manager_capabilities(manager));
     write_u32_le(&body[6], manager->config.session_timeout_ms);
     *body_length = 10U;
     manager->state = FW_UPDATE_MANAGER_STATE_NEGOTIATING;
@@ -351,6 +387,8 @@ static enum fw_protocol_status handle_product_config_set(struct fw_update_manage
 static enum fw_protocol_status handle_begin(struct fw_update_manager* manager, const struct fw_protocol_frame* frame) {
     enum fw_protocol_status status;
 
+    if (manager->config.image_install_disabled != 0U)
+        return FW_PROTOCOL_STATUS_UNSUPPORTED_COMMAND;
     if (manager->state != FW_UPDATE_MANAGER_STATE_NEGOTIATING)
         return FW_PROTOCOL_STATUS_INVALID_STATE;
     status = validate_begin(manager, frame);
@@ -467,11 +505,85 @@ static enum fw_protocol_status handle_commit(struct fw_update_manager* manager, 
         return FW_PROTOCOL_STATUS_BOOT_CONTROL_ERROR;
     }
 
-    manager->commit_succeeded = 1U;
-    manager->commit_response_consumed = 0U;
-    manager->tx_idle_seen = 0U;
-    manager->pending_action = FW_UPDATE_MANAGER_ACTION_NONE;
-    manager->state = FW_UPDATE_MANAGER_STATE_COMPLETED;
+    complete_with_reset(manager, FW_UPDATE_MANAGER_ACTION_RESET, 1U);
+    return FW_PROTOCOL_STATUS_OK;
+}
+
+static enum fw_protocol_status handle_reboot(struct fw_update_manager* manager, const struct fw_protocol_frame* frame) {
+    enum fw_update_manager_action action;
+
+    if (frame->payload_length != 1U)
+        return FW_PROTOCOL_STATUS_BAD_FRAME;
+    if (manager->state != FW_UPDATE_MANAGER_STATE_NEGOTIATING)
+        return FW_PROTOCOL_STATUS_INVALID_STATE;
+    if (frame->payload[0] == FW_PROTOCOL_REBOOT_APPLICATION)
+        action = FW_UPDATE_MANAGER_ACTION_RESET;
+    else if (frame->payload[0] == FW_PROTOCOL_REBOOT_RECOVERY)
+        action = FW_UPDATE_MANAGER_ACTION_RESET_TO_RECOVERY;
+    else
+        return FW_PROTOCOL_STATUS_INVALID_ARGUMENT;
+
+    clear_session(manager);
+    complete_with_reset(manager, action, 0U);
+    return FW_PROTOCOL_STATUS_OK;
+}
+
+static enum fw_protocol_status handle_admin_challenge(struct fw_update_manager* manager,
+                                                      const struct fw_protocol_frame* frame, uint8_t* body,
+                                                      uint16_t* body_length) {
+    if (frame->payload_length != 0U)
+        return FW_PROTOCOL_STATUS_BAD_FRAME;
+    if (manager->config.admin_auth == NULL)
+        return FW_PROTOCOL_STATUS_UNSUPPORTED_COMMAND;
+    if (manager->state != FW_UPDATE_MANAGER_STATE_NEGOTIATING)
+        return FW_PROTOCOL_STATUS_INVALID_STATE;
+
+    /* A new challenge always revokes earlier rights and any unanswered challenge. */
+    manager->admin_authenticated = 0U;
+    manager->admin_challenge_valid = 0U;
+    if (fw_update_admin_auth_generate_challenge(manager->config.admin_auth, manager->admin_challenge) != FW_UPDATE_OK) {
+        memset(manager->admin_challenge, 0, sizeof(manager->admin_challenge));
+        return FW_PROTOCOL_STATUS_INTERNAL_ERROR;
+    }
+    manager->admin_challenge_valid = 1U;
+    memcpy(body, manager->admin_challenge, sizeof(manager->admin_challenge));
+    *body_length = (uint16_t)sizeof(manager->admin_challenge);
+    return FW_PROTOCOL_STATUS_OK;
+}
+
+static enum fw_protocol_status handle_admin_auth(struct fw_update_manager* manager,
+                                                 const struct fw_protocol_frame* frame) {
+    enum fw_update_result result;
+
+    if (frame->payload_length != FW_UPDATE_ADMIN_SIGNATURE_SIZE)
+        return FW_PROTOCOL_STATUS_BAD_FRAME;
+    if (manager->config.admin_auth == NULL)
+        return FW_PROTOCOL_STATUS_UNSUPPORTED_COMMAND;
+    if (manager->state != FW_UPDATE_MANAGER_STATE_NEGOTIATING || manager->admin_challenge_valid == 0U)
+        return FW_PROTOCOL_STATUS_INVALID_STATE;
+
+    /* Each challenge allows exactly one verification attempt, successful or not. */
+    manager->admin_challenge_valid = 0U;
+    result = fw_update_admin_auth_verify(manager->config.admin_auth, manager->admin_challenge, frame->payload);
+    memset(manager->admin_challenge, 0, sizeof(manager->admin_challenge));
+    if (result != FW_UPDATE_OK)
+        return FW_PROTOCOL_STATUS_VERIFY_ERROR;
+    manager->admin_authenticated = 1U;
+    return FW_PROTOCOL_STATUS_OK;
+}
+
+static enum fw_protocol_status handle_factory_erase(struct fw_update_manager* manager,
+                                                    const struct fw_protocol_frame* frame) {
+    if (frame->payload_length != 0U)
+        return FW_PROTOCOL_STATUS_BAD_FRAME;
+    if (manager->config.admin_auth == NULL)
+        return FW_PROTOCOL_STATUS_UNSUPPORTED_COMMAND;
+    if (manager->state != FW_UPDATE_MANAGER_STATE_NEGOTIATING || manager->admin_authenticated == 0U)
+        return FW_PROTOCOL_STATUS_INVALID_STATE;
+
+    /* The erase itself runs in the platform after the response; the Manager only authorizes it once. */
+    clear_session(manager);
+    complete_with_reset(manager, FW_UPDATE_MANAGER_ACTION_ERASE_AND_RESET, 0U);
     return FW_PROTOCOL_STATUS_OK;
 }
 
@@ -488,7 +600,14 @@ static enum fw_protocol_status validate_request_frame(const struct fw_protocol_f
         case FW_PROTOCOL_COMMAND_END:
         case FW_PROTOCOL_COMMAND_COMMIT:
         case FW_PROTOCOL_COMMAND_ABORT:
+        case FW_PROTOCOL_COMMAND_ADMIN_CHALLENGE:
+        case FW_PROTOCOL_COMMAND_FACTORY_ERASE:
             return frame->payload_length == 0U ? FW_PROTOCOL_STATUS_OK : FW_PROTOCOL_STATUS_BAD_FRAME;
+        case FW_PROTOCOL_COMMAND_REBOOT:
+            return frame->payload_length == 1U ? FW_PROTOCOL_STATUS_OK : FW_PROTOCOL_STATUS_BAD_FRAME;
+        case FW_PROTOCOL_COMMAND_ADMIN_AUTH:
+            return frame->payload_length == FW_UPDATE_ADMIN_SIGNATURE_SIZE ? FW_PROTOCOL_STATUS_OK
+                                                                           : FW_PROTOCOL_STATUS_BAD_FRAME;
         case FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_SET:
             return frame->payload_length >= FW_UPDATE_PRODUCT_CONFIG_WIRE_HEADER_SIZE
                            && frame->payload_length <= FW_UPDATE_PRODUCT_CONFIG_MAX_WIRE_SIZE
@@ -526,6 +645,14 @@ static enum fw_protocol_status handle_frame(struct fw_update_manager* manager, c
             return handle_commit(manager, frame);
         case FW_PROTOCOL_COMMAND_ABORT:
             return handle_abort(manager, frame);
+        case FW_PROTOCOL_COMMAND_REBOOT:
+            return handle_reboot(manager, frame);
+        case FW_PROTOCOL_COMMAND_ADMIN_CHALLENGE:
+            return handle_admin_challenge(manager, frame, body, body_length);
+        case FW_PROTOCOL_COMMAND_ADMIN_AUTH:
+            return handle_admin_auth(manager, frame);
+        case FW_PROTOCOL_COMMAND_FACTORY_ERASE:
+            return handle_factory_erase(manager, frame);
         default:
             return FW_PROTOCOL_STATUS_UNSUPPORTED_COMMAND;
     }
@@ -582,7 +709,7 @@ static enum fw_update_manager_result queue_response(struct fw_update_manager* ma
     manager->pending_request_size = accepted != 0 ? request_size : 0U;
     manager->cache_request_after_tx = accepted != 0 ? 1U : 0U;
     manager->tx_is_successful_commit = accepted != 0 && status == FW_PROTOCOL_STATUS_OK
-                                               && request->command == FW_PROTOCOL_COMMAND_COMMIT
+                                               && command_completes_session(request->command) != 0
                                                && manager->state == FW_UPDATE_MANAGER_STATE_COMPLETED
                                            ? 1U
                                            : 0U;
@@ -772,7 +899,7 @@ enum fw_update_manager_result fw_update_manager_notify_disconnect(struct fw_upda
     if (manager == NULL)
         return FW_UPDATE_MANAGER_ERR_INVALID_ARGUMENT;
 
-    if (manager->commit_succeeded != 0U) {
+    if (manager->commit_succeeded != 0U && manager->completion_survives_disconnect != 0U) {
         if (manager->cache_request_after_tx != 0U) {
             memcpy(manager->tx_buffer, manager->parser.buffer, manager->pending_request_size);
             manager->cached_request_size = manager->pending_request_size;
@@ -806,7 +933,7 @@ enum fw_update_manager_action fw_update_manager_take_action(struct fw_update_man
         return FW_UPDATE_MANAGER_ACTION_NONE;
     action = manager->pending_action;
     manager->pending_action = FW_UPDATE_MANAGER_ACTION_NONE;
-    if (action == FW_UPDATE_MANAGER_ACTION_RESET)
+    if (action != FW_UPDATE_MANAGER_ACTION_NONE)
         manager->reset_action_taken = 1U;
     return action;
 }

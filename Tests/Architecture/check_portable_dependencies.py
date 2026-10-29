@@ -31,6 +31,7 @@ FORBIDDEN = (
     "flash_map_backend",
     "cherryusb",
     "usbd_",
+    "tinycrypt",
 )
 
 violations = []

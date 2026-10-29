@@ -38,6 +38,12 @@ struct fake_product_config {
     enum fw_update_result set_result;
 };
 
+struct fake_admin {
+    unsigned int challenge_calls;
+    unsigned int verify_calls;
+    enum fw_update_result challenge_result;
+};
+
 struct fixture {
     struct fake_storage fake_storage;
     struct fw_update_storage storage;
@@ -45,6 +51,8 @@ struct fixture {
     struct fw_update_boot_control boot_control;
     struct fake_product_config fake_product;
     struct fw_update_product_config product_config;
+    struct fake_admin fake_admin;
+    struct fw_update_admin_auth admin_auth;
     struct fw_update_manager manager;
     uint32_t now_ms;
     uint32_t next_sequence;
@@ -154,6 +162,35 @@ static enum fw_update_result fake_product_set(void* context, const struct fw_upd
     return FW_UPDATE_OK;
 }
 
+/* Challenge n is n repeated; the only accepted signature is the challenge XOR 0xA5, mirrored twice. */
+static enum fw_update_result fake_admin_challenge(void* context, uint8_t challenge[FW_UPDATE_ADMIN_CHALLENGE_SIZE]) {
+    struct fake_admin* fake = context;
+    ++fake->challenge_calls;
+    if (fake->challenge_result != FW_UPDATE_OK)
+        return fake->challenge_result;
+    memset(challenge, (int)fake->challenge_calls, FW_UPDATE_ADMIN_CHALLENGE_SIZE);
+    return FW_UPDATE_OK;
+}
+
+static void fake_admin_sign(const uint8_t* challenge, uint8_t* signature) {
+    for (size_t index = 0U; index < FW_UPDATE_ADMIN_SIGNATURE_SIZE; ++index)
+        signature[index] = (uint8_t)(challenge[index % FW_UPDATE_ADMIN_CHALLENGE_SIZE] ^ 0xA5U);
+}
+
+static enum fw_update_result fake_admin_verify(void* context, const uint8_t challenge[FW_UPDATE_ADMIN_CHALLENGE_SIZE],
+                                               const uint8_t signature[FW_UPDATE_ADMIN_SIGNATURE_SIZE]) {
+    struct fake_admin* fake = context;
+    uint8_t expected[FW_UPDATE_ADMIN_SIGNATURE_SIZE];
+    ++fake->verify_calls;
+    fake_admin_sign(challenge, expected);
+    return memcmp(expected, signature, sizeof(expected)) == 0 ? FW_UPDATE_OK : FW_UPDATE_ERR_INVALID_ARGUMENT;
+}
+
+static const struct fw_update_admin_auth_ops admin_ops = {
+    .generate_challenge = fake_admin_challenge,
+    .verify = fake_admin_verify,
+};
+
 static const struct fw_update_storage_ops storage_ops = {
     .get_info = fake_get_info,
     .erase_all = fake_erase_all,
@@ -208,6 +245,9 @@ static void fixture_init(struct fixture* fixture, uint32_t alignment) {
     fixture->product_config.ops = &product_config_ops;
     fixture->product_config.context = &fixture->fake_product;
     fixture->fake_boot.request_result = FW_UPDATE_OK;
+    fixture->admin_auth.ops = &admin_ops;
+    fixture->admin_auth.context = &fixture->fake_admin;
+    fixture->fake_admin.challenge_result = FW_UPDATE_OK;
     fixture->now_ms = 100U;
     config = make_config(fixture);
     assert(fw_update_manager_init(&fixture->manager, &config) == FW_UPDATE_MANAGER_OK);
@@ -306,7 +346,9 @@ static void send_hello(struct fixture* fixture) {
     assert(read_u16_le(&response.body[0]) == FW_PROTOCOL_MAX_PAYLOAD);
     assert(read_u32_le(&response.body[2])
            == (FW_PROTOCOL_CAPABILITY_TEST_UPGRADE | FW_PROTOCOL_CAPABILITY_READBACK_CRC
-               | FW_PROTOCOL_CAPABILITY_STRICT_DATA | FW_PROTOCOL_CAPABILITY_PRODUCT_CONFIG));
+               | FW_PROTOCOL_CAPABILITY_STRICT_DATA | FW_PROTOCOL_CAPABILITY_PRODUCT_CONFIG
+               | FW_PROTOCOL_CAPABILITY_REBOOT
+               | (fixture->manager.config.admin_auth != NULL ? FW_PROTOCOL_CAPABILITY_ADMIN : 0U)));
     assert(read_u32_le(&response.body[6]) == 5000U);
     fixture->next_sequence = 1U;
 }
@@ -1052,6 +1094,182 @@ static void test_commit_tx_idle_ordering_and_failure(void) {
     assert(fw_update_manager_take_action(&fixture.manager) == FW_UPDATE_MANAGER_ACTION_NONE);
 }
 
+static void reinit(struct fixture* fixture, const struct fw_update_admin_auth* admin_auth, uint8_t install_disabled) {
+    struct fw_update_manager_config config = make_config(fixture);
+    config.admin_auth = admin_auth;
+    config.image_install_disabled = install_disabled;
+    assert(fw_update_manager_init(&fixture->manager, &config) == FW_UPDATE_MANAGER_OK);
+}
+
+/* Releases the reset-class action the same way a transport does: response consumed, then TX idle. */
+static enum fw_update_manager_action finish_reset_action(struct fixture* fixture) {
+    assert(fw_update_manager_get_state(&fixture->manager) == FW_UPDATE_MANAGER_STATE_COMPLETED);
+    assert(fw_update_manager_take_action(&fixture->manager) == FW_UPDATE_MANAGER_ACTION_NONE);
+    assert(fw_update_manager_notify_tx_idle(&fixture->manager) == FW_UPDATE_MANAGER_OK);
+    return fw_update_manager_take_action(&fixture->manager);
+}
+
+static void test_reboot_targets_and_install_lock(void) {
+    struct fixture fixture;
+    struct response response;
+    uint8_t target = FW_PROTOCOL_REBOOT_RECOVERY;
+    uint8_t begin[28];
+
+    /* An Application instance advertises REBOOT but no install capabilities and rejects BEGIN. */
+    fixture_init(&fixture, 4U);
+    reinit(&fixture, NULL, 1U);
+    send_request(&fixture, FW_PROTOCOL_COMMAND_HELLO, 0U, NULL, 0U, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_OK);
+    assert(read_u32_le(&response.body[2]) == (FW_PROTOCOL_CAPABILITY_PRODUCT_CONFIG | FW_PROTOCOL_CAPABILITY_REBOOT));
+    fixture.next_sequence = 1U;
+    make_begin_payload(&fixture, 16U, 0U, begin);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_BEGIN, begin, sizeof(begin), &response);
+    assert(response.status == FW_PROTOCOL_STATUS_UNSUPPORTED_COMMAND);
+    assert(fixture.fake_storage.erase_calls == 0U);
+
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_REBOOT, &target, 1U, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_OK && response.body_length == 0U);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_DEVICE_INFO, NULL, 0U, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_INVALID_STATE);
+    assert(finish_reset_action(&fixture) == FW_UPDATE_MANAGER_ACTION_RESET_TO_RECOVERY);
+    assert(fw_update_manager_take_action(&fixture.manager) == FW_UPDATE_MANAGER_ACTION_NONE);
+
+    fixture_init(&fixture, 4U);
+    send_hello(&fixture);
+    target = 2U;
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_REBOOT, &target, 1U, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_INVALID_ARGUMENT);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_REBOOT, NULL, 0U, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_BAD_FRAME);
+    target = FW_PROTOCOL_REBOOT_APPLICATION;
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_REBOOT, &target, 1U, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_OK);
+    assert(finish_reset_action(&fixture) == FW_UPDATE_MANAGER_ACTION_RESET);
+
+    /* A disconnect before the REBOOT response is delivered cancels it: no reset, and a fresh HELLO works. */
+    fixture_init(&fixture, 4U);
+    send_hello(&fixture);
+    target = FW_PROTOCOL_REBOOT_RECOVERY;
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_REBOOT, &target, 1U, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_OK);
+    assert(fw_update_manager_notify_disconnect(&fixture.manager) == FW_UPDATE_MANAGER_OK);
+    assert(fw_update_manager_get_state(&fixture.manager) == FW_UPDATE_MANAGER_STATE_IDLE);
+    assert(fw_update_manager_notify_tx_idle(&fixture.manager) == FW_UPDATE_MANAGER_OK);
+    assert(fw_update_manager_take_action(&fixture.manager) == FW_UPDATE_MANAGER_ACTION_NONE);
+    send_hello(&fixture);
+    assert(fw_update_manager_get_state(&fixture.manager) == FW_UPDATE_MANAGER_STATE_NEGOTIATING);
+    target = FW_PROTOCOL_REBOOT_APPLICATION;
+
+    /* REBOOT is refused while an image transfer is open. */
+    fixture_init(&fixture, 4U);
+    send_hello(&fixture);
+    assert(send_begin(&fixture, 16U, 0U) == FW_PROTOCOL_STATUS_OK);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_REBOOT, &target, 1U, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_INVALID_STATE);
+    assert(fw_update_manager_take_action(&fixture.manager) == FW_UPDATE_MANAGER_ACTION_NONE);
+}
+
+static void test_admin_authentication_and_factory_erase(void) {
+    struct fixture fixture;
+    struct response response;
+    uint8_t challenge[FW_UPDATE_ADMIN_CHALLENGE_SIZE];
+    uint8_t signature[FW_UPDATE_ADMIN_SIGNATURE_SIZE];
+
+    /* Without a backend every administrator command is unsupported. */
+    fixture_init(&fixture, 4U);
+    send_hello(&fixture);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_ADMIN_CHALLENGE, NULL, 0U, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_UNSUPPORTED_COMMAND);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_FACTORY_ERASE, NULL, 0U, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_UNSUPPORTED_COMMAND);
+
+    fixture_init(&fixture, 4U);
+    reinit(&fixture, &fixture.admin_auth, 0U);
+    send_hello(&fixture);
+
+    /* Erase and auth both require an earlier step. */
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_FACTORY_ERASE, NULL, 0U, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_INVALID_STATE);
+    memset(signature, 0, sizeof(signature));
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_ADMIN_AUTH, signature, sizeof(signature), &response);
+    assert(response.status == FW_PROTOCOL_STATUS_INVALID_STATE);
+    assert(fixture.fake_admin.verify_calls == 0U);
+
+    /* A wrong signature consumes the challenge, so a retry needs a fresh challenge. */
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_ADMIN_CHALLENGE, NULL, 0U, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_OK && response.body_length == FW_UPDATE_ADMIN_CHALLENGE_SIZE);
+    memcpy(challenge, response.body, sizeof(challenge));
+    fake_admin_sign(challenge, signature);
+    signature[0] ^= 1U;
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_ADMIN_AUTH, signature, sizeof(signature), &response);
+    assert(response.status == FW_PROTOCOL_STATUS_VERIFY_ERROR);
+    signature[0] ^= 1U;
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_ADMIN_AUTH, signature, sizeof(signature), &response);
+    assert(response.status == FW_PROTOCOL_STATUS_INVALID_STATE);
+    assert(fixture.fake_admin.verify_calls == 1U);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_FACTORY_ERASE, NULL, 0U, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_INVALID_STATE);
+
+    /* A signature over an older challenge is rejected. */
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_ADMIN_CHALLENGE, NULL, 0U, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_OK && memcmp(response.body, challenge, sizeof(challenge)) != 0);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_ADMIN_AUTH, signature, sizeof(signature), &response);
+    assert(response.status == FW_PROTOCOL_STATUS_VERIFY_ERROR);
+
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_ADMIN_CHALLENGE, NULL, 0U, &response);
+    memcpy(challenge, response.body, sizeof(challenge));
+    fake_admin_sign(challenge, signature);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_ADMIN_AUTH, signature, sizeof(signature), &response);
+    assert(response.status == FW_PROTOCOL_STATUS_OK && response.body_length == 0U);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_FACTORY_ERASE, NULL, 0U, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_OK);
+    assert(fixture.fake_storage.erase_calls == 0U);
+    assert(finish_reset_action(&fixture) == FW_UPDATE_MANAGER_ACTION_ERASE_AND_RESET);
+
+    /* A disconnect before the FACTORY_ERASE response is delivered cancels the erase and its authorization. */
+    fixture_init(&fixture, 4U);
+    reinit(&fixture, &fixture.admin_auth, 0U);
+    send_hello(&fixture);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_ADMIN_CHALLENGE, NULL, 0U, &response);
+    memcpy(challenge, response.body, sizeof(challenge));
+    fake_admin_sign(challenge, signature);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_ADMIN_AUTH, signature, sizeof(signature), &response);
+    assert(response.status == FW_PROTOCOL_STATUS_OK);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_FACTORY_ERASE, NULL, 0U, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_OK);
+    assert(fw_update_manager_notify_disconnect(&fixture.manager) == FW_UPDATE_MANAGER_OK);
+    assert(fw_update_manager_get_state(&fixture.manager) == FW_UPDATE_MANAGER_STATE_IDLE);
+    assert(fw_update_manager_notify_tx_idle(&fixture.manager) == FW_UPDATE_MANAGER_OK);
+    assert(fw_update_manager_take_action(&fixture.manager) == FW_UPDATE_MANAGER_ACTION_NONE);
+    send_hello(&fixture);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_FACTORY_ERASE, NULL, 0U, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_INVALID_STATE);
+    assert(fw_update_manager_take_action(&fixture.manager) == FW_UPDATE_MANAGER_ACTION_NONE);
+
+    /* Rights end with the session: after a timeout a new HELLO must authenticate again. */
+    fixture_init(&fixture, 4U);
+    reinit(&fixture, &fixture.admin_auth, 0U);
+    send_hello(&fixture);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_ADMIN_CHALLENGE, NULL, 0U, &response);
+    memcpy(challenge, response.body, sizeof(challenge));
+    fake_admin_sign(challenge, signature);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_ADMIN_AUTH, signature, sizeof(signature), &response);
+    assert(response.status == FW_PROTOCOL_STATUS_OK);
+    assert(fw_update_manager_poll(&fixture.manager, fixture.now_ms + 6000U) == FW_UPDATE_MANAGER_OK);
+    assert(fw_update_manager_get_state(&fixture.manager) == FW_UPDATE_MANAGER_STATE_IDLE);
+    fixture.now_ms += 6000U;
+    send_hello(&fixture);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_FACTORY_ERASE, NULL, 0U, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_INVALID_STATE);
+
+    /* A challenge source failure reports an internal error and grants nothing. */
+    fixture.fake_admin.challenge_result = FW_UPDATE_ERR_IO;
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_ADMIN_CHALLENGE, NULL, 0U, &response);
+    assert(response.status == FW_PROTOCOL_STATUS_INTERNAL_ERROR);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_ADMIN_AUTH, signature, sizeof(signature), &response);
+    assert(response.status == FW_PROTOCOL_STATUS_INVALID_STATE);
+}
+
 int main(void) {
     test_complete_lifecycle();
     test_product_config_provisioning();
@@ -1068,5 +1286,7 @@ int main(void) {
     test_timeout_and_tick_wrap();
     test_disconnect_lifecycle();
     test_commit_tx_idle_ordering_and_failure();
+    test_reboot_targets_and_install_lock();
+    test_admin_authentication_and_factory_erase();
     return 0;
 }

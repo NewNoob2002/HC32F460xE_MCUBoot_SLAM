@@ -194,6 +194,7 @@ add_test(NAME fw_protocol COMMAND fw_protocol_tests)
 add_executable(fw_update_manager_tests
     fw_update_manager_tests.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/manager.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/admin_auth.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/protocol.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/storage.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/boot_control.c
@@ -207,6 +208,7 @@ add_test(NAME fw_update_manager COMMAND fw_update_manager_tests)
 add_executable(fw_update_fake_device
     fw_update_fake_device.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/manager.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/admin_auth.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/protocol.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/storage.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/boot_control.c
@@ -221,6 +223,7 @@ add_executable(usb_fw_update_tests
     ${PROJECT_SOURCE_DIR}/App/Core/Src/usb_fw_update.c
     ${PROJECT_SOURCE_DIR}/App/Core/Src/usb_debug_link.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/manager.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/admin_auth.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/protocol.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/storage.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/boot_control.c
@@ -308,3 +311,29 @@ target_include_directories(usb_debug_link_tests SYSTEM PRIVATE
 target_compile_definitions(usb_debug_link_tests PRIVATE BOOT_HOST_TEST)
 target_compile_options(usb_debug_link_tests PRIVATE -Wall -Wextra -Wconversion -Wshadow -Werror)
 add_test(NAME usb_debug_link COMMAND usb_debug_link_tests)
+
+set(TINYCRYPT_TEST_ROOT ${PROJECT_SOURCE_DIR}/components/mcuboot-2.4.0/ext/tinycrypt/lib)
+add_executable(fw_update_admin_auth_tests
+    fw_update_admin_auth_tests.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/src/admin_auth.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/backends/mcuboot/src/admin_auth_ecdsa.c
+    ${TINYCRYPT_TEST_ROOT}/source/ecc.c
+    ${TINYCRYPT_TEST_ROOT}/source/ecc_dsa.c
+    ${TINYCRYPT_TEST_ROOT}/source/ecc_platform_specific.c
+    ${TINYCRYPT_TEST_ROOT}/source/sha256.c
+    ${TINYCRYPT_TEST_ROOT}/source/utils.c
+)
+set_source_files_properties(
+    ${TINYCRYPT_TEST_ROOT}/source/ecc.c
+    ${TINYCRYPT_TEST_ROOT}/source/ecc_dsa.c
+    ${TINYCRYPT_TEST_ROOT}/source/ecc_platform_specific.c
+    ${TINYCRYPT_TEST_ROOT}/source/sha256.c
+    ${TINYCRYPT_TEST_ROOT}/source/utils.c
+    PROPERTIES COMPILE_OPTIONS "-w"
+)
+target_include_directories(fw_update_admin_auth_tests PRIVATE
+    ${PROJECT_SOURCE_DIR}/components/fw_update/include
+    ${PROJECT_SOURCE_DIR}/components/fw_update/backends/mcuboot/include
+)
+target_include_directories(fw_update_admin_auth_tests SYSTEM PRIVATE ${TINYCRYPT_TEST_ROOT}/include)
+add_test(NAME fw_update_admin_auth COMMAND fw_update_admin_auth_tests)
