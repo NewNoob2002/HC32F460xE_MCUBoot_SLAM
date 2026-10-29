@@ -184,6 +184,16 @@ SECTIONS
         __bss_end_ret_ram__ = .;
     } >RET_RAM
 
+    /* Application -> Boot reset request (bsp_boot_request.c). The address is identical in Boot and App, and NOLOAD
+     * keeps startup code from copying or zeroing it. */
+    .boot_request (ORIGIN(RET_RAM) + LENGTH(RET_RAM) - 16) (NOLOAD) :
+    {
+        KEEP(*(.boot_request))
+    } >RET_RAM
+    ASSERT(ADDR(.boot_request) == 0x200F0FF0, "boot request must stay at the shared retention-SRAM address")
+    ASSERT(SIZEOF(.boot_request) <= 16, "boot request exceeds its reserved retention-SRAM slot")
+    ASSERT(__bss_end_ret_ram__ <= ADDR(.boot_request), "retention SRAM overlaps the boot request")
+
     .heap_stack (COPY) :
     {
         . = ALIGN(8);

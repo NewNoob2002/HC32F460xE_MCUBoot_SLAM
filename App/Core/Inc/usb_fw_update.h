@@ -10,6 +10,10 @@ extern "C" {
 enum usb_fw_update_action {
     USB_FW_UPDATE_ACTION_NONE = 0,
     USB_FW_UPDATE_ACTION_RESET,
+    /** Reset into Boot recovery; the caller records the request before resetting. */
+    USB_FW_UPDATE_ACTION_RESET_TO_RECOVERY,
+    /** Boot only: an authenticated administrator requested erasing both slots, scratch and Product Config. */
+    USB_FW_UPDATE_ACTION_ERASE_AND_RESET,
 };
 
 struct usb_fw_update_status {

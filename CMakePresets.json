@@ -16,7 +16,8 @@
             "inherits": "default",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
-                "MCUBOOT_SIGNING_KEY": "$env{HOME}/Desktop/workspace/MyKey/HC32_MCUBOOT_SLAM/dev-ec-p256.pem"
+                "MCUBOOT_SIGNING_KEY": "$env{HOME}/Desktop/workspace/MyKey/HC32_MCUBOOT_SLAM/dev-ec-p256.pem",
+                "HC32_ADMIN_PUBLIC_KEY": "$env{HOME}/Desktop/workspace/MyKey/HC32_MCUBOOT_SLAM/dev-admin-p256.pub.pem"
             }
         },
         {

@@ -140,6 +140,11 @@ Response payload:
 | 32 | 8 | Bootloader version |
 
 An eight-byte version is `major:u8, minor:u8, revision:u16, build:u32`.
+`0.0.0` means "no version". The Application reports its build version, and Boot
+reports the version in the Primary MCUboot header without validating the image
+(`0.0.0` when the slot is empty). Both report the bootloader version from the
+fixed 16-byte Boot info record at Flash `0x00000420` (`BOOT_VERSION` CMake
+cache value); a Boot without that record reports `0.0.0`.
 DEVICE_INFO is informational and does not mutate update state.
 
 ### BEGIN

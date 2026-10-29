@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "bsp_boot_info.h"
 #include "bsp_status_led.h"
 #include "bsp_usb.h"
 #include "fw_update/boot_control_mcuboot.h"
@@ -76,6 +77,12 @@ void bsp_status_led_set_mode(enum bsp_status_led_mode mode) {
 
 void bsp_status_led_poll(uint32_t now_ms) {
     (void)now_ms;
+}
+
+/* The real reader dereferences Boot Flash at 0x420; the host has no such record. */
+bool bsp_boot_info_read(struct bsp_boot_info* info) {
+    (void)info;
+    return false;
 }
 
 uint32_t bsp_usb_device_base(void) {

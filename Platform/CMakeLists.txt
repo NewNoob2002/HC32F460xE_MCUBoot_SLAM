@@ -1,6 +1,8 @@
 add_library(hc32_platform STATIC
     HC32F460/Src/boot_handover_jump.S
     HC32F460/Src/boot_handover.c
+    HC32F460/Src/bsp_boot_info.c
+    HC32F460/Src/bsp_boot_request.c
     HC32F460/Src/bsp_charger_signals.c
     HC32F460/Src/bsp_clock.c
     HC32F460/Src/bsp_external_watchdog.c
@@ -11,6 +13,7 @@ add_library(hc32_platform STATIC
     HC32F460/Src/bsp_reset.c
     HC32F460/Src/bsp_status_led.c
     HC32F460/Src/bsp_timebase.c
+    HC32F460/Src/bsp_trng.c
     HC32F460/Src/bsp_usb.c
     HC32F460/Src/bsp_write_protection.c
 )

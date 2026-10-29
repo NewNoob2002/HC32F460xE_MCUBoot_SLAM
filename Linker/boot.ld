@@ -62,6 +62,14 @@ SECTIONS
     ASSERT(ADDR(.icg_sec) == 0x00000400, "ICG must start at 0x400")
     ASSERT(SIZEOF(.icg_sec) == 0x20, "ICG must contain exactly eight 32-bit words")
 
+    /* Fixed Boot identity record read by the Application (bsp_boot_info.h). */
+    .boot_info 0x00000420 :
+    {
+        KEEP(*(.boot_info))
+    } >FLASH
+    ASSERT(ADDR(.boot_info) == 0x00000420, "boot info must follow the ICG at 0x420")
+    ASSERT(SIZEOF(.boot_info) == 16, "boot info must be one 16-byte record")
+
     .text :
     {
         . = ALIGN(4);
@@ -212,6 +220,16 @@ SECTIONS
         . = ALIGN(4);
         __bss_end_ret_ram__ = .;
     } >RET_RAM
+
+    /* Application -> Boot reset request (bsp_boot_request.c). The address is identical in Boot and App, and NOLOAD
+     * keeps startup code from copying or zeroing it. */
+    .boot_request (ORIGIN(RET_RAM) + LENGTH(RET_RAM) - 16) (NOLOAD) :
+    {
+        KEEP(*(.boot_request))
+    } >RET_RAM
+    ASSERT(ADDR(.boot_request) == 0x200F0FF0, "boot request must stay at the shared retention-SRAM address")
+    ASSERT(SIZEOF(.boot_request) <= 16, "boot request exceeds its reserved retention-SRAM slot")
+    ASSERT(__bss_end_ret_ram__ <= ADDR(.boot_request), "retention SRAM overlaps the boot request")
 
     .heap_stack (COPY) :
     {

@@ -35,3 +35,22 @@ target_link_options(hc32_project_options INTERFACE
     --specs=nano.specs
     --specs=nosys.specs
 )
+
+# Parses MAJOR.MINOR.REVISION[+BUILD] into <name>_{MAJOR,MINOR,REVISION,BUILD}_VALUE, checked against Protocol V1 widths.
+function(hc32_parse_version name value)
+    if(NOT value MATCHES "^([0-9]+)[.]([0-9]+)[.]([0-9]+)([+]([0-9]+))?$")
+        message(FATAL_ERROR "${name} must be MAJOR.MINOR.REVISION[+BUILD]")
+    endif()
+    set(build ${CMAKE_MATCH_5})
+    if("${build}" STREQUAL "")
+        set(build 0)
+    endif()
+    if(CMAKE_MATCH_1 GREATER 255 OR CMAKE_MATCH_2 GREATER 255 OR CMAKE_MATCH_3 GREATER 65535
+        OR build GREATER 4294967295)
+        message(FATAL_ERROR "${name} fields exceed Protocol V1 widths")
+    endif()
+    set(${name}_MAJOR_VALUE ${CMAKE_MATCH_1} PARENT_SCOPE)
+    set(${name}_MINOR_VALUE ${CMAKE_MATCH_2} PARENT_SCOPE)
+    set(${name}_REVISION_VALUE ${CMAKE_MATCH_3} PARENT_SCOPE)
+    set(${name}_BUILD_VALUE ${build} PARENT_SCOPE)
+endfunction()

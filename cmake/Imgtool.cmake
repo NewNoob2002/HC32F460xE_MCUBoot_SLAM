@@ -38,3 +38,27 @@ string(FIND "${public_key_source}" "ecdsa_pub_key[]" ecdsa_key_symbol)
 if(ecdsa_key_symbol EQUAL -1)
     message(FATAL_ERROR "MCUBOOT_SIGNING_KEY must be an ECDSA-P256 key")
 endif()
+
+# Optional administrator key: Boot verifies challenge signatures with this public key before FACTORY_ERASE. It is
+# independent of the image-signing key so administrator rights cannot sign firmware and vice versa.
+set(HC32_ADMIN_PUBLIC_KEY "" CACHE FILEPATH "ECDSA-P256 administrator public key (PEM); empty disables Boot administrator mode")
+set(HC32_ADMIN_PUBLIC_KEY_SOURCE "")
+if(HC32_ADMIN_PUBLIC_KEY)
+    get_filename_component(HC32_ACTIVE_ADMIN_PUBLIC_KEY "${HC32_ADMIN_PUBLIC_KEY}" ABSOLUTE)
+    if(NOT EXISTS "${HC32_ACTIVE_ADMIN_PUBLIC_KEY}")
+        message(FATAL_ERROR "HC32_ADMIN_PUBLIC_KEY does not exist: ${HC32_ACTIVE_ADMIN_PUBLIC_KEY}")
+    endif()
+    set(HC32_ADMIN_PUBLIC_KEY_SOURCE "${CMAKE_BINARY_DIR}/generated/admin_public_key.c")
+    execute_process(
+        COMMAND "${MCUBOOT_PYTHON}" "${PROJECT_SOURCE_DIR}/cmake/export_admin_key.py"
+                "${HC32_ACTIVE_ADMIN_PUBLIC_KEY}" "${HC32_ADMIN_PUBLIC_KEY_SOURCE}"
+        RESULT_VARIABLE admin_key_result
+    )
+    if(NOT admin_key_result EQUAL 0)
+        message(FATAL_ERROR "Failed to export HC32_ADMIN_PUBLIC_KEY")
+    endif()
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${HC32_ACTIVE_ADMIN_PUBLIC_KEY}")
+    message(STATUS "Boot administrator mode enabled with ${HC32_ACTIVE_ADMIN_PUBLIC_KEY}")
+else()
+    message(STATUS "Boot administrator mode disabled (HC32_ADMIN_PUBLIC_KEY is empty)")
+endif()

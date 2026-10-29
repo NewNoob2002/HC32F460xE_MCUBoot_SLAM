@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "bsp_boot_info.h"
 #include "bsp_critical.h"
 #include "bsp_status_led.h"
 #include "bsp_usb.h"
@@ -34,6 +35,24 @@
 
 #ifndef USB_FW_UPDATE_BOOT_RECOVERY
 #define USB_FW_UPDATE_BOOT_RECOVERY 0
+#endif
+
+#if USB_FW_UPDATE_BOOT_RECOVERY
+#include "boot_memory_map.h"
+#include "bootutil/image.h"
+#endif
+
+#ifndef HC32_ADMIN_AUTH_ENABLED
+#define HC32_ADMIN_AUTH_ENABLED 0
+#endif
+/* Administrator mode exists only in Boot recovery, where FACTORY_ERASE is executed. */
+#if HC32_ADMIN_AUTH_ENABLED && !USB_FW_UPDATE_BOOT_RECOVERY
+#error "HC32_ADMIN_AUTH_ENABLED requires USB_FW_UPDATE_BOOT_RECOVERY"
+#endif
+#if HC32_ADMIN_AUTH_ENABLED
+#include "bsp_trng.h"
+#include "fw_update/admin_auth_ecdsa.h"
+extern const uint8_t hc32_admin_public_key[FW_UPDATE_ADMIN_PUBLIC_KEY_SIZE];
 #endif
 
 #if USB_FW_UPDATE_BOOT_RECOVERY
@@ -176,6 +195,9 @@ USB_MEM_ALIGNX static uint8_t tx_buffer[FW_PROTOCOL_MAX_FRAME_SIZE];
 static struct fw_update_storage storage;
 static struct fw_update_boot_control boot_control;
 static struct fw_update_product_config product_config;
+#if HC32_ADMIN_AUTH_ENABLED
+static struct fw_update_admin_auth admin_auth;
+#endif
 static struct fw_update_manager manager;
 static volatile uint32_t rx_length;
 static volatile uint32_t tx_complete_length;
@@ -315,6 +337,45 @@ static void process_rx(uint32_t now_ms) {
     }
 }
 
+#if USB_FW_UPDATE_BOOT_RECOVERY
+/* Boot reports the Primary header version so the host can show what is installed. It is informational only: the
+ * image is not validated here, and 0.0.0 means the slot holds no MCUboot header (for example after factory erase). */
+static struct fw_update_version application_version(void) {
+    struct image_header header;
+    memcpy(&header, (const void*)PRIMARY_SLOT_BASE, sizeof(header));
+    if (header.ih_magic != IMAGE_MAGIC)
+        return (struct fw_update_version){0};
+    return (struct fw_update_version){
+        .major = header.ih_ver.iv_major,
+        .minor = header.ih_ver.iv_minor,
+        .revision = header.ih_ver.iv_revision,
+        .build = header.ih_ver.iv_build_num,
+    };
+}
+#else
+static struct fw_update_version application_version(void) {
+    return (struct fw_update_version){
+        .major = APP_VERSION_MAJOR,
+        .minor = APP_VERSION_MINOR,
+        .revision = APP_VERSION_REVISION,
+        .build = APP_VERSION_BUILD,
+    };
+}
+#endif
+
+/* Both Boot and Application read the record at its fixed Flash address; a Boot without one reports 0.0.0. */
+static struct fw_update_version bootloader_version(void) {
+    struct bsp_boot_info info;
+    if (!bsp_boot_info_read(&info))
+        return (struct fw_update_version){0};
+    return (struct fw_update_version){
+        .major = info.major,
+        .minor = info.minor,
+        .revision = info.revision,
+        .build = info.build,
+    };
+}
+
 int usb_fw_update_init(void) {
     const struct fw_update_product_identity default_identity = {
         .hardware_id = HC32_PRODUCT_HARDWARE_ID,
@@ -335,22 +396,29 @@ int usb_fw_update_init(void) {
     device_descriptor[USB_DEVICE_PID_OFFSET + 1U] = (uint8_t)(product_config_state.identity.application_pid >> 8U);
 #endif
     fw_update_boot_control_mcuboot_init(&boot_control, &product_config);
+#if HC32_ADMIN_AUTH_ENABLED
+    /* Without entropy or with an invalid key, recovery still works but never advertises administrator mode. */
+    const struct fw_update_admin_auth* admin =
+        bsp_trng_init()
+                && fw_update_admin_auth_ecdsa_init(&admin_auth, hc32_admin_public_key, bsp_trng_read) == FW_UPDATE_OK
+            ? &admin_auth
+            : NULL;
+#else
+    const struct fw_update_admin_auth* admin = NULL;
+#endif
     const struct fw_update_manager_config config = {
         .storage = &storage,
         .boot_control = &boot_control,
         .product_config = &product_config,
+        .admin_auth = admin,
         .product_config_writable = USB_FW_UPDATE_BOOT_RECOVERY != 0 ? 1U : 0U,
+        /* Images are received only by Boot recovery; the Application can only REBOOT into it. */
+        .image_install_disabled = USB_FW_UPDATE_BOOT_RECOVERY != 0 ? 0U : 1U,
         .usb_boot_pid = HC32_PRODUCT_USB_BOOT_PID,
         .usb_application_pid_min = HC32_PRODUCT_USB_APPLICATION_PID_MIN,
         .usb_application_pid_max = HC32_PRODUCT_USB_APPLICATION_PID_MAX,
-        .application_version =
-            {
-                .major = APP_VERSION_MAJOR,
-                .minor = APP_VERSION_MINOR,
-                .revision = APP_VERSION_REVISION,
-                .build = APP_VERSION_BUILD,
-            },
-        .bootloader_version = {.major = 1U, .minor = 0U, .revision = 0U, .build = 0U},
+        .application_version = application_version(),
+        .bootloader_version = bootloader_version(),
         .session_timeout_ms = 5000U,
     };
     int result = fw_update_manager_init(&manager, &config);
@@ -438,8 +506,16 @@ enum usb_fw_update_action usb_fw_update_poll(uint32_t now_ms) {
 
     g_usb_fw_update_last_result = fw_update_manager_poll(&manager, now_ms);
     update_status_led(now_ms);
-    return fw_update_manager_take_action(&manager) == FW_UPDATE_MANAGER_ACTION_RESET ? USB_FW_UPDATE_ACTION_RESET
-                                                                                     : USB_FW_UPDATE_ACTION_NONE;
+    switch (fw_update_manager_take_action(&manager)) {
+        case FW_UPDATE_MANAGER_ACTION_RESET:
+            return USB_FW_UPDATE_ACTION_RESET;
+        case FW_UPDATE_MANAGER_ACTION_RESET_TO_RECOVERY:
+            return USB_FW_UPDATE_ACTION_RESET_TO_RECOVERY;
+        case FW_UPDATE_MANAGER_ACTION_ERASE_AND_RESET:
+            return USB_FW_UPDATE_BOOT_RECOVERY != 0 ? USB_FW_UPDATE_ACTION_ERASE_AND_RESET : USB_FW_UPDATE_ACTION_RESET;
+        default:
+            return USB_FW_UPDATE_ACTION_NONE;
+    }
 }
 
 void usb_fw_update_get_status(struct usb_fw_update_status* status) {

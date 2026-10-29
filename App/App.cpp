@@ -1,4 +1,5 @@
 #include "App.h"
+#include "bsp_boot_request.h"
 #include "bsp_clock.h"
 #include "bsp_log_uart.h"
 #include "bsp_panic.h"
@@ -71,7 +72,9 @@ app::DiagnosticsSnapshot g_app_diagnostics{};
         const auto action = update_.poll(now_ms);
         (void)broker_.handleTimers(now_ms);
         const bool debug_reset = debug_.poll(now_ms);
-        if (action == USB_FW_UPDATE_ACTION_RESET || debug_reset)
+        if (action == USB_FW_UPDATE_ACTION_RESET_TO_RECOVERY)
+            bsp_boot_request_recovery();
+        if (action != USB_FW_UPDATE_ACTION_NONE || debug_reset)
             bsp_system_reset();
         bsp_status_led_poll(bsp_millis());
         __WFI();
