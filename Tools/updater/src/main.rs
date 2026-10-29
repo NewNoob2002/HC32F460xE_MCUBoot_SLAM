@@ -53,33 +53,30 @@ fn run(command: CliCommand) -> Result<(), Box<dyn std::error::Error>> {
                 .serial_number()
                 .unwrap_or("not-reported")
                 .to_owned();
-            let mut client = ProtocolV1Client::new(transport, REQUEST_TIMEOUT);
-            print_info(&client.info()?);
+            let info = with_client(transport, |client| client.info())?;
+            print_info(&info);
             println!("mode={mode}");
             println!("serial={serial_number}");
         }
         CliCommand::Install(path) => {
             let image = FirmwareImage::parse(fs::read(path)?)?;
             let transport = open_device()?.ok_or("USB device not found")?;
-            let mut client = ProtocolV1Client::new(transport, REQUEST_TIMEOUT);
-            UpgradeWorkflow::install(&mut client, &image, print_progress)?;
+            with_client(transport, |client| {
+                UpgradeWorkflow::install(client, &image, print_progress)
+            })?;
         }
         CliCommand::ConfigGet => {
             let transport = open_device()?.ok_or("USB device not found")?;
-            let mut client = ProtocolV1Client::new(transport, REQUEST_TIMEOUT);
-            print_product_config(&client.product_config()?);
+            print_product_config(&with_client(transport, |client| client.product_config())?);
         }
         CliCommand::ConfigSet(device_serial, hardware_version, application_pid) => {
             let transport = open_device()?.ok_or("USB device not found")?;
-            let mut client = ProtocolV1Client::new(transport, REQUEST_TIMEOUT);
-            print_product_config(&client.provision_product_config(
-                &device_serial,
-                &hardware_version,
-                application_pid,
-            )?);
+            print_product_config(&with_client(transport, |client| {
+                client.provision_product_config(&device_serial, &hardware_version, application_pid)
+            })?);
         }
         CliCommand::Wait { version, timeout } => {
-            let (info, _) = UpgradeWorkflow::wait_for_version(
+            let (info, mut client) = UpgradeWorkflow::wait_for_version(
                 NusbTransport::open_unique_application,
                 version,
                 timeout,
@@ -87,11 +84,24 @@ fn run(command: CliCommand) -> Result<(), Box<dyn std::error::Error>> {
                 REQUEST_TIMEOUT,
                 print_progress,
             )?;
+            client.close();
             print_info(&info);
         }
         CliCommand::Debug(arguments) => debug_cli::run(arguments)?,
     }
     Ok(())
+}
+
+/// Runs one command and always ends the device session, also on failure, so the next CLI process is not
+/// rejected until the device inactivity timeout.
+fn with_client<R>(
+    transport: NusbTransport,
+    operation: impl FnOnce(&mut ProtocolV1Client<NusbTransport>) -> Result<R, hc32_updater::Error>,
+) -> Result<R, hc32_updater::Error> {
+    let mut client = ProtocolV1Client::new(transport, REQUEST_TIMEOUT);
+    let result = operation(&mut client);
+    client.close();
+    result
 }
 
 fn open_device() -> std::io::Result<Option<NusbTransport>> {

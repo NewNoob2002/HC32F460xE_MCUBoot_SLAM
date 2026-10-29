@@ -26,6 +26,8 @@ const DEVICE_SERIAL_MAX_LENGTH: usize = 32;
 const HARDWARE_VERSION_MAX_LENGTH: usize = 16;
 const DEFAULT_ATTEMPTS: usize = 3;
 const MAX_STALE_RESPONSES: usize = 2;
+/// Upper bound for waiting out a session another host left open (V1 default inactivity timeout is 5000 ms).
+const FOREIGN_SESSION_WAIT: Duration = Duration::from_millis(6000);
 
 pub trait Transport {
     fn send(&mut self, request: &[u8], timeout: Duration) -> io::Result<()>;
@@ -288,6 +290,7 @@ impl UpgradeWorkflow {
                         if info.application_version == expected {
                             return Ok((info, client));
                         }
+                        client.close();
                     }
                     Err(Error::Transport(error)) if retryable_wait_error(&error) => {}
                     Err(error) => return Err(error),
@@ -322,6 +325,7 @@ pub struct ProtocolV1Client<T> {
     next_sequence: u32,
     hello: Option<HelloInfo>,
     last_response: Option<(Command, u32)>,
+    committed: bool,
 }
 
 impl<T: Transport> ProtocolV1Client<T> {
@@ -333,18 +337,37 @@ impl<T: Transport> ProtocolV1Client<T> {
             next_sequence: 0,
             hello: None,
             last_response: None,
+            committed: false,
         }
+    }
+
+    /// Ends an open, uncommitted session with one ABORT so the next host can HELLO immediately instead of
+    /// waiting for the device inactivity timeout. Best effort: on failure the device timeout still applies.
+    /// After a successful COMMIT the device resets by itself and rejects ABORT, so nothing is sent.
+    pub fn close(&mut self) {
+        if self.hello.take().is_some() && !self.committed {
+            let attempts = std::mem::replace(&mut self.attempts, 1);
+            let _ = self.request(Command::Abort, Vec::new());
+            self.attempts = attempts;
+        }
+        self.next_sequence = 0;
+        self.last_response = None;
+        self.committed = false;
     }
 
     pub fn into_transport(self) -> T {
         self.transport
     }
 
+    pub fn transport(&self) -> &T {
+        &self.transport
+    }
+
     pub fn hello(&mut self) -> Result<HelloInfo, Error> {
         if let Some(info) = &self.hello {
             return Ok(info.clone());
         }
-        let body = self.request(Command::Hello, Vec::new())?;
+        let body = self.hello_waiting_for_foreign_session()?;
         if body.len() != 10 {
             return Err(Error::Protocol(ProtocolError::InvalidLength(body.len())));
         }
@@ -360,6 +383,21 @@ impl<T: Transport> ProtocolV1Client<T> {
         }
         self.hello = Some(info.clone());
         Ok(info)
+    }
+
+    /// HELLO is rejected with BAD_SEQUENCE while another host's session is still open (for example after that
+    /// host crashed without ABORT). Retry until the device inactivity timeout has released it.
+    fn hello_waiting_for_foreign_session(&mut self) -> Result<Vec<u8>, Error> {
+        let deadline = Instant::now() + FOREIGN_SESSION_WAIT;
+        let interval = self.timeout.min(Duration::from_millis(500));
+        loop {
+            match self.request(Command::Hello, Vec::new()) {
+                Err(Error::Device(Status::BadSequence)) if Instant::now() < deadline => {
+                    std::thread::sleep(interval);
+                }
+                result => return result,
+            }
+        }
     }
 
     pub fn info(&mut self) -> Result<DeviceInfo, Error> {
@@ -510,6 +548,7 @@ impl<T: Transport> ProtocolV1Client<T> {
 
         progress(ProgressEvent::Committing);
         self.request(Command::Commit, Vec::new())?;
+        self.committed = true;
         progress(ProgressEvent::WaitingForReenumeration);
         Ok(device)
     }
@@ -872,6 +911,43 @@ mod tests {
         let transport = client.into_transport();
         assert_eq!(transport.naks, 1);
         assert_eq!(transport.requests.len(), 1);
+    }
+
+    #[test]
+    fn close_aborts_an_open_session_once() {
+        let transport = ScriptTransport::new([
+            Ok(response(Command::Hello, 0, Status::Ok, &hello_body())),
+            Ok(response(Command::Abort, 1, Status::Ok, &[])),
+        ]);
+        let mut client = ProtocolV1Client::new(transport, Duration::from_millis(10));
+        client.hello().unwrap();
+        client.close();
+        client.close();
+        let requests = client.into_transport().requests;
+        assert_eq!(requests.len(), 2);
+        let abort = Frame::decode(&requests[1]).unwrap();
+        assert_eq!((abort.command, abort.sequence), (Command::Abort, 1));
+    }
+
+    #[test]
+    fn close_sends_nothing_without_a_session() {
+        let mut client = ProtocolV1Client::new(ScriptTransport::new([]), Duration::from_millis(10));
+        client.close();
+        assert!(client.into_transport().requests.is_empty());
+    }
+
+    #[test]
+    fn hello_waits_for_a_foreign_session_to_end() {
+        let transport = ScriptTransport::new([
+            Ok(response(Command::Hello, 0, Status::BadSequence, &[])),
+            Ok(response(Command::Hello, 0, Status::BadSequence, &[])),
+            Ok(response(Command::Hello, 0, Status::Ok, &hello_body())),
+        ]);
+        let mut client = ProtocolV1Client::new(transport, Duration::from_millis(10));
+        assert_eq!(client.hello().unwrap().max_payload, 512);
+        let requests = client.into_transport().requests;
+        assert_eq!(requests.len(), 3);
+        assert!(requests.iter().all(|request| request == &requests[0]));
     }
 
     #[test]

@@ -189,6 +189,7 @@ fn worker_loop(receiver: Receiver<WorkerCommand>, ui: slint::Weak<UpdaterWindow>
                 Err(RecvTimeoutError::Timeout) => None,
                 Err(RecvTimeoutError::Disconnected) => {
                     debug.close(&ui, "Debug closed");
+                    close_session(&mut connected);
                     return;
                 }
             }
@@ -214,7 +215,7 @@ fn worker_loop(receiver: Receiver<WorkerCommand>, ui: slint::Weak<UpdaterWindow>
                 },
                 WorkerCommand::Connect(index) => {
                     debug.close(&ui, "Open Debug on the connected Application device");
-                    connected = None;
+                    close_session(&mut connected);
                     let result = usize::try_from(index)
                         .ok()
                         .and_then(|index| devices.get(index))
@@ -232,7 +233,7 @@ fn worker_loop(receiver: Receiver<WorkerCommand>, ui: slint::Weak<UpdaterWindow>
                 }
                 WorkerCommand::Disconnect => {
                     debug.close(&ui, "Debug disconnected");
-                    connected = None;
+                    close_session(&mut connected);
                     post_disconnected(&ui, "Disconnected");
                 }
                 WorkerCommand::Configure {
@@ -297,6 +298,14 @@ fn worker_loop(receiver: Receiver<WorkerCommand>, ui: slint::Weak<UpdaterWindow>
                 connected = None;
             }
         }
+    }
+}
+
+/// Ends the open update session (ABORT before COMMIT) so the next connection is not rejected until the
+/// device inactivity timeout. A lost connection is simply dropped by the heartbeat path instead.
+fn close_session(connected: &mut Option<ConnectedDevice>) {
+    if let Some(mut device) = connected.take() {
+        device.client.close();
     }
 }
 
@@ -410,8 +419,13 @@ fn install_image(
         .filter(|config| config.provisioned)
         .map(|config| config.device_serial.clone())
         .unwrap_or_else(|| device.serial_number.clone());
-    UpgradeWorkflow::install(&mut device.client, &image, |event| post_progress(ui, event))
-        .map_err(|error| error.to_string())?;
+    if let Err(error) =
+        UpgradeWorkflow::install(&mut device.client, &image, |event| post_progress(ui, event))
+    {
+        // Leave the device in IDLE instead of RECEIVING/ERROR so a reconnect can HELLO at once.
+        device.client.close();
+        return Err(error.to_string());
+    }
     drop(device);
 
     let (info, mut client) = UpgradeWorkflow::wait_for_version(

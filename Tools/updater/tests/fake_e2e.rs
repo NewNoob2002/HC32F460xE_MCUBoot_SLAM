@@ -11,6 +11,7 @@ struct ProcessTransport {
     child: Option<Child>,
     input: Option<ChildStdin>,
     output: ChildStdout,
+    requests: usize,
 }
 
 impl ProcessTransport {
@@ -29,6 +30,7 @@ impl ProcessTransport {
             child: Some(child),
             input: Some(input),
             output,
+            requests: 0,
         }
     }
 
@@ -57,6 +59,7 @@ impl Drop for ProcessTransport {
 impl Transport for ProcessTransport {
     fn send(&mut self, request: &[u8], _timeout: Duration) -> io::Result<()> {
         let input = self.input.as_mut().expect("fake input remains open");
+        self.requests += 1;
         input.write_all(request)?;
         input.flush()
     }
@@ -109,6 +112,10 @@ fn rust_core_completes_real_c_manager_fake_e2e() {
         total: image.bytes().len(),
     }));
 
+    // A committed session is ended by the device reset; closing must not send ABORT.
+    let requests = client.transport().requests;
+    client.close();
+    assert_eq!(client.transport().requests, requests);
     client.into_transport().finish();
     fs::remove_file(path).expect("remove fake image");
 }

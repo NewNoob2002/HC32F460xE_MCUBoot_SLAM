@@ -15,10 +15,13 @@ Tools/updater/target/debug/hc32-updater wait --version 2.0.0
 cargo run --manifest-path Tools/updater/Cargo.toml --bin hc32-updater-gui
 ```
 
-The CLI currently uses one protocol session per process. If an immediate
-follow-up command returns `BadSequence`, wait for the advertised 5000 ms session
-timeout before retrying. The GUI keeps one serialized connection and is not
-affected by this one-shot CLI limitation.
+The CLI uses one protocol session per process and ends it with ABORT before
+exiting, including after a failed command, so the next command can start at
+once. A successful COMMIT is not aborted; the device resets instead. The GUI
+sends ABORT on disconnect, reconnect, failed installation and window close. If
+a previous host exited without ABORT, HELLO is retried for up to 6 s while the
+device answers `BadSequence`; on hardware the device's three-error limit
+releases the stale session after about 1.5 s.
 
 Builds read the project identity from `Config/Product/ProductIdentity.env`.
 Before provisioning, firmware appends the HC32F460 96-bit UQID to `HC32F460-`.
