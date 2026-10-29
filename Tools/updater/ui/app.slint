@@ -9,15 +9,29 @@ import {
     Switch,
 } from "std-widgets.slint";
 
+// icon selects an Icons.by-id() glyph; tone 0 = neutral, 1 = good, 2 = warning.
 export struct DebugValueRow {
     name: string,
     value: string,
+    icon: int,
+    tone: int,
 }
 
-export struct DebugLogRow {
-    time: string,
-    level: string,
-    text: string,
+// One BQ40Z50 pack; tone 0 = idle, 1 = charging/full, 2 = alarm. Values are preformatted with units.
+export struct BatteryCard {
+    title: string,
+    present: bool,
+    state: string,
+    tone: int,
+    soc: int,
+    capacity: string,
+    voltage: string,
+    current: string,
+    power: string,
+    temperature: string,
+    charge-target: string,
+    cycles: string,
+    alarms: string,
 }
 
 export struct DebugSettingRow {
@@ -44,8 +58,77 @@ global Theme {
     out property <color> success-soft: dark ? #173326 : #e7f6ec;
     out property <color> warning: dark ? #f0b84b : #b45309;
     out property <color> warning-soft: dark ? #3a2e17 : #fff4e0;
-    out property <color> console: #0f1218;
-    out property <color> console-text: #c9d1d9;
+    out property <color> danger: dark ? #ff6b6b : #dc2626;
+    out property <color> danger-soft: dark ? #3b1d1f : #fdecec;
+}
+
+// Stroke icons drawn on a 24x24 grid as SVG path data, so no icon font or colour-emoji support is needed.
+export global Icons {
+    out property <string> chip: "M7 4 H17 A3 3 0 0 1 20 7 V17 A3 3 0 0 1 17 20 H7 A3 3 0 0 1 4 17 V7 A3 3 0 0 1 7 4 Z M9.5 9.5 H14.5 V14.5 H9.5 Z M9 1.5 V4 M15 1.5 V4 M9 20 V22.5 M15 20 V22.5 M1.5 9 H4 M1.5 15 H4 M20 9 H22.5 M20 15 H22.5";
+    out property <string> tag: "M3 12 L12 3 H21 V12 L12 21 Z M16 6.5 A1.5 1.5 0 1 0 16 9.5 A1.5 1.5 0 1 0 16 6.5 Z";
+    out property <string> hash: "M10 3 L8 21 M16 3 L14 21 M4 8.5 H20 M3.5 15.5 H19.5";
+    out property <string> plug: "M9 2 V7 M15 2 V7 M6 7 H18 V11 A6 6 0 0 1 6 11 Z M12 17 V22";
+    out property <string> clock: "M12 3 A9 9 0 1 0 12 21 A9 9 0 1 0 12 3 Z M12 7 V12 L15.5 14";
+    out property <string> loop: "M20 12 A8 8 0 1 1 17.66 6.34 M20 3.5 V8.5 H15";
+    out property <string> battery: "M2.5 7 H18.5 V17 H2.5 Z M21.5 10 V14 M6 10.5 V13.5 M9.5 10.5 V13.5 M13 10.5 V13.5";
+    out property <string> bolt: "M13 2 L4 14 H11 L10 22 L20 9.5 H13 Z";
+    out property <string> alert: "M12 3 L22 20.5 H2 Z M12 9.5 V14 M12 17 V17.5";
+    out property <string> download: "M12 3 V15 M7 10 L12 15 L17 10 M4 20 H20";
+    out property <string> shield: "M12 2 L20 5 V11 C20 16 16.5 20 12 22 C7.5 20 4 16 4 11 V5 Z M9 12 L11 14 L15 10";
+    out property <string> key: "M7.5 8 A4 4 0 1 0 7.5 16 A4 4 0 1 0 7.5 8 Z M11.5 12 H21.5 M18 12 V15.5 M21.5 12 V15";
+    out property <string> sliders: "M4 6 H20 M4 12 H20 M4 18 H20 M9 3.5 V8.5 M15 9.5 V14.5 M7 15.5 V20.5";
+    out property <string> chart: "M5 20 V11 M11 20 V4 M17 20 V14 M2.5 20.5 H21.5";
+    out property <string> trash: "M4 7 H20 M9.5 7 V4 H14.5 V7 M6 7 L7 21 H17 L18 7 M10 11 V17 M14 11 V17";
+    out property <string> power: "M12 3 V12 M7.5 6.5 A7.5 7.5 0 1 0 16.5 6.5";
+    out property <string> play: "M8 5 L19 12 L8 19 Z";
+    out property <string> link: "M10 14 L14 10 M8.5 11.5 L6 14 A3.2 3.2 0 0 0 10 18 L12.5 15.5 M15.5 12.5 L18 10 A3.2 3.2 0 0 0 14 6 L11.5 8.5";
+    out property <string> pulse: "M2 12 H6 L9 5 L14 19 L17 12 H22";
+    out property <string> lock: "M6 11 H18 V21 H6 Z M8.5 11 V7.5 A3.5 3.5 0 0 1 15.5 7.5 V11";
+    out property <string> unlock: "M6 11 H18 V21 H6 Z M8.5 11 V7.5 A3.5 3.5 0 0 1 15.2 6";
+    out property <string> file: "M6 2.5 H14 L19 7.5 V21.5 H6 Z M14 2.5 V7.5 H19";
+
+    public pure function by-id(id: int) -> string {
+        if id == 1 { return self.clock; }
+        if id == 2 { return self.loop; }
+        if id == 3 { return self.chip; }
+        if id == 4 { return self.battery; }
+        if id == 5 { return self.bolt; }
+        if id == 6 { return self.alert; }
+        if id == 7 { return self.download; }
+        if id == 8 { return self.power; }
+        if id == 9 { return self.chart; }
+        if id == 10 { return self.plug; }
+        return self.pulse;
+    }
+}
+
+component Icon inherits Path {
+    viewbox-width: 24;
+    viewbox-height: 24;
+    width: 18px;
+    height: 18px;
+    fill: transparent;
+    stroke: Theme.accent;
+    stroke-width: 1.8px;
+}
+
+// Rounded tinted square holding one icon, used in headers and list rows.
+component IconBadge inherits Rectangle {
+    in property <string> icon;
+    in property <color> tint: Theme.accent;
+    in property <color> fill: Theme.accent-soft;
+    in property <length> size: 30px;
+    width: root.size;
+    height: root.size;
+    border-radius: root.size / 3.2;
+    background: root.fill;
+
+    Icon {
+        commands: root.icon;
+        stroke: root.tint;
+        width: root.size * 0.56;
+        height: root.size * 0.56;
+    }
 }
 
 component Card inherits Rectangle {
@@ -61,24 +144,42 @@ component Card inherits Rectangle {
     }
 }
 
-component SectionHeader inherits VerticalLayout {
+component SectionHeader inherits HorizontalLayout {
     in property <string> title;
     in property <string> subtitle;
-    spacing: 3px;
-    alignment: center;
+    in property <string> icon;
+    in property <color> tint: Theme.accent;
+    in property <color> fill: Theme.accent-soft;
+    spacing: 12px;
 
-    Text {
-        text: root.title;
-        color: Theme.text;
-        font-size: 15px;
-        font-weight: 600;
+    if root.icon != "": VerticalLayout {
+        alignment: start;
+        IconBadge {
+            icon: root.icon;
+            tint: root.tint;
+            fill: root.fill;
+            size: 34px;
+        }
     }
 
-    if root.subtitle != "": Text {
-        text: root.subtitle;
-        color: Theme.muted;
-        font-size: 12px;
-        wrap: word-wrap;
+    VerticalLayout {
+        spacing: 3px;
+        alignment: center;
+        horizontal-stretch: 1;
+
+        Text {
+            text: root.title;
+            color: Theme.text;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        if root.subtitle != "": Text {
+            text: root.subtitle;
+            color: Theme.muted;
+            font-size: 12px;
+            wrap: word-wrap;
+        }
     }
 }
 
@@ -120,6 +221,8 @@ component KeyValueRow inherits Rectangle {
     in property <string> name;
     in property <string> value;
     in property <bool> shaded;
+    in property <string> icon;
+    in property <int> tone;
     border-radius: 6px;
     background: root.shaded ? Theme.surface-alt : transparent;
 
@@ -128,7 +231,17 @@ component KeyValueRow inherits Rectangle {
         padding-right: 10px;
         padding-top: 7px;
         padding-bottom: 7px;
-        spacing: 16px;
+        spacing: 12px;
+
+        if root.icon != "": VerticalLayout {
+            alignment: center;
+            IconBadge {
+                icon: root.icon;
+                size: 26px;
+                tint: root.tone == 1 ? Theme.success : root.tone == 2 ? Theme.warning : Theme.accent;
+                fill: root.tone == 1 ? Theme.success-soft : root.tone == 2 ? Theme.warning-soft : Theme.accent-soft;
+            }
+        }
 
         Text {
             text: root.name;
@@ -140,7 +253,7 @@ component KeyValueRow inherits Rectangle {
 
         Text {
             text: root.value;
-            color: Theme.text;
+            color: root.tone == 1 ? Theme.success : root.tone == 2 ? Theme.warning : Theme.text;
             font-family: "monospace";
             horizontal-stretch: 1;
             horizontal-alignment: right;
@@ -150,30 +263,44 @@ component KeyValueRow inherits Rectangle {
     }
 }
 
-component InfoItem inherits VerticalLayout {
+component InfoItem inherits HorizontalLayout {
     in property <string> label;
     in property <string> value;
-    spacing: 2px;
+    in property <string> icon;
+    spacing: 10px;
 
-    Text {
-        text: root.label;
-        color: Theme.muted;
-        font-size: 11px;
-        font-weight: 600;
+    VerticalLayout {
+        alignment: center;
+        IconBadge {
+            icon: root.icon;
+            size: 28px;
+        }
     }
 
-    Text {
-        text: root.value;
-        color: Theme.text;
-        font-size: 14px;
-        font-weight: 600;
-        overflow: elide;
+    VerticalLayout {
+        spacing: 1px;
+        alignment: center;
+        Text {
+            text: root.label;
+            color: Theme.muted;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        Text {
+            text: root.value;
+            color: Theme.text;
+            font-size: 13px;
+            font-weight: 600;
+            overflow: elide;
+        }
     }
 }
 
 component NavItem inherits Rectangle {
     in property <string> text;
     in property <string> hint;
+    in property <string> icon;
     in property <bool> active;
     callback clicked;
     border-radius: 8px;
@@ -189,6 +316,14 @@ component NavItem inherits Rectangle {
             width: 3px;
             border-radius: 1.5px;
             background: root.active ? Theme.accent : transparent;
+        }
+
+        VerticalLayout {
+            alignment: center;
+            Icon {
+                commands: root.icon;
+                stroke: root.active ? Theme.accent : Theme.muted;
+            }
         }
 
         VerticalLayout {
@@ -242,10 +377,158 @@ component EmptyHint inherits Text {
     horizontal-alignment: center;
 }
 
+component BatteryMetric inherits VerticalLayout {
+    in property <string> label;
+    in property <string> value;
+    spacing: 2px;
+    horizontal-stretch: 1;
+
+    Text {
+        text: root.label;
+        color: Theme.muted;
+        font-size: 11px;
+    }
+
+    Text {
+        text: root.value;
+        color: Theme.text;
+        font-family: "monospace";
+        font-size: 14px;
+    }
+}
+
+component BatteryPanel inherits Rectangle {
+    in property <BatteryCard> pack;
+    property <color> tint: root.pack.tone == 1 ? Theme.success : root.pack.tone == 2 ? Theme.warning : Theme.accent;
+    property <color> fill: root.pack.tone == 1 ? Theme.success-soft : root.pack.tone == 2 ? Theme.warning-soft : Theme.accent-soft;
+    horizontal-stretch: 1;
+    border-radius: 10px;
+    border-width: 1px;
+    border-color: Theme.border;
+    background: Theme.surface-alt;
+
+    VerticalLayout {
+        padding: 14px;
+        spacing: 10px;
+
+        HorizontalLayout {
+            spacing: 10px;
+            IconBadge {
+                icon: Icons.battery;
+                tint: root.tint;
+                fill: root.fill;
+            }
+
+            Text {
+                text: root.pack.title;
+                color: Theme.text;
+                font-weight: 600;
+                horizontal-stretch: 1;
+                vertical-alignment: center;
+            }
+
+            VerticalLayout {
+                alignment: center;
+                Badge {
+                    text: root.pack.state;
+                    tint: root.pack.present ? root.tint : Theme.muted;
+                    fill: root.pack.present ? root.fill : Theme.hover;
+                }
+            }
+        }
+
+        if !root.pack.present: EmptyHint {
+            text: "Pack not detected or not answering on I2C.";
+        }
+
+        if root.pack.present: VerticalLayout {
+            spacing: 10px;
+
+            HorizontalLayout {
+                spacing: 12px;
+                Text {
+                    text: root.pack.soc + "%";
+                    color: root.tint;
+                    font-size: 28px;
+                    font-weight: 700;
+                    vertical-alignment: center;
+                }
+
+                VerticalLayout {
+                    alignment: center;
+                    horizontal-stretch: 1;
+                    spacing: 4px;
+                    Text {
+                        text: root.pack.capacity;
+                        color: Theme.muted;
+                        font-family: "monospace";
+                    }
+
+                    Rectangle {
+                        height: 8px;
+                        border-radius: 4px;
+                        background: Theme.hover;
+                        Rectangle {
+                            x: 0;
+                            width: parent.width * clamp(root.pack.soc, 0, 100) / 100;
+                            height: parent.height;
+                            border-radius: 4px;
+                            background: root.tint;
+                        }
+                    }
+                }
+            }
+
+            HorizontalLayout {
+                spacing: 12px;
+                BatteryMetric {
+                    label: "Voltage";
+                    value: root.pack.voltage;
+                }
+
+                BatteryMetric {
+                    label: "Current";
+                    value: root.pack.current;
+                }
+
+                BatteryMetric {
+                    label: "Power";
+                    value: root.pack.power;
+                }
+            }
+
+            HorizontalLayout {
+                spacing: 12px;
+                BatteryMetric {
+                    label: "Temperature";
+                    value: root.pack.temperature;
+                }
+
+                BatteryMetric {
+                    label: "Charge target";
+                    value: root.pack.charge-target;
+                }
+
+                BatteryMetric {
+                    label: "Cycles";
+                    value: root.pack.cycles;
+                }
+            }
+
+            if root.pack.alarms != "": Text {
+                text: "Alarm: " + root.pack.alarms;
+                color: Theme.warning;
+                wrap: word-wrap;
+            }
+        }
+    }
+}
+
 component Dialog inherits Rectangle {
     in property <string> heading;
     in property <string> body;
     in property <length> dialog-width: 460px;
+    in property <bool> danger;
     background: #000000a0;
 
     TouchArea { }
@@ -271,7 +554,7 @@ component Dialog inherits Rectangle {
                 Rectangle {
                     width: 4px;
                     border-radius: 2px;
-                    background: Theme.warning;
+                    background: root.danger ? Theme.danger : Theme.warning;
                 }
 
                 Text {
@@ -299,7 +582,8 @@ component Dialog inherits Rectangle {
 }
 
 export component UpdaterWindow inherits Window {
-    title: "HC32 Firmware Updater";
+    in property <string> app-version;
+    title: "HC32 Firmware Updater " + root.app-version;
     preferred-width: 1040px;
     preferred-height: 780px;
     min-width: 860px;
@@ -318,6 +602,10 @@ export component UpdaterWindow inherits Window {
     in property <string> device-hardware-version: "—";
     in property <string> device-application-pid: "—";
     in property <string> device-version: "—";
+    in property <string> device-boot-version: "—";
+    in property <string> device-mode: "—";
+    in property <bool> device-in-boot: false;
+    in property <bool> device-admin-capable: false;
     in property <string> firmware-version: "Not selected";
     in property <string> firmware-sha256: "Not checked";
     in property <string> status-text: "Ready";
@@ -336,14 +624,16 @@ export component UpdaterWindow inherits Window {
     in property <bool> debug-streaming: false;
     in property <string> debug-status: "Open Debug on a connected Application device";
     in property <[DebugValueRow]> debug-telemetry;
-    in property <[DebugValueRow]> debug-stats;
+    in property <[BatteryCard]> debug-batteries;
+    in property <[DebugValueRow]> debug-charger;
     in property <[DebugSettingRow]> debug-settings;
-    in property <[DebugLogRow]> debug-logs;
     in-out property <string> debug-period: "1000";
-    in-out property <bool> debug-include-logs: true;
-    in-out property <bool> debug-follow-logs: true;
     in-out property <bool> debug-confirm-visible: false;
     in property <string> debug-confirm-text;
+    in property <bool> admin-unlocked: false;
+    in property <bool> admin-verified: false;
+    in property <string> admin-fingerprint: "No key loaded";
+    in-out property <bool> admin-erase-confirm-visible: false;
 
     callback refresh-device();
     callback connect-device(int);
@@ -353,17 +643,30 @@ export component UpdaterWindow inherits Window {
     callback install-firmware(string);
     callback debug-open();
     callback debug-refresh();
-    callback debug-start(string, bool);
+    callback debug-start(string);
     callback debug-stop();
+    callback debug-close();
     callback debug-edit-setting(int, string);
     callback debug-apply-setting(int);
     callback debug-reset();
     callback debug-confirm();
-    callback debug-clear-logs();
+    callback admin-load-key();
+    callback admin-lock();
+    // Drops the key without a status message; fired when Boot Recovery ends (Exit Boot, reset or disconnect).
+    callback admin-release();
+    callback admin-verify();
+    callback admin-erase();
+    callback reboot-device(bool);
 
     // Every action is disabled while a USB operation or a confirmation is pending.
-    property <bool> idle: !root.busy && !root.debug-busy && !root.debug-confirm-visible;
+    property <bool> idle: !root.busy && !root.debug-busy && !root.debug-confirm-visible
+        && !root.admin-erase-confirm-visible;
     in-out property <int> page: 0;
+    changed device-in-boot => {
+        if !self.device-in-boot && self.admin-unlocked {
+            root.admin-release();
+        }
+    }
 
     VerticalLayout {
         // Header
@@ -401,7 +704,7 @@ export component UpdaterWindow inherits Window {
                     }
 
                     Text {
-                        text: "HC32F460 · MCUboot · USB";
+                        text: "HC32F460 · MCUboot · USB · Boot + App · " + root.app-version;
                         color: Theme.muted;
                         font-size: 12px;
                     }
@@ -409,6 +712,26 @@ export component UpdaterWindow inherits Window {
 
                 Rectangle {
                     horizontal-stretch: 1;
+                }
+
+                if root.admin-unlocked: VerticalLayout {
+                    alignment: center;
+                    horizontal-stretch: 0;
+                    Badge {
+                        text: "Administrator";
+                        tint: Theme.danger;
+                        fill: Theme.danger-soft;
+                    }
+                }
+
+                if root.device-connected: VerticalLayout {
+                    alignment: center;
+                    horizontal-stretch: 0;
+                    Badge {
+                        text: root.device-mode;
+                        tint: root.device-in-boot ? Theme.warning : Theme.accent;
+                        fill: root.device-in-boot ? Theme.warning-soft : Theme.accent-soft;
+                    }
                 }
 
                 VerticalLayout {
@@ -457,6 +780,14 @@ export component UpdaterWindow inherits Window {
             }
 
             Button {
+                text: root.device-in-boot ? "Exit Boot" : "Enter Boot";
+                enabled: root.idle && root.device-connected;
+                clicked => {
+                    root.reboot-device(!root.device-in-boot);
+                }
+            }
+
+            Button {
                 text: "Disconnect";
                 enabled: root.idle && root.can-disconnect;
                 clicked => {
@@ -487,21 +818,31 @@ export component UpdaterWindow inherits Window {
                     InfoItem {
                         label: "Serial number";
                         value: root.device-serial;
+                        icon: Icons.hash;
                     }
 
                     InfoItem {
-                        label: "Firmware version";
+                        label: "Application version";
                         value: root.device-version;
+                        icon: Icons.tag;
+                    }
+
+                    InfoItem {
+                        label: "Boot version";
+                        value: root.device-boot-version;
+                        icon: Icons.shield;
                     }
 
                     InfoItem {
                         label: "Hardware version";
                         value: root.device-hardware-version;
+                        icon: Icons.chip;
                     }
 
                     InfoItem {
                         label: "App USB PID";
                         value: root.device-application-pid;
+                        icon: Icons.plug;
                     }
                 }
 
@@ -511,6 +852,7 @@ export component UpdaterWindow inherits Window {
                     NavItem {
                         text: "Firmware Update";
                         hint: "Install a signed image";
+                        icon: Icons.download;
                         active: root.page == 0;
                         clicked => {
                             root.page = 0;
@@ -518,8 +860,9 @@ export component UpdaterWindow inherits Window {
                     }
 
                     NavItem {
-                        text: "Debug";
-                        hint: "Telemetry, logs, settings";
+                        text: "Monitor";
+                        hint: "Battery, charger, settings";
+                        icon: Icons.pulse;
                         active: root.page == 1;
                         clicked => {
                             root.page = 1;
@@ -529,9 +872,20 @@ export component UpdaterWindow inherits Window {
                     NavItem {
                         text: "Device Setup";
                         hint: "Write-once manufacturing";
+                        icon: Icons.sliders;
                         active: root.page == 2;
                         clicked => {
                             root.page = 2;
+                        }
+                    }
+
+                    NavItem {
+                        text: "Administrator";
+                        hint: root.admin-unlocked ? "Unlocked" : "Key required";
+                        icon: root.admin-unlocked ? Icons.unlock : Icons.shield;
+                        active: root.page == 3;
+                        clicked => {
+                            root.page = 3;
                         }
                     }
                 }
@@ -556,6 +910,7 @@ export component UpdaterWindow inherits Window {
                             SectionHeader {
                                 title: "Firmware image";
                                 subtitle: "Select artifacts/app-signed-<version>.bin. Slot-padded primary/update images are rejected.";
+                                icon: Icons.file;
                             }
 
                             HorizontalLayout {
@@ -596,7 +951,10 @@ export component UpdaterWindow inherits Window {
                                 SectionHeader {
                                     horizontal-stretch: 1;
                                     title: "Install";
-                                    subtitle: "The image is written to the Secondary slot only; the device verifies the signature, swaps and restarts.";
+                                    subtitle: root.device-in-boot
+                                        ? "Boot Recovery receives the image into the Secondary slot, verifies the signature, swaps and starts the new Application."
+                                        : "Installation runs in Boot Recovery. Click Enter Boot in the toolbar first.";
+                                    icon: Icons.download;
                                 }
 
                                 VerticalLayout {
@@ -604,7 +962,8 @@ export component UpdaterWindow inherits Window {
                                     Button {
                                         text: "Install update";
                                         primary: true;
-                                        enabled: root.idle && root.device-connected && root.firmware-path != "";
+                                        enabled: root.idle && root.device-connected && root.device-in-boot
+                                            && root.firmware-path != "";
                                         clicked => {
                                             root.install-firmware(root.firmware-path);
                                         }
@@ -643,18 +1002,30 @@ export component UpdaterWindow inherits Window {
                                 spacing: 8px;
                                 SectionHeader {
                                     horizontal-stretch: 1;
-                                    title: "Debug session";
+                                    title: "Monitor session";
                                     subtitle: root.debug-status;
+                                    icon: Icons.link;
                                 }
 
                                 VerticalLayout {
                                     alignment: center;
                                     Button {
-                                        text: "Open Debug";
+                                        text: "Open";
                                         primary: !root.debug-connected;
                                         enabled: root.debug-available && root.idle && !root.debug-connected;
                                         clicked => {
                                             root.debug-open();
+                                        }
+                                    }
+                                }
+
+                                VerticalLayout {
+                                    alignment: center;
+                                    Button {
+                                        text: "Close";
+                                        enabled: root.debug-connected && root.idle;
+                                        clicked => {
+                                            root.debug-close();
                                         }
                                     }
                                 }
@@ -677,7 +1048,7 @@ export component UpdaterWindow inherits Window {
                                 spacing: 10px;
 
                                 Text {
-                                    text: "Period";
+                                    text: "Update every";
                                     color: Theme.muted;
                                     vertical-alignment: center;
                                 }
@@ -695,15 +1066,6 @@ export component UpdaterWindow inherits Window {
                                     vertical-alignment: center;
                                 }
 
-                                VerticalLayout {
-                                    alignment: center;
-                                    Switch {
-                                        text: "Logs";
-                                        checked <=> root.debug-include-logs;
-                                        enabled: root.idle && !root.debug-streaming;
-                                    }
-                                }
-
                                 Rectangle {
                                     horizontal-stretch: 1;
                                 }
@@ -713,7 +1075,7 @@ export component UpdaterWindow inherits Window {
                                     primary: true;
                                     enabled: root.debug-connected && !root.debug-streaming && root.idle;
                                     clicked => {
-                                        root.debug-start(root.debug-period, root.debug-include-logs);
+                                        root.debug-start(root.debug-period);
                                     }
                                 }
 
@@ -728,10 +1090,52 @@ export component UpdaterWindow inherits Window {
                         }
 
                         Card {
+                            SectionHeader {
+                                title: "Battery";
+                                subtitle: "BQ40Z50 fuel gauge, refreshed by the device once per second. Positive current is charging.";
+                                icon: Icons.battery;
+                            }
+
+                            HorizontalLayout {
+                                spacing: 12px;
+                                for pack in root.debug-batteries: BatteryPanel {
+                                    pack: pack;
+                                }
+                            }
+
+                            if root.debug-batteries.length == 0: EmptyHint {
+                                text: "No battery data yet. Open the monitor, then Refresh or Start.";
+                            }
+                        }
+
+                        Card {
+                            SectionHeader {
+                                title: "Charger";
+                                subtitle: "MP2762A charge controller and its PG / INT# pins. Register scaling is preliminary until validated on hardware.";
+                                icon: Icons.bolt;
+                            }
+
+                            VerticalLayout {
+                                for field[index] in root.debug-charger: KeyValueRow {
+                                    name: field.name;
+                                    value: field.value;
+                                    icon: Icons.by-id(field.icon);
+                                    tone: field.tone;
+                                    shaded: Math.mod(index, 2) == 0;
+                                }
+                            }
+
+                            if root.debug-charger.length == 0: EmptyHint {
+                                text: "No charger data yet. Open the monitor, then Refresh or Start.";
+                            }
+                        }
+
+                        Card {
                             HorizontalLayout {
                                 SectionHeader {
                                     horizontal-stretch: 1;
-                                    title: "Live telemetry";
+                                    title: "System status";
+                                    icon: Icons.pulse;
                                 }
 
                                 VerticalLayout {
@@ -749,111 +1153,14 @@ export component UpdaterWindow inherits Window {
                                 for field[index] in root.debug-telemetry: KeyValueRow {
                                     name: field.name;
                                     value: field.value;
+                                    icon: Icons.by-id(field.icon);
+                                    tone: field.tone;
                                     shaded: Math.mod(index, 2) == 0;
                                 }
                             }
 
                             if root.debug-telemetry.length == 0: EmptyHint {
-                                text: "No telemetry yet. Open Debug, then Refresh or Start.";
-                            }
-                        }
-
-                        Card {
-                            HorizontalLayout {
-                                spacing: 12px;
-                                SectionHeader {
-                                    horizontal-stretch: 1;
-                                    title: "Logs";
-                                    subtitle: "Device log and EasyLogger console (Debug builds) · latest 500 lines";
-                                }
-
-                                VerticalLayout {
-                                    alignment: center;
-                                    Switch {
-                                        text: "Follow";
-                                        checked <=> root.debug-follow-logs;
-                                    }
-                                }
-
-                                VerticalLayout {
-                                    alignment: center;
-                                    Button {
-                                        text: "Clear";
-                                        enabled: root.debug-logs.length > 0;
-                                        clicked => {
-                                            root.debug-clear-logs();
-                                        }
-                                    }
-                                }
-                            }
-
-                            Rectangle {
-                                height: 260px;
-                                border-radius: 8px;
-                                background: Theme.console;
-
-                                // Keep the newest line visible while Follow is on, like a serial terminal.
-                                log-view := ScrollView {
-                                    property <int> line-count: root.debug-logs.length;
-                                    changed line-count => {
-                                        follow-timer.running = true;
-                                    }
-
-                                    // Scrolls after layout settles; reading viewport-height during init recurses.
-                                    follow-timer := Timer {
-                                        interval: 1ms;
-                                        running: true;
-                                        triggered => {
-                                            self.running = false;
-                                            if root.debug-follow-logs {
-                                                log-view.viewport-y = min(0px, log-view.visible-height - log-view.viewport-height);
-                                            }
-                                        }
-                                    }
-
-                                    VerticalLayout {
-                                        padding: 10px;
-                                        spacing: 2px;
-                                        alignment: start;
-                                        for line in root.debug-logs: HorizontalLayout {
-                                            spacing: 10px;
-                                            Text {
-                                                text: line.time;
-                                                color: #6e7681;
-                                                font-family: "monospace";
-                                                font-size: 12px;
-                                                horizontal-stretch: 0;
-                                            }
-
-                                            Text {
-                                                text: line.level;
-                                                font-family: "monospace";
-                                                font-size: 12px;
-                                                font-weight: 700;
-                                                horizontal-stretch: 0;
-                                                color: line.level == "A" || line.level == "E" ? #ff7b72
-                                                    : line.level == "W" ? #e3b341
-                                                    : line.level == "I" ? #79c0ff
-                                                    : line.level == "D" ? #7ee787 : #8b949e;
-                                            }
-
-                                            Text {
-                                                text: line.text;
-                                                color: Theme.console-text;
-                                                font-family: "monospace";
-                                                font-size: 12px;
-                                                horizontal-stretch: 1;
-                                                wrap: word-wrap;
-                                            }
-                                        }
-                                    }
-                                }
-
-                                if root.debug-logs.length == 0: Text {
-                                    text: "No log entries";
-                                    color: #6e7681;
-                                    font-size: 12px;
-                                }
+                                text: "No status yet. Open the monitor, then Refresh or Start.";
                             }
                         }
 
@@ -864,6 +1171,7 @@ export component UpdaterWindow inherits Window {
                                     horizontal-stretch: 1;
                                     title: "Settings";
                                     subtitle: "Stored in the device app_kv partition. Each change needs confirmation.";
+                                    icon: Icons.sliders;
                                 }
 
                                 VerticalLayout {
@@ -953,24 +1261,6 @@ export component UpdaterWindow inherits Window {
                                 text: "Settings load after Open Debug.";
                             }
                         }
-
-                        Card {
-                            SectionHeader {
-                                title: "Statistics";
-                            }
-
-                            VerticalLayout {
-                                for field[index] in root.debug-stats: KeyValueRow {
-                                    name: field.name;
-                                    value: field.value;
-                                    shaded: Math.mod(index, 2) == 0;
-                                }
-                            }
-
-                            if root.debug-stats.length == 0: EmptyHint {
-                                text: "No statistics yet.";
-                            }
-                        }
                     }
 
                     if root.page == 2: VerticalLayout {
@@ -982,7 +1272,8 @@ export component UpdaterWindow inherits Window {
                                 SectionHeader {
                                     horizontal-stretch: 1;
                                     title: "Product configuration";
-                                    subtitle: "Accepted only in Boot Recovery, and only once per device.";
+                                    subtitle: "Accepted only in Boot Recovery, and only once per device. An administrator factory erase allows it again.";
+                                    icon: Icons.sliders;
                                 }
 
                                 VerticalLayout {
@@ -1062,6 +1353,112 @@ export component UpdaterWindow inherits Window {
                             }
                         }
                     }
+
+                    if root.page == 3: VerticalLayout {
+                        spacing: 16px;
+
+                        Card {
+                            HorizontalLayout {
+                                spacing: 8px;
+                                SectionHeader {
+                                    horizontal-stretch: 1;
+                                    title: "Administrator key";
+                                    subtitle: "Load the administrator ECDSA-P256 private key (PEM). It stays on this computer; the device only checks a signature over its own random challenge.";
+                                    icon: Icons.key;
+                                    tint: Theme.danger;
+                                    fill: Theme.danger-soft;
+                                }
+
+                                VerticalLayout {
+                                    alignment: center;
+                                    horizontal-stretch: 0;
+                                    Badge {
+                                        text: root.admin-verified ? "Verified" : root.admin-unlocked ? "Key loaded" : "Locked";
+                                        tint: root.admin-verified ? Theme.success : root.admin-unlocked ? Theme.warning : Theme.muted;
+                                        fill: root.admin-verified ? Theme.success-soft : root.admin-unlocked ? Theme.warning-soft : Theme.hover;
+                                    }
+                                }
+                            }
+
+                            KeyValueRow {
+                                name: "Key fingerprint";
+                                value: root.admin-fingerprint;
+                                icon: root.admin-unlocked ? Icons.unlock : Icons.lock;
+                                shaded: true;
+                            }
+
+                            HorizontalLayout {
+                                alignment: end;
+                                spacing: 8px;
+                                Button {
+                                    text: "Lock";
+                                    enabled: root.idle && root.admin-unlocked && root.device-in-boot;
+                                    clicked => {
+                                        root.admin-lock();
+                                    }
+                                }
+
+                                Button {
+                                    text: "Load key…";
+                                    primary: !root.admin-unlocked;
+                                    enabled: root.idle && root.device-connected && root.device-in-boot;
+                                    clicked => {
+                                        root.admin-load-key();
+                                    }
+                                }
+
+                                Button {
+                                    text: "Verify on device";
+                                    enabled: root.idle && root.admin-unlocked && root.device-connected && root.device-in-boot
+                                        && root.device-admin-capable;
+                                    clicked => {
+                                        root.admin-verify();
+                                    }
+                                }
+                            }
+                        }
+
+                        if !root.device-in-boot: Card {
+                            SectionHeader {
+                                title: "Boot Recovery required";
+                                subtitle: root.device-connected
+                                    ? "Administrator operations run in Boot Recovery. Click Enter Boot in the toolbar first."
+                                    : "Connect a device, then click Enter Boot in the toolbar.";
+                                icon: Icons.power;
+                                tint: Theme.warning;
+                                fill: Theme.warning-soft;
+                            }
+                        }
+
+                        Card {
+                            SectionHeader {
+                                title: "Factory erase";
+                                subtitle: "Erases the Primary and Secondary image slots, the scratch sector and Product Config. The device restarts unprovisioned in Boot Recovery with its factory USB serial, ready for Device Setup and a new install. Application settings are kept.";
+                                icon: Icons.trash;
+                                tint: Theme.danger;
+                                fill: Theme.danger-soft;
+                            }
+
+                            if root.device-connected && root.device-in-boot && !root.device-admin-capable: Text {
+                                text: "This Boot was built without an administrator key (HC32_ADMIN_PUBLIC_KEY).";
+                                color: Theme.warning;
+                                font-size: 12px;
+                                wrap: word-wrap;
+                            }
+
+                            HorizontalLayout {
+                                alignment: end;
+                                Button {
+                                    text: "Erase device…";
+                                    enabled: root.idle && root.admin-unlocked && root.device-connected && root.device-in-boot
+                                        && root.device-admin-capable;
+                                    clicked => {
+                                        root.admin-erase-confirm-visible = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1107,6 +1504,33 @@ export component UpdaterWindow inherits Window {
             primary: true;
             clicked => {
                 root.warning-visible = false;
+            }
+        }
+    }
+
+    if root.admin-erase-confirm-visible: Dialog {
+        width: 100%;
+        height: 100%;
+        dialog-width: 520px;
+        danger: true;
+        heading: "Erase this device?";
+        body: "Both application slots, the scratch sector and Product Config (" + root.device-serial
+            + ") are erased permanently. The device will need Device Setup and a new firmware install. This cannot be undone.";
+
+        Button {
+            text: "Cancel";
+            clicked => {
+                root.admin-erase-confirm-visible = false;
+            }
+        }
+
+        Button {
+            text: "Erase";
+            primary: true;
+            enabled: root.device-connected && !root.busy && !root.debug-busy;
+            clicked => {
+                root.admin-erase-confirm-visible = false;
+                root.admin-erase();
             }
         }
     }

@@ -1,3 +1,4 @@
+pub mod admin;
 pub mod debug_link;
 pub mod nusb_transport;
 mod protocol;
@@ -18,8 +19,11 @@ const IMAGE_HEADER_SIZE: usize = 32;
 const IMAGE_TLV_PROT_INFO_MAGIC: u16 = 0x6908;
 const COMPATIBILITY_TLV_TYPE: u16 = 0x00a0;
 const COMPATIBILITY_PAYLOAD_SIZE: usize = 12;
+/// Advertised only by Boot recovery: images are installed there after REBOOT to recovery.
 pub const UPGRADE_CAPABILITIES: u32 = 0b111;
 const PRODUCT_CONFIG_CAPABILITY: u32 = 1 << 3;
+pub const REBOOT_CAPABILITY: u32 = 1 << 4;
+pub const ADMIN_CAPABILITY: u32 = 1 << 5;
 const PRODUCT_CONFIG_FORMAT_VERSION: u8 = 3;
 const PRODUCT_CONFIG_HEADER_SIZE: usize = 6;
 const DEVICE_SERIAL_MAX_LENGTH: usize = 32;
@@ -34,7 +38,7 @@ pub trait Transport {
     fn receive(&mut self, timeout: Duration) -> io::Result<Vec<u8>>;
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct Version {
     pub major: u8,
     pub minor: u8,
@@ -248,6 +252,14 @@ pub enum ProgressEvent {
     WaitingForReenumeration,
 }
 
+/// REBOOT payload byte: where the device starts after its reset.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[repr(u8)]
+pub enum RebootTarget {
+    Application = 0,
+    Recovery = 1,
+}
+
 pub struct UpgradeWorkflow;
 
 impl UpgradeWorkflow {
@@ -260,8 +272,49 @@ impl UpgradeWorkflow {
     }
 
     pub fn wait_for_version<T: Transport>(
-        mut connect: impl FnMut() -> io::Result<Option<T>>,
+        connect: impl FnMut() -> io::Result<Option<T>>,
         expected: Version,
+        timeout: Duration,
+        poll_interval: Duration,
+        request_timeout: Duration,
+        progress: impl FnMut(ProgressEvent),
+    ) -> Result<(DeviceInfo, ProtocolV1Client<T>), Error> {
+        Self::wait_for(
+            connect,
+            |info| info.application_version == expected,
+            Error::WaitTimeout(expected),
+            timeout,
+            poll_interval,
+            request_timeout,
+            progress,
+        )
+    }
+
+    /// Waits for the device after REBOOT to recovery; `connect` must open only the same serial in Boot mode.
+    pub fn wait_for_recovery<T: Transport>(
+        connect: impl FnMut() -> io::Result<Option<T>>,
+        timeout: Duration,
+        poll_interval: Duration,
+        request_timeout: Duration,
+        progress: impl FnMut(ProgressEvent),
+    ) -> Result<(DeviceInfo, ProtocolV1Client<T>), Error> {
+        Self::wait_for(
+            connect,
+            |_| true,
+            Error::ReconnectTimeout("Boot recovery"),
+            timeout,
+            poll_interval,
+            request_timeout,
+            progress,
+        )
+    }
+
+    /// Polls `connect` until a device answers DEVICE_INFO and `accept` returns true, or fails with
+    /// `timeout_error`. Transient enumeration and transport errors are retried.
+    pub fn wait_for<T: Transport>(
+        mut connect: impl FnMut() -> io::Result<Option<T>>,
+        mut accept: impl FnMut(&DeviceInfo) -> bool,
+        timeout_error: Error,
         timeout: Duration,
         poll_interval: Duration,
         request_timeout: Duration,
@@ -287,7 +340,7 @@ impl UpgradeWorkflow {
                 match client.info() {
                     Ok(info) => {
                         progress(ProgressEvent::Device(info.clone()));
-                        if info.application_version == expected {
+                        if accept(&info) {
                             return Ok((info, client));
                         }
                         client.close();
@@ -298,17 +351,20 @@ impl UpgradeWorkflow {
             }
             let now = Instant::now();
             if now >= deadline {
-                return Err(Error::WaitTimeout(expected));
+                return Err(timeout_error);
             }
             std::thread::sleep(poll_interval.min(deadline - now));
         }
     }
 }
 
+/// PermissionDenied is retried because udev applies the device-node ACL shortly after enumeration; a lasting
+/// permission problem still ends in the wait timeout.
 fn retryable_wait_error(error: &io::Error) -> bool {
     matches!(
         error.kind(),
         io::ErrorKind::NotFound
+            | io::ErrorKind::PermissionDenied
             | io::ErrorKind::NotConnected
             | io::ErrorKind::ConnectionAborted
             | io::ErrorKind::ConnectionReset
@@ -553,6 +609,48 @@ impl<T: Transport> ProtocolV1Client<T> {
         Ok(device)
     }
 
+    /// Asks the device to reset into the Application or into Boot recovery. Like COMMIT, a successful REBOOT ends
+    /// the session: the device resets on its own and would reject ABORT.
+    pub fn reboot(&mut self, target: RebootTarget) -> Result<(), Error> {
+        let hello = self.hello()?;
+        if hello.capabilities & REBOOT_CAPABILITY == 0 {
+            return Err(Error::Capability(hello.capabilities));
+        }
+        self.request(Command::Reboot, vec![target as u8])?;
+        self.committed = true;
+        Ok(())
+    }
+
+    /// Proves possession of the administrator key. Rights last until the session ends; a wrong key is reported
+    /// as `Error::Device(Status::VerifyError)` and the challenge is spent.
+    pub fn admin_authenticate(&mut self, key: &admin::AdminKey) -> Result<(), Error> {
+        let hello = self.hello()?;
+        if hello.capabilities & ADMIN_CAPABILITY == 0 {
+            return Err(Error::Capability(hello.capabilities));
+        }
+        let challenge = self.request(Command::AdminChallenge, Vec::new())?;
+        if challenge.len() != admin::CHALLENGE_SIZE {
+            return Err(Error::Protocol(ProtocolError::InvalidLength(
+                challenge.len(),
+            )));
+        }
+        let signature = key.sign_challenge(&challenge)?;
+        self.request(Command::AdminAuth, signature.to_vec())?;
+        Ok(())
+    }
+
+    /// Erases both image slots, scratch and Product Config after `admin_authenticate`; the device then resets into
+    /// recovery with factory identity so it can be provisioned again.
+    pub fn factory_erase(&mut self) -> Result<(), Error> {
+        let hello = self.hello()?;
+        if hello.capabilities & ADMIN_CAPABILITY == 0 {
+            return Err(Error::Capability(hello.capabilities));
+        }
+        self.request(Command::FactoryErase, Vec::new())?;
+        self.committed = true;
+        Ok(())
+    }
+
     fn request(&mut self, command: Command, payload: Vec<u8>) -> Result<Vec<u8>, Error> {
         let sequence = self.next_sequence;
         let encoded = Frame::request(command, sequence, payload).encode()?;
@@ -775,6 +873,7 @@ pub enum Error {
     Protocol(ProtocolError),
     Transport(io::Error),
     WaitTimeout(Version),
+    ReconnectTimeout(&'static str),
 }
 
 impl fmt::Display for Error {
@@ -793,6 +892,12 @@ impl fmt::Display for Error {
             Self::Transport(error) => write!(formatter, "transport error: {error}"),
             Self::WaitTimeout(version) => {
                 write!(formatter, "timed out waiting for version {version}")
+            }
+            Self::ReconnectTimeout(mode) => {
+                write!(
+                    formatter,
+                    "timed out waiting for the device to restart in {mode}"
+                )
             }
         }
     }
@@ -1126,6 +1231,36 @@ mod tests {
     }
 
     #[test]
+    fn wait_retries_a_device_node_that_is_not_accessible_yet() {
+        let mut attempts = 0;
+        let (info, _) = UpgradeWorkflow::wait_for(
+            || {
+                attempts += 1;
+                if attempts == 1 {
+                    return Err(io::Error::from(io::ErrorKind::PermissionDenied));
+                }
+                Ok(Some(ScriptTransport::new([
+                    Ok(response(Command::Hello, 0, Status::Ok, &hello_body())),
+                    Ok(response(
+                        Command::DeviceInfo,
+                        1,
+                        Status::Ok,
+                        &device_info_body(2048),
+                    )),
+                ])))
+            },
+            |_| true,
+            Error::ReconnectTimeout("test"),
+            Duration::from_secs(1),
+            Duration::from_millis(1),
+            Duration::from_millis(10),
+            |_| {},
+        )
+        .unwrap();
+        assert_eq!((attempts, info.image_capacity), (2, 2048));
+    }
+
+    #[test]
     fn heartbeat_reuses_hello_and_sends_device_info() {
         let transport = ScriptTransport::new([
             Ok(response(Command::Hello, 0, Status::Ok, &hello_body())),
@@ -1156,6 +1291,98 @@ mod tests {
             Frame::decode(&requests[2]).unwrap().command,
             Command::DeviceInfo
         );
+    }
+
+    fn admin_hello_body() -> Vec<u8> {
+        let mut body = Vec::new();
+        body.extend_from_slice(&512u16.to_le_bytes());
+        body.extend_from_slice(
+            &(UPGRADE_CAPABILITIES
+                | PRODUCT_CONFIG_CAPABILITY
+                | REBOOT_CAPABILITY
+                | ADMIN_CAPABILITY)
+                .to_le_bytes(),
+        );
+        body.extend_from_slice(&5000u32.to_le_bytes());
+        body
+    }
+
+    #[test]
+    fn admin_signs_the_device_challenge_and_erase_ends_the_session() {
+        use p256::ecdsa::signature::Verifier;
+        let challenge: Vec<u8> = (0x40..0x60).collect();
+        let transport = ScriptTransport::new([
+            Ok(response(Command::Hello, 0, Status::Ok, &admin_hello_body())),
+            Ok(response(Command::AdminChallenge, 1, Status::Ok, &challenge)),
+            Ok(response(Command::AdminAuth, 2, Status::Ok, &[])),
+            Ok(response(Command::FactoryErase, 3, Status::Ok, &[])),
+        ]);
+        let key = admin::AdminKey::from_pem(admin::tests::TEST_KEY).unwrap();
+        let mut client = ProtocolV1Client::new(transport, Duration::from_millis(10));
+        client.admin_authenticate(&key).unwrap();
+        client.factory_erase().unwrap();
+        // The device resets after FACTORY_ERASE, so close() must not send ABORT.
+        client.close();
+        let requests = client.into_transport().requests;
+        assert_eq!(requests.len(), 4);
+        let auth = Frame::decode(&requests[2]).unwrap();
+        assert_eq!(auth.command, Command::AdminAuth);
+        let mut message = admin::ADMIN_DOMAIN.to_vec();
+        message.extend_from_slice(&challenge);
+        let public =
+            p256::ecdsa::VerifyingKey::from_sec1_bytes(&admin::tests::test_public_point()).unwrap();
+        let signature = p256::ecdsa::Signature::from_slice(&auth.payload).unwrap();
+        assert!(public.verify(&message, &signature).is_ok());
+        assert_eq!(
+            Frame::decode(&requests[3]).unwrap().command,
+            Command::FactoryErase
+        );
+    }
+
+    #[test]
+    fn admin_requires_capability_and_reports_a_wrong_key() {
+        let key = admin::AdminKey::from_pem(admin::tests::TEST_KEY).unwrap();
+        let transport =
+            ScriptTransport::new([Ok(response(Command::Hello, 0, Status::Ok, &hello_body()))]);
+        let mut client = ProtocolV1Client::new(transport, Duration::from_millis(10));
+        assert!(matches!(
+            client.admin_authenticate(&key),
+            Err(Error::Capability(_))
+        ));
+
+        let transport = ScriptTransport::new([
+            Ok(response(Command::Hello, 0, Status::Ok, &admin_hello_body())),
+            Ok(response(Command::AdminChallenge, 1, Status::Ok, &[7; 32])),
+            Ok(response(Command::AdminAuth, 2, Status::VerifyError, &[])),
+        ]);
+        let mut client = ProtocolV1Client::new(transport, Duration::from_millis(10));
+        assert!(matches!(
+            client.admin_authenticate(&key),
+            Err(Error::Device(Status::VerifyError))
+        ));
+    }
+
+    #[test]
+    fn reboot_sends_the_target_and_skips_abort() {
+        let transport = ScriptTransport::new([
+            Ok(response(Command::Hello, 0, Status::Ok, &admin_hello_body())),
+            Ok(response(Command::Reboot, 1, Status::Ok, &[])),
+        ]);
+        let mut client = ProtocolV1Client::new(transport, Duration::from_millis(10));
+        client.reboot(RebootTarget::Recovery).unwrap();
+        client.close();
+        let requests = client.into_transport().requests;
+        assert_eq!(requests.len(), 2);
+        let reboot = Frame::decode(&requests[1]).unwrap();
+        assert_eq!((reboot.command, reboot.payload), (Command::Reboot, vec![1]));
+
+        let transport =
+            ScriptTransport::new([Ok(response(Command::Hello, 0, Status::Ok, &hello_body()))]);
+        let mut client = ProtocolV1Client::new(transport, Duration::from_millis(10));
+        assert!(matches!(
+            client.reboot(RebootTarget::Application),
+            Err(Error::Capability(_))
+        ));
     }
 
     struct ScriptTransport {

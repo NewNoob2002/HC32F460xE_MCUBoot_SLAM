@@ -166,6 +166,10 @@ impl NusbTransport {
         Self::open_by_serial(serial_number, DeviceMode::Application)
     }
 
+    pub fn open_recovery(serial_number: &str) -> io::Result<Option<Self>> {
+        Self::open_by_serial(serial_number, DeviceMode::BootRecovery)
+    }
+
     pub fn open_unique_application() -> io::Result<Option<Self>> {
         let devices: Vec<_> = Self::enumerate()?
             .into_iter()

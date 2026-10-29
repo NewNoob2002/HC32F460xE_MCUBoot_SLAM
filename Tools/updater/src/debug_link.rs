@@ -282,11 +282,162 @@ pub struct BqIdentity {
     pub chemistry_id: u16,
 }
 
+/// BQ40Z50 Smart Battery Data words carried by telemetry tags 0x50/0x51.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct BatteryStatus {
+    pub battery_mode: u16,
+    pub voltage_mv: u16,
+    /// Positive while charging.
+    pub current_ma: i16,
+    pub temperature_dk: u16,
+    pub relative_soc_percent: u16,
+    pub remaining_capacity: u16,
+    pub full_charge_capacity: u16,
+    pub charging_voltage_mv: u16,
+    pub charging_current_ma: u16,
+    pub battery_status: u16,
+    pub cycle_count: u16,
+}
+impl BatteryStatus {
+    /// BatteryStatus alarm bits from the SBS 1.1 specification.
+    const ALARMS: [(u16, &'static str); 6] = [
+        (0x8000, "over-charged"),
+        (0x4000, "terminate charge"),
+        (0x1000, "over-temperature"),
+        (0x0800, "terminate discharge"),
+        (0x0200, "remaining capacity"),
+        (0x0100, "remaining time"),
+    ];
+
+    /// BatteryMode CAPM switches capacities from mAh to 10 mWh units.
+    pub fn capacity_in_mwh(&self) -> bool {
+        self.battery_mode & 0x8000 != 0
+    }
+    /// Returns (remaining, full, unit) with the CAPM scaling applied.
+    pub fn capacity(&self) -> (u32, u32, &'static str) {
+        if self.capacity_in_mwh() {
+            (
+                u32::from(self.remaining_capacity) * 10,
+                u32::from(self.full_charge_capacity) * 10,
+                "mWh",
+            )
+        } else {
+            (
+                u32::from(self.remaining_capacity),
+                u32::from(self.full_charge_capacity),
+                "mAh",
+            )
+        }
+    }
+    /// Terminal power in milliwatts; positive while charging.
+    pub fn power_mw(&self) -> i32 {
+        i32::from(self.voltage_mv) * i32::from(self.current_ma) / 1000
+    }
+    pub fn temperature_c(&self) -> f32 {
+        f32::from(self.temperature_dk) / 10.0 - 273.15
+    }
+    pub fn state(&self) -> &'static str {
+        if self.battery_status & 0x0020 != 0 {
+            "Full"
+        } else if self.current_ma > 0 {
+            "Charging"
+        } else if self.current_ma < 0 || self.battery_status & 0x0040 != 0 {
+            "Discharging"
+        } else {
+            "Idle"
+        }
+    }
+    pub fn alarms(&self) -> Vec<&'static str> {
+        Self::ALARMS
+            .iter()
+            .filter(|(bit, _)| self.battery_status & bit != 0)
+            .map(|(_, name)| *name)
+            .collect()
+    }
+}
+
+/// Raw MP2762A registers carried by telemetry tag 0x12.
+///
+/// ADC words hold a 10-bit value in bits 15:6. The LSB weights come from the earlier `Libraries/Mp2762a` driver and
+/// still have to be confirmed against the datasheet and cross-checked with the BQ40Z50 on hardware.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ChargerStatus {
+    pub status: u8,
+    pub fault: u8,
+    pub battery_voltage: u16,
+    pub system_voltage: u16,
+    pub charge_current: u16,
+    pub input_voltage: u16,
+    pub input_current: u16,
+}
+impl ChargerStatus {
+    fn adc(word: u16, lsb: f32) -> f32 {
+        f32::from(word >> 6) * lsb
+    }
+    pub fn battery_voltage_mv(&self) -> f32 {
+        Self::adc(self.battery_voltage, 12.5)
+    }
+    pub fn system_voltage_mv(&self) -> f32 {
+        Self::adc(self.system_voltage, 12.5)
+    }
+    pub fn charge_current_ma(&self) -> f32 {
+        Self::adc(self.charge_current, 12.5)
+    }
+    pub fn input_voltage_mv(&self) -> f32 {
+        Self::adc(self.input_voltage, 25.0)
+    }
+    pub fn input_current_ma(&self) -> f32 {
+        Self::adc(self.input_current, 6.25)
+    }
+    pub fn input_power_mw(&self) -> f32 {
+        self.input_voltage_mv() * self.input_current_ma() / 1000.0
+    }
+    /// Charge state field, status register bits 3:2.
+    pub fn charge_state(&self) -> &'static str {
+        match (self.status >> 2) & 0x03 {
+            0 => "Not charging",
+            1 => "Pre-charge",
+            2 => "Fast charge",
+            _ => "Charge done",
+        }
+    }
+}
+
+/// Names the RMU_RSTF0 flags in bit order. HC32F460 keeps them latched until software clears them, so more than one
+/// can be set; bit 14 marks that several causes were recorded.
+pub fn reset_cause_names(flags: u32) -> Vec<&'static str> {
+    const NAMES: [&str; 15] = [
+        "Power-on",
+        "Reset pin",
+        "Brown-out",
+        "PVD1",
+        "PVD2",
+        "Watchdog",
+        "Special watchdog",
+        "Power-down",
+        "Software",
+        "MPU error",
+        "RAM parity error",
+        "RAM ECC error",
+        "Clock frequency error",
+        "XTAL failure",
+        "Multiple causes",
+    ];
+    NAMES
+        .iter()
+        .enumerate()
+        .filter(|(bit, _)| flags & (1 << bit) != 0)
+        .map(|(_, name)| *name)
+        .collect()
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum TelemetryValue {
     U8(u8),
     U32(u32),
     Identity(BqIdentity),
+    Battery(BatteryStatus),
+    Charger(ChargerStatus),
     Bytes(Vec<u8>),
 }
 impl fmt::Display for TelemetryValue {
@@ -307,6 +458,40 @@ impl fmt::Display for TelemetryValue {
                 value.execution_context,
                 value.hardware_version,
                 value.chemistry_id
+            ),
+            Self::Battery(value) => {
+                let (remaining, full, unit) = value.capacity();
+                write!(
+                    f,
+                    "state={} soc={}% capacity={remaining}/{full}{unit} voltage={}mV current={}mA power={}mW temperature={:.1}C charge_target={}mV/{}mA cycles={} status=0x{:04x}",
+                    value.state(),
+                    value.relative_soc_percent,
+                    value.voltage_mv,
+                    value.current_ma,
+                    value.power_mw(),
+                    value.temperature_c(),
+                    value.charging_voltage_mv,
+                    value.charging_current_ma,
+                    value.cycle_count,
+                    value.battery_status
+                )?;
+                for alarm in value.alarms() {
+                    write!(f, " alarm={alarm}")?;
+                }
+                Ok(())
+            }
+            Self::Charger(value) => write!(
+                f,
+                "state={} input={:.0}mV/{:.0}mA power={:.0}mW battery={:.0}mV system={:.0}mV charge_current={:.0}mA status=0x{:02x} fault=0x{:02x}",
+                value.charge_state(),
+                value.input_voltage_mv(),
+                value.input_current_ma(),
+                value.input_power_mw(),
+                value.battery_voltage_mv(),
+                value.system_voltage_mv(),
+                value.charge_current_ma(),
+                value.status,
+                value.fault
             ),
             Self::Bytes(bytes) => {
                 for byte in bytes {
@@ -329,6 +514,9 @@ impl Tlv {
             2 => "loop_count",
             0x10 => "power_probe_mask",
             0x11 => "bq_identity",
+            0x12 => "charger",
+            0x50 => "battery_0x0b",
+            0x51 => "battery_0x0c",
             0x20 => "charger_pg",
             0x21 => "charger_int",
             0x22 => "charger_change_count",
@@ -377,6 +565,35 @@ pub fn decode_tlvs(mut bytes: &[u8]) -> Result<Vec<Tlv>, Error> {
                     execution_context: value[12],
                     hardware_version: u16_at(value, 13),
                     chemistry_id: u16_at(value, 15),
+                })
+            }
+            0x12 => {
+                exact(value, 12)?;
+                TelemetryValue::Charger(ChargerStatus {
+                    status: value[0],
+                    fault: value[1],
+                    battery_voltage: u16_at(value, 2),
+                    system_voltage: u16_at(value, 4),
+                    charge_current: u16_at(value, 6),
+                    input_voltage: u16_at(value, 8),
+                    input_current: u16_at(value, 10),
+                })
+            }
+            0x50 | 0x51 => {
+                exact(value, 22)?;
+                let word = |index: usize| u16_at(value, index * 2);
+                TelemetryValue::Battery(BatteryStatus {
+                    battery_mode: word(0),
+                    voltage_mv: word(1),
+                    current_ma: word(2) as i16,
+                    temperature_dk: word(3),
+                    relative_soc_percent: word(4),
+                    remaining_capacity: word(5),
+                    full_charge_capacity: word(6),
+                    charging_voltage_mv: word(7),
+                    charging_current_ma: word(8),
+                    battery_status: word(9),
+                    cycle_count: word(10),
                 })
             }
             _ => TelemetryValue::Bytes(value.to_vec()),

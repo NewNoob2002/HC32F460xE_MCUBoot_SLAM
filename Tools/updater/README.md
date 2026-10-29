@@ -12,8 +12,17 @@ Tools/updater/target/debug/hc32-updater config set \
   --device-serial SN12AB34 --hardware-version A1.2 --app-pid 0x0020
 Tools/updater/target/debug/hc32-updater install <signed-image>
 Tools/updater/target/debug/hc32-updater wait --version 2.0.0
+Tools/updater/target/debug/hc32-updater reboot boot
+Tools/updater/target/debug/hc32-updater reboot app
+Tools/updater/target/debug/hc32-updater factory-erase --admin-key <admin-private-key.pem>
 cargo run --manifest-path Tools/updater/Cargo.toml --bin hc32-updater-gui
 ```
+
+Images are installed only by Boot Recovery. When `install` finds an Application
+device it sends REBOOT to recovery, waits up to 15 s for the same serial in Boot
+mode and installs over that session. `factory-erase` does the same, then signs the
+device challenge with the administrator key and erases both image slots, scratch
+and Product Config; the device restarts unprovisioned with its factory serial.
 
 The CLI uses one protocol session per process and ends it with ABORT before
 exiting, including after a failed command, so the next command can start at
@@ -70,6 +79,11 @@ sudo udevadm trigger --subsystem-match=usb --attr-match=idVendor=cafe
 Remove it with `sudo rm /etc/udev/rules.d/70-hc32-updater.rules`, followed by
 the same reload command.
 
+The host tool version is the `version` in `Cargo.toml`. `hc32-updater
+--version` prints it, the GUI shows it in its title bar and header, and the
+Windows ZIP name includes it. Release Windows GUI builds start without a
+console window.
+
 Linux development and validation use the Release binaries directly; no package
 installation is required. Cross-build the two Windows x64 executables, then
 create the portable ZIP:
@@ -105,9 +119,19 @@ on `Device Setup`. It has one USB worker. Refresh only
 updates the device list; select a row and Connect to claim interface 0 and
 complete HELLO plus DeviceInfo. While idle, the worker sends DeviceInfo every
 2000 ms without repeating HELLO. Configuration
-and install run on the same worker, so sequence numbers cannot race. After
-COMMIT, the GUI waits for the same serial to return in Application mode and
-keeps the reconnected client. The content remains mouse-wheel scrollable on
+and install run on the same worker, so sequence numbers cannot race. The toolbar
+**Enter Boot**/**Exit Boot** button sends REBOOT and reconnects to the same serial
+in the other mode; the header shows the connected mode. Install and every
+Administrator action are enabled only in Boot Recovery. After COMMIT, the GUI
+waits for the serial to return in Application mode and keeps the reconnected
+client.
+
+**Administrator** loads an ECDSA-P256 private key PEM (PKCS#8 or SEC1) on the UI
+thread and shows its fingerprint; the key never leaves the host and Lock drops
+it. In Boot Recovery the page offers Load key…, Verify on device and Erase
+device… behind a confirmation dialog. Every erase signs
+a fresh device challenge. A development key pair lives beside the development
+signing key; the Debug preset passes its public half as `HC32_ADMIN_PUBLIC_KEY`. The content remains mouse-wheel scrollable on
 small or high-DPI displays.
 
 ## Application Debug Link
@@ -145,12 +169,14 @@ termination cannot send that request; another HELLO or USB reset stops the devic
 stream. The client queues up to 256 events that arrive before responses, dropping
 the oldest on overflow and exposing `events_dropped` to library callers.
 
-In the GUI, connect an Application device, select the **Debug** page and click
-**Open Debug**.
-The page shows live telemetry and the latest 500 log lines, colored by level.
-In Debug firmware the log view mirrors the EasyLogger UART/RTT console. Follow
-keeps the newest line visible; Clear empties the view only. Set the period,
-toggle logs, and use Start/Stop to control streaming. Refresh reloads telemetry,
+In the GUI, connect an Application device, select the **Monitor** page and click
+**Open**; **Close** stops any stream and releases the Debug interface while the
+updater connection stays open. The page shows system status rows with icons and decoded values (uptime,
+power devices found, charger input/interrupt, update state), settings and
+statistics. The GUI streams telemetry only; it never requests log events, and it
+updates the existing rows in place, sending at most one UI update per worker tick
+and only when values change. Use the CLI `monitor --log` for device logs. Set the
+period and use Start/Stop to control streaming. Refresh reloads status,
 settings and statistics. Edit and Apply one setting at a time, or reset all
 settings; both operations require the confirmation dialog and serial UNLOCK.
 Debug uses the existing background worker, so USB requests never block the UI.
@@ -164,4 +190,6 @@ sequences. Per-setting Apply and explicit statistics refresh are the GUI choices
 
 Host verification uses scripted transports and software-rendered GUI snapshots;
 real interface claiming, USB framing, streaming and device mutations still require
-hardware validation. No new dependencies are required.
+hardware validation. Administrator signing uses the pinned `p256` 0.13.2 crate
+(RFC 6979 deterministic ECDSA, so no host entropy source is needed); a host test
+signs the same challenge that the C device test verifies with tinycrypt.

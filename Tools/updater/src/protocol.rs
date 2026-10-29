@@ -15,11 +15,15 @@ pub enum Command {
     DeviceInfo = 0x02,
     ProductConfigGet = 0x03,
     ProductConfigSet = 0x04,
+    Reboot = 0x05,
     Begin = 0x10,
     Data = 0x11,
     End = 0x12,
     Commit = 0x13,
     Abort = 0x14,
+    AdminChallenge = 0x20,
+    AdminAuth = 0x21,
+    FactoryErase = 0x22,
 }
 
 impl TryFrom<u8> for Command {
@@ -31,11 +35,15 @@ impl TryFrom<u8> for Command {
             0x02 => Ok(Self::DeviceInfo),
             0x03 => Ok(Self::ProductConfigGet),
             0x04 => Ok(Self::ProductConfigSet),
+            0x05 => Ok(Self::Reboot),
             0x10 => Ok(Self::Begin),
             0x11 => Ok(Self::Data),
             0x12 => Ok(Self::End),
             0x13 => Ok(Self::Commit),
             0x14 => Ok(Self::Abort),
+            0x20 => Ok(Self::AdminChallenge),
+            0x21 => Ok(Self::AdminAuth),
+            0x22 => Ok(Self::FactoryErase),
             _ => Err(ProtocolError::UnknownCommand(value)),
         }
     }

@@ -1,6 +1,6 @@
 [package]
 name = "hc32-updater"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
 license = "MIT"
 build = "build.rs"
@@ -10,6 +10,7 @@ fake-e2e = []
 
 [dependencies]
 nusb = "=0.2.3"
+p256 = { version = "=0.13.2", default-features = false, features = ["ecdsa", "pem", "std"] }
 rfd = "=0.15.4"
 sha2 = "=0.10.9"
 slint = "=1.16.0"

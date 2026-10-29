@@ -1,7 +1,10 @@
 use super::{
-    ConnectedDevice, DebugLogRow, DebugSettingRow, DebugValueRow, UpdaterWindow, WorkerCommand,
+    BatteryCard, ConnectedDevice, DebugSettingRow, DebugValueRow, UpdaterWindow, WorkerCommand,
 };
-use hc32_updater::debug_link::{ConfigEntry, DebugClient, Error, Event, Tlv, ValueType};
+use hc32_updater::debug_link::{
+    BatteryStatus, ChargerStatus, ConfigEntry, DebugClient, Error, Event, TelemetryValue, Tlv,
+    ValueType, reset_cause_names,
+};
 use hc32_updater::nusb_transport::{DeviceMode, NusbTransport};
 use slint::{ComponentHandle, Model, ModelRc, VecModel};
 use std::cell::RefCell;
@@ -9,17 +12,17 @@ use std::rc::Rc;
 use std::sync::mpsc::Sender;
 use std::time::Duration;
 
-const LOG_LIMIT: usize = 500;
 const MAX_EVENTS_PER_POLL: usize = 64;
 const TELEMETRY: u32 = 1;
-const LOGS: u32 = 1 << 1;
 const CONFIG: u32 = 1 << 2;
-const STATS: u32 = 1 << 5;
+/// STREAM_SET mask: telemetry only. Log events are not requested; rendering them was the GUI hot spot.
+const STREAM_TELEMETRY: u32 = 1;
 
 pub enum Command {
     Open,
+    Close,
     Refresh,
-    Start { period: String, logs: bool },
+    Start { period: String },
     Stop,
     Apply { key: u16, value: i32 },
     Reset,
@@ -32,6 +35,7 @@ struct Session {
     settings: Vec<ConfigEntry>,
     streaming: bool,
     skipped: u64,
+    last_telemetry: Vec<Tlv>,
 }
 
 #[derive(Default)]
@@ -41,14 +45,6 @@ pub struct State {
 
 pub fn register(ui: &UpdaterWindow, sender: Sender<WorkerCommand>) {
     let pending = Rc::new(RefCell::new(None));
-    // poll() appends to this VecModel; Clear swaps in a new empty one.
-    ui.set_debug_logs(ModelRc::new(VecModel::<DebugLogRow>::default()));
-    let weak = ui.as_weak();
-    ui.on_debug_clear_logs(move || {
-        if let Some(ui) = weak.upgrade() {
-            ui.set_debug_logs(ModelRc::new(VecModel::<DebugLogRow>::default()));
-        }
-    });
     let weak = ui.as_weak();
     let commands = sender.clone();
     ui.on_debug_open(move || send(&weak, &commands, Command::Open));
@@ -57,19 +53,21 @@ pub fn register(ui: &UpdaterWindow, sender: Sender<WorkerCommand>) {
     ui.on_debug_refresh(move || send(&weak, &commands, Command::Refresh));
     let weak = ui.as_weak();
     let commands = sender.clone();
-    ui.on_debug_start(move |period, logs| {
+    ui.on_debug_start(move |period| {
         send(
             &weak,
             &commands,
             Command::Start {
                 period: period.into(),
-                logs,
             },
         );
     });
     let weak = ui.as_weak();
     let commands = sender.clone();
     ui.on_debug_stop(move || send(&weak, &commands, Command::Stop));
+    let weak = ui.as_weak();
+    let commands = sender.clone();
+    ui.on_debug_close(move || send(&weak, &commands, Command::Close));
 
     let weak = ui.as_weak();
     ui.on_debug_edit_setting(move |index, text| {
@@ -136,10 +134,10 @@ fn send(ui: &slint::Weak<UpdaterWindow>, sender: &Sender<WorkerCommand>, command
         return;
     }
     ui.set_debug_busy(true);
-    ui.set_debug_status("Debug request in progress…".into());
+    ui.set_debug_status("Monitor request in progress…".into());
     if sender.send(WorkerCommand::Debug(command)).is_err() {
         ui.set_debug_busy(false);
-        ui.set_debug_status("Debug worker is unavailable".into());
+        ui.set_debug_status("Monitor worker is unavailable".into());
     }
 }
 
@@ -168,9 +166,9 @@ impl State {
             ui.set_debug_streaming(false);
             ui.set_debug_confirm_visible(false);
             ui.set_debug_telemetry(ModelRc::default());
-            ui.set_debug_stats(ModelRc::default());
+            ui.set_debug_batteries(ModelRc::default());
+            ui.set_debug_charger(ModelRc::default());
             ui.set_debug_settings(ModelRc::default());
-            ui.set_debug_logs(ModelRc::new(VecModel::<DebugLogRow>::default()));
             ui.set_debug_status(status.into());
         });
     }
@@ -181,41 +179,37 @@ impl State {
         connected: Option<&ConnectedDevice>,
         ui: &slint::Weak<UpdaterWindow>,
     ) {
+        if matches!(command, Command::Close) {
+            // close() stops an active stream and releases the Debug interface; the updater session stays open.
+            self.close(ui, "Monitor closed");
+            return;
+        }
         let result = if matches!(command, Command::Open) {
             self.open(connected, ui)
         } else {
             self.session
                 .as_mut()
-                .ok_or_else(|| "Open Debug first".to_owned())
+                .ok_or_else(|| "Open the monitor first".to_owned())
                 .and_then(|session| {
                     match command {
-                        Command::Open => unreachable!(),
+                        Command::Open | Command::Close => unreachable!(),
                         Command::Refresh => {
                             session.refresh(ui)?;
-                            Ok("Debug snapshot, settings and statistics refreshed".to_owned())
+                            Ok("Status and settings refreshed".to_owned())
                         }
-                        Command::Start { period, logs } => {
+                        Command::Start { period } => {
                             let period = parse_period(&period)?;
                             if session.capabilities & TELEMETRY == 0 {
                                 return Err(
                                     "Device does not support telemetry streaming".to_owned()
                                 );
                             }
-                            if logs && session.capabilities & LOGS == 0 {
-                                return Err(
-                                    "Device does not support log streaming; switch Logs off"
-                                        .to_owned(),
-                                );
-                            }
                             session
                                 .client
-                                .stream_set(period, if logs { 3 } else { 1 })
+                                .stream_set(period, STREAM_TELEMETRY)
                                 .map_err(|error| error.to_string())?;
                             session.streaming = true;
-                            Ok(format!(
-                                "Streaming every {period} ms{}",
-                                if logs { " with logs" } else { "" }
-                            ))
+                            Ok(format!("Live status every {period} ms"))
                         }
                         Command::Stop => {
                             session
@@ -223,7 +217,7 @@ impl State {
                                 .stream_set(0, 0)
                                 .map_err(|error| error.to_string())?;
                             session.streaming = false;
-                            Ok("Debug stream stopped".to_owned())
+                            Ok("Live status stopped".to_owned())
                         }
                         Command::Apply { key, value } => {
                             let entry = session
@@ -268,14 +262,14 @@ impl State {
                                 format!("Reset succeeded, but reloading settings failed: {error}")
                             })?;
                             post_settings(ui, &session.settings);
-                            Ok("All debug settings reset to defaults".to_owned())
+                            Ok("All settings reset to defaults".to_owned())
                         }
                     }
                 })
         };
         let streaming = self.streaming();
         let connected = self.session.is_some();
-        let status = result.unwrap_or_else(|error| format!("Debug error: {error}"));
+        let status = result.unwrap_or_else(|error| format!("Monitor error: {error}"));
         let _ = ui.upgrade_in_event_loop(move |ui| {
             ui.set_debug_busy(false);
             ui.set_debug_connected(connected);
@@ -290,11 +284,11 @@ impl State {
         ui: &slint::Weak<UpdaterWindow>,
     ) -> Result<String, String> {
         if self.session.is_some() {
-            return Err("Debug is already open".to_owned());
+            return Err("The monitor is already open".to_owned());
         }
         let device = connected.ok_or_else(|| "Connect an Application device first".to_owned())?;
         if device.mode != DeviceMode::Application {
-            return Err("Debug is available only in Application mode".to_owned());
+            return Err("The monitor is available only in Application mode".to_owned());
         }
         let transport = NusbTransport::open_debug(&device.serial_number)
             .map_err(|error| error.to_string())?
@@ -304,7 +298,7 @@ impl State {
         let serial = transport
             .serial_number()
             .filter(|serial| !serial.is_empty())
-            .ok_or_else(|| "Debug requires a device with a USB serial number".to_owned())?
+            .ok_or_else(|| "The monitor requires a device with a USB serial number".to_owned())?
             .to_owned();
         let mut client = DebugClient::new(transport, super::REQUEST_TIMEOUT);
         let hello = client.hello().map_err(|error| error.to_string())?;
@@ -315,10 +309,11 @@ impl State {
             settings: Vec::new(),
             streaming: false,
             skipped: 0,
+            last_telemetry: Vec::new(),
         };
         session.refresh(ui)?;
         let status = format!(
-            "Debug {}.{} · USB {} · capabilities 0x{:08x} · telemetry v{}",
+            "Debug Link {}.{} · USB {} · capabilities 0x{:08x} · telemetry v{}",
             hello.major, hello.minor, session.serial, hello.capabilities, hello.telemetry_version
         );
         self.session = Some(session);
@@ -330,18 +325,14 @@ impl State {
             return;
         };
         let mut telemetry = None;
-        let mut lines = Vec::new();
         let mut failure = None;
-        // Drain everything already queued so log bursts do not fall behind the 20 ms worker tick.
+        // Drain everything queued and keep only the newest snapshot, so the UI thread gets at most one update per
+        // worker tick however far the host fell behind.
         for _ in 0..MAX_EVENTS_PER_POLL {
             match session.client.poll_event(Duration::from_millis(1)) {
-                Ok(Some(Event::Telemetry { fields, .. })) => telemetry = Some(value_rows(fields)),
-                Ok(Some(Event::Log {
-                    level,
-                    uptime_ms,
-                    text,
-                    ..
-                })) => lines.push(log_line(level, uptime_ms, &text)),
+                Ok(Some(Event::Telemetry { fields, .. })) => telemetry = Some(fields),
+                // Logs are never requested; tolerate them from a stream another host started.
+                Ok(Some(Event::Log { .. })) => {}
                 Ok(None) => break,
                 // A malformed frame is skipped; only a USB failure ends the session.
                 Err(Error::Io(error)) => {
@@ -359,25 +350,54 @@ impl State {
                 }
             }
         }
-        if telemetry.is_some() || !lines.is_empty() {
-            let _ = ui.upgrade_in_event_loop(move |ui| {
-                if let Some(rows) = telemetry {
-                    ui.set_debug_telemetry(ModelRc::new(VecModel::from(rows)));
-                }
-                let model = ui.get_debug_logs();
-                if let Some(logs) = model.as_any().downcast_ref::<VecModel<DebugLogRow>>() {
-                    for line in lines {
-                        if logs.row_count() >= LOG_LIMIT {
-                            logs.remove(0);
-                        }
-                        logs.push(line);
-                    }
-                }
-            });
+        if let Some(fields) = telemetry.filter(|fields| *fields != session.last_telemetry) {
+            session.last_telemetry = fields.clone();
+            post_telemetry(ui, fields);
         }
         if let Some(error) = failure {
             self.close(ui, &format!("Debug stream failed: {error}"));
         }
+    }
+}
+
+/// Splits one snapshot into the battery, charger and system cards.
+fn post_telemetry(ui: &slint::Weak<UpdaterWindow>, fields: Vec<Tlv>) {
+    let batteries = battery_cards(&fields);
+    let (charger, system): (Vec<_>, Vec<_>) = fields
+        .into_iter()
+        .filter(|field| !matches!(field.value, TelemetryValue::Battery(_)))
+        .partition(|field| CHARGER_TAGS.contains(&field.tag));
+    let charger = charger.into_iter().flat_map(charger_rows).collect();
+    let system = value_rows(system);
+    let _ = ui.upgrade_in_event_loop(move |ui| {
+        update_rows(&ui.get_debug_telemetry(), system, |model| {
+            ui.set_debug_telemetry(model)
+        });
+        update_rows(&ui.get_debug_batteries(), batteries, |model| {
+            ui.set_debug_batteries(model)
+        });
+        update_rows(&ui.get_debug_charger(), charger, |model| {
+            ui.set_debug_charger(model)
+        });
+    });
+}
+
+/// Updates an existing row model in place so Slint only re-renders changed rows; a new model is created only when
+/// the row count changes.
+fn update_rows<T: Clone + PartialEq + 'static>(
+    current: &ModelRc<T>,
+    rows: Vec<T>,
+    replace: impl FnOnce(ModelRc<T>),
+) {
+    match current.as_any().downcast_ref::<VecModel<T>>() {
+        Some(model) if model.row_count() == rows.len() => {
+            for (index, row) in rows.into_iter().enumerate() {
+                if model.row_data(index).as_ref() != Some(&row) {
+                    model.set_row_data(index, row);
+                }
+            }
+        }
+        _ => replace(ModelRc::new(VecModel::from(rows))),
     }
 }
 
@@ -394,32 +414,10 @@ impl Session {
                 .config_list()
                 .map_err(|error| error.to_string())?;
         }
-        let stats = if self.capabilities & STATS != 0 {
-            self.client.stats().map_err(|error| error.to_string())?
-        } else {
-            Vec::new()
-        };
         post_settings(ui, &self.settings);
-        let telemetry = value_rows(telemetry);
-        let stats = value_rows(stats);
-        let _ = ui.upgrade_in_event_loop(move |ui| {
-            ui.set_debug_telemetry(ModelRc::new(VecModel::from(telemetry)));
-            ui.set_debug_stats(ModelRc::new(VecModel::from(stats)));
-        });
+        self.last_telemetry = telemetry.clone();
+        post_telemetry(ui, telemetry);
         Ok(())
-    }
-}
-
-/// Level numbers follow EasyLogger: 0 assert, 1 error, 2 warn, 3 info, 4 debug, 5 verbose.
-fn log_line(level: u8, uptime_ms: u32, text: &str) -> DebugLogRow {
-    let letter = ["A", "E", "W", "I", "D", "V"]
-        .get(usize::from(level))
-        .copied()
-        .unwrap_or("?");
-    DebugLogRow {
-        time: format!("{:>9.3}", f64::from(uptime_ms) / 1000.0).into(),
-        level: letter.into(),
-        text: text.trim_end().into(),
     }
 }
 
@@ -480,41 +478,419 @@ fn post_settings(ui: &slint::Weak<UpdaterWindow>, settings: &[ConfigEntry]) {
         .upgrade_in_event_loop(move |ui| ui.set_debug_settings(ModelRc::new(VecModel::from(rows))));
 }
 
+// Icon ids match Icons.by-id() in ui/app.slint.
+const ICON_CLOCK: i32 = 1;
+const ICON_LOOP: i32 = 2;
+const ICON_CHIP: i32 = 3;
+const ICON_BATTERY: i32 = 4;
+const ICON_BOLT: i32 = 5;
+const ICON_ALERT: i32 = 6;
+const ICON_DOWNLOAD: i32 = 7;
+const ICON_POWER: i32 = 8;
+const ICON_CHART: i32 = 9;
+const ICON_PLUG: i32 = 10;
+const TONE_NEUTRAL: i32 = 0;
+const TONE_GOOD: i32 = 1;
+const TONE_WARNING: i32 = 2;
+
+/// Power probe mask bits follow the REG_READ device order in DEBUG_LINK_V1.md.
+const POWER_DEVICES: [&str; 4] = ["MP2762A", "BQ40Z50 0x0B", "BQ40Z50 0x0C", "HUSB238"];
+const MANAGER_STATES: [&str; 10] = [
+    "Idle",
+    "Negotiating",
+    "Preparing",
+    "Receiving",
+    "Verifying",
+    "Ready to commit",
+    "Committing",
+    "Completed",
+    "Aborted",
+    "Error",
+];
+
+/// Battery tags 0x50 + slot are shown as pack cards, not generic rows.
+const BATTERY_TAG: u8 = 0x50;
+const BATTERY_ADDRESSES: [u8; 2] = [0x0b, 0x0c];
+
+/// MP2762A registers plus its PG/INT# pins form the charger card.
+const CHARGER_TAGS: [u8; 4] = [0x12, 0x20, 0x21, 0x22];
+
 fn value_rows(fields: Vec<Tlv>) -> Vec<DebugValueRow> {
-    fields
-        .into_iter()
-        .map(|field| DebugValueRow {
-            name: match field.tag {
-                0x01 => "Uptime (ms)".into(),
-                0x02 => "Loop count".into(),
-                0x10 => "Power probe mask".into(),
-                0x11 => "BQ identity block".into(),
-                0x20 => "Charger PG".into(),
-                0x21 => "Charger INT#".into(),
-                0x22 => "Charger change count".into(),
-                0x30 => "Update manager state".into(),
-                0x31 => "USB update errors".into(),
-                0x40 => "Debug events dropped".into(),
-                0x41 => "Last reset cause".into(),
-                tag => format!("Tag 0x{tag:02x}").into(),
+    fields.into_iter().map(value_row).collect()
+}
+
+fn charger_rows(field: Tlv) -> Vec<DebugValueRow> {
+    let TelemetryValue::Charger(charger) = field.value else {
+        return vec![value_row(field)];
+    };
+    charger_status_rows(&charger)
+}
+
+fn charger_status_rows(charger: &ChargerStatus) -> Vec<DebugValueRow> {
+    let row = |name: &str, icon, tone, value: String| DebugValueRow {
+        name: name.into(),
+        value: value.into(),
+        icon,
+        tone,
+    };
+    let state = charger.charge_state();
+    vec![
+        row(
+            "Charge state",
+            ICON_BOLT,
+            if state == "Not charging" {
+                TONE_NEUTRAL
+            } else {
+                TONE_GOOD
             },
-            value: field.value.to_string().into(),
+            state.to_owned(),
+        ),
+        row(
+            "Input",
+            ICON_PLUG,
+            TONE_NEUTRAL,
+            format!(
+                "{:.2} V · {:.2} A · {:.2} W",
+                charger.input_voltage_mv() / 1000.0,
+                charger.input_current_ma() / 1000.0,
+                charger.input_power_mw() / 1000.0
+            ),
+        ),
+        row(
+            "Charge current",
+            ICON_BOLT,
+            TONE_NEUTRAL,
+            format!("{:.0} mA", charger.charge_current_ma()),
+        ),
+        row(
+            "Battery voltage (charger)",
+            ICON_BATTERY,
+            TONE_NEUTRAL,
+            format!("{:.2} V", charger.battery_voltage_mv() / 1000.0),
+        ),
+        row(
+            "System voltage",
+            ICON_POWER,
+            TONE_NEUTRAL,
+            format!("{:.2} V", charger.system_voltage_mv() / 1000.0),
+        ),
+        row(
+            "Fault register",
+            ICON_ALERT,
+            if charger.fault == 0 {
+                TONE_GOOD
+            } else {
+                TONE_WARNING
+            },
+            if charger.fault == 0 {
+                "None".to_owned()
+            } else {
+                format!("0x{:02x}", charger.fault)
+            },
+        ),
+    ]
+}
+
+/// Always one card per pack address so a missing pack stays visible as "Not detected".
+fn battery_cards(fields: &[Tlv]) -> Vec<BatteryCard> {
+    BATTERY_ADDRESSES
+        .iter()
+        .zip(BATTERY_TAG..)
+        .map(|(address, tag)| {
+            let title = format!("Pack 0x{address:02X}");
+            match fields.iter().find_map(|field| match field.value {
+                TelemetryValue::Battery(battery) if field.tag == tag => Some(battery),
+                _ => None,
+            }) {
+                Some(battery) => battery_card(title, &battery),
+                None => BatteryCard {
+                    title: title.into(),
+                    state: "Not detected".into(),
+                    ..Default::default()
+                },
+            }
         })
         .collect()
 }
 
+fn battery_card(title: String, battery: &BatteryStatus) -> BatteryCard {
+    let (remaining, full, unit) = battery.capacity();
+    let alarms = battery.alarms();
+    let state = battery.state();
+    let tone = if !alarms.is_empty() {
+        TONE_WARNING
+    } else if state == "Charging" || state == "Full" {
+        TONE_GOOD
+    } else {
+        TONE_NEUTRAL
+    };
+    BatteryCard {
+        title: title.into(),
+        present: true,
+        state: state.into(),
+        tone,
+        soc: i32::from(battery.relative_soc_percent),
+        capacity: format!("{remaining} / {full} {unit}").into(),
+        voltage: format!("{:.2} V", f32::from(battery.voltage_mv) / 1000.0).into(),
+        current: format!("{:+} mA", battery.current_ma).into(),
+        power: format!("{:+.2} W", battery.power_mw() as f32 / 1000.0).into(),
+        temperature: format!("{:.1} °C", battery.temperature_c()).into(),
+        charge_target: format!(
+            "{:.2} V / {} mA",
+            f32::from(battery.charging_voltage_mv) / 1000.0,
+            battery.charging_current_ma
+        )
+        .into(),
+        cycles: battery.cycle_count.to_string().into(),
+        alarms: alarms.join(", ").into(),
+    }
+}
+
+fn value_row(field: Tlv) -> DebugValueRow {
+    let number = match &field.value {
+        TelemetryValue::U8(value) => Some(u32::from(*value)),
+        TelemetryValue::U32(value) => Some(*value),
+        _ => None,
+    };
+    let (name, icon, tone, value) = match (field.tag, number) {
+        (0x01, Some(ms)) => ("Uptime", ICON_CLOCK, TONE_NEUTRAL, format_uptime(ms)),
+        (0x02, Some(count)) => (
+            "Main loop passes",
+            ICON_LOOP,
+            TONE_NEUTRAL,
+            count.to_string(),
+        ),
+        (0x10, Some(mask)) => {
+            let found = (0..POWER_DEVICES.len())
+                .filter(|bit| mask & (1 << bit) != 0)
+                .count();
+            let missing: Vec<_> = POWER_DEVICES
+                .iter()
+                .enumerate()
+                .filter(|(bit, _)| mask & (1 << bit) == 0)
+                .map(|(_, name)| *name)
+                .collect();
+            let value = if missing.is_empty() {
+                format!("{found}/{} found", POWER_DEVICES.len())
+            } else {
+                format!(
+                    "{found}/{} · missing {}",
+                    POWER_DEVICES.len(),
+                    missing.join(", ")
+                )
+            };
+            let tone = if missing.is_empty() {
+                TONE_GOOD
+            } else {
+                TONE_WARNING
+            };
+            ("Power devices", ICON_CHIP, tone, value)
+        }
+        (0x20, Some(pg)) => (
+            "Charger input",
+            ICON_BOLT,
+            if pg != 0 { TONE_GOOD } else { TONE_NEUTRAL },
+            if pg != 0 { "Power good" } else { "No input" }.to_owned(),
+        ),
+        // The firmware already decodes the active-low INT# pin: 1 means asserted (DEBUG_LINK_V1.md).
+        (0x21, Some(int)) => (
+            "Charger interrupt",
+            ICON_ALERT,
+            if int != 0 { TONE_WARNING } else { TONE_NEUTRAL },
+            if int != 0 { "Asserted" } else { "Idle" }.to_owned(),
+        ),
+        (0x22, Some(count)) => (
+            "Charger changes",
+            ICON_BOLT,
+            TONE_NEUTRAL,
+            count.to_string(),
+        ),
+        (0x30, Some(state)) => (
+            "Update manager",
+            ICON_DOWNLOAD,
+            if state >= 8 {
+                TONE_WARNING
+            } else {
+                TONE_NEUTRAL
+            },
+            MANAGER_STATES
+                .get(state as usize)
+                .map_or_else(|| state.to_string(), |name| (*name).to_owned()),
+        ),
+        (0x31, Some(errors)) => (
+            "USB update errors",
+            ICON_ALERT,
+            if errors != 0 { TONE_WARNING } else { TONE_GOOD },
+            errors.to_string(),
+        ),
+        (0x40, Some(dropped)) => (
+            "Debug events dropped",
+            ICON_CHART,
+            if dropped != 0 {
+                TONE_WARNING
+            } else {
+                TONE_NEUTRAL
+            },
+            dropped.to_string(),
+        ),
+        (0x41, Some(cause)) => {
+            let names = reset_cause_names(cause);
+            let unexpected = cause & 0x1e7c != 0; // brown-out, PVD, watchdogs and hardware faults
+            (
+                "Last reset cause",
+                ICON_POWER,
+                if unexpected {
+                    TONE_WARNING
+                } else {
+                    TONE_NEUTRAL
+                },
+                if names.is_empty() {
+                    "None recorded".to_owned()
+                } else {
+                    names.join(", ")
+                },
+            )
+        }
+        (0x11, _) => match &field.value {
+            TelemetryValue::Identity(identity) => (
+                "Battery pack identity",
+                ICON_BATTERY,
+                TONE_GOOD,
+                format!(
+                    "type 0x{:04x} · fw 0x{:04x} · hw 0x{:04x} · chem 0x{:04x}",
+                    identity.device_type,
+                    identity.firmware_version,
+                    identity.hardware_version,
+                    identity.chemistry_id
+                ),
+            ),
+            other => (
+                "Battery pack identity",
+                ICON_BATTERY,
+                TONE_NEUTRAL,
+                other.to_string(),
+            ),
+        },
+        _ => {
+            return DebugValueRow {
+                name: format!("Tag 0x{:02x}", field.tag).into(),
+                value: field.value.to_string().into(),
+                icon: 0,
+                tone: TONE_NEUTRAL,
+            };
+        }
+    };
+    DebugValueRow {
+        name: name.into(),
+        value: value.into(),
+        icon,
+        tone,
+    }
+}
+
+fn format_uptime(ms: u32) -> String {
+    let seconds = ms / 1000;
+    let (hours, minutes, seconds) = (seconds / 3600, seconds / 60 % 60, seconds % 60);
+    if hours != 0 {
+        format!("{hours}h {minutes:02}m {seconds:02}s")
+    } else if minutes != 0 {
+        format!("{minutes}m {seconds:02}s")
+    } else {
+        format!("{seconds}.{:01}s", ms % 1000 / 100)
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{log_line, parse_period, validate_setting};
-    use hc32_updater::debug_link::{ConfigEntry, Unit, ValueType};
+    use super::{
+        battery_cards, charger_status_rows, format_uptime, parse_period, validate_setting,
+        value_row,
+    };
+    use hc32_updater::debug_link::{
+        BatteryStatus, ConfigEntry, TelemetryValue, Tlv, Unit, ValueType,
+    };
 
     #[test]
-    fn log_rows_use_easylogger_level_letters() {
-        let row = log_line(1, 12_345, "E/core [12345] fault\r\n");
-        assert_eq!(row.level.as_str(), "E");
-        assert_eq!(row.time.as_str(), "   12.345");
-        assert_eq!(row.text.as_str(), "E/core [12345] fault");
-        assert_eq!(log_line(9, 0, "x").level.as_str(), "?");
+    fn battery_cards_cover_both_packs() {
+        let battery = BatteryStatus {
+            battery_mode: 0,
+            voltage_mv: 8000,
+            current_ma: 1500,
+            temperature_dk: 2982,
+            relative_soc_percent: 64,
+            remaining_capacity: 2000,
+            full_charge_capacity: 3125,
+            charging_voltage_mv: 8400,
+            charging_current_ma: 2000,
+            battery_status: 0,
+            cycle_count: 3,
+        };
+        let cards = battery_cards(&[Tlv {
+            tag: 0x51,
+            value: TelemetryValue::Battery(battery),
+        }]);
+        assert_eq!(cards.len(), 2);
+        assert!(!cards[0].present);
+        assert_eq!(cards[0].state.as_str(), "Not detected");
+        let pack = &cards[1];
+        assert!(pack.present && pack.tone == 1 && pack.soc == 64);
+        assert_eq!(pack.title.as_str(), "Pack 0x0C");
+        assert_eq!(pack.capacity.as_str(), "2000 / 3125 mAh");
+        assert_eq!(pack.voltage.as_str(), "8.00 V");
+        assert_eq!(pack.current.as_str(), "+1500 mA");
+        assert_eq!(pack.power.as_str(), "+12.00 W");
+        // 0.1 K minus 273.15 always lands on a half-tenth, so compare numerically.
+        let celsius: f32 = pack.temperature.trim_end_matches(" °C").parse().unwrap();
+        assert!((celsius - 25.05).abs() <= 0.051);
+        assert_eq!(pack.charge_target.as_str(), "8.40 V / 2000 mA");
+    }
+
+    #[test]
+    fn telemetry_rows_are_readable() {
+        let row = |tag, value| {
+            value_row(Tlv {
+                tag,
+                value: TelemetryValue::U8(value),
+            })
+        };
+        assert_eq!(
+            row(0x10, 0b1011).value.as_str(),
+            "3/4 · missing BQ40Z50 0x0C"
+        );
+        assert_eq!(row(0x10, 0b1111).tone, 1);
+        assert_eq!(row(0x20, 1).value.as_str(), "Power good");
+        assert_eq!(row(0x21, 1).value.as_str(), "Asserted");
+        assert_eq!(row(0x21, 1).tone, 2);
+        assert_eq!(row(0x21, 0).value.as_str(), "Idle");
+        assert_eq!(row(0x30, 3).value.as_str(), "Receiving");
+        assert_eq!(row(0x7f, 9).name.as_str(), "Tag 0x7f");
+        let reset = value_row(Tlv {
+            tag: 0x41,
+            value: TelemetryValue::U32(0x0101),
+        });
+        assert_eq!(reset.value.as_str(), "Power-on, Software");
+        assert_eq!(reset.tone, 0);
+        let watchdog = value_row(Tlv {
+            tag: 0x41,
+            value: TelemetryValue::U32(0x0020),
+        });
+        assert_eq!(watchdog.tone, 2);
+        let charger = charger_status_rows(&hc32_updater::debug_link::ChargerStatus {
+            status: 0x0c,
+            fault: 0x10,
+            battery_voltage: 672 << 6,
+            system_voltage: 0,
+            charge_current: 0,
+            input_voltage: 200 << 6,
+            input_current: 160 << 6,
+        });
+        assert_eq!(charger[0].value.as_str(), "Charge done");
+        assert_eq!(charger[1].value.as_str(), "5.00 V · 1.00 A · 5.00 W");
+        assert_eq!(charger[3].value.as_str(), "8.40 V");
+        assert_eq!((charger[5].value.as_str(), charger[5].tone), ("0x10", 2));
+        assert_eq!(format_uptime(12_345), "12.3s");
+        assert_eq!(format_uptime(125_000), "2m 05s");
+        assert_eq!(format_uptime(3_723_000), "1h 02m 03s");
     }
 
     #[test]

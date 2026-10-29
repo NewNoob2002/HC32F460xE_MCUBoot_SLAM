@@ -255,6 +255,72 @@ fn typed_tlvs_preserve_unknown_and_decode_identity() {
 }
 
 #[test]
+fn battery_tlv_decodes_signed_current_and_derived_values() {
+    let words: [u16; 11] = [
+        0x6001,
+        7920,
+        (-1200i16) as u16,
+        3015,
+        76,
+        2340,
+        3100,
+        8400,
+        2000,
+        0x40c0,
+        12,
+    ];
+    let mut bytes = vec![0x51, 22];
+    for word in words {
+        bytes.extend_from_slice(&word.to_le_bytes());
+    }
+    let fields = decode_tlvs(&bytes).unwrap();
+    assert_eq!(fields[0].name(), "battery_0x0c");
+    let TelemetryValue::Battery(battery) = fields[0].value else {
+        panic!("expected battery value");
+    };
+    assert_eq!(battery.current_ma, -1200);
+    assert_eq!(battery.capacity(), (2340, 3100, "mAh"));
+    assert_eq!(battery.power_mw(), -9504);
+    assert!((battery.temperature_c() - 28.35).abs() < 0.01);
+    assert_eq!(battery.state(), "Discharging");
+    assert_eq!(battery.alarms(), ["terminate charge"]);
+    let mwh = hc32_updater::debug_link::BatteryStatus {
+        battery_mode: 0x8000,
+        current_ma: 500,
+        ..battery
+    };
+    assert_eq!(mwh.capacity(), (23400, 31000, "mWh"));
+    assert_eq!(mwh.state(), "Charging");
+    assert!(decode_tlvs(&[0x50, 2, 0, 0]).is_err());
+}
+
+#[test]
+fn charger_tlv_and_reset_cause_decode() {
+    // 10-bit ADC values in bits 15:6: battery 672 * 12.5 mV, input 200 * 25 mV, input current 160 * 6.25 mA.
+    let word = |value: u16| (value << 6).to_le_bytes();
+    let mut bytes = vec![0x12, 12, 0x08, 0x00];
+    for value in [672, 670, 80, 200, 160] {
+        bytes.extend_from_slice(&word(value));
+    }
+    let fields = decode_tlvs(&bytes).unwrap();
+    let TelemetryValue::Charger(charger) = fields[0].value else {
+        panic!("expected charger value");
+    };
+    assert_eq!(charger.charge_state(), "Fast charge");
+    assert_eq!(charger.battery_voltage_mv(), 8400.0);
+    assert_eq!(charger.charge_current_ma(), 1000.0);
+    assert_eq!(charger.input_voltage_mv(), 5000.0);
+    assert_eq!(charger.input_current_ma(), 1000.0);
+    assert_eq!(charger.input_power_mw(), 5000.0);
+    assert!(decode_tlvs(&[0x12, 2, 0, 0]).is_err());
+    assert_eq!(
+        hc32_updater::debug_link::reset_cause_names(0x4102),
+        ["Reset pin", "Software", "Multiple causes"]
+    );
+    assert!(hc32_updater::debug_link::reset_cause_names(0).is_empty());
+}
+
+#[test]
 fn config_list_pages_using_entry_count_and_rejects_nonprogress() {
     let mut script = Script::frames([
         response(Command::ConfigList, 1, &page(3, &[entry(1, "one", 1)])),

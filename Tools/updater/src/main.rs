@@ -1,8 +1,10 @@
 mod debug_cli;
 
-use hc32_updater::nusb_transport::NusbTransport;
+use hc32_updater::admin::AdminKey;
+use hc32_updater::nusb_transport::{DeviceMode, NusbTransport};
 use hc32_updater::{
-    FirmwareImage, ProductConfig, ProgressEvent, ProtocolV1Client, UpgradeWorkflow, Version,
+    FirmwareImage, ProductConfig, ProgressEvent, ProtocolV1Client, RebootTarget, UpgradeWorkflow,
+    Version,
 };
 use std::env;
 use std::fs;
@@ -12,12 +14,16 @@ use std::time::Duration;
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(2);
 const WAIT_POLL: Duration = Duration::from_millis(250);
+const RECOVERY_TIMEOUT: Duration = Duration::from_secs(15);
 
 enum CliCommand {
+    Version,
     Info,
     ConfigGet,
     ConfigSet(String, String, u16),
     Install(PathBuf),
+    Reboot(RebootTarget),
+    FactoryErase(PathBuf),
     Wait { version: Version, timeout: Duration },
     Debug(debug_cli::Arguments),
 }
@@ -46,6 +52,7 @@ fn main() -> ExitCode {
 
 fn run(command: CliCommand) -> Result<(), Box<dyn std::error::Error>> {
     match command {
+        CliCommand::Version => println!("hc32-updater {}", env!("CARGO_PKG_VERSION")),
         CliCommand::Info => {
             let transport = open_device()?.ok_or("USB device not found")?;
             let mode = transport.mode();
@@ -60,10 +67,22 @@ fn run(command: CliCommand) -> Result<(), Box<dyn std::error::Error>> {
         }
         CliCommand::Install(path) => {
             let image = FirmwareImage::parse(fs::read(path)?)?;
-            let transport = open_device()?.ok_or("USB device not found")?;
-            with_client(transport, |client| {
+            finish(open_recovery_client()?, |client| {
                 UpgradeWorkflow::install(client, &image, print_progress)
             })?;
+        }
+        CliCommand::Reboot(target) => {
+            let transport = open_device()?.ok_or("USB device not found")?;
+            with_client(transport, |client| client.reboot(target))?;
+            println!("reboot requested");
+        }
+        CliCommand::FactoryErase(key_path) => {
+            let key = AdminKey::from_pem(&fs::read_to_string(key_path)?)?;
+            finish(open_recovery_client()?, |client| {
+                client.admin_authenticate(&key)?;
+                client.factory_erase()
+            })?;
+            println!("factory erase accepted; the device restarts unprovisioned in Boot recovery");
         }
         CliCommand::ConfigGet => {
             let transport = open_device()?.ok_or("USB device not found")?;
@@ -98,7 +117,13 @@ fn with_client<R>(
     transport: NusbTransport,
     operation: impl FnOnce(&mut ProtocolV1Client<NusbTransport>) -> Result<R, hc32_updater::Error>,
 ) -> Result<R, hc32_updater::Error> {
-    let mut client = ProtocolV1Client::new(transport, REQUEST_TIMEOUT);
+    finish(ProtocolV1Client::new(transport, REQUEST_TIMEOUT), operation)
+}
+
+fn finish<R>(
+    mut client: ProtocolV1Client<NusbTransport>,
+    operation: impl FnOnce(&mut ProtocolV1Client<NusbTransport>) -> Result<R, hc32_updater::Error>,
+) -> Result<R, hc32_updater::Error> {
     let result = operation(&mut client);
     client.close();
     result
@@ -106,6 +131,30 @@ fn with_client<R>(
 
 fn open_device() -> std::io::Result<Option<NusbTransport>> {
     NusbTransport::open_unique_updater()
+}
+
+/// Opens the unique device in Boot recovery, first asking an Application device to restart into recovery. The
+/// returned client may already hold the session opened while waiting, so it must be used, not re-created.
+fn open_recovery_client() -> Result<ProtocolV1Client<NusbTransport>, Box<dyn std::error::Error>> {
+    let transport = open_device()?.ok_or("USB device not found")?;
+    if transport.mode() == DeviceMode::BootRecovery {
+        return Ok(ProtocolV1Client::new(transport, REQUEST_TIMEOUT));
+    }
+    let serial_number = transport
+        .serial_number()
+        .filter(|serial| !serial.is_empty())
+        .ok_or("entering Boot recovery requires a device with a USB serial number")?
+        .to_owned();
+    with_client(transport, |client| client.reboot(RebootTarget::Recovery))?;
+    println!("entering Boot recovery");
+    let (_, client) = UpgradeWorkflow::wait_for_recovery(
+        || NusbTransport::open_recovery(&serial_number),
+        RECOVERY_TIMEOUT,
+        WAIT_POLL,
+        REQUEST_TIMEOUT,
+        print_progress,
+    )?;
+    Ok(client)
 }
 
 fn print_info(info: &hc32_updater::DeviceInfo) {
@@ -148,6 +197,7 @@ fn parse_command(args: impl Iterator<Item = String>) -> Result<Option<CliCommand
     };
     match command.as_str() {
         "help" | "--help" | "-h" if args.next().is_none() => Ok(None),
+        "--version" | "-V" if args.next().is_none() => Ok(Some(CliCommand::Version)),
         "info" if args.next().is_none() => Ok(Some(CliCommand::Info)),
         "config" => parse_config(args).map(Some),
         "install" => {
@@ -157,6 +207,23 @@ fn parse_command(args: impl Iterator<Item = String>) -> Result<Option<CliCommand
             }
             Ok(Some(CliCommand::Install(path)))
         }
+        "reboot" => {
+            let target = match args.next().as_deref() {
+                Some("app") => RebootTarget::Application,
+                Some("boot") => RebootTarget::Recovery,
+                _ => return Err(()),
+            };
+            if args.next().is_some() {
+                return Err(());
+            }
+            Ok(Some(CliCommand::Reboot(target)))
+        }
+        "factory-erase" => match (args.next().as_deref(), args.next(), args.next()) {
+            (Some("--admin-key"), Some(path), None) => {
+                Ok(Some(CliCommand::FactoryErase(PathBuf::from(path))))
+            }
+            _ => Err(()),
+        },
         "debug" => debug_cli::parse(args).map(CliCommand::Debug).map(Some),
         "wait" => parse_wait(args).map(Some),
         _ => Err(()),
@@ -229,13 +296,19 @@ fn parse_wait(mut args: impl Iterator<Item = String>) -> Result<CliCommand, ()> 
 }
 
 fn usage() {
+    eprintln!("hc32-updater {}", env!("CARGO_PKG_VERSION"));
     eprintln!("usage:");
+    eprintln!("  hc32-updater --version");
     eprintln!("  hc32-updater info");
     eprintln!("  hc32-updater config get");
     eprintln!(
         "  hc32-updater config set --device-serial <serial> --hardware-version <version> --app-pid <hex-pid>"
     );
-    eprintln!("  hc32-updater install <signed-image>");
+    eprintln!(
+        "  hc32-updater install <signed-image>   (restarts an Application device into Boot first)"
+    );
+    eprintln!("  hc32-updater reboot <app|boot>");
+    eprintln!("  hc32-updater factory-erase --admin-key <private-key.pem>");
     eprintln!("  hc32-updater wait --version <version> [--timeout <seconds>]");
     debug_cli::usage();
 }
@@ -263,6 +336,20 @@ mod tests {
             parse_command(["install", "image.bin"].map(String::from).into_iter()),
             Ok(Some(CliCommand::Install(_)))
         ));
+        assert!(matches!(
+            parse_command(["reboot", "boot"].map(String::from).into_iter()),
+            Ok(Some(CliCommand::Reboot(RebootTarget::Recovery)))
+        ));
+        assert!(parse_command(["reboot", "x"].map(String::from).into_iter()).is_err());
+        assert!(matches!(
+            parse_command(
+                ["factory-erase", "--admin-key", "k.pem"]
+                    .map(String::from)
+                    .into_iter()
+            ),
+            Ok(Some(CliCommand::FactoryErase(_)))
+        ));
+        assert!(parse_command(["factory-erase"].map(String::from).into_iter()).is_err());
     }
 
     #[test]
@@ -270,6 +357,11 @@ mod tests {
         assert!(
             parse_command(["wait", "--version", "2.0.0"].map(String::from).into_iter()).is_ok()
         );
+        assert!(matches!(
+            parse_command(["--version"].map(String::from).into_iter()),
+            Ok(Some(super::CliCommand::Version))
+        ));
+        assert!(parse_command(["--version", "x"].map(String::from).into_iter()).is_err());
         assert!(
             parse_command(
                 ["wait", "--timeout", "30", "--version", "2.0.0"]
