@@ -519,18 +519,14 @@ impl<T: Transport> ProtocolV1Client<T> {
         let mut last_error = None;
 
         for attempt in 0..self.attempts {
+            if attempt > 0
+                && let Some((status, body)) = self.drain_pending(command, sequence)?
+            {
+                return self.complete(command, sequence, status, body);
+            }
             match self.transport.send(&encoded, self.timeout) {
                 Ok(()) => match self.receive_response(command, sequence) {
-                    Ok((status, body)) => {
-                        self.last_response = Some((command, sequence));
-                        if status.advances_sequence() {
-                            self.next_sequence = self.next_sequence.wrapping_add(1);
-                        }
-                        if status != Status::Ok {
-                            return Err(Error::Device(status));
-                        }
-                        return Ok(body);
-                    }
+                    Ok((status, body)) => return self.complete(command, sequence, status, body),
                     Err(Error::Protocol(error))
                         if error.retryable() && attempt + 1 < self.attempts =>
                     {
@@ -551,6 +547,47 @@ impl<T: Transport> ProtocolV1Client<T> {
         }
 
         Err(last_error.unwrap_or(Error::Argument("request attempts must be positive")))
+    }
+
+    fn complete(
+        &mut self,
+        command: Command,
+        sequence: u32,
+        status: Status,
+        body: Vec<u8>,
+    ) -> Result<Vec<u8>, Error> {
+        self.last_response = Some((command, sequence));
+        if status.advances_sequence() {
+            self.next_sequence = self.next_sequence.wrapping_add(1);
+        }
+        if status != Status::Ok {
+            return Err(Error::Device(status));
+        }
+        Ok(body)
+    }
+
+    /// The device is half-duplex: it NAKs new requests until its queued response has been read. Before a
+    /// retry, read any late answer to the outstanding request and discard stale or partial frames left by an
+    /// earlier exchange; a timeout means nothing is pending and the request must be re-sent.
+    fn drain_pending(
+        &mut self,
+        command: Command,
+        sequence: u32,
+    ) -> Result<Option<(Status, Vec<u8>)>, Error> {
+        for _ in 0..=MAX_STALE_RESPONSES {
+            let raw = match self.transport.receive(self.timeout) {
+                Ok(raw) => raw,
+                Err(error) if retryable_transport_error(&error) => return Ok(None),
+                Err(error) => return Err(Error::Transport(error)),
+            };
+            if let Ok(frame) = Frame::decode(&raw)
+                && frame.command == command
+                && frame.sequence == sequence
+            {
+                return decode_response(frame).map(Some);
+            }
+        }
+        Ok(None)
     }
 
     fn receive_response(
@@ -790,7 +827,7 @@ mod tests {
         let hello = response(Command::Hello, 0, Status::Ok, &hello_body());
         let transport = ScriptTransport::new([
             Err(io::Error::new(io::ErrorKind::TimedOut, "injected timeout")),
-            Ok(hello.clone()),
+            Err(io::Error::new(io::ErrorKind::TimedOut, "nothing pending")),
             Ok(hello),
             Ok(response(
                 Command::DeviceInfo,
@@ -805,6 +842,35 @@ mod tests {
         let transport = client.into_transport();
         assert_eq!(transport.requests.len(), 3);
         assert_eq!(transport.requests[0], transport.requests[1]);
+    }
+
+    #[test]
+    fn accepts_a_late_response_without_resending() {
+        let mut transport =
+            HalfDuplexTransport::new([response(Command::Hello, 0, Status::Ok, &hello_body())]);
+        transport.late_receives = 1;
+        let mut client = ProtocolV1Client::new(transport, Duration::from_millis(10));
+        assert_eq!(client.hello().unwrap().max_payload, 512);
+        let transport = client.into_transport();
+        assert_eq!(transport.requests.len(), 1);
+        assert_eq!(transport.naks, 0);
+    }
+
+    #[test]
+    fn drains_a_stale_response_that_blocks_the_device() {
+        let mut transport =
+            HalfDuplexTransport::new([response(Command::Hello, 0, Status::Ok, &hello_body())]);
+        transport.pending.push_back(response(
+            Command::DeviceInfo,
+            7,
+            Status::Ok,
+            &device_info_body(2048),
+        ));
+        let mut client = ProtocolV1Client::new(transport, Duration::from_millis(10));
+        assert_eq!(client.hello().unwrap().max_payload, 512);
+        let transport = client.into_transport();
+        assert_eq!(transport.naks, 1);
+        assert_eq!(transport.requests.len(), 1);
     }
 
     #[test]
@@ -1037,6 +1103,49 @@ mod tests {
 
         fn receive(&mut self, _timeout: Duration) -> io::Result<Vec<u8>> {
             self.responses.pop_front().expect("scripted response")
+        }
+    }
+
+    /// Models the device's half-duplex bulk pipe: OUT is NAKed while a response is still queued on IN.
+    struct HalfDuplexTransport {
+        replies: VecDeque<Vec<u8>>,
+        pending: VecDeque<Vec<u8>>,
+        requests: Vec<Vec<u8>>,
+        late_receives: usize,
+        naks: usize,
+    }
+
+    impl HalfDuplexTransport {
+        fn new(replies: impl IntoIterator<Item = Vec<u8>>) -> Self {
+            Self {
+                replies: replies.into_iter().collect(),
+                pending: VecDeque::new(),
+                requests: Vec::new(),
+                late_receives: 0,
+                naks: 0,
+            }
+        }
+    }
+
+    impl Transport for HalfDuplexTransport {
+        fn send(&mut self, request: &[u8], _timeout: Duration) -> io::Result<()> {
+            if !self.pending.is_empty() {
+                self.naks += 1;
+                return Err(io::Error::new(io::ErrorKind::TimedOut, "OUT NAKed"));
+            }
+            self.requests.push(request.to_vec());
+            self.pending.extend(self.replies.pop_front());
+            Ok(())
+        }
+
+        fn receive(&mut self, _timeout: Duration) -> io::Result<Vec<u8>> {
+            if self.late_receives > 0 {
+                self.late_receives -= 1;
+                return Err(io::Error::new(io::ErrorKind::TimedOut, "late response"));
+            }
+            self.pending
+                .pop_front()
+                .ok_or_else(|| io::Error::new(io::ErrorKind::TimedOut, "nothing pending"))
         }
     }
 
