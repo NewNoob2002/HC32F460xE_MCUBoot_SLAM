@@ -22,6 +22,23 @@ const IDENTITY_KEYS: &[&str] = &[
 fn main() {
     generate_product_identity();
     slint_build::compile("ui/app.slint").expect("failed to compile updater UI");
+    embed_windows_icon();
+}
+
+/// Gives both Windows executables the updater icon in Explorer and the taskbar. Uses rc.exe for MSVC
+/// targets and the mingw windres for the cross-compiled windows-gnu package.
+fn embed_windows_icon() {
+    const ICON: &str = "assets/hc32-updater.ico";
+    println!("cargo:rerun-if-changed={ICON}");
+    if env::var("CARGO_CFG_TARGET_OS").as_deref() != Ok("windows") {
+        return;
+    }
+    winresource::WindowsResource::new()
+        .set_icon(ICON)
+        .set("FileDescription", "HC32 Firmware Updater")
+        .set("ProductName", "HC32 Firmware Updater")
+        .compile()
+        .expect("failed to embed the Windows icon resource");
 }
 
 fn generate_product_identity() {

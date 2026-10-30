@@ -1,5 +1,5 @@
-// Release builds on Windows start without a console window; the GUI never writes to stdout/stderr.
-#![cfg_attr(all(windows, not(debug_assertions)), windows_subsystem = "windows")]
+// Windows builds start without a console window; the GUI never writes to stdout/stderr.
+#![cfg_attr(windows, windows_subsystem = "windows")]
 mod debug_gui;
 
 use hc32_updater::admin::AdminKey;
@@ -22,7 +22,9 @@ use std::time::{Duration, Instant};
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(2);
 const HEARTBEAT_INTERVAL: Duration = Duration::from_secs(2);
 const WAIT_TIMEOUT: Duration = Duration::from_secs(30);
-const WAIT_POLL: Duration = Duration::from_millis(250);
+const WAIT_POLL: Duration = Duration::from_millis(150);
+/// How long a finished install keeps its Done/Failed result on the progress bar before it empties.
+const PROGRESS_RESET_DELAY: Duration = Duration::from_secs(3);
 /// Covers the device reset, Boot's boot_go() and USB enumeration of the other mode.
 const RESTART_TIMEOUT: Duration = Duration::from_secs(15);
 const BOOT_CONFIG_REQUIRED_WARNING: &str = "Device parameters are not configured. Open Device Setup in Boot Recovery and configure SN, Hardware Version, and App USB PID before upgrading.";
@@ -206,6 +208,8 @@ fn main() -> Result<(), slint::PlatformError> {
             return;
         }
         ui.set_busy(true);
+        ui.set_progress_tone(0);
+        ui.set_progress_indeterminate(false);
         ui.set_progress(0.0);
         ui.set_progress_label("0%".into());
         ui.set_status_text("Checking firmware image...".into());
@@ -425,6 +429,7 @@ fn worker_loop(receiver: Receiver<WorkerCommand>, ui: slint::Weak<UpdaterWindow>
                     let result = install_image(connected.take(), &path, &ui);
                     match result {
                         Ok(device) => {
+                            relist_devices(&mut devices, &device, &ui);
                             let snapshot = device.snapshot();
                             let version = device.info.application_version;
                             connected = Some(device);
@@ -436,13 +441,17 @@ fn worker_loop(receiver: Receiver<WorkerCommand>, ui: slint::Weak<UpdaterWindow>
                                 true,
                             );
                         }
-                        Err(error) => post_disconnected(&ui, &format!("Install failed: {error}")),
+                        Err(error) => {
+                            post_disconnected(&ui, &format!("Install failed: {error}"));
+                            let _ = ui.upgrade_in_event_loop(|ui| finish_progress(&ui, false));
+                        }
                     }
                 }
                 WorkerCommand::Reboot(target) => {
                     debug.close(&ui, "Monitor closed for restart; reopen after reconnect");
                     match restart_device(connected.take(), target, &ui) {
                         Ok(device) => {
+                            relist_devices(&mut devices, &device, &ui);
                             let snapshot = device.snapshot();
                             connected = Some(device);
                             last_heartbeat = Instant::now();
@@ -709,6 +718,30 @@ fn install_image(
     ConnectedDevice::from_client(client, info, serial_number, DeviceMode::Application)
 }
 
+/// Re-lists devices after a restart so the selector shows the connected device in its new mode instead of
+/// the stale entry it was connected from.
+fn relist_devices(
+    devices: &mut Vec<UpdaterDevice>,
+    device: &ConnectedDevice,
+    ui: &slint::Weak<UpdaterWindow>,
+) {
+    let Ok(found) = NusbTransport::enumerate() else {
+        return;
+    };
+    let selected = found
+        .iter()
+        .position(|listed| {
+            listed.mode() == device.mode && listed.serial_number() == device.serial_number
+        })
+        .map_or(-1, |index| index as i32);
+    let labels: Vec<SharedString> = found.iter().map(|listed| listed.label().into()).collect();
+    *devices = found;
+    let _ = ui.upgrade_in_event_loop(move |ui| {
+        ui.set_device_model(ModelRc::new(VecModel::from(labels)));
+        ui.set_selected_device(selected);
+    });
+}
+
 fn post_devices(ui: &slint::Weak<UpdaterWindow>, labels: Vec<String>) {
     let count = labels.len();
     let labels: Vec<_> = labels.into_iter().map(SharedString::from).collect();
@@ -741,6 +774,7 @@ fn post_connected(
             .as_ref()
             .is_some_and(|config| config.provisioned);
         ui.set_busy(false);
+        ui.set_reconnecting(false);
         ui.set_device_connected(true);
         ui.set_device_mode(
             match device.mode {
@@ -756,14 +790,14 @@ fn post_connected(
         ui.set_device_provisioned(provisioned);
         ui.set_can_connect(false);
         ui.set_can_disconnect(true);
-        // A finished install shows 100%; any other connection or restart starts from an empty bar.
-        let (progress, label) = if upgrade_complete {
-            (1.0, "100%")
-        } else {
-            (0.0, "0%")
-        };
-        ui.set_progress(progress);
-        ui.set_progress_label(label.into());
+        // A finished install briefly shows Done; any other connection or restart leaves an empty bar.
+        if upgrade_complete {
+            finish_progress(&ui, true);
+        } else if ui.get_progress_tone() == 0 {
+            ui.set_progress_indeterminate(false);
+            ui.set_progress(0.0);
+            ui.set_progress_label("0%".into());
+        }
         set_device_info(&ui, &device.info);
         set_product_config_info(&ui, device.product_config.as_ref());
         if let Some(config) = device.product_config {
@@ -796,6 +830,29 @@ fn post_admin_verified(ui: &slint::Weak<UpdaterWindow>, verified: bool, status: 
     });
 }
 
+/// Shows the install result on the bar, then lets it ease back to empty so it never sticks at 100%.
+fn finish_progress(ui: &UpdaterWindow, succeeded: bool) {
+    ui.set_progress_indeterminate(false);
+    ui.set_progress_tone(if succeeded { 1 } else { 2 });
+    if succeeded {
+        ui.set_progress(1.0);
+        ui.set_progress_label("Done".into());
+    } else {
+        ui.set_progress_label("Failed".into());
+    }
+    let weak = ui.as_weak();
+    slint::Timer::single_shot(PROGRESS_RESET_DELAY, move || {
+        let Some(ui) = weak.upgrade() else { return };
+        // A new install has already taken over the bar.
+        if ui.get_busy() || ui.get_progress_tone() == 0 {
+            return;
+        }
+        ui.set_progress_tone(0);
+        ui.set_progress(0.0);
+        ui.set_progress_label("0%".into());
+    });
+}
+
 fn clear_device_mode(ui: &UpdaterWindow) {
     ui.set_device_mode("—".into());
     ui.set_device_in_boot(false);
@@ -807,6 +864,7 @@ fn post_disconnected(ui: &slint::Weak<UpdaterWindow>, status: &str) {
     let status = status.to_owned();
     let _ = ui.upgrade_in_event_loop(move |ui| {
         ui.set_busy(false);
+        ui.set_reconnecting(false);
         clear_device_mode(&ui);
         ui.set_device_connected(false);
         ui.set_debug_available(false);
@@ -821,6 +879,7 @@ fn post_disconnected(ui: &slint::Weak<UpdaterWindow>, status: &str) {
 fn post_error(ui: &slint::Weak<UpdaterWindow>, status: String, keep_connection: bool) {
     let _ = ui.upgrade_in_event_loop(move |ui| {
         ui.set_busy(false);
+        ui.set_reconnecting(false);
         if !keep_connection {
             clear_device_mode(&ui);
             ui.set_device_connected(false);
@@ -847,9 +906,17 @@ fn post_progress(ui: &slint::Weak<UpdaterWindow>, event: ProgressEvent) {
     let _ = ui.upgrade_in_event_loop(move |ui| match event {
         ProgressEvent::Device(info) => {
             set_device_info(&ui, &info);
-            ui.set_status_text(format!("Device application {}", info.application_version).into());
+            ui.set_status_text(
+                format!(
+                    "Device is back with application {}; reconnecting...",
+                    info.application_version
+                )
+                .into(),
+            );
         }
         ProgressEvent::Transferring { sent, total } => {
+            ui.set_reconnecting(false);
+            ui.set_progress_indeterminate(false);
             ui.set_progress(sent as f32 / total as f32);
             ui.set_progress_label(format!("{}%", sent * 100 / total).into());
             ui.set_status_text(format!("Transferring {sent}/{total} bytes").into());
@@ -865,9 +932,14 @@ fn post_progress(ui: &slint::Weak<UpdaterWindow>, event: ProgressEvent) {
             ui.set_status_text("Committing upgrade...".into());
         }
         ProgressEvent::WaitingForReenumeration => {
-            ui.set_progress(0.99);
-            ui.set_progress_label("99%".into());
-            ui.set_status_text("Waiting for the same device to re-enumerate...".into());
+            // Boot swaps the slots before the new Application enumerates and that time is unknown, so the
+            // bar runs indeterminate with an elapsed-time label instead of freezing at 99%.
+            ui.set_reconnecting(true);
+            ui.set_progress_indeterminate(true);
+            ui.set_status_text(
+                "Device is restarting: Boot swaps in the new image, then the Application reconnects..."
+                    .into(),
+            );
         }
     });
 }
@@ -878,7 +950,10 @@ fn post_restart_progress(ui: &slint::Weak<UpdaterWindow>, event: ProgressEvent) 
         ProgressEvent::Device(_) => "Device found; reconnecting...",
         _ => return,
     };
-    let _ = ui.upgrade_in_event_loop(move |ui| ui.set_status_text(status.into()));
+    let _ = ui.upgrade_in_event_loop(move |ui| {
+        ui.set_reconnecting(true);
+        ui.set_status_text(status.into());
+    });
 }
 
 fn set_device_info(ui: &UpdaterWindow, info: &DeviceInfo) {

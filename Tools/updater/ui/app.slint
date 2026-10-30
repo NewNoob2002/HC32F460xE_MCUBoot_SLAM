@@ -189,6 +189,7 @@ component Badge inherits Rectangle {
     in property <color> fill: Theme.hover;
     border-radius: 11px;
     background: root.fill;
+    animate background { duration: 200ms; easing: ease-out; }
 
     HorizontalLayout {
         padding-left: 10px;
@@ -204,12 +205,14 @@ component Badge inherits Rectangle {
                 height: 7px;
                 border-radius: 3.5px;
                 background: root.tint;
+                animate background { duration: 200ms; easing: ease-out; }
             }
         }
 
         Text {
             text: root.text;
             color: root.tint;
+            animate color { duration: 200ms; easing: ease-out; }
             font-size: 12px;
             font-weight: 600;
             vertical-alignment: center;
@@ -305,6 +308,7 @@ component NavItem inherits Rectangle {
     callback clicked;
     border-radius: 8px;
     background: root.active ? Theme.accent-soft : touch.has-hover ? Theme.hover : transparent;
+    animate background { duration: 150ms; easing: ease-out; }
 
     HorizontalLayout {
         padding-top: 8px;
@@ -316,6 +320,7 @@ component NavItem inherits Rectangle {
             width: 3px;
             border-radius: 1.5px;
             background: root.active ? Theme.accent : transparent;
+            animate background { duration: 150ms; easing: ease-out; }
         }
 
         VerticalLayout {
@@ -364,6 +369,21 @@ component FormField inherits VerticalLayout {
     }
 
     @children
+}
+
+// Fades its content in when it is created, so switching pages does not snap.
+component FadePage inherits Rectangle {
+    property <float> shown: 0;
+    opacity: self.shown;
+    animate shown { duration: 220ms; easing: ease-out; }
+    init => {
+        self.shown = 1;
+    }
+
+    VerticalLayout {
+        spacing: 16px;
+        @children
+    }
 }
 
 component Divider inherits Rectangle {
@@ -529,7 +549,13 @@ component Dialog inherits Rectangle {
     in property <string> body;
     in property <length> dialog-width: 460px;
     in property <bool> danger;
+    property <float> shown: 0;
     background: #000000a0;
+    opacity: self.shown;
+    animate shown { duration: 160ms; easing: ease-out; }
+    init => {
+        self.shown = 1;
+    }
 
     TouchArea { }
 
@@ -584,6 +610,7 @@ component Dialog inherits Rectangle {
 export component UpdaterWindow inherits Window {
     in property <string> app-version;
     title: "HC32 Firmware Updater " + root.app-version;
+    icon: @image-url("../assets/hc32-updater.png");
     preferred-width: 1040px;
     preferred-height: 780px;
     min-width: 860px;
@@ -611,6 +638,14 @@ export component UpdaterWindow inherits Window {
     in property <string> status-text: "Ready";
     in property <float> progress: 0;
     in property <string> progress-label: "0%";
+    // Restart and reconnect run indeterminate: their duration depends on the Boot swap and USB enumeration.
+    in property <bool> progress-indeterminate: false;
+    // 0 = in progress, 1 = finished, 2 = failed.
+    in property <int> progress-tone: 0;
+    in property <bool> reconnecting: false;
+    property <int> reconnect-seconds: 0;
+    property <float> shown-progress: root.progress;
+    animate shown-progress { duration: 300ms; easing: ease-out; }
     in property <bool> busy: false;
     in-out property <string> config-device-serial;
     in-out property <string> config-hardware-version;
@@ -662,6 +697,17 @@ export component UpdaterWindow inherits Window {
     property <bool> idle: !root.busy && !root.debug-busy && !root.debug-confirm-visible
         && !root.admin-erase-confirm-visible;
     in-out property <int> page: 0;
+    changed reconnecting => {
+        self.reconnect-seconds = 0;
+    }
+    Timer {
+        interval: 1s;
+        running: root.reconnecting;
+        triggered => {
+            root.reconnect-seconds += 1;
+        }
+    }
+
     changed device-in-boot => {
         if !self.device-in-boot && self.admin-unlocked {
             root.admin-release();
@@ -680,16 +726,12 @@ export component UpdaterWindow inherits Window {
                 padding-bottom: 14px;
                 spacing: 12px;
 
-                Rectangle {
-                    width: 36px;
-                    height: 36px;
-                    border-radius: 10px;
-                    background: Theme.accent;
-                    Text {
-                        text: "HC";
-                        color: #ffffff;
-                        font-size: 14px;
-                        font-weight: 700;
+                VerticalLayout {
+                    alignment: center;
+                    Image {
+                        width: 36px;
+                        height: 36px;
+                        source: @image-url("../assets/hc32-updater.png");
                     }
                 }
 
@@ -724,13 +766,13 @@ export component UpdaterWindow inherits Window {
                     }
                 }
 
-                if root.device-connected: VerticalLayout {
+                if root.device-connected || root.reconnecting: VerticalLayout {
                     alignment: center;
                     horizontal-stretch: 0;
                     Badge {
-                        text: root.device-mode;
-                        tint: root.device-in-boot ? Theme.warning : Theme.accent;
-                        fill: root.device-in-boot ? Theme.warning-soft : Theme.accent-soft;
+                        text: root.reconnecting ? "Restarting… " + root.reconnect-seconds + " s" : root.device-mode;
+                        tint: root.reconnecting || root.device-in-boot ? Theme.warning : Theme.accent;
+                        fill: root.reconnecting || root.device-in-boot ? Theme.warning-soft : Theme.accent-soft;
                     }
                 }
 
@@ -903,8 +945,7 @@ export component UpdaterWindow inherits Window {
                     spacing: 16px;
                     padding-right: 12px;
 
-                    if root.page == 0: VerticalLayout {
-                        spacing: 16px;
+                    if root.page == 0: FadePage {
 
                         Card {
                             SectionHeader {
@@ -978,14 +1019,16 @@ export component UpdaterWindow inherits Window {
                                     horizontal-stretch: 1;
                                     ProgressIndicator {
                                         height: 8px;
-                                        progress: root.progress;
+                                        progress: root.shown-progress;
+                                        indeterminate: root.progress-indeterminate;
                                     }
                                 }
 
                                 Text {
-                                    width: 48px;
-                                    text: root.progress-label;
-                                    color: Theme.text;
+                                    width: 56px;
+                                    text: root.progress-indeterminate ? root.reconnect-seconds + " s" : root.progress-label;
+                                    color: root.progress-tone == 1 ? Theme.success : root.progress-tone == 2 ? Theme.danger : Theme.text;
+                                    animate color { duration: 200ms; easing: ease-out; }
                                     font-family: "monospace";
                                     horizontal-alignment: right;
                                     vertical-alignment: center;
@@ -994,8 +1037,7 @@ export component UpdaterWindow inherits Window {
                         }
                     }
 
-                    if root.page == 1: VerticalLayout {
-                        spacing: 16px;
+                    if root.page == 1: FadePage {
 
                         Card {
                             HorizontalLayout {
@@ -1263,8 +1305,7 @@ export component UpdaterWindow inherits Window {
                         }
                     }
 
-                    if root.page == 2: VerticalLayout {
-                        spacing: 16px;
+                    if root.page == 2: FadePage {
 
                         Card {
                             HorizontalLayout {
@@ -1354,8 +1395,7 @@ export component UpdaterWindow inherits Window {
                         }
                     }
 
-                    if root.page == 3: VerticalLayout {
-                        spacing: 16px;
+                    if root.page == 3: FadePage {
 
                         Card {
                             HorizontalLayout {
