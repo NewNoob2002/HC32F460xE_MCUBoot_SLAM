@@ -332,7 +332,7 @@ impl UpgradeWorkflow {
         loop {
             let transport = match connect() {
                 Ok(transport) => transport,
-                Err(error) if retryable_wait_error(&error) => None,
+                Err(error) if retryable_connect_error(&error) => None,
                 Err(error) => return Err(Error::Transport(error)),
             };
             if let Some(transport) = transport {
@@ -372,6 +372,17 @@ fn retryable_wait_error(error: &io::Error) -> bool {
             | io::ErrorKind::TimedOut
             | io::ErrorKind::WouldBlock
     )
+}
+
+/// Opening also retries Unsupported and Other: Windows lists a re-enumerated device before WinUSB is bound
+/// to its interfaces, and nusb reports the missing device path with those kinds. Only the open is retried
+/// this way; protocol errors from an opened device still fail at once.
+fn retryable_connect_error(error: &io::Error) -> bool {
+    retryable_wait_error(error)
+        || matches!(
+            error.kind(),
+            io::ErrorKind::Unsupported | io::ErrorKind::Other
+        )
 }
 
 pub struct ProtocolV1Client<T> {
@@ -1258,6 +1269,42 @@ mod tests {
         )
         .unwrap();
         assert_eq!((attempts, info.image_capacity), (2, 2048));
+    }
+
+    #[test]
+    fn wait_retries_a_device_whose_winusb_interface_is_not_bound_yet() {
+        let mut attempts = 0;
+        let (info, _) = UpgradeWorkflow::wait_for(
+            || {
+                attempts += 1;
+                match attempts {
+                    1 => Err(io::Error::new(
+                        io::ErrorKind::Unsupported,
+                        "failed to find device path for WinUSB interface",
+                    )),
+                    2 => Err(io::Error::other(
+                        "failed to find device path for WinUSB device",
+                    )),
+                    _ => Ok(Some(ScriptTransport::new([
+                        Ok(response(Command::Hello, 0, Status::Ok, &hello_body())),
+                        Ok(response(
+                            Command::DeviceInfo,
+                            1,
+                            Status::Ok,
+                            &device_info_body(2048),
+                        )),
+                    ]))),
+                }
+            },
+            |_| true,
+            Error::ReconnectTimeout("test"),
+            Duration::from_secs(1),
+            Duration::from_millis(1),
+            Duration::from_millis(10),
+            |_| {},
+        )
+        .unwrap();
+        assert_eq!((attempts, info.image_capacity), (3, 2048));
     }
 
     #[test]
