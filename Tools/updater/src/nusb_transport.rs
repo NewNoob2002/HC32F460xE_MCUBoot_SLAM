@@ -245,12 +245,18 @@ fn updater_mode(info: &DeviceInfo) -> Option<DeviceMode> {
                 && interface.class() == 0xff
                 && interface.subclass() == 0
                 && interface.protocol() == 0
-                && interface.interface_string() == Some(INTERFACE_DESCRIPTION)
+                && interface_string_matches(interface.interface_string())
         })
     {
         return None;
     }
     mode_for_product_id(info.product_id())
+}
+
+// nusb on Windows reports interface strings only for usbccgp composite
+// children; a single-interface WinUSB device always reports None.
+fn interface_string_matches(interface_string: Option<&str>) -> bool {
+    interface_string.is_none_or(|string| string == INTERFACE_DESCRIPTION)
 }
 
 impl Transport for NusbTransport {
@@ -439,6 +445,13 @@ mod tests {
                 .kind(),
             io::ErrorKind::UnexpectedEof
         );
+    }
+
+    #[test]
+    fn accepts_a_missing_interface_string_but_rejects_a_different_one() {
+        assert!(interface_string_matches(Some(INTERFACE_DESCRIPTION)));
+        assert!(interface_string_matches(None));
+        assert!(!interface_string_matches(Some("CDC Data")));
     }
 
     #[test]
