@@ -3,6 +3,11 @@ import sys
 from pathlib import Path
 
 
+# Interface strings matched by Tools/updater/src/nusb_transport.rs.
+UPDATE_INTERFACE = b"Slam-ChargerManager Firmware Update"
+DEBUG_INTERFACE = b"Slam-ChargerManager Debug Monitor"
+
+
 def require_once(image: bytes, expected: bytes, label: str) -> None:
     count = image.count(expected)
     if count != 1:
@@ -61,10 +66,11 @@ def verify(
     config = bytes.fromhex("0902") + (55 if composite else 32).to_bytes(2, "little")
     config += bytes([2 if composite else 1, 1, 0, 0x80, 50])
     config += bytes.fromhex("0904000002ff0000040705810240000007050202400000")
+    require_once(image, UPDATE_INTERFACE, f"{mode} firmware-update interface string")
     if composite:
         config += bytes.fromhex("0904010002ff0000050705830240000007050402400000")
-        require_once(image, b"Vendor Bulk Debug", f"{mode} debug string")
-    elif b"Vendor Bulk Debug" in image:
+        require_once(image, DEBUG_INTERFACE, f"{mode} debug interface string")
+    elif DEBUG_INTERFACE in image:
         raise SystemExit("Boot recovery: debug interface must be absent")
     require_once(image, config, f"{mode} configuration/endpoints")
     require_present(image, serial_prefix.encode(), f"{mode} UQID serial prefix")

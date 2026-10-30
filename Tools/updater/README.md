@@ -136,7 +136,7 @@ small or high-DPI displays.
 
 ## Application Debug Link
 
-Debug Link V1 uses Application interface 1 (`Vendor Bulk Debug`, OUT `0x04`,
+Debug Link V1 uses Application interface 1 (`Slam-ChargerManager Debug Monitor`, OUT `0x04`,
 IN `0x83`), independently of the existing interface 0 updater. Boot Recovery
 does not expose Debug. Select the Application by its exact USB serial:
 

@@ -12,7 +12,14 @@ const OUT_ENDPOINT: u8 = 0x02;
 const IN_ENDPOINT: u8 = 0x81;
 const HEADER_SIZE: usize = 16;
 const MAX_RESPONSE_SIZE: usize = HEADER_SIZE + 512 + 4;
-const INTERFACE_DESCRIPTION: &str = "Vendor Bulk Firmware Update";
+/// Interface 0 strings: the current name first, then the generic name of earlier Boot and App builds.
+const INTERFACE_DESCRIPTIONS: [&str; 2] = [
+    "Slam-ChargerManager Firmware Update",
+    "Vendor Bulk Firmware Update",
+];
+/// Application interface 1 strings, current name first.
+const DEBUG_INTERFACE_DESCRIPTIONS: [&str; 2] =
+    ["Slam-ChargerManager Debug Monitor", "Vendor Bulk Debug"];
 
 #[derive(Clone)]
 pub struct UpdaterDevice {
@@ -119,11 +126,13 @@ impl NusbTransport {
                 && interface.class() == 0xff
                 && interface.subclass() == 0
                 && interface.protocol() == 0
-                && interface.interface_string() == Some("Vendor Bulk Debug")
+                && interface
+                    .interface_string()
+                    .is_some_and(|string| DEBUG_INTERFACE_DESCRIPTIONS.contains(&string))
         }) {
             return Err(io::Error::new(
                 io::ErrorKind::NotFound,
-                "Application does not expose Vendor Bulk Debug interface 1",
+                "Application does not expose the Debug Monitor interface 1",
             ));
         }
         let opened = device.info.clone().open().wait()?;
@@ -256,7 +265,7 @@ fn updater_mode(info: &DeviceInfo) -> Option<DeviceMode> {
 // nusb on Windows reports interface strings only for usbccgp composite
 // children; a single-interface WinUSB device always reports None.
 fn interface_string_matches(interface_string: Option<&str>) -> bool {
-    interface_string.is_none_or(|string| string == INTERFACE_DESCRIPTION)
+    interface_string.is_none_or(|string| INTERFACE_DESCRIPTIONS.contains(&string))
 }
 
 impl Transport for NusbTransport {
@@ -449,7 +458,12 @@ mod tests {
 
     #[test]
     fn accepts_a_missing_interface_string_but_rejects_a_different_one() {
-        assert!(interface_string_matches(Some(INTERFACE_DESCRIPTION)));
+        assert!(interface_string_matches(Some(
+            "Slam-ChargerManager Firmware Update"
+        )));
+        assert!(interface_string_matches(Some(
+            "Vendor Bulk Firmware Update"
+        )));
         assert!(interface_string_matches(None));
         assert!(!interface_string_matches(Some("CDC Data")));
     }

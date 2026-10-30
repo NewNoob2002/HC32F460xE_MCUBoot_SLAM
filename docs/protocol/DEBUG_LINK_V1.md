@@ -30,7 +30,7 @@ commands and its Boot Recovery behavior are unchanged.
 | --- | --- |
 | Interface | 1 (interface 0 remains the firmware-update interface) |
 | Class/Subclass/Protocol | `0xFF/0x00/0x00` |
-| Interface string | `Vendor Bulk Debug` |
+| Interface string | `Slam-ChargerManager Debug Monitor` (host also accepts the earlier `Vendor Bulk Debug`) |
 | Bulk OUT | `0x04`, 64-byte max packet |
 | Bulk IN | `0x83`, 64-byte max packet |
 

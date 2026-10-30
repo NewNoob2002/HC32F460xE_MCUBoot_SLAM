@@ -85,10 +85,15 @@ static const uint8_t config_descriptor[] = {
 #endif
 };
 
+/* Interface strings name the composite children in Windows Device Manager; the host updater matches them. */
 static const char* string_descriptors[] = {
-    (const char[]){0x09, 0x04}, HC32_PRODUCT_USB_MANUFACTURER, UPDATE_USB_PRODUCT, NULL, "Vendor Bulk Firmware Update",
+    (const char[]){0x09, 0x04},
+    HC32_PRODUCT_USB_MANUFACTURER,
+    UPDATE_USB_PRODUCT,
+    NULL,
+    "Slam-ChargerManager Firmware Update",
 #if !USB_FW_UPDATE_BOOT_RECOVERY
-    "Vendor Bulk Debug",
+    "Slam-ChargerManager Debug Monitor",
 #endif
 };
 static char usb_serial[USB_SERIAL_BUFFER_SIZE];
