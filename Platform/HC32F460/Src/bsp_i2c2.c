@@ -14,6 +14,43 @@ static bool status_is_set(uint32_t flag) {
     return I2C_GetStatus(BSP_I2C2, flag) == SET;
 }
 
+/* I2C-bus specification UM10204 rev. 7, 3.1.16 "Bus clear": an MCU reset in the middle of a read leaves the slave
+ * driving a 0 on SDA, and no START is possible afterwards (HIL 2026-11-04: SDA held low after a J-Link reset, every
+ * device returned START timeout). Clock SCL as open-drain GPIO up to nine times until SDA is released, then send a
+ * STOP. Half periods of 5 us keep the 100 kHz bus timing. */
+static void bus_clear(void) {
+    stc_gpio_init_t gpio;
+
+    GPIO_SetFunc(BSP_I2C2_SCL_PORT, BSP_I2C2_SCL_PIN, GPIO_FUNC_0);
+    GPIO_SetFunc(BSP_I2C2_SDA_PORT, BSP_I2C2_SDA_PIN, GPIO_FUNC_0);
+    (void)GPIO_StructInit(&gpio);
+    gpio.u16PinState = PIN_STAT_SET;
+    gpio.u16PinDir = PIN_DIR_OUT;
+    gpio.u16PinOutputType = PIN_OUT_TYPE_NMOS;
+    (void)GPIO_Init(BSP_I2C2_SCL_PORT, BSP_I2C2_SCL_PIN, &gpio);
+    (void)GPIO_Init(BSP_I2C2_SDA_PORT, BSP_I2C2_SDA_PIN, &gpio);
+    DDL_DelayUS(5UL);
+    for (unsigned i = 0U; i < 9U && GPIO_ReadInputPins(BSP_I2C2_SDA_PORT, BSP_I2C2_SDA_PIN) == PIN_RESET; ++i) {
+        GPIO_ResetPins(BSP_I2C2_SCL_PORT, BSP_I2C2_SCL_PIN);
+        DDL_DelayUS(5UL);
+        GPIO_SetPins(BSP_I2C2_SCL_PORT, BSP_I2C2_SCL_PIN);
+        DDL_DelayUS(5UL);
+    }
+    /* STOP: SDA rises while SCL is high. */
+    GPIO_ResetPins(BSP_I2C2_SCL_PORT, BSP_I2C2_SCL_PIN);
+    DDL_DelayUS(5UL);
+    GPIO_ResetPins(BSP_I2C2_SDA_PORT, BSP_I2C2_SDA_PIN);
+    DDL_DelayUS(5UL);
+    GPIO_SetPins(BSP_I2C2_SCL_PORT, BSP_I2C2_SCL_PIN);
+    DDL_DelayUS(5UL);
+    GPIO_SetPins(BSP_I2C2_SDA_PORT, BSP_I2C2_SDA_PIN);
+    DDL_DelayUS(5UL);
+    /* Back to the reset (input) configuration the I2C function was validated with. */
+    (void)GPIO_StructInit(&gpio);
+    (void)GPIO_Init(BSP_I2C2_SCL_PORT, BSP_I2C2_SCL_PIN, &gpio);
+    (void)GPIO_Init(BSP_I2C2_SDA_PORT, BSP_I2C2_SDA_PIN, &gpio);
+}
+
 static void finish_transfer(void) {
     I2C_AckConfig(BSP_I2C2, I2C_ACK);
     I2C_ClearStatus(BSP_I2C2, I2C_FLAG_CLR_ALL);
@@ -70,6 +107,7 @@ int bsp_i2c2_init(void) {
     int32_t result;
 
     g_ready = false;
+    bus_clear();
     GPIO_SetFunc(BSP_I2C2_SCL_PORT, BSP_I2C2_SCL_PIN, BSP_I2C2_SCL_FUNCTION);
     GPIO_SetFunc(BSP_I2C2_SDA_PORT, BSP_I2C2_SDA_PIN, BSP_I2C2_SDA_FUNCTION);
     FCG_Fcg1PeriphClockCmd(BSP_I2C2_CLOCK, ENABLE);
