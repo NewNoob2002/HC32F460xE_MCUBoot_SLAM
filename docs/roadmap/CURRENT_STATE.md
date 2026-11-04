@@ -147,6 +147,11 @@ and SEGGER RTT channel 0. The Debug App places `_SEGGER_RTT` at
 independent of EasyLogger and writes its raw/panic output through USART3;
 Release firmware omits EasyLogger and RTT.
 
+Boot keeps SYSCLK at 200 MHz for ECDSA verification. The Application re-clocks
+SYSCLK and all buses to 50 MHz from MPLL at startup; 2026-11-04 HIL measured
+about 4.5 mA less 5 V input current than 200 MHz, with USB enumeration and full
+USB updates passing at 50 MHz (an 8 MHz XTAL SYSCLK does not enumerate USB).
+
 Boot's scope is secure image selection/swap, USB recovery (invalid image or
 Application request), recovery-only provisioning, optional administrator factory
 erase and validated handover. This extends the 2026-09-03 freeze tag and needs new

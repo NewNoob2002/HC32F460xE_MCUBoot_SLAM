@@ -13,6 +13,10 @@ extern "C" {
 #include "cmsis_gcc.h"
 }
 
+namespace {
+constexpr uint32_t AppSystemClockHz = 50000000U;
+}
+
 #if defined(BSP_DEBUG)
 namespace {
 debug::Service* g_log_sink = nullptr;
@@ -102,6 +106,10 @@ void App::applyLedOverride() {
     bsp_debug_port_use_swd();
     if (!bsp_clock_init())
         bsp_panic("app clock init failed");
+    // The App needs no 200 MHz work (Boot keeps 200 MHz for ECDSA). HIL 2026-11-04 at 5 V: 50 MHz saves ~4.5 mA of
+    // ~34 mA input; USB enumerates and updates at 25/50 MHz but not with an 8 MHz SYSCLK, so 50 MHz keeps margin.
+    if (!bsp_clock_set_pll_hz(AppSystemClockHz))
+        bsp_panic("app clock reduce failed");
     if (!bsp_timebase_init())
         bsp_panic("app timebase init failed");
     (void)bsp_log_uart_init();
