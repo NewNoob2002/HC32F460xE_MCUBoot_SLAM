@@ -78,6 +78,8 @@ struct UpdateState {
 };
 struct SystemState {
     int confirm_result = 0;
+    // The running image is confirmed only after a host enumerated USB; until then a reset lets MCUboot revert.
+    bool confirm_pending = true;
     uint32_t loop_count = 0U;
     bool watchdog_ready = false;
     bool watchdog_pulse_active = false;
@@ -167,7 +169,11 @@ class SystemNode final : public ValueNode<SystemState> {
   public:
     bool init(DataBroker& broker, uint32_t now_ms);
     void poll(uint32_t now_ms);
-    int confirm(bool auto_confirm);
+    /** Confirms the running MCUboot image once, the first time a host has configured USB. An update is always
+     * installed from a host that waits for this re-enumeration, so an image whose USB never works stays unconfirmed
+     * and is reverted on the next reset instead of locking the device out of USB updates. Returns the confirm
+     * result when it ran, 0 otherwise. */
+    int confirmAfterHost(bool usb_configured, bool auto_confirm);
     int onEvent(EventParam* event) override;
 };
 } // namespace dp

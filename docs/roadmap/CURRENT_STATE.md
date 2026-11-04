@@ -108,7 +108,8 @@ The single `app_firmware` target uses C++17 in the Application orchestration,
 HAL and domain nodes, following the GNSS_Panel DataBroker/typed-reader design.
 `main.cpp` delegates to the statically owned `App`. Startup remains: unlock,
 SWD, clock, timebase, UART/logging, LED, Power, Charger, watchdog, USB,
-confirmation, Diagnostics, then restore write protection before the loop.
+Diagnostics, then restore write protection before the loop. The image is
+confirmed in the loop on the first host USB configuration, not at startup.
 Power probes `0x0B`, `0x0C`, `0x08`, `0x5C` in order and reads BQ identity
 only at `0x0C` after ACK; missing devices are degraded status.
 

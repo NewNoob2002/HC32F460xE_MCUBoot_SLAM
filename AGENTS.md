@@ -44,7 +44,7 @@
 - Keep the portable updater bounded and caller-allocated. Do not add heap, RTOS, transport registries, or new dependencies without a demonstrated need.
 - Do not weaken image validation, ECDSA-P256 key checks, rollback behavior, handover validation, or trust-boundary input validation.
 - Firmware builds require an explicitly supplied external private key. Never commit private keys or generate them under `build/`; the Debug preset uses the fixed development key outside the repository.
-- Immediate App confirmation is the current baseline, not an ideal health policy. If changing confirmation timing, confirm only after explicit bounded health checks.
+- The App confirms its image only after a host has configured USB (`SystemNode::confirmAfterHost`), so an image whose USB never enumerates is reverted on the next reset. If changing confirmation timing, keep it gated on explicit bounded health checks.
 
 ## Build and verification
 

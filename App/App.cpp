@@ -72,8 +72,6 @@ void App::applyLedOverride() {
         bsp_panic("app watchdog init failed");
     if (update_.init(broker_) != 0)
         bsp_panic("app USB init failed");
-    if (system_.confirm(APP_AUTO_CONFIRM != 0) != 0)
-        bsp_panic("app startup check failed");
     if (!diagnostics_.init(broker_, bsp_millis()))
         bsp_panic("app diagnostics init failed");
 
@@ -89,6 +87,10 @@ void App::applyLedOverride() {
         usb_fw_update_set_idle_led_mode(dp::batteryLedMode(power_.state(), charger_.state()));
         applyLedOverride();
         const auto action = update_.poll(now_ms);
+        // A failed confirm write leaves the image unconfirmed; the panic stops feeding the external watchdog, whose
+        // reset lets MCUboot revert to the previous image.
+        if (system_.confirmAfterHost(update_.state().usb.configured != 0U, APP_AUTO_CONFIRM != 0) != 0)
+            bsp_panic("app image confirm failed");
         (void)broker_.handleTimers(now_ms);
         const bool debug_reset = debug_.poll(now_ms);
         if (action == USB_FW_UPDATE_ACTION_RESET_TO_RECOVERY)

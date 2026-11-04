@@ -12,7 +12,10 @@ void SystemNode::poll(uint32_t now_ms) {
     ++state_.loop_count;
     bsp_external_watchdog_poll(now_ms);
 }
-int SystemNode::confirm(bool auto_confirm) {
+int SystemNode::confirmAfterHost(bool usb_configured, bool auto_confirm) {
+    if (!state_.confirm_pending || !usb_configured)
+        return 0;
+    state_.confirm_pending = false;
     state_.confirm_result = app_confirm_running_image(auto_confirm);
     return state_.confirm_result;
 }

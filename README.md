@@ -76,7 +76,7 @@ Use the same signing key for both application versions and preserve each build's
 3. Build version 2 with APP_VERSION=2.0.0 and APP_AUTO_CONFIRM=OFF; program its app-update-2.0.0.bin at 0x00042000.
 4. Reset once and verify that version 2 runs as a test upgrade.
 5. Reset again without confirming version 2; verify that MCUboot reverts to version 1.
-6. Rebuild version 2 with APP_AUTO_CONFIRM=ON, program the new app-update-2.0.0.bin, and boot it so the application confirms the image.
+6. Rebuild version 2 with APP_AUTO_CONFIRM=ON, program the new app-update-2.0.0.bin, and boot it with USB attached to a host: the application confirms the image only after the host configures USB.
 7. Reset again and verify that version 2 remains active.
 
 The build and host tests validate layout, signing, handover, and confirmation contracts. They do not prove physical flash swapping, reset behavior, or rollback on hardware; the HIL sequence above remains required for a new release baseline.

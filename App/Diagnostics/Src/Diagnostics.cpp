@@ -70,7 +70,8 @@ bool Diagnostics::init(DataBroker& broker, uint32_t now_ms) {
             CORE_DEBUG_PRINTF("diag subscribe %s failed: %d", publisher, result);
     }
     pullAll();
-    CORE_DEBUG_PRINTF("startup usb=%d confirm=%d", snapshot_.update.init_result, snapshot_.system.confirm_result);
+    CORE_DEBUG_PRINTF("startup usb=%d confirm=%s", snapshot_.update.init_result,
+                      snapshot_.system.confirm_pending ? "pending-host" : "done");
     logCharger(snapshot_.charger);
     startTimer(DiagnosticsPeriodMs, now_ms);
     return true;

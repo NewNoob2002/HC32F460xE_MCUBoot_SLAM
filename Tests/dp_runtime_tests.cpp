@@ -72,9 +72,20 @@ int main() {
     assert(observer.init(broker, "observer", DataNode::EVENT_PUBLISH) == DataNode::RES_OK);
     assert(dp::Update::subscribe(observer) == DataNode::RES_OK);
     assert(dp::System::subscribe(observer) == DataNode::RES_OK);
-    assert(system.confirm(true) == 0 && confirm_enabled);
-    confirm_result = -3;
-    assert(system.confirm(false) == -3 && !confirm_enabled);
+    // No host yet: nothing is confirmed, however often the loop asks.
+    assert(system.confirmAfterHost(false, true) == 0 && !confirm_enabled);
+    // The first host configuration confirms once; later ones do not write again.
+    assert(system.confirmAfterHost(true, true) == 0 && confirm_enabled);
+    confirm_enabled = false;
+    assert(system.confirmAfterHost(true, true) == 0 && !confirm_enabled);
+    {
+        DataBroker other;
+        dp::SystemNode failing;
+        assert(failing.init(other, 0U));
+        confirm_result = -3;
+        assert(failing.confirmAfterHost(true, false) == -3 && !confirm_enabled);
+        assert(failing.state().confirm_result == -3 && !failing.state().confirm_pending);
+    }
     for (uint32_t now = 1000U; now < 1005U; ++now) {
         system.poll(now);
         assert(update.poll(now) == USB_FW_UPDATE_ACTION_NONE);
@@ -85,7 +96,8 @@ int main() {
     dp::SystemState state{};
     pulse = true;
     assert(dp::System::pull(observer, state) == DataNode::RES_OK);
-    assert(state.loop_count == 5U && state.confirm_result == -3 && state.watchdog_ready && state.watchdog_pulse_active);
+    assert(state.loop_count == 5U && state.confirm_result == 0 && !state.confirm_pending && state.watchdog_ready
+           && state.watchdog_pulse_active);
     usb.last_result = -8;
     (void)update.poll(1006U);
     assert(observer.publishes == 0U);
