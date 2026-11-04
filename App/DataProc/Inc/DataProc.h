@@ -20,6 +20,13 @@ inline constexpr uint32_t ChargerPeriodMs = 100U;
 inline constexpr uint32_t BatteryPeriodMs = 1000U;
 /** Battery slot 0 is the default 0x0B pack, slot 1 the alternate 0x0C pack. */
 inline constexpr unsigned BatteryCount = 2U;
+/** Without a pack the charger DC/DC only cycles into battery OVP, so it is suspended after this many absent ticks. */
+inline constexpr uint8_t ChargerSuspendAfterTicks = 3U;
+/** A pack in BQ40Z50 shutdown answers I2C only once the charger drives PACK+, so suspend is lifted periodically.
+ * Window length is a first guess that HIL must confirm against a sleeping pack. */
+inline constexpr uint8_t ChargerWakeIntervalTicks = 60U;
+inline constexpr uint8_t ChargerWakeWindowTicks = 5U;
+enum class ChargerMode : uint8_t { Active, Suspended, WakeProbe };
 
 struct PowerState {
     int i2c_init_result = 0;
@@ -34,6 +41,8 @@ struct PowerState {
     hal::BqStatus bq_status[BatteryCount]{};
     int mp2762a_status_result = BSP_I2C2_ERR_NOT_READY;
     hal::Mp2762aStatus mp2762a_status{};
+    ChargerMode charger_mode = ChargerMode::Active;
+    int charger_control_result = BSP_I2C2_ERR_NOT_READY;
 };
 struct ChargerState {
     bool valid = false;
@@ -111,7 +120,9 @@ class PowerNode final : public ValueNode<PowerState> {
 
   private:
     hal::I2cBus& bus_;
+    uint8_t charger_ticks_ = 0U;
     void refreshDevices();
+    void updateChargerMode();
 };
 class ChargerNode final : public ValueNode<ChargerState> {
   public:

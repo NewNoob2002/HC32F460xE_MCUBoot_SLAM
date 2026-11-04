@@ -59,8 +59,9 @@ static void batteryRefresh() {
     (void)broker.handleTimers(dp::BatteryPeriodMs - 1U);
     assert(bus.reads == 0U);
     (void)broker.handleTimers(dp::BatteryPeriodMs);
-    // The absent pack stops at its first word, the present pack reads all 11, the charger reads 7 registers.
-    assert(bus.reads == 19U);
+    // The absent pack stops at its first word, the present pack reads all 11, the charger reads 7 status registers
+    // plus REG08H before and after enabling charging for the present pack.
+    assert(bus.reads == 21U && bus.mp_writes == 1U && bus.mp_regs[0x08] == 0x10U);
     dp::PowerState state{};
     assert(dp::Power::pull(sub, state) == DataNode::RES_OK);
     assert(state.bq_status_result[0] == BSP_I2C2_ERR_ADDR_NACK);
@@ -76,6 +77,64 @@ static void batteryRefresh() {
     (void)broker.handleTimers(2U * dp::BatteryPeriodMs);
     assert(dp::Power::pull(sub, state) == DataNode::RES_OK);
     assert(state.mp2762a_status_result == BSP_I2C2_ERR_ADDR_NACK && state.mp2762a_status.status == 0x08U);
+    assert(state.charger_mode == dp::ChargerMode::Active && state.charger_control_result == BSP_I2C2_ERR_ADDR_NACK);
+}
+/* No pack: suspend the charger after a debounce, keep re-applying it, and lift it periodically for a sleeping pack. */
+static void chargerSuspend() {
+    DataBroker broker;
+    FakeI2cBus bus;
+    bus.probe_results[1] = BSP_I2C2_ERR_ADDR_NACK;
+    dp::PowerNode power(bus);
+    DataNode sub;
+    assert(power.init(broker, 0U));
+    assert(sub.init(broker, "sub") == DataNode::RES_OK && dp::Power::subscribe(sub) == DataNode::RES_OK);
+    bus.sbs = true;
+    bus.read_result = BSP_I2C2_ERR_ADDR_NACK;
+    bus.sbs_absent_address = hal::BQ40Z50::DefaultAddress;
+    bus.sbs_fail_reg = 0x03;   // the alternate pack fails its first word: both packs absent
+    bus.mp_regs[0x08] = 0x96U; // V1.1 read-back 0x16 plus a set REG_RST bit, which must never be written back
+    uint32_t now = 0U;
+    dp::PowerState state{};
+    const auto tick = [&]() {
+        now += dp::BatteryPeriodMs;
+        (void)broker.handleTimers(now);
+        assert(dp::Power::pull(sub, state) == DataNode::RES_OK);
+    };
+    for (uint8_t i = 1U; i < dp::ChargerSuspendAfterTicks; ++i) {
+        tick();
+        assert(state.charger_mode == dp::ChargerMode::Active);
+    }
+    assert(bus.mp_writes == 1U && bus.mp_regs[0x08] == 0x16U); // only REG_RST cleared, CHG_EN kept on
+    tick();
+    // Suspend sets SUSP_EN and clears CHG_EN and nothing else.
+    assert(state.charger_mode == dp::ChargerMode::Suspended && state.charger_control_result == BSP_I2C2_OK);
+    assert(bus.mp_writes == 2U && bus.mp_regs[0x08] == 0x0EU);
+    tick();
+    assert(bus.mp_writes == 2U); // already suspended: no write
+    bus.mp_regs[0x08] = 0x16U;   // input replug resets the MP2762A to its defaults
+    tick();
+    assert(bus.mp_writes == 3U && bus.mp_regs[0x08] == 0x0EU);
+    while (state.charger_mode == dp::ChargerMode::Suspended)
+        tick();
+    // The wake window starts ChargerWakeIntervalTicks after entering suspend (3 ticks already elapsed above).
+    assert(now == (dp::ChargerSuspendAfterTicks + dp::ChargerWakeIntervalTicks) * dp::BatteryPeriodMs);
+    assert(state.charger_mode == dp::ChargerMode::WakeProbe && bus.mp_regs[0x08] == 0x16U);
+    for (uint8_t i = 1U; i < dp::ChargerWakeWindowTicks; ++i) {
+        tick();
+        assert(state.charger_mode == dp::ChargerMode::WakeProbe);
+    }
+    tick();
+    assert(state.charger_mode == dp::ChargerMode::Suspended && bus.mp_regs[0x08] == 0x0EU);
+    // A pack that answers resumes charging at once.
+    bus.sbs_fail_reg = -1;
+    tick();
+    assert(state.charger_mode == dp::ChargerMode::Active && bus.mp_regs[0x08] == 0x16U);
+    // A register that does not take the value is reported, not assumed.
+    bus.sbs_fail_reg = 0x03;
+    bus.mp_stuck_bits = 0x10U;
+    for (uint8_t i = 0U; i < dp::ChargerSuspendAfterTicks; ++i)
+        tick();
+    assert(state.charger_mode == dp::ChargerMode::Suspended && state.charger_control_result == hal::Mp2762aErrVerify);
 }
 /* LED pattern priorities: unknown -> heartbeat, input power -> charging/full, then the lowest pack SOC. */
 static void batteryLed() {
@@ -110,6 +169,7 @@ static void batteryLed() {
 int main() {
     batteryLed();
     batteryRefresh();
+    chargerSuspend();
     check(BSP_I2C2_OK, BSP_I2C2_OK);
     check(BSP_I2C2_ERR_ADDR_NACK, BSP_I2C2_OK);
     check(BSP_I2C2_ERR_NOT_READY, BSP_I2C2_ERR_INIT);

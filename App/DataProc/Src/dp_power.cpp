@@ -34,6 +34,32 @@ void PowerNode::refreshDevices() {
     }
     hal::MP2762A charger(bus_);
     state_.mp2762a_status_result = charger.readStatus(&state_.mp2762a_status);
+    updateChargerMode();
+}
+void PowerNode::updateChargerMode() {
+    bool present = false;
+    for (int result : state_.bq_status_result)
+        present = present || result == hal::BQ40Z50_OK;
+    const ChargerMode previous = state_.charger_mode;
+    if (present) {
+        state_.charger_mode = ChargerMode::Active;
+        charger_ticks_ = 0U;
+    } else {
+        ++charger_ticks_;
+        const uint8_t limit = previous == ChargerMode::Active      ? ChargerSuspendAfterTicks
+                              : previous == ChargerMode::Suspended ? ChargerWakeIntervalTicks
+                                                                   : ChargerWakeWindowTicks;
+        if (charger_ticks_ >= limit) {
+            state_.charger_mode = previous == ChargerMode::Suspended ? ChargerMode::WakeProbe : ChargerMode::Suspended;
+            charger_ticks_ = 0U;
+        }
+    }
+    // Applied every tick: the MP2762A is powered from the input and returns to its defaults after a replug.
+    hal::MP2762A charger(bus_);
+    state_.charger_control_result = charger.setSuspended(state_.charger_mode == ChargerMode::Suspended);
+    if (state_.charger_mode != previous)
+        CORE_DEBUG_PRINTF("charger mode %u->%u result=%d", static_cast<unsigned>(previous),
+                          static_cast<unsigned>(state_.charger_mode), state_.charger_control_result);
 }
 bsp_status_led_mode batteryLedMode(const PowerState& power, const ChargerState& charger) {
     constexpr uint16_t FullyCharged = 0x0020U; // BatteryStatus FC

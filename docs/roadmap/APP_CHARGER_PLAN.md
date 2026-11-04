@@ -82,8 +82,19 @@ preserved; see [ADR-007](../adr/ADR-007-app-cpp-databroker.md).
   with host-side scaling that A3 must validate.
 - A3: validate MP2762A/BQ40Z50 register telemetry, units, freshness and
   cross-device consistency on V1.1; the former ADC node is removed.
-- A4: bounded charging policy using BQ recommendations, an 8.4 V hard ceiling,
-  the confirmed pack current limit and input-power limits.
+- A4 (started): without a pack the MP2762A keeps cycling between fast charge
+  and battery OVP while its DC/DC boosts SYS. The Power node now suspends it
+  (REG08H `SUSP_EN=1`, `CHG_EN=0`, read-back checked) after 3 s with neither
+  BQ40Z50 address answering, re-applies that every second because a replug
+  resets the charger, and lifts suspend for 5 s every 60 s so a pack in BQ
+  shutdown can be driven awake. J4 needs no power without a pack. HIL
+  2026-11-04 confirmed the transitions and a quiet `INT#`; the wake window
+  still has to be proven against a sleeping pack.
+- A4 (remaining): bounded charging policy using BQ recommendations, an 8.4 V
+  hard ceiling, the confirmed pack current limit and input-power limits. The
+  `charge_voltage_limit` setting range (12000-16800 mV) is a 3S-4S placeholder
+  and must become a 2S range before it is applied: MP2762A REG04H covers
+  7.425-9 V.
 - A5: fault degradation, charge/discharge HIL and release evidence.
 
 OTG, persistent telemetry, a voltage-derived SOC estimator, RTOS, DMA and new

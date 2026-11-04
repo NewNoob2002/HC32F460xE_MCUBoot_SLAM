@@ -23,6 +23,8 @@ struct Mp2762aStatus {
     uint16_t input_voltage;   // 0x1C..0x1D
     uint16_t input_current;   // 0x1E..0x1F
 };
+/** A REG08H write did not read back as written. Outside the BSP_I2C2_* and BQ40Z50_* ranges. */
+inline constexpr int Mp2762aErrVerify = -24;
 class MP2762A {
   public:
     static constexpr uint8_t Address = 0x5CU;
@@ -49,6 +51,33 @@ class MP2762A {
         if (result == BSP_I2C2_OK)
             *status = next;
         return result;
+    }
+
+    /** Suspend turns the DC/DC off (REG08H SUSP_EN) and stops charging (CHG_EN); resume restores both. Only those
+     * two bits change: REG_RST/WTD_RST are self-clearing commands written as 0, the rest is kept. Writes only on a
+     * difference and checks the read-back. Datasheet MP2762A Rev 1.1, REG08H. */
+    int setSuspended(bool suspended) {
+        constexpr uint8_t Reg08 = 0x08U;
+        constexpr uint8_t Commands = 0xC0U; // REG_RST | WTD_RST
+        constexpr uint8_t SuspEn = 0x08U;
+        constexpr uint8_t ChgEn = 0x10U;
+        uint8_t current = 0U;
+        int result = bus_.readReg(Address, Reg08, &current, 1U);
+        if (result != BSP_I2C2_OK)
+            return result;
+        const auto wanted =
+            static_cast<uint8_t>((current & ~(Commands | SuspEn | ChgEn)) | (suspended ? SuspEn : ChgEn));
+        if (wanted == current)
+            return BSP_I2C2_OK;
+        const uint8_t frame[2] = {Reg08, wanted};
+        result = bus_.write(Address, frame, sizeof(frame));
+        if (result != BSP_I2C2_OK)
+            return result;
+        uint8_t readback = 0U;
+        result = bus_.readReg(Address, Reg08, &readback, 1U);
+        if (result != BSP_I2C2_OK)
+            return result;
+        return readback == wanted ? BSP_I2C2_OK : Mp2762aErrVerify;
     }
 
   private:

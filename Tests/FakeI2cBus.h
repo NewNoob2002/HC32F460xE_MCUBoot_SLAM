@@ -40,7 +40,16 @@ class FakeI2cBus final : public hal::I2cBus {
         probes[probe_count] = address;
         return probe_results[probe_count++];
     }
+    unsigned mp_writes = 0U;
+    // Bits forced back on after every MP2762A write, to emulate a register that does not take the value.
+    uint8_t mp_stuck_bits = 0U;
     int write(uint8_t address, const uint8_t* data, uint32_t length) override {
+        if (sbs && address == hal::MP2762A::Address) {
+            assert(data && length == 2U && data[0] < mp_regs.size());
+            ++mp_writes;
+            mp_regs[data[0]] = static_cast<uint8_t>(data[1] | mp_stuck_bits);
+            return write_result;
+        }
         assert(address == expected_address && data && length == 3U && data[0] == 0x00U);
         command = static_cast<uint16_t>(data[1] | static_cast<uint16_t>(data[2] << 8U));
         ++writes;
