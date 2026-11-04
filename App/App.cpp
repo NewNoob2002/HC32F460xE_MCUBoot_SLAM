@@ -48,7 +48,8 @@ app::DiagnosticsSnapshot g_app_diagnostics{};
 
 [[noreturn]] void App::runApplication() {
     bsp_status_led_set_mode(BSP_STATUS_LED_MODE_APP_UPDATER);
-    (void)settings_store_.init();
+    // Settings fall back to defaults without storage; keep running but report it once the log sink exists.
+    const bool settings_storage_ready = settings_store_.init();
     if (!settings_.init(broker_))
         bsp_panic("app settings init failed");
     (void)power_.init(broker_, bsp_millis());
@@ -64,6 +65,8 @@ app::DiagnosticsSnapshot g_app_diagnostics{};
 
     if (!debug_.init(broker_, usb_fw_update_serial(), bsp_reset_capture()))
         bsp_panic("app debug init failed");
+    if (!settings_storage_ready)
+        debug_.log(2U, bsp_millis(), "settings storage unavailable; using defaults");
     debug_.log(3U, bsp_millis(), "app startup complete");
     bsp_write_protection_restore();
     for (;;) {
