@@ -53,34 +53,56 @@ class MP2762A {
         return result;
     }
 
-    /** Suspend turns the DC/DC off (REG08H SUSP_EN) and stops charging (CHG_EN); resume restores both. Only those
-     * two bits change: REG_RST/WTD_RST are self-clearing commands written as 0, the rest is kept. Writes only on a
-     * difference and checks the read-back. Datasheet MP2762A Rev 1.1, REG08H. */
-    int setSuspended(bool suspended) {
-        constexpr uint8_t Reg08 = 0x08U;
+    /** Suspend turns the DC/DC off (REG08H SUSP_EN) and stops charging (CHG_EN); resume restores DC/DC and sets
+     * CHG_EN to `charge`. REG_RST/WTD_RST are self-clearing commands and always written as 0. */
+    int setSuspended(bool suspended, bool charge = true) {
         constexpr uint8_t Commands = 0xC0U; // REG_RST | WTD_RST
         constexpr uint8_t SuspEn = 0x08U;
         constexpr uint8_t ChgEn = 0x10U;
+        const uint8_t value = suspended ? SuspEn : charge ? ChgEn : 0U;
+        return updateBits(0x08U, Commands | SuspEn | ChgEn, value);
+    }
+    /** REG04H VBATT_REG: 7425 mV + 25 mV steps up to 9000 mV; VRECH_OS (bit 0) is kept. */
+    int setChargeVoltage(uint16_t millivolts) {
+        if (millivolts < MinChargeMv || millivolts > 9000U)
+            return BSP_I2C2_ERR_ARGUMENT;
+        return updateBits(0x04U, 0x7EU, static_cast<uint8_t>(((millivolts - MinChargeMv) / 25U) << 1U));
+    }
+    /** REG02H ICC: 50 mA steps, 0..6350 mA; rounds down. */
+    int setChargeCurrent(uint16_t milliamps) {
+        return updateBits(0x02U, 0x7FU, stepOf50(milliamps));
+    }
+    /** REG00H IIN_LIM1 (RS = 10 mOhm): 50 mA steps, 0..6350 mA; rounds down. */
+    int setInputCurrentLimit(uint16_t milliamps) {
+        return updateBits(0x00U, 0x7FU, stepOf50(milliamps));
+    }
+    static constexpr uint16_t MinChargeMv = 7425U;
+
+  private:
+    I2cBus& bus_;
+    static uint8_t stepOf50(uint16_t milliamps) {
+        const unsigned step = milliamps / 50U;
+        return static_cast<uint8_t>(step > 0x7FU ? 0x7FU : step);
+    }
+    /** Read-modify-write of `mask` bits (datasheet MP2762A Rev 1.1); writes only on a difference and verifies the
+     * read-back so a register that did not take the value is reported, not assumed. */
+    int updateBits(uint8_t reg, uint8_t mask, uint8_t value) {
         uint8_t current = 0U;
-        int result = bus_.readReg(Address, Reg08, &current, 1U);
+        int result = bus_.readReg(Address, reg, &current, 1U);
         if (result != BSP_I2C2_OK)
             return result;
-        const auto wanted =
-            static_cast<uint8_t>((current & ~(Commands | SuspEn | ChgEn)) | (suspended ? SuspEn : ChgEn));
+        const auto wanted = static_cast<uint8_t>((current & ~mask) | (value & mask));
         if (wanted == current)
             return BSP_I2C2_OK;
-        const uint8_t frame[2] = {Reg08, wanted};
+        const uint8_t frame[2] = {reg, wanted};
         result = bus_.write(Address, frame, sizeof(frame));
         if (result != BSP_I2C2_OK)
             return result;
         uint8_t readback = 0U;
-        result = bus_.readReg(Address, Reg08, &readback, 1U);
+        result = bus_.readReg(Address, reg, &readback, 1U);
         if (result != BSP_I2C2_OK)
             return result;
         return readback == wanted ? BSP_I2C2_OK : Mp2762aErrVerify;
     }
-
-  private:
-    I2cBus& bus_;
 };
 } // namespace hal

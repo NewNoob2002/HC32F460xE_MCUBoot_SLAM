@@ -19,14 +19,23 @@ struct SettingSpec {
 inline constexpr uint8_t SettingPersisted = 1U << 0U;
 inline constexpr uint8_t SettingRequiresUnlock = 1U << 1U;
 inline constexpr uint8_t SettingApplied = 1U << 2U;
+inline constexpr uint16_t ChargeEnableKey = 1U;
+inline constexpr uint16_t ChargeCurrentKey = 2U;
+inline constexpr uint16_t ChargeVoltageKey = 3U;
+inline constexpr uint16_t InputCurrentKey = 4U;
 inline constexpr uint16_t LedOverrideKey = 6U;
 /** led_override values: 0 follows the normal pattern; 1..4 hold the LEDs off, red, blue or red+blue. */
 enum class LedOverride : int32_t { Auto = 0, Off, Red, Blue, RedBlue };
 inline constexpr std::array<SettingSpec, 6> SettingTable{{
-    {1U, "charge_enable", 1U, 0U, 0, 1, 0, SettingPersisted | SettingRequiresUnlock},
-    {2U, "charge_current_limit", 0U, 1U, 100, 2000, 500, SettingPersisted | SettingRequiresUnlock},
-    {3U, "charge_voltage_limit", 0U, 2U, 12000, 16800, 16800, SettingPersisted | SettingRequiresUnlock},
-    {4U, "input_current_limit", 0U, 1U, 100, 3000, 1500, SettingPersisted | SettingRequiresUnlock},
+    // Charger limits cap the charged pack's own request (BQ40Z50 ChargingVoltage/ChargingCurrent) before they reach
+    // the MP2762A. The voltage range is 2S: REG04H starts at 7425 mV and 8400 mV is the hard ceiling.
+    {ChargeEnableKey, "charge_enable", 1U, 0U, 0, 1, 1, SettingPersisted | SettingRequiresUnlock | SettingApplied},
+    {ChargeCurrentKey, "charge_current_limit", 0U, 1U, 100, 2000, 2000,
+     SettingPersisted | SettingRequiresUnlock | SettingApplied},
+    {ChargeVoltageKey, "charge_voltage_limit", 0U, 2U, 7425, 8400, 8400,
+     SettingPersisted | SettingRequiresUnlock | SettingApplied},
+    {InputCurrentKey, "input_current_limit", 0U, 1U, 100, 3000, 1500,
+     SettingPersisted | SettingRequiresUnlock | SettingApplied},
     {5U, "telemetry_period", 0U, 3U, 100, 5000, 1000, SettingPersisted | SettingRequiresUnlock},
     // Runtime-only so a power-measurement override can never survive a reset and ship with dark LEDs.
     {LedOverrideKey, "led_override", 0U, 0U, 0, 4, 0, SettingRequiresUnlock | SettingApplied},
@@ -47,6 +56,13 @@ struct SettingsState {
             values[i] = SettingTable[i].initial;
     }
 };
+/** Value of `key` in a published settings snapshot, or its table default if the key is unknown to `state`. */
+constexpr int32_t settingValue(const SettingsState& state, uint16_t key) {
+    for (std::size_t i = 0U; i < SettingTable.size(); ++i)
+        if (SettingTable[i].key == key)
+            return state.values[i];
+    return 0;
+}
 enum class SettingResult { Ok, UnknownKey, OutOfRange, StorageError };
 class SettingsNode final : public DataNode {
   public:

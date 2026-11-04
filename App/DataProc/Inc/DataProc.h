@@ -27,6 +27,11 @@ inline constexpr uint8_t ChargerSuspendAfterTicks = 3U;
 inline constexpr uint8_t ChargerWakeIntervalTicks = 60U;
 inline constexpr uint8_t ChargerWakeWindowTicks = 5U;
 enum class ChargerMode : uint8_t { Active, Suspended, WakeProbe };
+/** Slot of the pack charged through J2 (BQ40Z50 default address 0x0B). Slot 1 (0x0C) is an output-only pack that
+ * is monitored but never charged. */
+inline constexpr unsigned ChargedPackSlot = 0U;
+/** Hard 2S charge-voltage ceiling, independent of settings and pack requests. */
+inline constexpr uint16_t ChargeVoltageCeilingMv = 8400U;
 
 struct PowerState {
     int i2c_init_result = 0;
@@ -43,6 +48,10 @@ struct PowerState {
     hal::Mp2762aStatus mp2762a_status{};
     ChargerMode charger_mode = ChargerMode::Active;
     int charger_control_result = BSP_I2C2_ERR_NOT_READY;
+    // Last limits computed from the charged pack's request and the settings; zero while charging is not allowed.
+    bool charge_allowed = false;
+    uint16_t charge_target_mv = 0U;
+    uint16_t charge_target_ma = 0U;
 };
 struct ChargerState {
     bool valid = false;
@@ -121,8 +130,10 @@ class PowerNode final : public ValueNode<PowerState> {
   private:
     hal::I2cBus& bus_;
     uint8_t charger_ticks_ = 0U;
+    SettingsState settings_{};
     void refreshDevices();
     void updateChargerMode();
+    int applyChargeLimits(hal::MP2762A& charger);
 };
 class ChargerNode final : public ValueNode<ChargerState> {
   public:

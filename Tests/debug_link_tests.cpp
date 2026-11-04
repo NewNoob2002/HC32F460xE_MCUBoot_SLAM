@@ -122,8 +122,8 @@ void settingsTests() {
         dp::SettingsNode settings(store);
         assert(settings.init(broker));
         int32_t value = 0;
-        assert(settings.get(2U, value) == dp::SettingResult::Ok && value == 500);
-        assert(settings.set(2U, 500) == dp::SettingResult::Ok && store.writes == 0U);
+        assert(settings.get(2U, value) == dp::SettingResult::Ok && value == 2000);
+        assert(settings.set(2U, 2000) == dp::SettingResult::Ok && store.writes == 0U);
         assert(settings.set(2U, 99) == dp::SettingResult::OutOfRange && store.writes == 0U);
         assert(settings.set(100U, 1) == dp::SettingResult::UnknownKey);
         assert(settings.set(2U, 800) == dp::SettingResult::Ok && store.writes == 1U);
@@ -150,11 +150,23 @@ void settingsTests() {
         dp::SettingsNode settings(store);
         assert(settings.init(broker));
         int32_t value = 0;
-        assert(settings.get(2U, value) == dp::SettingResult::Ok && value == 500);
+        assert(settings.get(2U, value) == dp::SettingResult::Ok && value == 2000);
     }
     store.blob[0] ^= 1U;
     debug::write32(store.blob.data() + 8U, 2U); // Valid CRC, invalid bool: only that value defaults.
+    // A value stored under an older, wider range (the former 4S voltage limit) loads as its default in RAM only;
+    // Flash keeps it until the host writes a new value.
+    debug::write32(store.blob.data() + 16U, 16800U);
     debug::write32(store.blob.data() + 28U, fw_protocol_crc32(store.blob.data(), 28U));
+    {
+        DataBroker broker;
+        dp::SettingsNode settings(store);
+        const auto writes = store.writes;
+        assert(settings.init(broker));
+        int32_t value = 0;
+        assert(settings.get(dp::ChargeVoltageKey, value) == dp::SettingResult::Ok && value == 8400);
+        assert(store.writes == writes && debug::read32(store.blob.data() + 16U) == 16800U);
+    }
     {
         DataBroker broker;
         dp::SettingsNode settings(store);
@@ -166,7 +178,7 @@ void settingsTests() {
         assert(reader.subscribe(dp::names::Charger) == DataNode::RES_OK);
         dp::ChargerState state{};
         assert(dp::Charger::pull(reader, state) == DataNode::RES_OK);
-        assert(state.settings.values[0] == 0 && state.settings.values[1] == 800);
+        assert(state.settings.values[0] == 1 && state.settings.values[1] == 800);
         assert(settings.set(2U, 1100) == dp::SettingResult::Ok);
         assert(dp::Charger::pull(reader, state) == DataNode::RES_OK && state.settings.values[1] == 1100);
         assert(settings.set(dp::LedOverrideKey, 3) == dp::SettingResult::Ok);
@@ -263,8 +275,8 @@ void dispatchTests() {
     assert(page.payload[2] == 6U && page.payload[3] == 6U);
     std::size_t at = 4U;
     for (unsigned i = 0U; i < 6U; ++i) {
-        // Charger/telemetry entries persist; led_override is runtime-only and applied to hardware.
-        assert(debug::read16(page.payload + at) == i + 1U && page.payload[at + 3U] == (i < 5U ? 3U : 6U));
+        // Charger entries persist and are applied, telemetry_period only persists, led_override is runtime-only.
+        assert(debug::read16(page.payload + at) == i + 1U && page.payload[at + 3U] == (i < 4U ? 7U : i < 5U ? 3U : 6U));
         at += 22U + page.payload[at + 21U];
     }
     assert(at == page.length);

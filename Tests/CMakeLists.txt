@@ -81,9 +81,11 @@ target_link_libraries(bq40z50_tests PRIVATE app_test_hal)
 add_test(NAME bq40z50 COMMAND bq40z50_tests)
 
 add_executable(power_devices_tests power_devices_tests.cpp
-    ${PROJECT_SOURCE_DIR}/App/DataProc/Src/dp_power.cpp)
+    ${PROJECT_SOURCE_DIR}/App/DataProc/Src/dp_power.cpp
+    ${PROJECT_SOURCE_DIR}/App/DataProc/Src/dp_settings.cpp)
 app_cpp_options(power_devices_tests)
-target_link_libraries(power_devices_tests PRIVATE app_test_framework app_test_hal)
+# debug_crc (settings blob CRC) is defined later in this file; target_link_libraries resolves it at generate time.
+target_link_libraries(power_devices_tests PRIVATE app_test_framework app_test_hal debug_crc)
 add_test(NAME power_devices COMMAND power_devices_tests)
 
 add_executable(data_broker_tests data_broker_tests.cpp)

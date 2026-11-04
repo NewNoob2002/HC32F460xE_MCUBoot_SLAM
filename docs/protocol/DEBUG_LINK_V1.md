@@ -124,11 +124,20 @@ Status codes: `0 OK`, `1 BAD_FRAME`, `2 UNKNOWN_COMMAND`, `3 LOCKED`,
 
 ## Settings table (initial)
 
-Keys `0x0001`-`0x0005` persist in the FlashDB `app_kv` partition. Values
-outside the range are rejected; on load an invalid or missing value falls back
-to its default. Charger values are stored and published to the Charger node
-now; the `applied-to-hardware` flag stays clear until the MP2762A driver applies
-them.
+Keys `0x0001`-`0x0005` persist in the FlashDB `app_kv` partition and change
+only through CONFIG_SET/CONFIG_RESET; firmware updates never rewrite them. At
+startup the Application loads them into RAM: a value outside the current range
+loads as its default in RAM while Flash keeps the stored value until the host
+writes a new one. CONFIG_SET validates the range, saves to Flash and publishes
+the new value in the same request.
+
+Keys `0x0001`-`0x0004` (flags `0x07`) are applied to the MP2762A once per
+second while the J2 pack (BQ40Z50 `0x0B`) answers: charge voltage =
+min(pack ChargingVoltage, `charge_voltage_limit`, 8400 mV), charge current =
+min(pack ChargingCurrent, `charge_current_limit`), input current limit =
+`input_current_limit`. Charging is enabled only when `charge_enable` is 1, the
+pack requests a nonzero current and BatteryStatus has none of OCA, TCA or OTA.
+The output-only pack at `0x0C` is monitored but never charged.
 
 `led_override` (`0x0006`, flags `0x06`) is runtime-only: it never reaches Flash,
 returns to `0` on every reset and on CONFIG_RESET, and is applied to the status
@@ -138,16 +147,15 @@ pattern (solid red) still overrides it.
 
 | Key | Name | Unit | Min | Max | Default |
 | --- | --- | --- | ---: | ---: | ---: |
-| `0x0001` | charge_enable | bool | 0 | 1 | 0 |
-| `0x0002` | charge_current_limit | mA | 100 | 2000 | 500 |
-| `0x0003` | charge_voltage_limit | mV | 12000 | 16800 | 16800 |
+| `0x0001` | charge_enable | bool | 0 | 1 | 1 |
+| `0x0002` | charge_current_limit | mA | 100 | 2000 | 2000 |
+| `0x0003` | charge_voltage_limit | mV | 7425 | 8400 | 8400 |
 | `0x0004` | input_current_limit | mA | 100 | 3000 | 1500 |
 | `0x0005` | telemetry_period | ms | 100 | 5000 | 1000 |
 | `0x0006` | led_override | none | 0 | 4 | 0 |
 
-The charger ranges are conservative placeholders. They must be confirmed against
-the battery pack and MP2762A specifications before the charger driver applies
-them to hardware.
+The voltage range is 2S (MP2762A REG04H starts at 7425 mV). Current and voltage
+are caps on the pack's own request, so the defaults let the pack decide.
 
 ## Firmware implementation details
 

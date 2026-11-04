@@ -90,11 +90,13 @@ preserved; see [ADR-007](../adr/ADR-007-app-cpp-databroker.md).
   shutdown can be driven awake. J4 needs no power without a pack. HIL
   2026-11-04 confirmed the transitions and a quiet `INT#`; the wake window
   still has to be proven against a sleeping pack.
-- A4 (remaining): bounded charging policy using BQ recommendations, an 8.4 V
-  hard ceiling, the confirmed pack current limit and input-power limits. The
-  `charge_voltage_limit` setting range (12000-16800 mV) is a 3S-4S placeholder
-  and must become a 2S range before it is applied: MP2762A REG04H covers
-  7.425-9 V.
+- A4 (charge limits): while the J2 pack (`0x0B`) answers, the Power node
+  writes REG04H/REG02H/REG00H from min(pack request, settings, 8.4 V ceiling)
+  and enables CHG_EN only with `charge_enable=1`, a nonzero request and no
+  OCA/TCA/OTA alarm. Every write is read back and re-applied each second; a
+  failed limit write leaves charging off. The `0x0C` pack is output-only.
+- A4 (remaining): input-power limits from the negotiated PD contract, thermal
+  observation at 2 A, and a sleeping-pack wake test.
 - A5: fault degradation, charge/discharge HIL and release evidence.
 
 OTG, persistent telemetry, a voltage-derived SOC estimator, RTOS, DMA and new

@@ -17,6 +17,9 @@ identity before upgrading and re-provision via Boot Recovery if necessary.
 Rollback to older firmware that treats all Reserved as product_kv can also
 overwrite app_kv; settings are recoverable defaults, not safety authorization.
 
-Charger settings are validated and published, but never applied to MP2762A
-registers. CONFIG_LIST's applied-to-hardware flag remains clear. FlashDB writes
+Charger settings are validated and published. Since 2026-11-04 (charger A4)
+they are applied to MP2762A registers as caps on the J2 pack's request and
+CONFIG_LIST marks them applied-to-hardware; see DEBUG_LINK_V1.md. Firmware
+updates do not rewrite stored values: a stored value outside a changed range
+loads as its default in RAM only. FlashDB writes
 and all debug service work run in the cooperative poll context.
