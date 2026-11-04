@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Export an ECDSA-P256 administrator public key PEM as a raw X||Y C array for Boot.
 
-Only public keys are accepted so the administrator private key never enters the firmware build.
+Only public keys are accepted so the administrator private key never enters the firmware build. The image-signing
+key is read only to reject an administrator key from the same key pair.
 """
 import sys
 from pathlib import Path
@@ -11,8 +12,8 @@ from cryptography.hazmat.primitives.asymmetric import ec
 
 
 def main() -> int:
-    if len(sys.argv) != 3:
-        print("usage: export_admin_key.py <public-key.pem> <output.c>", file=sys.stderr)
+    if len(sys.argv) != 4:
+        print("usage: export_admin_key.py <public-key.pem> <output.c> <signing-private-key.pem>", file=sys.stderr)
         return 2
     pem = Path(sys.argv[1]).read_bytes()
     if b"PRIVATE KEY" in pem:
@@ -23,6 +24,13 @@ def main() -> int:
         print("HC32_ADMIN_PUBLIC_KEY must be an ECDSA-P256 public key", file=sys.stderr)
         return 1
     point = key.public_bytes(serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint)
+    signing_key = serialization.load_pem_private_key(Path(sys.argv[3]).read_bytes(), password=None)
+    signing_point = signing_key.public_key().public_bytes(
+        serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint
+    )
+    if point == signing_point:
+        print("HC32_ADMIN_PUBLIC_KEY must not belong to the MCUBOOT_SIGNING_KEY key pair", file=sys.stderr)
+        return 1
     raw = point[1:]
     lines = [", ".join(f"0x{byte:02x}" for byte in raw[i : i + 8]) for i in range(0, len(raw), 8)]
     body = ",\n    ".join(lines)

@@ -33,7 +33,9 @@ python3 Tests/HIL/verify_evidence.py
 ~~~
 
 Build and verify Debug images. The Debug preset uses the external development key at
-`$HOME/Desktop/workspace/MyKey/HC32_MCUBOOT_SLAM/dev-ec-p256.pem`; it must not be committed or used for production:
+`$HOME/Desktop/workspace/MyKey/HC32_MCUBOOT_SLAM/dev-ec-p256.pem`; it must not be committed or used for production.
+It also enables Boot administrator mode with `dev-admin-p256.pub.pem` from the same directory and fails to configure
+when that file is missing; pass `-DHC32_ADMIN_PUBLIC_KEY=` to build without administrator mode:
 
 ~~~sh
 cmake --preset Debug -DAPP_VERSION=1.0.0 -DAPP_AUTO_CONFIRM=ON

@@ -70,7 +70,7 @@ cargo fmt --manifest-path Tools/updater/Cargo.toml -- --check
 cargo clippy --manifest-path Tools/updater/Cargo.toml --locked --all-targets --features fake-e2e -- -D warnings
 ```
 
-Build and verify Debug firmware for firmware/CMake/linker changes:
+Build and verify Debug firmware for firmware/CMake/linker changes. The Debug preset also expects the external development administrator public key; add `-DHC32_ADMIN_PUBLIC_KEY=` to build without administrator mode:
 
 ```sh
 cmake --preset Debug -DAPP_VERSION=1.0.0 -DAPP_AUTO_CONFIRM=ON

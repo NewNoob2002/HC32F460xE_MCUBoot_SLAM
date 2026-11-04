@@ -40,7 +40,8 @@ if(ecdsa_key_symbol EQUAL -1)
 endif()
 
 # Optional administrator key: Boot verifies challenge signatures with this public key before FACTORY_ERASE. It is
-# independent of the image-signing key so administrator rights cannot sign firmware and vice versa.
+# independent of the image-signing key so administrator rights cannot sign firmware and vice versa; the export script
+# rejects a key from the MCUBOOT_SIGNING_KEY pair.
 set(HC32_ADMIN_PUBLIC_KEY "" CACHE FILEPATH "ECDSA-P256 administrator public key (PEM); empty disables Boot administrator mode")
 set(HC32_ADMIN_PUBLIC_KEY_SOURCE "")
 if(HC32_ADMIN_PUBLIC_KEY)
@@ -51,7 +52,7 @@ if(HC32_ADMIN_PUBLIC_KEY)
     set(HC32_ADMIN_PUBLIC_KEY_SOURCE "${CMAKE_BINARY_DIR}/generated/admin_public_key.c")
     execute_process(
         COMMAND "${MCUBOOT_PYTHON}" "${PROJECT_SOURCE_DIR}/cmake/export_admin_key.py"
-                "${HC32_ACTIVE_ADMIN_PUBLIC_KEY}" "${HC32_ADMIN_PUBLIC_KEY_SOURCE}"
+                "${HC32_ACTIVE_ADMIN_PUBLIC_KEY}" "${HC32_ADMIN_PUBLIC_KEY_SOURCE}" "${MCUBOOT_ACTIVE_SIGNING_KEY}"
         RESULT_VARIABLE admin_key_result
     )
     if(NOT admin_key_result EQUAL 0)
