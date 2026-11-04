@@ -54,6 +54,12 @@ jobs:
           .venv/bin/python components/mcuboot-2.4.0/scripts/imgtool.py keygen \
             -t ecdsa-p256 -k build/ci-keys/debug.pem
 
+      # 缓存 Slint/tiny-skia 等依赖的编译产物，避免每次从零编译导致 rust_updater 在慢速运行器上超时
+      - name: Cache Rust updater build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: Tools/updater
+
       - name: Check Rust updater
         run: |
           cargo fmt --manifest-path Tools/updater/Cargo.toml -- --check

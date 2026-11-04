@@ -263,7 +263,8 @@ add_test(
         --locked
         --features fake-e2e
 )
-set_tests_properties(rust_updater PROPERTIES TIMEOUT 300)
+# cargo test 在冷缓存的 CI 运行器上需要完整编译 Slint 依赖树，300 秒在慢速运行器上不够
+set_tests_properties(rust_updater PROPERTIES TIMEOUT 900)
 
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 add_test(
