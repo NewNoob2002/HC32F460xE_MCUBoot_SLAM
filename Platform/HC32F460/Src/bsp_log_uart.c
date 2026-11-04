@@ -6,6 +6,9 @@
 
 #define BSP_LOG_UART_TIMEOUT 0x40000UL
 
+/* The log/panic UART exists only in Debug builds; Release leaves USART3 and PB13 at reset (no clock, no output). */
+#if defined(BSP_DEBUG)
+
 static bool g_log_uart_ready;
 
 /* USART_UART_Init() always links USART_SetBaudrate(), whose double-precision BRR math costs about 3 KiB in the
@@ -44,3 +47,14 @@ size_t bsp_log_uart_write(const char* data, size_t size) {
         return 0U;
     return USART_UART_Trans(BSP_LOG_UART, data, (uint32_t)size, BSP_LOG_UART_TIMEOUT) == LL_OK ? size : 0U;
 }
+#else
+bool bsp_log_uart_init(void) {
+    return false;
+}
+
+size_t bsp_log_uart_write(const char* data, size_t size) {
+    (void)data;
+    (void)size;
+    return 0U;
+}
+#endif

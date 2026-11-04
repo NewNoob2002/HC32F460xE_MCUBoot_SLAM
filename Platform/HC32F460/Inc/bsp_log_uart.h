@@ -8,7 +8,8 @@ extern "C" {
 #include <stdbool.h>
 #include <stddef.h>
 
-/* Requires write protection to be unlocked by the caller. */
+/* Requires write protection to be unlocked by the caller. Debug builds only: Release init returns false and writes
+ * nothing. */
 bool bsp_log_uart_init(void);
 size_t bsp_log_uart_write(const char* data, size_t size);
 

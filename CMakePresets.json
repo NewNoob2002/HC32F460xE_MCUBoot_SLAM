@@ -28,14 +28,6 @@
             }
         },
         {
-            "name": "ReleaseNoLog",
-            "inherits": "default",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
-                "BOOT_ENABLE_LOGGING": "OFF"
-            }
-        },
-        {
             "name": "HostTests",
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/HostTests",
@@ -53,10 +45,6 @@
         {
             "name": "Release",
             "configurePreset": "Release"
-        },
-        {
-            "name": "ReleaseNoLog",
-            "configurePreset": "ReleaseNoLog"
         },
         {
             "name": "HostTests",

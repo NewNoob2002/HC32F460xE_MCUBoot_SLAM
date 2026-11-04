@@ -144,8 +144,9 @@ Implementation gates remain in `APP_CHARGER_PLAN.md`.
 Debug Boot and Application EasyLogger output is mirrored to the existing UART
 and SEGGER RTT channel 0. The Debug App places `_SEGGER_RTT` at
 `0x1FFF8000` for J-Link MCP reconnect across reset. Platform code remains
-independent of EasyLogger and writes its raw/panic output through USART3;
-Release firmware omits EasyLogger and RTT.
+independent of EasyLogger and writes its raw/panic output through USART3 in
+Debug builds only; Release firmware omits EasyLogger, RTT and the USART3 log/panic
+output.
 
 Boot keeps SYSCLK at 200 MHz for ECDSA verification. The Application re-clocks
 SYSCLK and all buses to 50 MHz from MPLL at startup; 2026-11-04 HIL measured
@@ -202,7 +203,7 @@ Known deferred host issues for a later node:
 
 - Firmware uses CMake/Ninja and GNU Arm Embedded; Host logic uses CTest and Cargo.
 - Debug uses the fixed external development key configured by the Debug preset.
-- Release/ReleaseNoLog never inherit the development key and require an explicit
+- Release never inherits the development key and requires an explicit
   external ECDSA-P256 private key. Private keys are never generated or stored in
   the repository build tree.
 - Generated public-key C source lives under `build/<preset>/generated/`.
