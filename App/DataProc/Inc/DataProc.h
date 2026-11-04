@@ -64,6 +64,7 @@ struct PowerState {
     uint16_t input_limit_ma = 0U;  // what was written to REG00H
     int mp2762a_config_result = BSP_I2C2_ERR_NOT_READY;
     hal::Mp2762aConfig mp2762a_config{};
+    uint32_t i2c_recoveries = 0U;
 };
 struct ChargerState {
     bool valid = false;

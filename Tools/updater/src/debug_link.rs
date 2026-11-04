@@ -660,6 +660,7 @@ impl Tlv {
             0x31 => "usb_update_errors",
             0x40 => "debug_events_dropped",
             0x41 => "last_reset_cause",
+            0x42 => "i2c_recoveries",
             _ => return format!("tag_0x{:02x}", self.tag),
         }
         .to_owned()
@@ -680,7 +681,7 @@ pub fn decode_tlvs(mut bytes: &[u8]) -> Result<Vec<Tlv>, Error> {
         let length = usize::from(bytes[1]);
         let value = &bytes[2..2 + length];
         let value = match tag {
-            1 | 2 | 0x22 | 0x31 | 0x40 | 0x41 => {
+            1 | 2 | 0x22 | 0x31 | 0x40 | 0x41 | 0x42 => {
                 exact(value, 4)?;
                 TelemetryValue::U32(u32_at(value, 0))
             }

@@ -167,6 +167,7 @@ std::size_t Service::snapshot(uint8_t* output, uint32_t now_ms) {
     u32(0x40U, usb_debug_link_dropped() + log_dropped_);
     u32(0x41U, reset_cause_);
     if (have_power) {
+        u32(0x42U, power.i2c_recoveries);
         const auto word = [&output, &n](uint16_t value) {
             write16(output + n, value);
             n += 2U;

@@ -4,11 +4,23 @@
 #include <stddef.h>
 
 #include "bsp_board_config.h"
+#include "bsp_timebase.h"
 #include "hc32_ll.h"
 
-#define BSP_I2C2_TIMEOUT 0x40000UL
+/* LL wait loops count iterations, so a fixed count lasts 4x longer at 50 MHz than at 200 MHz. Scale it with
+ * SYSCLK so every wait lasts at least ~30 ms (one iteration takes >= 4 cycles): above the 25 ms SMBus per-message
+ * clock-stretch limit (tLOW:SEXT) that the BQ40Z50 may use. */
+#define BSP_I2C2_WAIT_MS              30UL
+#define BSP_I2C2_WAIT_LOOP_CYCLES     4UL
+#define BSP_I2C2_TIMEOUT              (SystemCoreClock / 1000UL * BSP_I2C2_WAIT_MS / BSP_I2C2_WAIT_LOOP_CYCLES)
+/* A stuck bus is cleared and the peripheral re-initialised at most this often; in between transfers fail at once so
+ * a dead bus cannot stall the cooperative loop for seconds. */
+#define BSP_I2C2_RECOVERY_INTERVAL_MS 1000UL
 
 static bool g_ready;
+static bool g_bus_fault;
+static uint32_t g_last_recovery_ms;
+static uint32_t g_recoveries;
 
 static bool status_is_set(uint32_t flag) {
     return I2C_GetStatus(BSP_I2C2, flag) == SET;
@@ -18,8 +30,9 @@ static bool status_is_set(uint32_t flag) {
  * driving a 0 on SDA, and no START is possible afterwards (HIL 2026-11-04: SDA held low after a J-Link reset, every
  * device returned START timeout). Clock SCL as open-drain GPIO up to nine times until SDA is released, then send a
  * STOP. Half periods of 5 us keep the 100 kHz bus timing. */
-static void bus_clear(void) {
+static bool bus_clear(void) {
     stc_gpio_init_t gpio;
+    bool released;
 
     GPIO_SetFunc(BSP_I2C2_SCL_PORT, BSP_I2C2_SCL_PIN, GPIO_FUNC_0);
     GPIO_SetFunc(BSP_I2C2_SDA_PORT, BSP_I2C2_SDA_PIN, GPIO_FUNC_0);
@@ -36,6 +49,7 @@ static void bus_clear(void) {
         GPIO_SetPins(BSP_I2C2_SCL_PORT, BSP_I2C2_SCL_PIN);
         DDL_DelayUS(5UL);
     }
+    released = GPIO_ReadInputPins(BSP_I2C2_SDA_PORT, BSP_I2C2_SDA_PIN) == PIN_SET;
     /* STOP: SDA rises while SCL is high. */
     GPIO_ResetPins(BSP_I2C2_SCL_PORT, BSP_I2C2_SCL_PIN);
     DDL_DelayUS(5UL);
@@ -49,6 +63,7 @@ static void bus_clear(void) {
     (void)GPIO_StructInit(&gpio);
     (void)GPIO_Init(BSP_I2C2_SCL_PORT, BSP_I2C2_SCL_PIN, &gpio);
     (void)GPIO_Init(BSP_I2C2_SDA_PORT, BSP_I2C2_SDA_PIN, &gpio);
+    return released;
 }
 
 static void finish_transfer(void) {
@@ -76,10 +91,15 @@ static int data_error(void) {
     return status_is_set(I2C_FLAG_NACKF) ? BSP_I2C2_ERR_TX_NACK : BSP_I2C2_ERR_TX_TIMEOUT;
 }
 
+static int check_bus(void);
+
 static int start_transfer(uint8_t address, uint8_t direction) {
     bool bus_was_busy;
     int32_t result;
+    const int bus = check_bus();
 
+    if (bus != BSP_I2C2_OK)
+        return bus;
     I2C_Cmd(BSP_I2C2, ENABLE);
     I2C_SWResetCmd(BSP_I2C2, ENABLE);
     I2C_SWResetCmd(BSP_I2C2, DISABLE);
@@ -89,6 +109,8 @@ static int start_transfer(uint8_t address, uint8_t direction) {
         int error = bus_was_busy ? BSP_I2C2_ERR_BUS_BUSY : BSP_I2C2_ERR_START_TIMEOUT;
 
         abort_transfer();
+        /* No START means the bus is held (typically SDA by a slave): recover on the next transfer. */
+        g_bus_fault = true;
         return error;
     }
     result = I2C_TransAddr(BSP_I2C2, address, direction, BSP_I2C2_TIMEOUT);
@@ -101,13 +123,13 @@ static int start_transfer(uint8_t address, uint8_t direction) {
     return BSP_I2C2_OK;
 }
 
-int bsp_i2c2_init(void) {
+static int configure(void) {
     stc_i2c_init_t init;
     float32_t error;
     int32_t result;
 
     g_ready = false;
-    bus_clear();
+    g_bus_fault = !bus_clear();
     GPIO_SetFunc(BSP_I2C2_SCL_PORT, BSP_I2C2_SCL_PIN, BSP_I2C2_SCL_FUNCTION);
     GPIO_SetFunc(BSP_I2C2_SDA_PORT, BSP_I2C2_SDA_PIN, BSP_I2C2_SDA_FUNCTION);
     FCG_Fcg1PeriphClockCmd(BSP_I2C2_CLOCK, ENABLE);
@@ -126,6 +148,37 @@ int bsp_i2c2_init(void) {
     I2C_BusWaitCmd(BSP_I2C2, ENABLE);
     g_ready = true;
     return BSP_I2C2_OK;
+}
+
+int bsp_i2c2_init(void) {
+    g_last_recovery_ms = bsp_millis();
+    return configure();
+}
+
+uint32_t bsp_i2c2_recovery_count(void) {
+    return g_recoveries;
+}
+
+/* Called before every transfer: a bus marked faulted is cleared and re-initialised once the interval has passed. */
+static int check_bus(void) {
+    if (!g_bus_fault)
+        return BSP_I2C2_OK;
+    if ((uint32_t)(bsp_millis() - g_last_recovery_ms) < BSP_I2C2_RECOVERY_INTERVAL_MS)
+        return BSP_I2C2_ERR_BUS_BUSY;
+    g_last_recovery_ms = bsp_millis();
+    ++g_recoveries;
+    /* The App re-locks GPIO (PWPR) before its loop, which would silently drop the pin reconfiguration. Unlock only
+     * for the recovery and restore the caller's state, so an init-time recovery does not lock GPIO early. FCG1
+     * (the I2C2 clock gate) is not write-protected. */
+    const bool gpio_locked = READ_REG16_BIT(CM_GPIO->PWPR, GPIO_PWPR_WE) == 0U;
+    if (gpio_locked)
+        GPIO_REG_Unlock();
+    const int result = configure();
+    if (gpio_locked)
+        GPIO_REG_Lock();
+    if (result != BSP_I2C2_OK)
+        return result;
+    return g_bus_fault ? BSP_I2C2_ERR_BUS_BUSY : BSP_I2C2_OK;
 }
 
 int bsp_i2c2_probe(uint8_t address) {

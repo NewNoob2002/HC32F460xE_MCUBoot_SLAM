@@ -120,7 +120,7 @@ Status codes: `0 OK`, `1 BAD_FRAME`, `2 UNKNOWN_COMMAND`, `3 LOCKED`,
   charger PG u8`, `0x21 charger INT# u8`, `0x22 charger change count u32`,
   `0x50`/`0x51 BQ SBS status` (packs `0x0B`/`0x0C`), `0x30 update manager
   state u8`, `0x31 usb update errors u32`, `0x40 debug
-  events dropped u32`, `0x41 last reset cause u32`. Charger control tags
+  events dropped u32`, `0x41 last reset cause u32`. `0x42 i2c bus recoveries u32`. Charger control tags
   (2026-11-04): `0x13` MP2762A read-back (7 bytes: `u8 REG00H, u8 REG0FH, u8
   REG02H, u8 REG04H, u8 REG08H, u16 REG24..25H`; junction code in bits 15:6, T(C) = (903 -
   code) / 2.578), `0x14` charge decision (12 bytes: `u8 mode` (0 active, 1

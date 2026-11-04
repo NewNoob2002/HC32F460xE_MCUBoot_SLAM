@@ -28,8 +28,12 @@ enum bsp_i2c2_result {
     BSP_I2C2_ERR_ARBITRATION_LOST = -19,
 };
 
-/* Requires write protection to be unlocked by the caller. */
+/* Requires write protection to be unlocked by the caller, and the timebase for bus recovery. Clears a bus held by a
+ * slave first; a transfer that cannot START marks the bus faulted and the next transfer, at most once per second,
+ * clears and re-initialises it. */
 int bsp_i2c2_init(void);
+/** Runtime bus recoveries since boot, for diagnostics. */
+uint32_t bsp_i2c2_recovery_count(void);
 int bsp_i2c2_probe(uint8_t address);
 int bsp_i2c2_write(uint8_t address, const uint8_t* data, uint32_t length);
 int bsp_i2c2_read_reg(uint8_t address, uint8_t reg, uint8_t* data, uint32_t length);

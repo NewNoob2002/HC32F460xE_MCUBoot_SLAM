@@ -6,6 +6,9 @@ namespace hal {
 int Hc32I2cBus::init() {
     return bsp_i2c2_init();
 }
+uint32_t Hc32I2cBus::recoveries() {
+    return bsp_i2c2_recovery_count();
+}
 int Hc32I2cBus::probe(uint8_t address) {
     return bsp_i2c2_probe(address);
 }

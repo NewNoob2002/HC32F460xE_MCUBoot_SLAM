@@ -48,6 +48,10 @@ void PowerNode::refreshDevices() {
     updateChargerMode();
     // Read back after control so telemetry shows what the charger actually holds.
     state_.mp2762a_config_result = charger.readConfig(&state_.mp2762a_config);
+    const uint32_t recoveries = bus_.recoveries();
+    if (recoveries != state_.i2c_recoveries)
+        CORE_DEBUG_PRINTF("i2c bus recovered, total=%lu", static_cast<unsigned long>(recoveries));
+    state_.i2c_recoveries = recoveries;
 }
 uint16_t sourceCurrentLimitMa(int husb238_result, const hal::Husb238Status& status) {
     constexpr uint16_t UsbDefaultMa = 500U;
