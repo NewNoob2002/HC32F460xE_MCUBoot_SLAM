@@ -35,11 +35,17 @@ static void check(int alternate_result, int init_result) {
     assert(state.bq_alternate_probe_result == alternate_result);
     assert(state.husb238_probe_result == BSP_I2C2_ERR_BUS_BUSY);
     assert(state.mp2762a_probe_result == BSP_I2C2_OK);
+    // A working bus also caps the MP2762A input limit at init: REG0FH and REG00H, each read plus read-back (no HUSB238 here,
+    // so 90% of the 500 mA USB default).
+    const unsigned charger_reads = init_result == BSP_I2C2_OK ? 4U : 0U;
+    if (init_result == BSP_I2C2_OK)
+        assert(state.input_limit_ma == 450U && bus.mp_regs[0x00] == 9U && bus.mp_regs[0x0F] == 9U
+               && bus.mp_writes == 2U);
     if (alternate_result == BSP_I2C2_OK) {
-        assert(bus.reads == 4U && state.bq_alternate_identity.device_type == 0x4500U);
+        assert(bus.reads == 4U + charger_reads && state.bq_alternate_identity.device_type == 0x4500U);
         assert(state.bq_alternate_identity_result == hal::BQ40Z50_OK);
     } else {
-        assert(bus.reads == 0U && bus.writes == 0U);
+        assert(bus.reads == charger_reads && bus.writes == 0U);
         assert(state.bq_alternate_identity_result == alternate_result);
     }
     assert(sub.notify(dp::names::Power, &state, sizeof(state)) == DataNode::RES_UNSUPPORTED_REQUEST);
@@ -58,6 +64,8 @@ static void batteryRefresh() {
     DataNode sub;
     assert(power.init(broker, 0U));
     assert(sub.init(broker, "sub") == DataNode::RES_OK && dp::Power::subscribe(sub) == DataNode::RES_OK);
+    bus.reads = 0U; // ignore the init-time input limit write
+    bus.mp_writes = 0U;
     bus.sbs = true;
     bus.read_result = BSP_I2C2_ERR_ADDR_NACK;
     bus.sbs_absent_address = hal::BQ40Z50::DefaultAddress;
@@ -71,9 +79,9 @@ static void batteryRefresh() {
     (void)broker.handleTimers(dp::BatteryPeriodMs - 1U);
     assert(bus.reads == 0U);
     (void)broker.handleTimers(dp::BatteryPeriodMs);
-    // The absent pack stops at its first word, the present pack reads all 11, the charger reads 7 status registers
-    // plus REG08H before and after enabling charging for the present pack.
-    assert(bus.reads == 21U && bus.mp_writes == 1U && bus.mp_regs[0x08] == 0x10U);
+    // The absent pack stops at its first word, the present pack reads all 11. The charger reads 7 status registers,
+    // REG0FH/REG00H (already at their limit), REG08H before and after enabling charging, and 6 read-back registers.
+    assert(bus.reads == 29U && bus.mp_writes == 1U && bus.mp_regs[0x08] == 0x10U);
     dp::PowerState state{};
     assert(dp::Power::pull(sub, state) == DataNode::RES_OK);
     assert(state.bq_status_result[0] == BSP_I2C2_ERR_ADDR_NACK);
@@ -103,6 +111,7 @@ static void chargerSuspend() {
     bus.sbs = true;
     bus.read_result = BSP_I2C2_ERR_ADDR_NACK;
     bus.sbs_absent_address = hal::BQ40Z50::DefaultAddress;
+    bus.mp_writes = 0U;        // ignore the init-time input limit write
     bus.sbs_fail_reg = 0x03;   // the alternate pack fails its first word: both packs absent
     bus.mp_regs[0x08] = 0x96U; // V1.1 read-back 0x16 plus a set REG_RST bit, which must never be written back
     uint32_t now = 0U;
@@ -156,6 +165,50 @@ static void chargerSuspend() {
         tick();
     assert(state.charger_mode == dp::ChargerMode::Suspended && state.charger_control_result == hal::Mp2762aErrVerify);
 }
+/* The source decides the input limit: a PD contract, else the Type-C advertisement, else USB 2.0's 500 mA. */
+static void sourceLimit() {
+    using dp::sourceCurrentLimitMa;
+    assert(sourceCurrentLimitMa(BSP_I2C2_ERR_ADDR_NACK, {0x3AU, 0x40U}) == 500U); // unreadable: USB default
+    assert(sourceCurrentLimitMa(BSP_I2C2_OK, {0x34U, 0x40U}) == 1500U);           // PD 12 V / 1.5 A
+    assert(sourceCurrentLimitMa(BSP_I2C2_OK, {0x6FU, 0x40U}) == 5000U);           // PD 20 V / 5 A
+    assert(sourceCurrentLimitMa(BSP_I2C2_OK, {0x00U, 0x40U}) == 500U);            // Type-C default current
+    assert(sourceCurrentLimitMa(BSP_I2C2_OK, {0x00U, 0x43U}) == 3000U);           // Type-C 3 A
+    assert(sourceCurrentLimitMa(BSP_I2C2_OK, {0x7AU, 0x41U}) == 1500U);           // reserved PD voltage: Type-C
+    // The applied limit keeps 10% headroom below the source and never exceeds the setting.
+    DataBroker broker;
+    Store store;
+    dp::SettingsNode settings(store);
+    FakeI2cBus bus;
+    bus.probe_results[1] = BSP_I2C2_ERR_ADDR_NACK;
+    bus.husb_result = BSP_I2C2_OK;
+    bus.husb_regs = {0x34U, 0x40U};
+    assert(settings.init(broker));
+    dp::PowerNode power(bus);
+    DataNode sub;
+    assert(power.init(broker, 0U));
+    assert(sub.init(broker, "sub") == DataNode::RES_OK && dp::Power::subscribe(sub) == DataNode::RES_OK);
+    dp::PowerState state{};
+    assert(dp::Power::pull(sub, state) == DataNode::RES_OK);
+    assert(state.source_limit_ma == 1500U && state.input_limit_ma == 1350U && bus.mp_regs[0x00] == 27U);
+    assert(bus.mp_regs[0x0F] == 27U); // IIN_LIM2 matches, so the two-level limit cannot exceed it
+    // A source change (replug to a PC port without PD) is picked up on the next tick, even while no pack answers.
+    bus.sbs = true;
+    bus.read_result = BSP_I2C2_ERR_ADDR_NACK;
+    bus.sbs_absent_address = hal::BQ40Z50::DefaultAddress;
+    bus.sbs_fail_reg = 0x03;
+    bus.husb_regs = {0x00U, 0x40U};
+    (void)broker.handleTimers(dp::BatteryPeriodMs);
+    assert(dp::Power::pull(sub, state) == DataNode::RES_OK);
+    assert(state.source_limit_ma == 500U && state.input_limit_ma == 450U && bus.mp_regs[0x00] == 9U);
+    // Read-back telemetry reflects the registers after control.
+    bus.mp_regs[0x24] = 0xC0U; // junction code in bits 15:6
+    bus.mp_regs[0x25] = 0x80U;
+    (void)broker.handleTimers(2U * dp::BatteryPeriodMs);
+    assert(dp::Power::pull(sub, state) == DataNode::RES_OK);
+    assert(state.mp2762a_config_result == BSP_I2C2_OK && state.mp2762a_config.input_limit == 9U);
+    assert(state.mp2762a_config.input_limit2 == 9U);
+    assert(state.mp2762a_config.junction_temp == 0x80C0U);
+}
 /* The charged pack's request, capped by the settings and the 8.4 V ceiling, is written before charging is enabled. */
 static void chargeLimits() {
     DataBroker broker;
@@ -174,7 +227,9 @@ static void chargeLimits() {
     bus.sbs_absent_address = hal::BQ40Z50::AlternateAddress;
     bus.sbs_words[0x15] = 8200U; // ChargingVoltage
     bus.sbs_words[0x14] = 2000U; // ChargingCurrent
-    bus.mp_regs[0x00] = 0x1EU;   // V1.1 OTP defaults: 1.5 A input, 1 A charge, 8.4 V with VRECH_OS kept
+    bus.husb_result = BSP_I2C2_OK;
+    bus.husb_regs = {0x3AU, 0x40U}; // PD 12 V / 3 A contract, attached
+    bus.mp_regs[0x00] = 0x1EU;      // V1.1 OTP defaults: 1.5 A input, 1 A charge, 8.4 V with VRECH_OS kept
     bus.mp_regs[0x02] = 0x14U;
     bus.mp_regs[0x04] = 0x4FU;
     bus.mp_regs[0x08] = 0x16U;
@@ -262,6 +317,7 @@ int main() {
     batteryRefresh();
     chargerSuspend();
     chargeLimits();
+    sourceLimit();
     check(BSP_I2C2_OK, BSP_I2C2_OK);
     check(BSP_I2C2_ERR_ADDR_NACK, BSP_I2C2_OK);
     check(BSP_I2C2_ERR_NOT_READY, BSP_I2C2_ERR_INIT);

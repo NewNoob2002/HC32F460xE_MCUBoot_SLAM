@@ -120,7 +120,14 @@ Status codes: `0 OK`, `1 BAD_FRAME`, `2 UNKNOWN_COMMAND`, `3 LOCKED`,
   charger PG u8`, `0x21 charger INT# u8`, `0x22 charger change count u32`,
   `0x50`/`0x51 BQ SBS status` (packs `0x0B`/`0x0C`), `0x30 update manager
   state u8`, `0x31 usb update errors u32`, `0x40 debug
-  events dropped u32`, `0x41 last reset cause u32`.
+  events dropped u32`, `0x41 last reset cause u32`. Charger control tags
+  (2026-11-04): `0x13` MP2762A read-back (7 bytes: `u8 REG00H, u8 REG0FH, u8
+  REG02H, u8 REG04H, u8 REG08H, u16 REG24..25H`; junction code in bits 15:6, T(C) = (903 -
+  code) / 2.578), `0x14` charge decision (12 bytes: `u8 mode` (0 active, 1
+  suspended without a pack, 2 wake probe), `u8 allowed, u16 target_mV, u16
+  target_mA, u16 input_limit_mA, u16 source_limit_mA, i16 control_result`) and
+  `0x15` HUSB238 `PD_STATUS0, PD_STATUS1`. `0x13` and `0x15` are omitted when
+  the device did not answer.
 
 ## Settings table (initial)
 
@@ -134,8 +141,13 @@ the new value in the same request.
 Keys `0x0001`-`0x0004` (flags `0x07`) are applied to the MP2762A once per
 second while the J2 pack (BQ40Z50 `0x0B`) answers: charge voltage =
 min(pack ChargingVoltage, `charge_voltage_limit`, 8400 mV), charge current =
-min(pack ChargingCurrent, `charge_current_limit`), input current limit =
-`input_current_limit`. Charging is enabled only when `charge_enable` is 1, the
+min(pack ChargingCurrent, `charge_current_limit`). The input current limit is
+min(`input_current_limit`, 90% of the source limit), written to both
+IIN_LIM1 (REG00H) and IIN_LIM2 (REG0FH) so the two-level limit cannot lift
+the average above it, and is also applied at
+startup and whenever the DC/DC runs without a pack. The source limit is the
+HUSB238 PD contract current, else its Type-C 5 V advertisement, else 500 mA
+(USB 2.0 default, also used when the HUSB238 does not answer). Charging is enabled only when `charge_enable` is 1, the
 pack requests a nonzero current and BatteryStatus has none of OCA, TCA or OTA.
 The output-only pack at `0x0C` is monitored but never charged.
 

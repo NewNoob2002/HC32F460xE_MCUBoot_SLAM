@@ -166,6 +166,41 @@ std::size_t Service::snapshot(uint8_t* output, uint32_t now_ms) {
     u32(0x31U, update.usb.errors);
     u32(0x40U, usb_debug_link_dropped() + log_dropped_);
     u32(0x41U, reset_cause_);
+    if (have_power) {
+        const auto word = [&output, &n](uint16_t value) {
+            write16(output + n, value);
+            n += 2U;
+        };
+        // 0x13: MP2762A control registers read back after the Power node applied them, plus the die temperature.
+        if (power.mp2762a_config_result == BSP_I2C2_OK) {
+            const auto& cfg = power.mp2762a_config;
+            output[n++] = 0x13U;
+            output[n++] = 7U;
+            output[n++] = cfg.input_limit;
+            output[n++] = cfg.input_limit2;
+            output[n++] = cfg.charge_current;
+            output[n++] = cfg.charge_voltage;
+            output[n++] = cfg.control;
+            word(cfg.junction_temp);
+        }
+        // 0x14: the charge decision and the limits it produced.
+        output[n++] = 0x14U;
+        output[n++] = 12U;
+        output[n++] = static_cast<uint8_t>(power.charger_mode);
+        output[n++] = power.charge_allowed ? 1U : 0U;
+        word(power.charge_target_mv);
+        word(power.charge_target_ma);
+        word(power.input_limit_ma);
+        word(power.source_limit_ma);
+        word(static_cast<uint16_t>(static_cast<int16_t>(power.charger_control_result)));
+        // 0x15: raw HUSB238 PD_STATUS0/1.
+        if (power.husb238_status_result == BSP_I2C2_OK) {
+            output[n++] = 0x15U;
+            output[n++] = 2U;
+            output[n++] = power.husb238_status.pd_status0;
+            output[n++] = power.husb238_status.pd_status1;
+        }
+    }
     return n;
 }
 void Service::dispatch(const Frame& r, uint32_t now_ms) {

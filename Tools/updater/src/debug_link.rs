@@ -358,8 +358,8 @@ impl BatteryStatus {
 
 /// Raw MP2762A registers carried by telemetry tag 0x12.
 ///
-/// ADC words hold a 10-bit value in bits 15:6. The LSB weights come from the earlier `Libraries/Mp2762a` driver and
-/// still have to be confirmed against the datasheet and cross-checked with the BQ40Z50 on hardware.
+/// ADC words hold a 10-bit value in bits 15:6. The LSB weights match MP2762A datasheet Rev 1.1 (REG16H-1FH); on
+/// 2026-11-04 HIL the charge-current reading agreed with the BQ40Z50 within about 6%.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct ChargerStatus {
     pub status: u8,
@@ -403,6 +403,113 @@ impl ChargerStatus {
     }
 }
 
+/// MP2762A control registers read back after the firmware applied them (telemetry tag 0x13, datasheet Rev 1.1).
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ChargerConfig {
+    pub input_limit: u8,
+    pub input_limit2: u8,
+    pub charge_current: u8,
+    pub charge_voltage: u8,
+    pub control: u8,
+    pub junction_temp: u16,
+}
+impl ChargerConfig {
+    /// REG00H IIN_LIM1, 50 mA steps.
+    pub fn input_limit_ma(&self) -> u32 {
+        u32::from(self.input_limit & 0x7f) * 50
+    }
+    /// REG0FH IIN_LIM2, 50 mA steps; the firmware keeps it equal to IIN_LIM1.
+    pub fn input_limit2_ma(&self) -> u32 {
+        u32::from(self.input_limit2 & 0x7f) * 50
+    }
+    /// REG02H ICC, 50 mA steps.
+    pub fn charge_current_ma(&self) -> u32 {
+        u32::from(self.charge_current & 0x7f) * 50
+    }
+    /// REG04H VBATT_REG = 7425 mV + 25 mV x bits 6:1.
+    pub fn charge_voltage_mv(&self) -> u32 {
+        7425 + u32::from((self.charge_voltage >> 1) & 0x3f) * 25
+    }
+    /// REG08H bit 3: DC/DC off.
+    pub fn suspended(&self) -> bool {
+        self.control & 0x08 != 0
+    }
+    /// REG08H bit 4: charging enabled.
+    pub fn charge_enabled(&self) -> bool {
+        self.control & 0x10 != 0
+    }
+    /// REG24H: code = 903 - 2.578 x T(C).
+    pub fn junction_c(&self) -> f32 {
+        (903.0 - f32::from(self.junction_temp >> 6)) / 2.578
+    }
+}
+
+/// Firmware charge decision (telemetry tag 0x14).
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct ChargeControl {
+    pub mode: u8,
+    pub allowed: bool,
+    pub target_mv: u16,
+    pub target_ma: u16,
+    pub input_limit_ma: u16,
+    pub source_limit_ma: u16,
+    pub result: i16,
+}
+impl ChargeControl {
+    pub fn mode_name(&self) -> &'static str {
+        match self.mode {
+            0 => "Active",
+            1 => "Suspended (no pack)",
+            2 => "Wake probe",
+            _ => "Unknown",
+        }
+    }
+}
+
+/// HUSB238 PD_STATUS0/1 (telemetry tag 0x15, Hynetek Register Information Rev 1.1).
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct PdStatus {
+    pub status0: u8,
+    pub status1: u8,
+}
+impl PdStatus {
+    /// Explicit PD contract voltage, or None without a contract.
+    pub fn pd_voltage_mv(&self) -> Option<u32> {
+        match self.status0 >> 4 {
+            1 => Some(5000),
+            2 => Some(9000),
+            3 => Some(12000),
+            4 => Some(15000),
+            5 => Some(18000),
+            6 => Some(20000),
+            _ => None,
+        }
+    }
+    pub fn pd_current_ma(&self) -> u32 {
+        const CURRENT: [u32; 16] = [
+            500, 700, 1000, 1250, 1500, 1750, 2000, 2250, 2500, 2750, 3000, 3250, 3500, 4000, 4500,
+            5000,
+        ];
+        CURRENT[usize::from(self.status0 & 0x0f)]
+    }
+    pub fn attached(&self) -> bool {
+        self.status1 & 0x40 != 0
+    }
+    /// Type-C 5 V advertisement without a PD contract; "default" is USB 2.0's 500 mA.
+    pub fn type_c_current_ma(&self) -> u32 {
+        [500, 1500, 2400, 3000][usize::from(self.status1 & 0x03)]
+    }
+}
+impl fmt::Display for PdStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.pd_voltage_mv() {
+            Some(voltage) => write!(f, "PD {}V/{}mA", voltage / 1000, self.pd_current_ma()),
+            None if self.attached() => write!(f, "Type-C 5V/{}mA", self.type_c_current_ma()),
+            None => f.write_str("unattached"),
+        }
+    }
+}
+
 /// Names the RMU_RSTF0 flags in bit order. HC32F460 keeps them latched until software clears them, so more than one
 /// can be set; bit 14 marks that several causes were recorded.
 pub fn reset_cause_names(flags: u32) -> Vec<&'static str> {
@@ -438,6 +545,9 @@ pub enum TelemetryValue {
     Identity(BqIdentity),
     Battery(BatteryStatus),
     Charger(ChargerStatus),
+    ChargerConfig(ChargerConfig),
+    ChargeControl(ChargeControl),
+    Pd(PdStatus),
     Bytes(Vec<u8>),
 }
 impl fmt::Display for TelemetryValue {
@@ -493,6 +603,29 @@ impl fmt::Display for TelemetryValue {
                 value.status,
                 value.fault
             ),
+            Self::ChargerConfig(value) => write!(
+                f,
+                "input_limit={}/{}mA charge={}mV/{}mA charging={} suspended={} junction={:.0}C",
+                value.input_limit_ma(),
+                value.input_limit2_ma(),
+                value.charge_voltage_mv(),
+                value.charge_current_ma(),
+                value.charge_enabled(),
+                value.suspended(),
+                value.junction_c()
+            ),
+            Self::ChargeControl(value) => write!(
+                f,
+                "mode={} allowed={} target={}mV/{}mA input_limit={}mA source={}mA result={}",
+                value.mode_name(),
+                value.allowed,
+                value.target_mv,
+                value.target_ma,
+                value.input_limit_ma,
+                value.source_limit_ma,
+                value.result
+            ),
+            Self::Pd(value) => value.fmt(f),
             Self::Bytes(bytes) => {
                 for byte in bytes {
                     write!(f, "{byte:02x}")?;
@@ -515,6 +648,9 @@ impl Tlv {
             0x10 => "power_probe_mask",
             0x11 => "bq_identity",
             0x12 => "charger",
+            0x13 => "charger_config",
+            0x14 => "charge_control",
+            0x15 => "pd_source",
             0x50 => "battery_0x0b",
             0x51 => "battery_0x0c",
             0x20 => "charger_pg",
@@ -577,6 +713,36 @@ pub fn decode_tlvs(mut bytes: &[u8]) -> Result<Vec<Tlv>, Error> {
                     charge_current: u16_at(value, 6),
                     input_voltage: u16_at(value, 8),
                     input_current: u16_at(value, 10),
+                })
+            }
+            0x13 => {
+                exact(value, 7)?;
+                TelemetryValue::ChargerConfig(ChargerConfig {
+                    input_limit: value[0],
+                    input_limit2: value[1],
+                    charge_current: value[2],
+                    charge_voltage: value[3],
+                    control: value[4],
+                    junction_temp: u16_at(value, 5),
+                })
+            }
+            0x14 => {
+                exact(value, 12)?;
+                TelemetryValue::ChargeControl(ChargeControl {
+                    mode: value[0],
+                    allowed: value[1] != 0,
+                    target_mv: u16_at(value, 2),
+                    target_ma: u16_at(value, 4),
+                    input_limit_ma: u16_at(value, 6),
+                    source_limit_ma: u16_at(value, 8),
+                    result: u16_at(value, 10) as i16,
+                })
+            }
+            0x15 => {
+                exact(value, 2)?;
+                TelemetryValue::Pd(PdStatus {
+                    status0: value[0],
+                    status1: value[1],
                 })
             }
             0x50 | 0x51 => {

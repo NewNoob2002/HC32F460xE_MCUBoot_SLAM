@@ -32,6 +32,12 @@ enum class ChargerMode : uint8_t { Active, Suspended, WakeProbe };
 inline constexpr unsigned ChargedPackSlot = 0U;
 /** Hard 2S charge-voltage ceiling, independent of settings and pack requests. */
 inline constexpr uint16_t ChargeVoltageCeilingMv = 8400U;
+/** Input current the source allows, from the HUSB238 PD contract or the Type-C 5 V advertisement. An unreadable
+ * HUSB238 or a default-current source falls back to USB 2.0's 500 mA. */
+uint16_t sourceCurrentLimitMa(int husb238_result, const hal::Husb238Status& status);
+/** The MP2762A input limit leaves headroom for the main board and HUSB238 on the same input and for the MP2762A
+ * IIN_LIM tolerance (+/-5% at 1.5 A, datasheet Rev 1.1). */
+inline constexpr unsigned SourceHeadroomPercent = 90U;
 
 struct PowerState {
     int i2c_init_result = 0;
@@ -52,6 +58,12 @@ struct PowerState {
     bool charge_allowed = false;
     uint16_t charge_target_mv = 0U;
     uint16_t charge_target_ma = 0U;
+    int husb238_status_result = BSP_I2C2_ERR_NOT_READY;
+    hal::Husb238Status husb238_status{};
+    uint16_t source_limit_ma = 0U; // what the source allows
+    uint16_t input_limit_ma = 0U;  // what was written to REG00H
+    int mp2762a_config_result = BSP_I2C2_ERR_NOT_READY;
+    hal::Mp2762aConfig mp2762a_config{};
 };
 struct ChargerState {
     bool valid = false;
@@ -132,6 +144,7 @@ class PowerNode final : public ValueNode<PowerState> {
     uint8_t charger_ticks_ = 0U;
     SettingsState settings_{};
     void refreshDevices();
+    void updateInputLimit();
     void updateChargerMode();
     int applyChargeLimits(hal::MP2762A& charger);
 };

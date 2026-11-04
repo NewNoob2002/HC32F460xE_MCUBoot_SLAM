@@ -29,8 +29,11 @@ class FakeI2cBus final : public hal::I2cBus {
     int sbs_fail_reg = -1;
     uint8_t sbs_absent_address = 0U;
     // MP2762A byte registers, answered in SBS mode for address 0x5C.
-    std::array<uint8_t, 0x20> mp_regs{};
+    std::array<uint8_t, 0x50> mp_regs{};
     int mp_result = BSP_I2C2_OK;
+    // HUSB238 PD_STATUS0/1, answered in SBS mode for address 0x08. Default: no reply, as on a board without it.
+    std::array<uint8_t, 2> husb_regs{};
+    int husb_result = BSP_I2C2_ERR_ADDR_NACK;
     int init() override {
         ++init_count;
         return init_result;
@@ -44,7 +47,7 @@ class FakeI2cBus final : public hal::I2cBus {
     // Bits forced back on after every MP2762A write, to emulate a register that does not take the value.
     uint8_t mp_stuck_bits = 0U;
     int write(uint8_t address, const uint8_t* data, uint32_t length) override {
-        if (sbs && address == hal::MP2762A::Address) {
+        if (address == hal::MP2762A::Address) {
             assert(data && length == 2U && data[0] < mp_regs.size());
             ++mp_writes;
             mp_regs[data[0]] = static_cast<uint8_t>(data[1] | mp_stuck_bits);
@@ -56,7 +59,13 @@ class FakeI2cBus final : public hal::I2cBus {
         return write_result;
     }
     int readReg(uint8_t address, uint8_t reg, uint8_t* data, uint32_t length) override {
-        if (sbs && address == hal::MP2762A::Address) {
+        // Charger-side devices answer outside raw (REG_READ) mode too: the Power node touches them during init.
+        if (!raw_read && address == hal::HUSB238::Address) {
+            assert(data && reg + length <= husb_regs.size());
+            std::memcpy(data, husb_regs.data() + reg, length);
+            return husb_result;
+        }
+        if (!raw_read && address == hal::MP2762A::Address) {
             assert(data && length >= 1U && reg + length <= mp_regs.size());
             ++reads;
             std::memcpy(data, mp_regs.data() + reg, length);

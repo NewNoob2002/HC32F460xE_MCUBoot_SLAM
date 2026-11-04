@@ -2,8 +2,8 @@ use super::{
     BatteryCard, ConnectedDevice, DebugSettingRow, DebugValueRow, UpdaterWindow, WorkerCommand,
 };
 use hc32_updater::debug_link::{
-    BatteryStatus, ChargerStatus, ConfigEntry, DebugClient, Error, Event, TelemetryValue, Tlv,
-    ValueType, reset_cause_names,
+    BatteryStatus, ChargeControl, ChargerConfig, ChargerStatus, ConfigEntry, DebugClient, Error,
+    Event, TelemetryValue, Tlv, ValueType, reset_cause_names,
 };
 use hc32_updater::nusb_transport::{DeviceMode, NusbTransport};
 use slint::{ComponentHandle, Model, ModelRc, VecModel};
@@ -512,18 +512,138 @@ const MANAGER_STATES: [&str; 10] = [
 const BATTERY_TAG: u8 = 0x50;
 const BATTERY_ADDRESSES: [u8; 2] = [0x0b, 0x0c];
 
-/// MP2762A registers plus its PG/INT# pins form the charger card.
-const CHARGER_TAGS: [u8; 4] = [0x12, 0x20, 0x21, 0x22];
+/// MP2762A status, its applied configuration, the firmware charge decision, the PD source and the PG/INT# pins
+/// form the charger card.
+const CHARGER_TAGS: [u8; 7] = [0x12, 0x13, 0x14, 0x15, 0x20, 0x21, 0x22];
 
 fn value_rows(fields: Vec<Tlv>) -> Vec<DebugValueRow> {
     fields.into_iter().map(value_row).collect()
 }
 
 fn charger_rows(field: Tlv) -> Vec<DebugValueRow> {
-    let TelemetryValue::Charger(charger) = field.value else {
-        return vec![value_row(field)];
+    match field.value {
+        TelemetryValue::Charger(charger) => charger_status_rows(&charger),
+        TelemetryValue::ChargerConfig(config) => charger_config_rows(&config),
+        TelemetryValue::ChargeControl(control) => charge_control_rows(&control),
+        TelemetryValue::Pd(pd) => vec![DebugValueRow {
+            name: "Power source".into(),
+            value: pd.to_string().into(),
+            icon: ICON_PLUG,
+            tone: TONE_NEUTRAL,
+        }],
+        _ => vec![value_row(field)],
+    }
+}
+
+fn charger_config_rows(config: &ChargerConfig) -> Vec<DebugValueRow> {
+    let row = |name: &str, icon, tone, value: String| DebugValueRow {
+        name: name.into(),
+        value: value.into(),
+        icon,
+        tone,
     };
-    charger_status_rows(&charger)
+    let junction = config.junction_c();
+    vec![
+        row(
+            "Charger setpoint",
+            ICON_BOLT,
+            TONE_NEUTRAL,
+            if config.input_limit2_ma() == config.input_limit_ma() {
+                format!(
+                    "{:.2} V · {} mA · input {} mA",
+                    f64::from(config.charge_voltage_mv()) / 1000.0,
+                    config.charge_current_ma(),
+                    config.input_limit_ma()
+                )
+            } else {
+                format!(
+                    "{:.2} V · {} mA · input {}/{} mA",
+                    f64::from(config.charge_voltage_mv()) / 1000.0,
+                    config.charge_current_ma(),
+                    config.input_limit_ma(),
+                    config.input_limit2_ma()
+                )
+            },
+        ),
+        row(
+            "Charger output",
+            ICON_POWER,
+            if config.suspended() {
+                TONE_NEUTRAL
+            } else {
+                TONE_GOOD
+            },
+            match (config.suspended(), config.charge_enabled()) {
+                (true, _) => "Suspended (DC/DC off)".to_owned(),
+                (false, true) => "DC/DC on · charging enabled".to_owned(),
+                (false, false) => "DC/DC on · charging off".to_owned(),
+            },
+        ),
+        row(
+            "Charger junction",
+            ICON_CHIP,
+            // MP2762A thermal regulation is configurable up to 120 C; warn well before it.
+            if junction >= 100.0 {
+                TONE_WARNING
+            } else {
+                TONE_NEUTRAL
+            },
+            format!("{junction:.0} °C"),
+        ),
+    ]
+}
+
+fn charge_control_rows(control: &ChargeControl) -> Vec<DebugValueRow> {
+    let row = |name: &str, icon, tone, value: String| DebugValueRow {
+        name: name.into(),
+        value: value.into(),
+        icon,
+        tone,
+    };
+    vec![
+        row(
+            "Charge policy",
+            ICON_BOLT,
+            if control.allowed {
+                TONE_GOOD
+            } else {
+                TONE_NEUTRAL
+            },
+            if control.allowed {
+                format!(
+                    "{} · target {:.2} V / {} mA",
+                    control.mode_name(),
+                    f64::from(control.target_mv) / 1000.0,
+                    control.target_ma
+                )
+            } else {
+                format!("{} · charging not allowed", control.mode_name())
+            },
+        ),
+        row(
+            "Input limit",
+            ICON_PLUG,
+            TONE_NEUTRAL,
+            format!(
+                "{} mA (source {} mA)",
+                control.input_limit_ma, control.source_limit_ma
+            ),
+        ),
+        row(
+            "Charger control",
+            ICON_ALERT,
+            if control.result == 0 {
+                TONE_GOOD
+            } else {
+                TONE_WARNING
+            },
+            if control.result == 0 {
+                "OK".to_owned()
+            } else {
+                format!("error {}", control.result)
+            },
+        ),
+    ]
 }
 
 fn charger_status_rows(charger: &ChargerStatus) -> Vec<DebugValueRow> {
@@ -803,12 +923,50 @@ fn format_uptime(ms: u32) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        battery_cards, charger_status_rows, format_uptime, parse_period, validate_setting,
-        value_row,
+        battery_cards, charger_rows, charger_status_rows, format_uptime, parse_period,
+        validate_setting, value_row,
     };
     use hc32_updater::debug_link::{
-        BatteryStatus, ConfigEntry, TelemetryValue, Tlv, Unit, ValueType,
+        BatteryStatus, ChargeControl, ChargerConfig, ConfigEntry, TelemetryValue, Tlv, Unit,
+        ValueType,
     };
+
+    #[test]
+    fn charger_card_shows_setpoint_policy_and_warnings() {
+        let rows = charger_rows(Tlv {
+            tag: 0x13,
+            value: TelemetryValue::ChargerConfig(ChargerConfig {
+                input_limit: 27,
+                input_limit2: 27,
+                charge_current: 40,
+                charge_voltage: 0x3e,
+                control: 0x0e,
+                junction_temp: 600 << 6,
+            }),
+        });
+        assert_eq!(rows[0].value.as_str(), "8.20 V · 2000 mA · input 1350 mA");
+        assert_eq!(rows[1].value.as_str(), "Suspended (DC/DC off)");
+        // Code 600 is about 118 C: above the 100 C warning line.
+        assert_eq!(rows[2].tone, 2);
+        let rows = charger_rows(Tlv {
+            tag: 0x14,
+            value: TelemetryValue::ChargeControl(ChargeControl {
+                mode: 1,
+                allowed: false,
+                target_mv: 0,
+                target_ma: 0,
+                input_limit_ma: 450,
+                source_limit_ma: 500,
+                result: -24,
+            }),
+        });
+        assert_eq!(
+            rows[0].value.as_str(),
+            "Suspended (no pack) · charging not allowed"
+        );
+        assert_eq!(rows[1].value.as_str(), "450 mA (source 500 mA)");
+        assert_eq!(rows[2].value.as_str(), "error -24");
+    }
 
     #[test]
     fn battery_cards_cover_both_packs() {

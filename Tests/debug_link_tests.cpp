@@ -444,11 +444,23 @@ void batteryTelemetryTests() {
     power.bq_status[1] = {0x6001U, 7920U, -1200, 3015U, 76U, 2340U, 3100U, 8400U, 2000U, 0x00C0U, 12U};
     power.mp2762a_status_result = BSP_I2C2_OK;
     power.mp2762a_status = {0x08U, 0x40U, 0x1111U, 0x2222U, 0x3333U, 0x4444U, 0x5555U};
+    power.mp2762a_config_result = BSP_I2C2_OK;
+    power.mp2762a_config = {27U, 27U, 40U, 0x3FU, 0x16U, 0x80C0U};
+    power.charger_mode = dp::ChargerMode::Active;
+    power.charge_allowed = true;
+    power.charge_target_mv = 8200U;
+    power.charge_target_ma = 2000U;
+    power.input_limit_ma = 1350U;
+    power.source_limit_ma = 1500U;
+    power.charger_control_result = hal::Mp2762aErrVerify;
+    power.husb238_status_result = BSP_I2C2_OK;
+    power.husb238_status = {0x34U, 0x40U};
     const auto r = f.request(2U);
     // TLVs follow the two-byte status; only the answering 0x0C pack (slot 1) is encoded.
     std::size_t at = 2U;
     bool found = false;
     bool charger_found = false;
+    unsigned control_tags = 0U;
     while (at < r.length) {
         const uint8_t tag = r.payload[at];
         const uint8_t length = r.payload[at + 1U];
@@ -458,6 +470,22 @@ void batteryTelemetryTests() {
             assert(length == 12U && v[0] == 0x08U && v[1] == 0x40U);
             assert(debug::read16(v + 2U) == 0x1111U && debug::read16(v + 10U) == 0x5555U);
             charger_found = true;
+        }
+        const uint8_t* value = r.payload + at + 2U;
+        if (tag == 0x13U) {
+            assert(length == 7U && value[0] == 27U && value[1] == 27U && value[3] == 0x3FU
+                   && debug::read16(value + 5U) == 0x80C0U);
+            ++control_tags;
+        }
+        if (tag == 0x14U) {
+            assert(length == 12U && value[0] == 0U && value[1] == 1U);
+            assert(debug::read16(value + 2U) == 8200U && debug::read16(value + 6U) == 1350U);
+            assert(static_cast<int16_t>(debug::read16(value + 10U)) == hal::Mp2762aErrVerify);
+            ++control_tags;
+        }
+        if (tag == 0x15U) {
+            assert(length == 2U && value[0] == 0x34U && value[1] == 0x40U);
+            ++control_tags;
         }
         if (tag == 0x51U) {
             assert(length == 22U);
@@ -470,7 +498,7 @@ void batteryTelemetryTests() {
         }
         at += 2U + length;
     }
-    assert(found && charger_found && at == r.length);
+    assert(found && charger_found && control_tags == 3U && at == r.length);
 }
 int main() {
     codecTests();

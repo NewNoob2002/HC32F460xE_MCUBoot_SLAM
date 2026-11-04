@@ -321,6 +321,37 @@ fn charger_tlv_and_reset_cause_decode() {
 }
 
 #[test]
+fn charger_control_tlvs_decode() {
+    // 0x13: REG00H/REG0FH 27 (1350 mA), REG02H 40 (2000 mA), REG04H 0x3E (8200 mV), REG08H 0x16, junction code 798 (about 40.7 C).
+    let mut bytes = vec![0x13, 7, 27, 27, 40, 0x3e, 0x16];
+    bytes.extend_from_slice(&(798u16 << 6).to_le_bytes());
+    // 0x14: Active, allowed, 8200/2000, input 1350, source 1500, result -24.
+    bytes.extend_from_slice(&[0x14, 12, 0, 1]);
+    for value in [8200u16, 2000, 1350, 1500, (-24i16) as u16] {
+        bytes.extend_from_slice(&value.to_le_bytes());
+    }
+    bytes.extend_from_slice(&[0x15, 2, 0x34, 0x40, 0x15, 2, 0x00, 0x43]);
+    let fields = decode_tlvs(&bytes).unwrap();
+    let TelemetryValue::ChargerConfig(config) = fields[0].value else {
+        panic!("expected charger config");
+    };
+    assert_eq!(config.input_limit_ma(), 1350);
+    assert_eq!(config.input_limit2_ma(), 1350);
+    assert_eq!(config.charge_current_ma(), 2000);
+    assert_eq!(config.charge_voltage_mv(), 8200);
+    assert!(config.charge_enabled() && !config.suspended());
+    assert!((config.junction_c() - 105.0 / 2.578).abs() < 0.01);
+    let TelemetryValue::ChargeControl(control) = fields[1].value else {
+        panic!("expected charge control");
+    };
+    assert_eq!(control.mode_name(), "Active");
+    assert!(control.allowed && control.result == -24 && control.source_limit_ma == 1500);
+    assert_eq!(fields[2].to_string(), "pd_source=PD 12V/1500mA");
+    assert_eq!(fields[3].to_string(), "pd_source=Type-C 5V/3000mA");
+    assert!(decode_tlvs(&[0x14, 2, 0, 0]).is_err());
+}
+
+#[test]
 fn config_list_pages_using_entry_count_and_rejects_nonprogress() {
     let mut script = Script::frames([
         response(Command::ConfigList, 1, &page(3, &[entry(1, "one", 1)])),

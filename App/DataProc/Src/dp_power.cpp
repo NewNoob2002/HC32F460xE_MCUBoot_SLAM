@@ -24,9 +24,15 @@ bool PowerNode::init(DataBroker& broker, uint32_t now_ms) {
     CORE_DEBUG_PRINTF("i2c2=%d bq@0b=%d bq@0c=%d husb@08=%d mp@5c=%d bq_identity=%d", state_.i2c_init_result,
                       state_.bq_default_probe_result, state_.bq_alternate_probe_result, state_.husb238_probe_result,
                       state_.mp2762a_probe_result, state_.bq_alternate_identity_result);
-    // Packs may be inserted after startup, so both addresses are polled regardless of the init probe.
-    if (state_.i2c_init_result == BSP_I2C2_OK)
+    if (state_.i2c_init_result == BSP_I2C2_OK) {
+        // The MP2762A powers up with its OTP 1.5 A input limit; cap it to the source before the first tick so a
+        // 500 mA USB port is not dragged down while the pack is still being detected.
+        state_.husb238_status_result = husb.readStatus(&state_.husb238_status);
+        updateInputLimit();
+        state_.charger_control_result = mp.setInputCurrentLimit(state_.input_limit_ma);
+        // Packs may be inserted after startup, so both addresses are polled regardless of the init probe.
         startTimer(BatteryPeriodMs, now_ms);
+    }
     return true;
 }
 void PowerNode::refreshDevices() {
@@ -37,7 +43,36 @@ void PowerNode::refreshDevices() {
     }
     hal::MP2762A charger(bus_);
     state_.mp2762a_status_result = charger.readStatus(&state_.mp2762a_status);
+    hal::HUSB238 husb(bus_);
+    state_.husb238_status_result = husb.readStatus(&state_.husb238_status);
     updateChargerMode();
+    // Read back after control so telemetry shows what the charger actually holds.
+    state_.mp2762a_config_result = charger.readConfig(&state_.mp2762a_config);
+}
+uint16_t sourceCurrentLimitMa(int husb238_result, const hal::Husb238Status& status) {
+    constexpr uint16_t UsbDefaultMa = 500U;
+    if (husb238_result != BSP_I2C2_OK)
+        return UsbDefaultMa;
+    // PD_SRC_CURRENT codes 0..15 (Register Information Rev 1.1, Table 2).
+    static constexpr uint16_t PdCurrentMa[16] = {500U,  700U,  1000U, 1250U, 1500U, 1750U, 2000U, 2250U,
+                                                 2500U, 2750U, 3000U, 3250U, 3500U, 4000U, 4500U, 5000U};
+    const unsigned pd_voltage = status.pd_status0 >> 4U;
+    if (pd_voltage >= 1U && pd_voltage <= 6U)
+        return PdCurrentMa[status.pd_status0 & 0x0FU];
+    // No explicit contract: Type-C 5V_CURRENT (Table 3); "default" is USB 2.0 500 mA.
+    static constexpr uint16_t TypeCCurrentMa[4] = {UsbDefaultMa, 1500U, 2400U, 3000U};
+    return TypeCCurrentMa[status.pd_status1 & 0x03U];
+}
+void PowerNode::updateInputLimit() {
+    const uint16_t previous = state_.source_limit_ma;
+    state_.source_limit_ma = sourceCurrentLimitMa(state_.husb238_status_result, state_.husb238_status);
+    const auto headroom = static_cast<uint16_t>(state_.source_limit_ma * SourceHeadroomPercent / 100U);
+    const auto setting = static_cast<uint16_t>(settingValue(settings_, InputCurrentKey));
+    state_.input_limit_ma = setting < headroom ? setting : headroom;
+    if (state_.source_limit_ma != previous)
+        CORE_DEBUG_PRINTF("source pd=0x%02x/0x%02x result=%d limit=%umA input=%umA", state_.husb238_status.pd_status0,
+                          state_.husb238_status.pd_status1, state_.husb238_status_result,
+                          static_cast<unsigned>(state_.source_limit_ma), static_cast<unsigned>(state_.input_limit_ma));
 }
 void PowerNode::updateChargerMode() {
     // Only the J2 pack is charged; the output-only pack must not keep the charger awake.
@@ -58,6 +93,7 @@ void PowerNode::updateChargerMode() {
     }
     // Applied every tick: the MP2762A is powered from the input and returns to its defaults after a replug.
     hal::MP2762A charger(bus_);
+    updateInputLimit();
     if (present) {
         state_.charger_control_result = applyChargeLimits(charger);
     } else {
@@ -66,7 +102,11 @@ void PowerNode::updateChargerMode() {
         state_.charge_allowed = false;
         state_.charge_target_mv = 0U;
         state_.charge_target_ma = 0U;
-        state_.charger_control_result = charger.setSuspended(state_.charger_mode == ChargerMode::Suspended);
+        const bool suspend = state_.charger_mode == ChargerMode::Suspended;
+        // The debounce and wake windows run the DC/DC, so they must respect the source limit too.
+        state_.charger_control_result = suspend ? BSP_I2C2_OK : charger.setInputCurrentLimit(state_.input_limit_ma);
+        if (state_.charger_control_result == BSP_I2C2_OK)
+            state_.charger_control_result = charger.setSuspended(suspend);
     }
     if (state_.charger_mode != previous)
         CORE_DEBUG_PRINTF("charger mode %u->%u result=%d", static_cast<unsigned>(previous),
@@ -93,7 +133,7 @@ int PowerNode::applyChargeLimits(hal::MP2762A& charger) {
     state_.charge_allowed = allowed;
     state_.charge_target_mv = allowed ? voltage : 0U;
     state_.charge_target_ma = allowed ? current : 0U;
-    int result = charger.setInputCurrentLimit(static_cast<uint16_t>(settingValue(settings_, InputCurrentKey)));
+    int result = charger.setInputCurrentLimit(state_.input_limit_ma);
     if (result != BSP_I2C2_OK)
         return result;
     if (!allowed) // stop first; the limits stay as last written

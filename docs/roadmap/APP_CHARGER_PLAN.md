@@ -95,8 +95,12 @@ preserved; see [ADR-007](../adr/ADR-007-app-cpp-databroker.md).
   and enables CHG_EN only with `charge_enable=1`, a nonzero request and no
   OCA/TCA/OTA alarm. Every write is read back and re-applied each second; a
   failed limit write leaves charging off. The `0x0C` pack is output-only.
-- A4 (remaining): input-power limits from the negotiated PD contract, thermal
-  observation at 2 A, and a sleeping-pack wake test.
+- A4 (input limit): the MP2762A input limit is min(setting, 90% of the
+  HUSB238 PD contract, else Type-C advertisement, else 500 mA), applied at
+  startup and every second. Telemetry tags `0x13`-`0x15` expose the charger
+  read-back, the charge decision and the PD source to the CLI and GUI.
+- A4 (remaining): thermal observation at 2 A with the junction reading, and a
+  sleeping-pack wake test.
 - A5: fault degradation, charge/discharge HIL and release evidence.
 
 OTG, persistent telemetry, a voltage-derived SOC estimator, RTOS, DMA and new
