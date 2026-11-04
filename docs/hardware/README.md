@@ -5,6 +5,13 @@ The primary source is `SLAMRTK_Chargeborad_V1.1.pdf` (one A4 page, OrCAD
 `Charge_board.opj`, PDF date 2026-10-28, SHA256
 `3d2008621771674cf0a9eb02d2cac4dd26a07f03854508caa699274d8588179c`).
 
+The V1.1 assembly is two boards. The main charge board carries the MCU, 3.3 V
+supply, Type-C/PD input, LEDs and watchdog. The companion charger board carries
+U9 MP2762A with all of its peripheral circuit, the J2 battery connector (`VBAT`)
+and the J4 `VCC_SYS` output, and reaches the main board through FPC3/FPC4
+(confirmed by the hardware owner on 2026-11-04). The PDF draws both on one page,
+so its reference designators are logical rather than a placement list.
+
 `SLAMRTK_Chargeborad_V1.0.pdf` (SHA256
 `07e75363b1b97b2df771b024f825e3bc89c33713d4e4083df9a75c22b23e73b5`) and the
 2026-08-28 all-pins breakout board are historical. Their HIL evidence does not
@@ -89,6 +96,16 @@ PB4 resets as JTAG `NJTRST`. Reading `VER_DET` requires
 
 ## Charger
 
+- U9 MP2762A and its whole peripheral circuit (including R49, R51/R52, Q9,
+  R311 and the NTC network below) sit on the companion charger board, together
+  with J2 (`VBAT`) and J4 (`VCC_SYS`). `VBAT` and `SYS` stay on that board and
+  do not cross the FPC. The MCU reaches the charger and both packs only through
+  FPC3/FPC4: I2C2, `CHARGE_STAT` (`INT#`), `MP2762_ACOK`, the switched `TYPEC`
+  input and ground.
+- With the companion board unplugged, the main board alone drew about 10 mA at
+  5.06 V from a PC USB port (no battery, 2026-11-04, while the App clock was
+  being reduced to 25-50 MHz). That is roughly a third of the full assembly, so
+  most of the input current is on the companion-board side.
 - U9 MP2762A (`0x5C`) on I2C2 through R51/R52 33 Ohm. Input `TYPEC` through
   the R49 10 mOhm sense resistor; output `SYS`, battery `VBAT`.
 - `INT#` (pin 9) drives `CHARGE_STAT` -> R311 0 Ohm -> `CHARGE_STAT1`/PA4.
@@ -106,13 +123,17 @@ PB4 resets as JTAG `NJTRST`. Reading `VER_DET` requires
 - Shared I2C2 at 100 kHz. Known 7-bit addresses: BQ40Z50 packs `0x0B`/`0x0C`,
   HUSB238 `0x08`, MP2762A `0x5C`. Production firmware probes only these
   configured devices.
+- J2 and J4 are on the companion charger board; their I2C2 pins reach the MCU
+  through FPC3/FPC4.
 - J2 `WAFER-HY2.0-4PLB` battery connector: 1 `VBAT` (TP5), 2 `I2C2_SCL`,
   3 `I2C2_SDA`, 4 ground (TP6). D29/D30 ESD7551N2T5G protect SCL/SDA.
 - J4 `FWF20019-S04B24W5M` output: 1 `VCC_SYS` (D31 SMAJ10CA), 2 `I2C2_SCL`,
   3 `I2C2_SDA`, 4 ground.
 - FPC3 `HC-FPC-05-09-14RLTAG` and FPC4 `AFC11-S14ICC-00` carry `VCC_3V3`,
   `I2C2_SDA/SCL`, `CHARGE_STAT`, `MP2762_ACOK`, `LED_B`, `LED_R`, `TYPEC` and
-  ground to the companion board.
+  ground to the companion charger board that carries U9 MP2762A, J2 and J4.
+  With it unplugged, MP2762A and both BQ40Z50 addresses NACK on I2C2 and
+  firmware must treat the charger and packs as absent.
 
 ## Watchdog
 
