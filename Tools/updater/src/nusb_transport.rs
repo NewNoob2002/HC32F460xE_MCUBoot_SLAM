@@ -263,9 +263,13 @@ fn updater_mode(info: &DeviceInfo) -> Option<DeviceMode> {
 }
 
 // nusb on Windows reports interface strings only for usbccgp composite
-// children; a single-interface WinUSB device always reports None.
+// children; a single-interface WinUSB device always reports None. Other
+// platforms read the string descriptor, so a missing one is not ours.
 fn interface_string_matches(interface_string: Option<&str>) -> bool {
-    interface_string.is_none_or(|string| INTERFACE_DESCRIPTIONS.contains(&string))
+    match interface_string {
+        Some(string) => INTERFACE_DESCRIPTIONS.contains(&string),
+        None => cfg!(windows),
+    }
 }
 
 impl Transport for NusbTransport {
@@ -457,14 +461,14 @@ mod tests {
     }
 
     #[test]
-    fn accepts_a_missing_interface_string_but_rejects_a_different_one() {
+    fn accepts_a_missing_interface_string_only_on_windows() {
         assert!(interface_string_matches(Some(
             "Slam-ChargerManager Firmware Update"
         )));
         assert!(interface_string_matches(Some(
             "Vendor Bulk Firmware Update"
         )));
-        assert!(interface_string_matches(None));
+        assert_eq!(interface_string_matches(None), cfg!(windows));
         assert!(!interface_string_matches(Some("CDC Data")));
     }
 
