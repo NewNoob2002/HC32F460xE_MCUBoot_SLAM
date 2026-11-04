@@ -31,6 +31,8 @@ class Service final : public DataNode {
     void log_line(const char* line, std::size_t length, uint32_t now_ms);
 
   private:
+    /** Longest wait for the host to read a REBOOT response before resetting anyway. */
+    static constexpr uint32_t RebootResponseGraceMs = 1000U;
     struct Log {
         uint32_t time = 0U;
         uint8_t level = 0U;
@@ -49,6 +51,7 @@ class Service final : public DataNode {
     uint32_t stream_mask_ = 0U;
     bool unlocked_ = false;
     bool reboot_ = false;
+    uint32_t reboot_at_ = 0U;
     std::array<Log, 20> logs_{};
     uint8_t log_head_ = 0U;
     uint8_t log_count_ = 0U;

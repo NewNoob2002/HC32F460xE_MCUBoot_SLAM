@@ -357,6 +357,9 @@ void dispatchTests() {
     // Simulate response still in USB; reboot waits and reset cancels it.
     response_size = 1U;
     assert(!f.service.poll(11U));
+    // A host that never drains the response must not wedge the link: reset after the bounded grace period.
+    assert(!f.service.poll(1009U));
+    assert(f.service.poll(1010U));
     response_size = 0U;
     assert(f.service.poll(12U));
     link_reset = true;

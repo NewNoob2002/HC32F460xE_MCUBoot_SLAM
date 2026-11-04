@@ -90,7 +90,7 @@ Status codes: `0 OK`, `1 BAD_FRAME`, `2 UNKNOWN_COMMAND`, `3 LOCKED`,
 | `0x13` | CONFIG_RESET | empty | empty |
 | `0x20` | UNLOCK | `u8 len, len bytes serial` | `u16 timeout_s` |
 | `0x30` | REG_READ | `u8 device, u8 reg, u8 len` | `len` bytes |
-| `0x40` | REBOOT | `u8 mode` (`0` = normal only) | empty; reset after the response is sent |
+| `0x40` | REBOOT | `u8 mode` (`0` = normal only) | empty; reset after the response is sent, or after 1 s if the host does not read it |
 | `0x41` | STATS | empty | stats TLV record |
 | `0x80` | EVT_TELEMETRY | event | telemetry TLV record |
 | `0x81` | EVT_LOG | event | `u8 level, u32 uptime_ms, u8 len, len bytes text` |

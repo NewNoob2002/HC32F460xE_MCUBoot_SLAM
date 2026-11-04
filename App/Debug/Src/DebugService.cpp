@@ -305,6 +305,7 @@ void Service::dispatch(const Frame& r, uint32_t now_ms) {
                     status = Status::OutOfRange;
                 else {
                     reboot_ = true;
+                    reboot_at_ = now_ms;
                     period_ = 0U;
                     stream_mask_ = 0U;
                 }
@@ -379,8 +380,10 @@ void Service::log_line(const char* line, std::size_t length, uint32_t now_ms) {
 bool Service::poll(uint32_t now_ms) {
     usb_debug_link_poll(now_ms);
     expire(now_ms);
+    // Wait for the host to drain the REBOOT response, but a host that never reads must not wedge the link:
+    // the request was authorized, so reset anyway after a bounded grace period.
     if (reboot_)
-        return !usb_debug_link_response_pending();
+        return !usb_debug_link_response_pending() || now_ms - reboot_at_ >= RebootResponseGraceMs;
     if (period_ == 0U)
         return false;
     uint8_t payload[MaxPayload]{};
