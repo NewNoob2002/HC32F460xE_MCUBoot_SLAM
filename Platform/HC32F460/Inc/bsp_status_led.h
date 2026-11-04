@@ -33,6 +33,8 @@ enum bsp_status_led_mode {
 bool bsp_status_led_init(void);
 void bsp_status_led_set_mode(enum bsp_status_led_mode mode);
 void bsp_status_led_poll(uint32_t now_ms);
+/** Holds the LEDs at `channels` (for power measurement) until cleared; ERROR mode still shows so panics stay visible. */
+void bsp_status_led_set_override(bool enabled, uint8_t channels);
 uint8_t bsp_status_led_sample(enum bsp_status_led_mode mode, uint32_t now_ms);
 
 #ifdef __cplusplus

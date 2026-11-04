@@ -232,7 +232,7 @@ void Service::dispatch(const Frame& r, uint32_t now_ms) {
                     write16(payload + length, spec.key);
                     length += 2U;
                     payload[length++] = spec.type;
-                    payload[length++] = 3U; // Persisted, unlock; hardware unapplied.
+                    payload[length++] = spec.flags;
                     for (int32_t value : {spec.min, spec.max, spec.initial, current}) {
                         write32(payload + length, static_cast<uint32_t>(value));
                         length += 4U;

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstring>
 #include "Settings.h"
 #include "fw_update/protocol.h"
@@ -20,7 +21,7 @@ bool SettingsNode::init(DataBroker& broker) {
     std::size_t length = 0U;
     if (store_.load(blob, sizeof(blob), length) && length == sizeof(blob)
         && std::memcmp(blob, "SET1\x01\x05\0\0", 8U) == 0 && fw_protocol_crc32(blob, 28U) == read32(blob + 28U)) {
-        for (std::size_t i = 0U; i < SettingTable.size(); ++i) {
+        for (std::size_t i = 0U; i < PersistedSettingCount; ++i) {
             const auto raw = read32(blob + 8U + i * 4U);
             int32_t value = 0;
             std::memcpy(&value, &raw, sizeof(value));
@@ -39,16 +40,19 @@ SettingResult SettingsNode::get(uint16_t key, int32_t& value) const {
     }
     return SettingResult::UnknownKey;
 }
-SettingResult SettingsNode::persist(const SettingsState& next) {
+SettingResult SettingsNode::commit(const SettingsState& next) {
     if (next.values == state_.values)
         return SettingResult::Ok;
-    uint8_t blob[BlobSize]{};
-    std::memcpy(blob, "SET1\x01\x05\0\0", 8U);
-    for (std::size_t i = 0U; i < SettingTable.size(); ++i)
-        write32(blob + 8U + i * 4U, static_cast<uint32_t>(next.values[i]));
-    write32(blob + 28U, fw_protocol_crc32(blob, 28U));
-    if (!store_.save(blob, sizeof(blob)))
-        return SettingResult::StorageError;
+    // Runtime-only changes skip Flash; a persisted change is published only after the blob is saved.
+    if (!std::equal(next.values.begin(), next.values.begin() + PersistedSettingCount, state_.values.begin())) {
+        uint8_t blob[BlobSize]{};
+        std::memcpy(blob, "SET1\x01\x05\0\0", 8U);
+        for (std::size_t i = 0U; i < PersistedSettingCount; ++i)
+            write32(blob + 8U + i * 4U, static_cast<uint32_t>(next.values[i]));
+        write32(blob + 28U, fw_protocol_crc32(blob, 28U));
+        if (!store_.save(blob, sizeof(blob)))
+            return SettingResult::StorageError;
+    }
     state_ = next;
     const SettingsState snapshot = state_;
     (void)publish(&snapshot, sizeof(snapshot));
@@ -62,12 +66,12 @@ SettingResult SettingsNode::set(uint16_t key, int32_t value) {
             return SettingResult::OutOfRange;
         auto next = state_;
         next.values[i] = value;
-        return persist(next);
+        return commit(next);
     }
     return SettingResult::UnknownKey;
 }
 SettingResult SettingsNode::reset() {
-    return persist(SettingsState{});
+    return commit(SettingsState{});
 }
 int SettingsNode::onEvent(EventParam* event) {
     return replyPull(event, &state_, sizeof(state_));

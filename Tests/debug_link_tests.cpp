@@ -127,6 +127,10 @@ void settingsTests() {
         assert(settings.set(2U, 99) == dp::SettingResult::OutOfRange && store.writes == 0U);
         assert(settings.set(100U, 1) == dp::SettingResult::UnknownKey);
         assert(settings.set(2U, 800) == dp::SettingResult::Ok && store.writes == 1U);
+        // led_override is runtime-only: accepted and range-checked without touching storage.
+        assert(settings.set(dp::LedOverrideKey, 5) == dp::SettingResult::OutOfRange);
+        assert(settings.set(dp::LedOverrideKey, 1) == dp::SettingResult::Ok && store.writes == 1U);
+        assert(settings.get(dp::LedOverrideKey, value) == dp::SettingResult::Ok && value == 1);
         store.fail = true;
         assert(settings.set(2U, 900) == dp::SettingResult::StorageError);
         assert(settings.get(2U, value) == dp::SettingResult::Ok && value == 800);
@@ -138,6 +142,7 @@ void settingsTests() {
         assert(settings.init(broker));
         int32_t value = 0;
         assert(settings.get(2U, value) == dp::SettingResult::Ok && value == 800);
+        assert(settings.get(dp::LedOverrideKey, value) == dp::SettingResult::Ok && value == 0);
     }
     store.blob[0] ^= 1U;
     {
@@ -164,7 +169,10 @@ void settingsTests() {
         assert(state.settings.values[0] == 0 && state.settings.values[1] == 800);
         assert(settings.set(2U, 1100) == dp::SettingResult::Ok);
         assert(dp::Charger::pull(reader, state) == DataNode::RES_OK && state.settings.values[1] == 1100);
+        assert(settings.set(dp::LedOverrideKey, 3) == dp::SettingResult::Ok);
         assert(settings.reset() == dp::SettingResult::Ok);
+        int32_t value = -1;
+        assert(settings.get(dp::LedOverrideKey, value) == dp::SettingResult::Ok && value == 0);
         const auto writes = store.writes;
         assert(settings.reset() == dp::SettingResult::Ok && store.writes == writes);
     }
@@ -252,20 +260,21 @@ void dispatchTests() {
     f.request(0x12U, set, sizeof(set), debug::Status::Locked);
     uint8_t start = 0U;
     auto page = f.request(0x10U, &start, 1U);
-    assert(page.payload[2] == 5U && page.payload[3] == 5U);
+    assert(page.payload[2] == 6U && page.payload[3] == 6U);
     std::size_t at = 4U;
-    for (unsigned i = 0U; i < 5U; ++i) {
-        assert(debug::read16(page.payload + at) == i + 1U && page.payload[at + 3U] == 3U);
+    for (unsigned i = 0U; i < 6U; ++i) {
+        // Charger/telemetry entries persist; led_override is runtime-only and applied to hardware.
+        assert(debug::read16(page.payload + at) == i + 1U && page.payload[at + 3U] == (i < 5U ? 3U : 6U));
         at += 22U + page.payload[at + 21U];
     }
     assert(at == page.length);
     start = 3U;
     page = f.request(0x10U, &start, 1U);
-    assert(page.payload[3] == 2U && debug::read16(page.payload + 4U) == 4U);
-    start = 5U;
+    assert(page.payload[3] == 3U && debug::read16(page.payload + 4U) == 4U);
+    start = 6U;
     page = f.request(0x10U, &start, 1U);
     assert(page.payload[3] == 0U);
-    start = 6U;
+    start = 7U;
     f.request(0x10U, &start, 1U, debug::Status::OutOfRange);
     f.bus.raw_read = true;
     uint8_t reg[] = {0U, 0x23U, 32U};

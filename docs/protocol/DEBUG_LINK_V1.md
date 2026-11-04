@@ -124,10 +124,17 @@ Status codes: `0 OK`, `1 BAD_FRAME`, `2 UNKNOWN_COMMAND`, `3 LOCKED`,
 
 ## Settings table (initial)
 
-Settings persist in the FlashDB `app_kv` partition. Values outside the range
-are rejected; on load an invalid or missing value falls back to its default.
-Charger values are stored and published to the Charger node now; the
-`applied-to-hardware` flag stays clear until the MP2762A driver applies them.
+Keys `0x0001`-`0x0005` persist in the FlashDB `app_kv` partition. Values
+outside the range are rejected; on load an invalid or missing value falls back
+to its default. Charger values are stored and published to the Charger node
+now; the `applied-to-hardware` flag stays clear until the MP2762A driver applies
+them.
+
+`led_override` (`0x0006`, flags `0x06`) is runtime-only: it never reaches Flash,
+returns to `0` on every reset and on CONFIG_RESET, and is applied to the status
+LEDs immediately. `0` keeps the normal battery/update pattern; `1` off, `2` red,
+`3` blue and `4` red+blue hold the LEDs steady for power measurement. The panic
+pattern (solid red) still overrides it.
 
 | Key | Name | Unit | Min | Max | Default |
 | --- | --- | --- | ---: | ---: | ---: |
@@ -136,6 +143,7 @@ Charger values are stored and published to the Charger node now; the
 | `0x0003` | charge_voltage_limit | mV | 12000 | 16800 | 16800 |
 | `0x0004` | input_current_limit | mA | 100 | 3000 | 1500 |
 | `0x0005` | telemetry_period | ms | 100 | 5000 | 1000 |
+| `0x0006` | led_override | none | 0 | 4 | 0 |
 
 The charger ranges are conservative placeholders. They must be confirmed against
 the battery pack and MP2762A specifications before the charger driver applies

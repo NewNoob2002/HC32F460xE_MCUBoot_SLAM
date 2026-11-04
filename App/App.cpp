@@ -46,6 +46,16 @@ extern "C" {
 app::DiagnosticsSnapshot g_app_diagnostics{};
 }
 
+void App::applyLedOverride() {
+    int32_t value = 0;
+    (void)settings_.get(dp::LedOverrideKey, value);
+    static constexpr uint8_t Channels[] = {0U, 0U, BSP_STATUS_LED_RED, BSP_STATUS_LED_BLUE,
+                                           BSP_STATUS_LED_RED | BSP_STATUS_LED_BLUE};
+    const bool enabled =
+        value > static_cast<int32_t>(dp::LedOverride::Auto) && value <= static_cast<int32_t>(dp::LedOverride::RedBlue);
+    bsp_status_led_set_override(enabled, enabled ? Channels[value] : 0U);
+}
+
 [[noreturn]] void App::runApplication() {
     bsp_status_led_set_mode(BSP_STATUS_LED_MODE_APP_UPDATER);
     // Settings fall back to defaults without storage; keep running but report it once the log sink exists.
@@ -73,6 +83,7 @@ app::DiagnosticsSnapshot g_app_diagnostics{};
         const uint32_t now_ms = bsp_millis();
         system_.poll(now_ms);
         usb_fw_update_set_idle_led_mode(dp::batteryLedMode(power_.state(), charger_.state()));
+        applyLedOverride();
         const auto action = update_.poll(now_ms);
         (void)broker_.handleTimers(now_ms);
         const bool debug_reset = debug_.poll(now_ms);

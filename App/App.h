@@ -22,6 +22,8 @@ class App final {
     dp::SystemNode system_{};
     dp::UpdateNode update_{};
     app::Diagnostics diagnostics_{g_app_diagnostics};
+    /** Applies the runtime-only led_override setting on top of the battery/update LED pattern. */
+    void applyLedOverride();
     [[noreturn]] void runApplication();
 #else
     [[noreturn]] void runPhase2Hil();

@@ -15,6 +15,8 @@
 static enum bsp_status_led_mode g_mode;
 static uint8_t g_channels;
 static bool g_ready;
+static bool g_override;
+static uint8_t g_override_channels;
 
 uint8_t bsp_status_led_sample(enum bsp_status_led_mode mode, uint32_t now_ms) {
     switch (mode) {
@@ -99,15 +101,26 @@ bool bsp_status_led_init(void) {
     return true;
 }
 
+static uint8_t current_channels(uint32_t now_ms) {
+    if (g_override && g_mode != BSP_STATUS_LED_MODE_ERROR)
+        return g_override_channels;
+    return bsp_status_led_sample(g_mode, now_ms);
+}
+
 void bsp_status_led_set_mode(enum bsp_status_led_mode mode) {
     if (mode > BSP_STATUS_LED_MODE_ERROR)
         mode = BSP_STATUS_LED_MODE_ERROR;
     if (g_mode == mode)
         return;
     g_mode = mode;
-    apply_channels(bsp_status_led_sample(mode, 0U));
+    apply_channels(current_channels(0U));
 }
 
 void bsp_status_led_poll(uint32_t now_ms) {
-    apply_channels(bsp_status_led_sample(g_mode, now_ms));
+    apply_channels(current_channels(now_ms));
+}
+
+void bsp_status_led_set_override(bool enabled, uint8_t channels) {
+    g_override = enabled;
+    g_override_channels = (uint8_t)(channels & (BSP_STATUS_LED_RED | BSP_STATUS_LED_BLUE));
 }
