@@ -3,8 +3,7 @@
 #include <limits.h>
 #include <string.h>
 
-#define FW_UPDATE_MANAGER_MAX_RESPONSE_PAYLOAD FW_UPDATE_PRODUCT_CONFIG_MAX_WIRE_SIZE
-#define FW_UPDATE_MANAGER_MAX_PROTOCOL_ERRORS  3U
+#define FW_UPDATE_MANAGER_MAX_PROTOCOL_ERRORS 3U
 #define FW_UPDATE_MANAGER_INSTALL_CAPABILITIES                                                                         \
     ((uint32_t)(FW_PROTOCOL_CAPABILITY_TEST_UPGRADE | FW_PROTOCOL_CAPABILITY_READBACK_CRC                              \
                 | FW_PROTOCOL_CAPABILITY_STRICT_DATA))
@@ -714,6 +713,12 @@ static enum fw_update_manager_result queue_response(struct fw_update_manager* ma
                                            ? 1U
                                            : 0U;
     if (accepted != 0) {
+        if (manager->tx_size > sizeof(manager->cached_response)) {
+            manager->tx_size = 0U;
+            manager->state = FW_UPDATE_MANAGER_STATE_ERROR;
+            manager->last_status = FW_PROTOCOL_STATUS_INTERNAL_ERROR;
+            return FW_UPDATE_MANAGER_ERR_INTERNAL;
+        }
         memcpy(manager->cached_response, output, manager->tx_size);
         manager->cached_response_size = manager->tx_size;
         manager->cached_commit_success = manager->tx_is_successful_commit;

@@ -14,6 +14,9 @@
 extern "C" {
 #endif
 
+/** Largest response payload: 2-byte status plus the largest body (a full Product Config wire record). */
+#define FW_UPDATE_MANAGER_MAX_RESPONSE_PAYLOAD (2U + FW_UPDATE_PRODUCT_CONFIG_MAX_WIRE_SIZE)
+
 /** Numeric firmware version encoded by Protocol V1. */
 struct fw_update_version {
     uint8_t major;
@@ -84,7 +87,7 @@ struct fw_update_manager {
     struct fw_protocol_parser parser;
     uint8_t tx_buffer[FW_PROTOCOL_MAX_FRAME_SIZE];
     uint8_t work_buffer[FW_PROTOCOL_MAX_PAYLOAD];
-    uint8_t cached_response[FW_PROTOCOL_HEADER_SIZE + FW_UPDATE_PRODUCT_CONFIG_MAX_WIRE_SIZE + FW_PROTOCOL_CRC_SIZE];
+    uint8_t cached_response[FW_PROTOCOL_HEADER_SIZE + FW_UPDATE_MANAGER_MAX_RESPONSE_PAYLOAD + FW_PROTOCOL_CRC_SIZE];
     size_t tx_size;
     size_t tx_offset;
     size_t cached_request_size;

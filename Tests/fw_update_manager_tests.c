@@ -63,7 +63,7 @@ struct response {
     uint8_t flags;
     uint8_t command;
     uint32_t sequence;
-    uint8_t body[38];
+    uint8_t body[FW_UPDATE_MANAGER_MAX_RESPONSE_PAYLOAD - 2U];
     uint16_t body_length;
 };
 
@@ -824,6 +824,41 @@ static void send_duplicate_encoded(struct fixture* fixture, const uint8_t* reque
     assert(response->status == replay.status);
 }
 
+/* 32 字符序列号 + 16 字符硬件版本时响应体正好是 Product Config 线格式上限；回归 R1 栈缓冲区越界。 */
+static void test_product_config_maximum_lengths(void) {
+    struct fixture fixture;
+    struct response response;
+    uint8_t payload[FW_UPDATE_PRODUCT_CONFIG_MAX_WIRE_SIZE] = {FW_UPDATE_PRODUCT_CONFIG_FORMAT_VERSION, 0U,
+                                                               FW_UPDATE_DEVICE_SERIAL_MAX_LENGTH,
+                                                               FW_UPDATE_HARDWARE_VERSION_MAX_LENGTH};
+    uint8_t* serial = &payload[FW_UPDATE_PRODUCT_CONFIG_WIRE_HEADER_SIZE];
+    uint8_t* hardware_version = &serial[FW_UPDATE_DEVICE_SERIAL_MAX_LENGTH];
+    uint8_t request[FW_PROTOCOL_MAX_FRAME_SIZE];
+    size_t request_size;
+    uint32_t sequence;
+
+    write_u16_le(&payload[4], 0x0020U);
+    memset(serial, 'S', FW_UPDATE_DEVICE_SERIAL_MAX_LENGTH);
+    memset(hardware_version, 'H', FW_UPDATE_HARDWARE_VERSION_MAX_LENGTH);
+
+    fixture_init(&fixture, 4U);
+    send_hello(&fixture);
+    send_expected_request(&fixture, FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_SET, payload, sizeof(payload), &response);
+    assert(response.status == FW_PROTOCOL_STATUS_OK && fixture.fake_product.set_calls == 1U);
+    assert(response.body_length == FW_UPDATE_PRODUCT_CONFIG_MAX_WIRE_SIZE);
+    assert(response.body[1] == 1U && memcmp(&response.body[2], &payload[2], sizeof(payload) - 2U) == 0);
+
+    /* GET 走同一写路径；精确重放命中 cached_response，验证缓存能装下最大响应帧。 */
+    sequence = fixture.next_sequence;
+    request_size = encode_request(FW_PROTOCOL_COMMAND_PRODUCT_CONFIG_GET, sequence, NULL, 0U, request);
+    for (int attempt = 0; attempt < 2; ++attempt) {
+        send_encoded_request(&fixture, request, request_size, &response);
+        assert(response.status == FW_PROTOCOL_STATUS_OK && response.sequence == sequence);
+        assert(response.body_length == FW_UPDATE_PRODUCT_CONFIG_MAX_WIRE_SIZE);
+        assert(memcmp(&response.body[2], &payload[2], sizeof(payload) - 2U) == 0);
+    }
+}
+
 static void test_sequence_and_semantic_progression(void) {
     struct fixture fixture;
     struct response response;
@@ -1273,6 +1308,7 @@ static void test_admin_authentication_and_factory_erase(void) {
 int main(void) {
     test_complete_lifecycle();
     test_product_config_provisioning();
+    test_product_config_maximum_lengths();
     test_storage_alignments();
     test_metadata_and_range_rejections();
     test_alignment_above_buffer();
