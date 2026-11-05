@@ -8,6 +8,7 @@
 #include "ExternalWatchdog.h"
 #include "PowerDevices.h"
 #include "Settings.h"
+#include "bsp_status_led.h"
 #include "usb_fw_update.h"
 
 namespace dp {

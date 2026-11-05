@@ -43,7 +43,7 @@ int main() {
     assert(broker.handleTimers(5999U) == 1U && snapshot.report_count == 0U);
     system.state().loop_count = 99U;
     system.state().watchdog_pulse_active = true;
-    update.state().usb = {2U, -1, 3, 1U};
+    update.state().usb = {2U, -1, 3, USB_FW_UPDATE_ACTIVITY_IDLE, 1U};
     power.state().bus_init_result = hal::InitError;
     assert(broker.handleTimers(6000U) == app::DiagnosticsPeriodMs);
     assert(snapshot.report_count == 1U && snapshot.uptime_ms == 5000U);

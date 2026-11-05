@@ -81,9 +81,14 @@ void App::applyLedOverride() {
     for (;;) {
         const uint32_t now_ms = bsp_millis();
         system_.poll(now_ms);
-        usb_fw_update_set_idle_led_mode(dp::batteryLedMode(power_.state(), charger_.state()));
-        applyLedOverride();
         const auto action = update_.poll(now_ms);
+        enum bsp_status_led_mode led_mode = dp::batteryLedMode(power_.state(), charger_.state());
+        if (update_.state().usb.activity == USB_FW_UPDATE_ACTIVITY_ACTIVE)
+            led_mode = BSP_STATUS_LED_MODE_UPDATE;
+        else if (update_.state().usb.activity == USB_FW_UPDATE_ACTIVITY_ERROR)
+            led_mode = BSP_STATUS_LED_MODE_ERROR;
+        applyLedOverride();
+        bsp_status_led_set_mode(led_mode);
         // A failed confirm write leaves the image unconfirmed; the panic stops feeding the external watchdog, whose
         // reset lets MCUboot revert to the previous image.
         if (system_.confirmAfterHost(update_.state().usb.configured != 0U, APP_AUTO_CONFIRM != 0) != 0)

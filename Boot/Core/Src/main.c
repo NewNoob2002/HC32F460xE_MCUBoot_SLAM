@@ -61,6 +61,15 @@ static _Noreturn void run_recovery_updater(void) {
         bsp_external_watchdog_poll(now_ms);
         const enum usb_fw_update_action action =
             g_boot_recovery_init_result == 0 ? usb_fw_update_poll(now_ms) : USB_FW_UPDATE_ACTION_NONE;
+        struct usb_fw_update_status status = {0};
+        enum bsp_status_led_mode led_mode = BSP_STATUS_LED_MODE_RECOVERY;
+        usb_fw_update_get_status(&status);
+        if (status.activity == USB_FW_UPDATE_ACTIVITY_ACTIVE)
+            led_mode = BSP_STATUS_LED_MODE_UPDATE;
+        else if (status.activity == USB_FW_UPDATE_ACTIVITY_ERROR)
+            led_mode = BSP_STATUS_LED_MODE_ERROR;
+        bsp_status_led_set_mode(led_mode);
+        bsp_status_led_poll(now_ms);
         if (action == USB_FW_UPDATE_ACTION_ERASE_AND_RESET)
             factory_erase();
         /* REBOOT to recovery from recovery behaves as from the Application: boot_go() runs, then recovery again. */

@@ -7,8 +7,6 @@ extern "C" {
 
 #include <stdint.h>
 
-#include "bsp_status_led.h"
-
 enum usb_fw_update_action {
     USB_FW_UPDATE_ACTION_NONE = 0,
     USB_FW_UPDATE_ACTION_RESET,
@@ -18,10 +16,17 @@ enum usb_fw_update_action {
     USB_FW_UPDATE_ACTION_ERASE_AND_RESET,
 };
 
+enum usb_fw_update_activity {
+    USB_FW_UPDATE_ACTIVITY_IDLE = 0,
+    USB_FW_UPDATE_ACTIVITY_ACTIVE,
+    USB_FW_UPDATE_ACTIVITY_ERROR,
+};
+
 struct usb_fw_update_status {
     uint32_t errors;
     int last_result;
     int manager_state;
+    enum usb_fw_update_activity activity;
     uint8_t configured;
 };
 
@@ -29,8 +34,7 @@ int usb_fw_update_init(void);
 const char* usb_fw_update_serial(void);
 enum usb_fw_update_action usb_fw_update_poll(uint32_t now_ms);
 void usb_fw_update_get_status(struct usb_fw_update_status* status);
-/** Pattern shown while no update is active; update progress and update errors still take priority. */
-void usb_fw_update_set_idle_led_mode(enum bsp_status_led_mode mode);
+enum usb_fw_update_activity usb_fw_update_activity_from_manager_state(int manager_state);
 
 #ifdef __cplusplus
 }

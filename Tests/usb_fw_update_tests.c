@@ -3,11 +3,11 @@
 #include <string.h>
 
 #include "bsp_image_info.h"
-#include "bsp_status_led.h"
 #include "bsp_usb.h"
 #include "fw_update/flashdb_product_config.h"
 #include "fw_update/image_control_mcuboot.h"
 #include "fw_update/image_storage_mcuboot.h"
+#include "fw_update/manager.h"
 #include "fw_update/protocol.h"
 #include "usb_fw_update.h"
 #include "usbd_core.h"
@@ -24,8 +24,6 @@ static unsigned int read_calls;
 static unsigned int write_calls;
 static uint8_t written[FW_PROTOCOL_MAX_FRAME_SIZE];
 static uint32_t written_length;
-static enum bsp_status_led_mode led_mode;
-static unsigned int led_poll_count;
 
 void usbd_desc_register(uint8_t busid, const struct usb_descriptor* desc) {
     (void)busid;
@@ -71,15 +69,6 @@ int usbd_ep_start_write(uint8_t busid, const uint8_t ep, const uint8_t* data, ui
     written_length = data_len;
     ++write_calls;
     return 0;
-}
-
-void bsp_status_led_set_mode(enum bsp_status_led_mode mode) {
-    led_mode = mode;
-}
-
-void bsp_status_led_poll(uint32_t now_ms) {
-    (void)now_ms;
-    ++led_poll_count;
 }
 
 /* The real reader dereferences Boot Flash at 0x420; the host has no such record. */
@@ -239,16 +228,31 @@ static void configure(void) {
     poll();
 }
 
+static void expect_activity(int manager_state, enum usb_fw_update_activity expected) {
+    assert(usb_fw_update_activity_from_manager_state(manager_state) == expected);
+}
+
 int main(void) {
     uint8_t frames[2U * FW_PROTOCOL_MAX_FRAME_SIZE];
+    struct usb_fw_update_status status = {0};
     size_t size;
 
     assert(usb_fw_update_init() == 0);
     assert(event_handler != NULL && out_callback != NULL && in_callback != NULL);
-    /* An idle update session retains the Application-selected LED policy and polls it once per USB poll. */
-    usb_fw_update_set_idle_led_mode(BSP_STATUS_LED_MODE_APP_LOW);
     poll();
-    assert(led_mode == BSP_STATUS_LED_MODE_APP_LOW && led_poll_count == 1U);
+    usb_fw_update_get_status(&status);
+    assert(status.activity == USB_FW_UPDATE_ACTIVITY_IDLE);
+    expect_activity(FW_UPDATE_MANAGER_STATE_IDLE, USB_FW_UPDATE_ACTIVITY_IDLE);
+    expect_activity(FW_UPDATE_MANAGER_STATE_NEGOTIATING, USB_FW_UPDATE_ACTIVITY_IDLE);
+    expect_activity(FW_UPDATE_MANAGER_STATE_PREPARING, USB_FW_UPDATE_ACTIVITY_ACTIVE);
+    expect_activity(FW_UPDATE_MANAGER_STATE_RECEIVING, USB_FW_UPDATE_ACTIVITY_ACTIVE);
+    expect_activity(FW_UPDATE_MANAGER_STATE_VERIFYING, USB_FW_UPDATE_ACTIVITY_ACTIVE);
+    expect_activity(FW_UPDATE_MANAGER_STATE_READY_TO_COMMIT, USB_FW_UPDATE_ACTIVITY_ACTIVE);
+    expect_activity(FW_UPDATE_MANAGER_STATE_COMMITTING, USB_FW_UPDATE_ACTIVITY_ACTIVE);
+    expect_activity(FW_UPDATE_MANAGER_STATE_COMPLETED, USB_FW_UPDATE_ACTIVITY_ACTIVE);
+    expect_activity(FW_UPDATE_MANAGER_STATE_ABORTED, USB_FW_UPDATE_ACTIVITY_ERROR);
+    expect_activity(FW_UPDATE_MANAGER_STATE_ERROR, USB_FW_UPDATE_ACTIVITY_ERROR);
+    expect_activity(FW_UPDATE_MANAGER_STATE_ERROR + 1, USB_FW_UPDATE_ACTIVITY_IDLE);
     configure();
     assert(read_calls == 1U && armed_buffer != NULL);
 
@@ -286,6 +290,5 @@ int main(void) {
     assert(armed_buffer == NULL);
     complete_in();
     assert(armed_buffer != NULL);
-    assert(led_mode == BSP_STATUS_LED_MODE_APP_LOW && led_poll_count > 1U);
     return 0;
 }

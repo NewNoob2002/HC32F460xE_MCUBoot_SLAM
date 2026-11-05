@@ -6,7 +6,6 @@
 
 #include "bsp_critical.h"
 #include "bsp_image_info.h"
-#include "bsp_status_led.h"
 #include "bsp_usb.h"
 #include "fw_update/flashdb_product_config.h"
 #include "fw_update/image_control_mcuboot.h"
@@ -218,24 +217,23 @@ static uint32_t rx_size;
 volatile uint32_t g_usb_fw_update_errors;
 volatile int g_usb_fw_update_last_result;
 
-static enum bsp_status_led_mode idle_led_mode =
-    USB_FW_UPDATE_BOOT_RECOVERY != 0 ? BSP_STATUS_LED_MODE_RECOVERY : BSP_STATUS_LED_MODE_APP_UPDATER;
-
-void usb_fw_update_set_idle_led_mode(enum bsp_status_led_mode mode) {
-    idle_led_mode = mode;
-}
-
-static void update_status_led(uint32_t now_ms) {
-    enum bsp_status_led_mode mode = idle_led_mode;
-    const enum fw_update_manager_state state = fw_update_manager_get_state(&manager);
-    if (state == FW_UPDATE_MANAGER_STATE_PREPARING || state == FW_UPDATE_MANAGER_STATE_RECEIVING
-        || state == FW_UPDATE_MANAGER_STATE_VERIFYING || state == FW_UPDATE_MANAGER_STATE_READY_TO_COMMIT
-        || state == FW_UPDATE_MANAGER_STATE_COMMITTING || state == FW_UPDATE_MANAGER_STATE_COMPLETED)
-        mode = BSP_STATUS_LED_MODE_UPDATE;
-    else if (state == FW_UPDATE_MANAGER_STATE_ABORTED || state == FW_UPDATE_MANAGER_STATE_ERROR)
-        mode = BSP_STATUS_LED_MODE_ERROR;
-    bsp_status_led_set_mode(mode);
-    bsp_status_led_poll(now_ms);
+enum usb_fw_update_activity usb_fw_update_activity_from_manager_state(int manager_state) {
+    switch (manager_state) {
+        case FW_UPDATE_MANAGER_STATE_PREPARING:
+        case FW_UPDATE_MANAGER_STATE_RECEIVING:
+        case FW_UPDATE_MANAGER_STATE_VERIFYING:
+        case FW_UPDATE_MANAGER_STATE_READY_TO_COMMIT:
+        case FW_UPDATE_MANAGER_STATE_COMMITTING:
+        case FW_UPDATE_MANAGER_STATE_COMPLETED:
+            return USB_FW_UPDATE_ACTIVITY_ACTIVE;
+        case FW_UPDATE_MANAGER_STATE_ABORTED:
+        case FW_UPDATE_MANAGER_STATE_ERROR:
+            return USB_FW_UPDATE_ACTIVITY_ERROR;
+        case FW_UPDATE_MANAGER_STATE_IDLE:
+        case FW_UPDATE_MANAGER_STATE_NEGOTIATING:
+        default:
+            return USB_FW_UPDATE_ACTIVITY_IDLE;
+    }
 }
 
 static void update_out(uint8_t busid, uint8_t ep, uint32_t nbytes) {
@@ -516,7 +514,6 @@ enum usb_fw_update_action usb_fw_update_poll(uint32_t now_ms) {
     }
 
     g_usb_fw_update_last_result = fw_update_manager_poll(&manager, now_ms);
-    update_status_led(now_ms);
     switch (fw_update_manager_take_action(&manager)) {
         case FW_UPDATE_MANAGER_ACTION_RESET:
             return USB_FW_UPDATE_ACTION_RESET;
@@ -531,11 +528,14 @@ enum usb_fw_update_action usb_fw_update_poll(uint32_t now_ms) {
 
 void usb_fw_update_get_status(struct usb_fw_update_status* status) {
     bsp_irq_state_t irq_state;
+    int manager_state;
 
     if (status == NULL)
         return;
 
-    status->manager_state = (int)fw_update_manager_get_state(&manager);
+    manager_state = (int)fw_update_manager_get_state(&manager);
+    status->manager_state = manager_state;
+    status->activity = usb_fw_update_activity_from_manager_state(manager_state);
     irq_state = bsp_enter_critical();
     status->errors = g_usb_fw_update_errors;
     status->last_result = g_usb_fw_update_last_result;
