@@ -5,6 +5,7 @@
 #include <type_traits>
 #include "ChargerSignals.h"
 #include "DataBroker.h"
+#include "ExternalWatchdog.h"
 #include "PowerDevices.h"
 #include "Settings.h"
 #include "usb_fw_update.h"
@@ -170,6 +171,7 @@ class UpdateNode final : public ValueNode<UpdateState> {
 };
 class SystemNode final : public ValueNode<SystemState> {
   public:
+    explicit constexpr SystemNode(hal::ExternalWatchdog& watchdog) : watchdog_(watchdog) {}
     bool init(DataBroker& broker, uint32_t now_ms);
     void poll(uint32_t now_ms);
     /** Confirms the running MCUboot image once, the first time a host has configured USB. An update is always
@@ -178,6 +180,9 @@ class SystemNode final : public ValueNode<SystemState> {
      * result when it ran, 0 otherwise. */
     int confirmAfterHost(bool usb_configured, bool auto_confirm);
     int onEvent(EventParam* event) override;
+
+  private:
+    hal::ExternalWatchdog& watchdog_;
 };
 } // namespace dp
 

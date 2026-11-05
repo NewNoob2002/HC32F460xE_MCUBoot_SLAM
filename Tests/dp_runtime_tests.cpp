@@ -4,18 +4,40 @@
 #include "bsp_external_watchdog.h"
 
 namespace {
-unsigned watchdog_polls = 0U;
 unsigned usb_polls = 0U;
 unsigned usb_inits = 0U;
-uint32_t last_watchdog_ms = 0U;
 uint32_t last_usb_ms = 0U;
-bool watchdog_ready = true;
-bool pulse = false;
 int confirm_result = 0;
 bool confirm_enabled = false;
 int usb_init_result = 0;
 usb_fw_update_status usb{};
 usb_fw_update_action action = USB_FW_UPDATE_ACTION_NONE;
+class FakeWatchdog final : public hal::ExternalWatchdog {
+  public:
+    unsigned init_calls = 0U;
+    unsigned poll_calls = 0U;
+    uint32_t last_init_ms = 0U;
+    uint32_t last_poll_ms = 0U;
+    bool init_result = true;
+    bool ready = true;
+    bool pulse = false;
+
+    bool init(uint32_t now_ms) override {
+        ++init_calls;
+        last_init_ms = now_ms;
+        return init_result;
+    }
+    void poll(uint32_t now_ms) override {
+        ++poll_calls;
+        last_poll_ms = now_ms;
+    }
+    bool isReady() const override {
+        return ready;
+    }
+    bool isPulseActive() const override {
+        return pulse;
+    }
+};
 class Observer final : public DataNode {
   public:
     unsigned publishes = 0U;
@@ -28,22 +50,8 @@ class Observer final : public DataNode {
     }
 };
 } // namespace
-// Only shared C runtime boundaries use link-time fakes; I2C/GPIO tests inject HAL fakes.
+// Shared C runtime boundaries use test doubles; device interfaces are injected.
 extern "C" {
-bool bsp_external_watchdog_init(uint32_t now_ms) {
-    last_watchdog_ms = now_ms;
-    return watchdog_ready;
-}
-void bsp_external_watchdog_poll(uint32_t now_ms) {
-    ++watchdog_polls;
-    last_watchdog_ms = now_ms;
-}
-bool bsp_external_watchdog_is_ready() {
-    return watchdog_ready;
-}
-bool bsp_external_watchdog_is_pulse_active() {
-    return pulse;
-}
 int app_confirm_running_image(bool enabled) {
     confirm_enabled = enabled;
     return confirm_result;
@@ -63,10 +71,11 @@ void usb_fw_update_get_status(usb_fw_update_status* status) {
 }
 int main() {
     DataBroker broker;
-    dp::SystemNode system;
+    FakeWatchdog watchdog;
+    dp::SystemNode system(watchdog);
     dp::UpdateNode update;
     Observer observer;
-    assert(system.init(broker, 123U) && last_watchdog_ms == 123U);
+    assert(system.init(broker, 123U) && watchdog.init_calls == 1U && watchdog.last_init_ms == 123U);
     assert(update.init(broker) == 0);
     assert(update.init(broker) == DataNode::RES_DUPLICATE && usb_inits == 1U);
     assert(observer.init(broker, "observer", DataNode::EVENT_PUBLISH) == DataNode::RES_OK);
@@ -80,7 +89,8 @@ int main() {
     assert(system.confirmAfterHost(true, true) == 0 && !confirm_enabled);
     {
         DataBroker other;
-        dp::SystemNode failing;
+        FakeWatchdog other_watchdog;
+        dp::SystemNode failing(other_watchdog);
         assert(failing.init(other, 0U));
         confirm_result = -3;
         assert(failing.confirmAfterHost(true, false) == -3 && !confirm_enabled);
@@ -90,11 +100,11 @@ int main() {
         system.poll(now);
         assert(update.poll(now) == USB_FW_UPDATE_ACTION_NONE);
     }
-    assert(watchdog_polls == 5U && usb_polls == 5U);
-    assert(last_watchdog_ms == 1004U && last_usb_ms == 1004U);
+    assert(watchdog.poll_calls == 5U && usb_polls == 5U);
+    assert(watchdog.last_poll_ms == 1004U && last_usb_ms == 1004U);
     assert(!system.hasTimer() && !update.hasTimer() && broker.handleTimers(1005U) == UINT32_MAX);
     dp::SystemState state{};
-    pulse = true;
+    watchdog.pulse = true;
     assert(dp::System::pull(observer, state) == DataNode::RES_OK);
     assert(state.loop_count == 5U && state.confirm_result == 0 && !state.confirm_pending && state.watchdog_ready
            && state.watchdog_pulse_active);
@@ -116,8 +126,9 @@ int main() {
     assert(update.poll(1010U) == USB_FW_UPDATE_ACTION_RESET && observer.publishes == 3U);
     {
         DataBroker failure_broker;
-        dp::SystemNode bad_watchdog;
-        watchdog_ready = false;
+        FakeWatchdog failed_watchdog;
+        failed_watchdog.init_result = false;
+        dp::SystemNode bad_watchdog(failed_watchdog);
         assert(!bad_watchdog.init(failure_broker, 0U));
         dp::UpdateNode bad_usb;
         usb_init_result = -9;

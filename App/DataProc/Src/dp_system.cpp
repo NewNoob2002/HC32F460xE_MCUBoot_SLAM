@@ -1,16 +1,15 @@
 #include "DataProc.h"
 #include "app_confirm.h"
-#include "bsp_external_watchdog.h"
 
 namespace dp {
 bool SystemNode::init(DataBroker& broker, uint32_t now_ms) {
     if (DataNode::init(broker, names::System, EVENT_PULL) != RES_OK)
         return false;
-    return bsp_external_watchdog_init(now_ms);
+    return watchdog_.init(now_ms);
 }
 void SystemNode::poll(uint32_t now_ms) {
     ++state_.loop_count;
-    bsp_external_watchdog_poll(now_ms);
+    watchdog_.poll(now_ms);
 }
 int SystemNode::confirmAfterHost(bool usb_configured, bool auto_confirm) {
     if (!state_.confirm_pending || !usb_configured)
@@ -20,8 +19,8 @@ int SystemNode::confirmAfterHost(bool usb_configured, bool auto_confirm) {
     return state_.confirm_result;
 }
 int SystemNode::onEvent(EventParam* event) {
-    state_.watchdog_ready = bsp_external_watchdog_is_ready();
-    state_.watchdog_pulse_active = bsp_external_watchdog_is_pulse_active();
+    state_.watchdog_ready = watchdog_.isReady();
+    state_.watchdog_pulse_active = watchdog_.isPulseActive();
     return ValueNode::onEvent(event);
 }
 } // namespace dp

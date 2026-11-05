@@ -25,6 +25,7 @@ add_executable(app_firmware
     Framework/DataBroker/DataNode.cpp
     HAL/BQ40Z50.cpp
     HAL/Hc32.cpp
+    HAL/Hc32ExternalWatchdog.cpp
     HAL/Hc32PowerDevices.cpp
     $<TARGET_OBJECTS:hc32_newlib>
     $<TARGET_OBJECTS:hc32_startup_app>

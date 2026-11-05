@@ -3,6 +3,7 @@
 #include "DataProc.h"
 #include "DebugService.h"
 #include "Diagnostics.h"
+#include "Hc32ExternalWatchdog.h"
 #include "Hc32PowerDevices.h"
 #include "I2cBus.h"
 
@@ -17,13 +18,14 @@ class App final {
     DataBroker broker_{};
     hal::Hc32I2cBus bus_{};
     hal::Hc32PowerDevices power_devices_{bus_};
+    hal::Hc32ExternalWatchdog watchdog_{};
     hal::Hc32ChargerSignals signals_{};
     hal::Hc32SettingsStore settings_store_{};
     dp::SettingsNode settings_{settings_store_};
     debug::Service debug_{settings_, bus_};
     dp::PowerNode power_{power_devices_};
     dp::ChargerNode charger_{signals_};
-    dp::SystemNode system_{};
+    dp::SystemNode system_{watchdog_};
     dp::UpdateNode update_{};
     app::Diagnostics diagnostics_{g_app_diagnostics};
     /** Applies the runtime-only led_override setting on top of the battery/update LED pattern. */
