@@ -1,12 +1,11 @@
 # Embedded Engineering Baseline Refactor
 
-Status: **Proposed, architecture approval required before implementation**
+Status: **Approved on 2026-11-05; implementation in progress**
 
 Baseline commit: `0e203b133a3d2b1fe56b15e81821caea1d4efabe`
 
-This document records the W02 architecture review and W09 refactor plan from the
-external `embedded-engineering` skill. The source tree is unchanged while this
-review is under approval.
+This document records the W02 architecture review and approved W09 refactor plan
+from the external `embedded-engineering` skill.
 
 ## Scope and profile
 
@@ -211,9 +210,9 @@ rules are violated.
 Proposed target architecture: **Proceed**, with no platform or OS change and no
 change to update, boot or recovery security boundaries.
 
-Execution is blocked by GEN-005 until the user explicitly approves this concrete
-target design and the eight-checkpoint implementation sequence. The approval must
-cover the App composition, DataProc and USB interfaces described above.
+The user approved this concrete target design and the eight-checkpoint
+implementation sequence, including the App composition, DataProc and USB
+interfaces described above.
 
 HIL remains a separate hardware authorization. The plan does not flash, reset or
 modify target hardware.

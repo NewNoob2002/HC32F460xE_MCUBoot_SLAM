@@ -24,6 +24,8 @@ static unsigned int read_calls;
 static unsigned int write_calls;
 static uint8_t written[FW_PROTOCOL_MAX_FRAME_SIZE];
 static uint32_t written_length;
+static enum bsp_status_led_mode led_mode;
+static unsigned int led_poll_count;
 
 void usbd_desc_register(uint8_t busid, const struct usb_descriptor* desc) {
     (void)busid;
@@ -72,11 +74,12 @@ int usbd_ep_start_write(uint8_t busid, const uint8_t ep, const uint8_t* data, ui
 }
 
 void bsp_status_led_set_mode(enum bsp_status_led_mode mode) {
-    (void)mode;
+    led_mode = mode;
 }
 
 void bsp_status_led_poll(uint32_t now_ms) {
     (void)now_ms;
+    ++led_poll_count;
 }
 
 /* The real reader dereferences Boot Flash at 0x420; the host has no such record. */
@@ -242,6 +245,10 @@ int main(void) {
 
     assert(usb_fw_update_init() == 0);
     assert(event_handler != NULL && out_callback != NULL && in_callback != NULL);
+    /* An idle update session retains the Application-selected LED policy and polls it once per USB poll. */
+    usb_fw_update_set_idle_led_mode(BSP_STATUS_LED_MODE_APP_LOW);
+    poll();
+    assert(led_mode == BSP_STATUS_LED_MODE_APP_LOW && led_poll_count == 1U);
     configure();
     assert(read_calls == 1U && armed_buffer != NULL);
 
@@ -279,5 +286,6 @@ int main(void) {
     assert(armed_buffer == NULL);
     complete_in();
     assert(armed_buffer != NULL);
+    assert(led_mode == BSP_STATUS_LED_MODE_APP_LOW && led_poll_count > 1U);
     return 0;
 }
