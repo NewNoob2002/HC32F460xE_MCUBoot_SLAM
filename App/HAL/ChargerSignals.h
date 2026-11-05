@@ -1,4 +1,5 @@
-#pragma once
+#ifndef APP_HAL_CHARGERSIGNALS_H
+#define APP_HAL_CHARGERSIGNALS_H
 namespace hal {
 struct ChargerSample {
     bool interrupt_asserted = false;
@@ -19,3 +20,5 @@ class Hc32ChargerSignals final : public ChargerSignals {
     bool read(ChargerSample& sample) override;
 };
 } // namespace hal
+
+#endif

@@ -3,8 +3,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "fw_update/boot_control_mcuboot.h"
-#include "fw_update/storage_mcuboot.h"
+#include "fw_update/image_control_mcuboot.h"
+#include "fw_update/image_storage_mcuboot.h"
 #include "product_identity.h"
 
 enum {
@@ -53,7 +53,7 @@ static int run_storage(void) {
     struct fw_update_storage_info info;
     uint32_t value = 0U;
 
-    fw_update_storage_mcuboot_init(&storage);
+    fw_update_image_storage_mcuboot_init(&storage);
     g_phase2_hil_stage = 1U;
     enum fw_update_result result = fw_update_storage_get_info(&storage, &info);
     if (result != FW_UPDATE_OK)
@@ -91,7 +91,7 @@ static int run_storage(void) {
 
 static int run_pending(void) {
     struct fw_update_boot_control control;
-    fw_update_boot_control_mcuboot_init(&control, &product_config);
+    fw_update_image_control_mcuboot_init(&control, &product_config);
     g_phase2_hil_stage = 5U;
     return fw_update_boot_control_request_test_upgrade(&control);
 }

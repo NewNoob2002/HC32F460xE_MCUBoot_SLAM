@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "fw_update/admin_auth_ecdsa.h"
+#include "fw_update/admin_ecdsa_auth.h"
 
 /* Test-only key (private scalar 0x01..0x20, see Tools/updater/src/admin.rs). The signature is what the Rust updater
  * produces for challenge 0x40..0x5f, so this checks host signing against device verification. */
@@ -38,9 +38,9 @@ int main(void) {
 
     memcpy(off_curve, public_key, sizeof(off_curve));
     off_curve[63] ^= 1U;
-    assert(fw_update_admin_auth_ecdsa_init(&auth, off_curve, fake_random) == FW_UPDATE_ERR_INVALID_ARGUMENT);
-    assert(fw_update_admin_auth_ecdsa_init(&auth, public_key, NULL) == FW_UPDATE_ERR_INVALID_ARGUMENT);
-    assert(fw_update_admin_auth_ecdsa_init(&auth, public_key, fake_random) == FW_UPDATE_OK);
+    assert(fw_update_admin_ecdsa_auth_init(&auth, off_curve, fake_random) == FW_UPDATE_ERR_INVALID_ARGUMENT);
+    assert(fw_update_admin_ecdsa_auth_init(&auth, public_key, NULL) == FW_UPDATE_ERR_INVALID_ARGUMENT);
+    assert(fw_update_admin_ecdsa_auth_init(&auth, public_key, fake_random) == FW_UPDATE_OK);
 
     assert(fw_update_admin_auth_generate_challenge(&auth, challenge) == FW_UPDATE_OK && random_calls == 1U);
     random_result = false;

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef APP_DIAGNOSTICS_DIAGNOSTICS_H
+#define APP_DIAGNOSTICS_DIAGNOSTICS_H
 #include "DataProc.h"
 
 namespace app {
@@ -24,5 +25,7 @@ class Diagnostics final : public DataNode {
     void report(uint32_t now_ms);
 };
 } // namespace app
+
+#endif
 // Keep an unmangled symbol so J-Link can inspect the full runtime snapshot by name.
 extern "C" app::DiagnosticsSnapshot g_app_diagnostics;

@@ -62,7 +62,7 @@ SECTIONS
     ASSERT(ADDR(.icg_sec) == 0x00000400, "ICG must start at 0x400")
     ASSERT(SIZEOF(.icg_sec) == 0x20, "ICG must contain exactly eight 32-bit words")
 
-    /* Fixed Boot identity record read by the Application (bsp_boot_info.h). */
+    /* Fixed Boot identity record read by the Application (bsp_image_info.h). */
     .boot_info 0x00000420 :
     {
         KEEP(*(.boot_info))
@@ -221,7 +221,7 @@ SECTIONS
         __bss_end_ret_ram__ = .;
     } >RET_RAM
 
-    /* Application -> Boot reset request (bsp_boot_request.c). The address is identical in Boot and App, and NOLOAD
+    /* Application -> Boot reset request (bsp_recovery_request.c). The address is identical in Boot and App, and NOLOAD
      * keeps startup code from copying or zeroing it. */
     .boot_request (ORIGIN(RET_RAM) + LENGTH(RET_RAM) - 16) (NOLOAD) :
     {

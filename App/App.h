@@ -1,4 +1,5 @@
-#pragma once
+#ifndef APP_APP_H
+#define APP_APP_H
 #include "DataProc.h"
 #include "DebugService.h"
 #include "Diagnostics.h"
@@ -29,3 +30,5 @@ class App final {
     [[noreturn]] void runPhase2Hil();
 #endif
 };
+
+#endif

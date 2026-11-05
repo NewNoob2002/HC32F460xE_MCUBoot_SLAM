@@ -1,4 +1,5 @@
-#pragma once
+#ifndef APP_DATAPROC_DATAPROC_H
+#define APP_DATAPROC_DATAPROC_H
 #include <cstring>
 #include <type_traits>
 #include "BQ40Z50.h"
@@ -178,3 +179,5 @@ class SystemNode final : public ValueNode<SystemState> {
     int onEvent(EventParam* event) override;
 };
 } // namespace dp
+
+#endif

@@ -1,4 +1,4 @@
-#include "fw_update/admin_auth_ecdsa.h"
+#include "fw_update/admin_ecdsa_auth.h"
 
 #include <string.h>
 
@@ -7,22 +7,22 @@
 #include "tinycrypt/ecc_dsa.h"
 #include "tinycrypt/sha256.h"
 
-struct admin_auth_ecdsa_context {
+struct admin_ecdsa_auth_context {
     const uint8_t* public_key;
     fw_update_admin_random_fn random;
 };
 
-static struct admin_auth_ecdsa_context backend;
+static struct admin_ecdsa_auth_context backend;
 
 static enum fw_update_result generate_challenge(void* context, uint8_t challenge[FW_UPDATE_ADMIN_CHALLENGE_SIZE]) {
-    const struct admin_auth_ecdsa_context* ecdsa = context;
+    const struct admin_ecdsa_auth_context* ecdsa = context;
     return ecdsa->random(challenge, FW_UPDATE_ADMIN_CHALLENGE_SIZE) ? FW_UPDATE_OK : FW_UPDATE_ERR_IO;
 }
 
 static enum fw_update_result verify(void* context, const uint8_t challenge[FW_UPDATE_ADMIN_CHALLENGE_SIZE],
                                     const uint8_t signature[FW_UPDATE_ADMIN_SIGNATURE_SIZE]) {
     static const char domain[] = FW_UPDATE_ADMIN_DOMAIN;
-    const struct admin_auth_ecdsa_context* ecdsa = context;
+    const struct admin_ecdsa_auth_context* ecdsa = context;
     struct tc_sha256_state_struct sha;
     uint8_t digest[TC_SHA256_DIGEST_SIZE];
     int verified;
@@ -42,7 +42,7 @@ static const struct fw_update_admin_auth_ops ops = {
     .verify = verify,
 };
 
-enum fw_update_result fw_update_admin_auth_ecdsa_init(struct fw_update_admin_auth* auth,
+enum fw_update_result fw_update_admin_ecdsa_auth_init(struct fw_update_admin_auth* auth,
                                                       const uint8_t public_key[FW_UPDATE_ADMIN_PUBLIC_KEY_SIZE],
                                                       fw_update_admin_random_fn random) {
     if (auth == NULL || public_key == NULL || random == NULL)

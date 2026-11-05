@@ -7,7 +7,7 @@
 #include <flashdb.h>
 
 #include "boot_memory_map.h"
-#include "fw_update/product_config_flashdb.h"
+#include "fw_update/flashdb_product_config.h"
 
 #define CHECK(condition)                                                                                               \
     do {                                                                                                               \
@@ -95,7 +95,7 @@ int main(void) {
     struct fw_update_product_config_state state;
 
     memset(reserved_flash, 0xFF, sizeof(reserved_flash));
-    CHECK(fw_update_product_config_flashdb_init(&config, &defaults) == FW_UPDATE_OK);
+    CHECK(fw_update_flashdb_product_config_init(&config, &defaults) == FW_UPDATE_OK);
     const struct fal_partition* product_part = fal_partition_find("product_kv");
     const struct fal_partition* app_part = fal_partition_find("app_kv");
     CHECK(product_part && app_part);
@@ -114,7 +114,7 @@ int main(void) {
                     provisioned.hardware_version, provisioned.application_pid, 1U);
     CHECK(fw_update_product_config_set(&config, &defaults) == FW_UPDATE_ERR_LOCKED);
 
-    CHECK(fw_update_product_config_flashdb_init(&restored, &defaults) == FW_UPDATE_OK);
+    CHECK(fw_update_flashdb_product_config_init(&restored, &defaults) == FW_UPDATE_OK);
     CHECK(fw_update_product_config_get(&restored, &state) == FW_UPDATE_OK);
     assert_identity(&state, defaults.hardware_id, defaults.board_id, defaults.board_revision, provisioned.device_serial,
                     provisioned.hardware_version, provisioned.application_pid, 1U);

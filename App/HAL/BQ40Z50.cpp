@@ -7,18 +7,18 @@ namespace hal {
 #define BQ40Z50_FIRMWARE_VERSION_SIZE   11U
 
 static uint16_t read_u16_le(const uint8_t* data) {
-    return (uint16_t)((uint16_t)data[0] | ((uint16_t)data[1] << 8U));
+    return static_cast<uint16_t>(static_cast<uint16_t>(data[0]) | (static_cast<uint16_t>(data[1]) << 8U));
 }
 
 static uint16_t read_u16_be(const uint8_t* data) {
-    return (uint16_t)(((uint16_t)data[0] << 8U) | data[1]);
+    return static_cast<uint16_t>((static_cast<uint16_t>(data[0]) << 8U) | static_cast<uint16_t>(data[1]));
 }
 
 int BQ40Z50::readManufacturerBlock(uint16_t command, uint8_t* payload, uint8_t payload_size) {
     const uint8_t request[] = {
         BQ40Z50_MANUFACTURER_ACCESS_REG,
-        (uint8_t)command,
-        (uint8_t)(command >> 8U),
+        static_cast<uint8_t>(command),
+        static_cast<uint8_t>(command >> 8U),
     };
     uint8_t response[BQ40Z50_FIRMWARE_VERSION_SIZE + 1U];
 
@@ -28,7 +28,7 @@ int BQ40Z50::readManufacturerBlock(uint16_t command, uint8_t* payload, uint8_t p
     int result = bus_.write(address_, request, sizeof(request));
     if (result != BSP_I2C2_OK)
         return result;
-    result = bus_.readReg(address_, BQ40Z50_MANUFACTURER_DATA_REG, response, (uint32_t)payload_size + 1U);
+    result = bus_.readReg(address_, BQ40Z50_MANUFACTURER_DATA_REG, response, static_cast<uint32_t>(payload_size) + 1U);
     if (result != BSP_I2C2_OK)
         return result;
     if (response[0] != payload_size)

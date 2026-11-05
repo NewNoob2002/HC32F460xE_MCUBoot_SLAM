@@ -184,7 +184,7 @@ SECTIONS
         __bss_end_ret_ram__ = .;
     } >RET_RAM
 
-    /* Application -> Boot reset request (bsp_boot_request.c). The address is identical in Boot and App, and NOLOAD
+    /* Application -> Boot reset request (bsp_recovery_request.c). The address is identical in Boot and App, and NOLOAD
      * keeps startup code from copying or zeroing it. */
     .boot_request (ORIGIN(RET_RAM) + LENGTH(RET_RAM) - 16) (NOLOAD) :
     {

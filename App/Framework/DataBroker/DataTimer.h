@@ -20,7 +20,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#pragma once
+#ifndef APP_FRAMEWORK_DATABROKER_DATATIMER_H
+#define APP_FRAMEWORK_DATABROKER_DATATIMER_H
 #include <cstdint>
 
 /** Embedded node timer; unsigned elapsed time handles millisecond wraparound without catching up missed periods. */
@@ -55,3 +56,5 @@ class DataTimer {
     uint32_t last_ = 0U;
     bool running_ = false;
 };
+
+#endif

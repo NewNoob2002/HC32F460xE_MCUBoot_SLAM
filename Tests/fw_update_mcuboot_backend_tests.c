@@ -7,8 +7,8 @@
 #include "bootutil/image.h"
 #include "bootutil_priv.h"
 #include "flash_map_backend/flash_map_backend.h"
-#include "fw_update/boot_control_mcuboot.h"
-#include "fw_update/storage_mcuboot.h"
+#include "fw_update/image_control_mcuboot.h"
+#include "fw_update/image_storage_mcuboot.h"
 #include "product_identity.h"
 
 static const struct flash_area secondary = {FLASH_AREA_ID_SECONDARY, FLASH_DEVICE_INTERNAL_FLASH, 0U,
@@ -184,7 +184,7 @@ static void test_storage_backend(void) {
     struct fw_update_storage_info info;
     uint32_t word = 0U;
 
-    fw_update_storage_mcuboot_init(&storage);
+    fw_update_image_storage_mcuboot_init(&storage);
     assert(fw_update_storage_get_info(&storage, &info) == FW_UPDATE_OK);
     assert(opened_id == FLASH_AREA_ID_SECONDARY);
     assert(info.capacity == SECONDARY_SLOT_SIZE - MCUBOOT_TRAILER_RESERVE);
@@ -249,7 +249,7 @@ static void test_boot_control_backend(void) {
     product_config_state.identity.application_pid = HC32_PRODUCT_USB_APPLICATION_PID;
     product_config_state.provisioned = 0U;
 
-    fw_update_boot_control_mcuboot_init(&control, &product_config);
+    fw_update_image_control_mcuboot_init(&control, &product_config);
     assert(fw_update_boot_control_request_test_upgrade(&control) == FW_UPDATE_OK);
     assert(pending_image == 0 && pending_permanent == 0);
     assert(loader_close_calls == 1);

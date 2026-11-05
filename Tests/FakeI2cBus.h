@@ -1,4 +1,5 @@
-#pragma once
+#ifndef TESTS_FAKEI2CBUS_H
+#define TESTS_FAKEI2CBUS_H
 #include <array>
 #include <cassert>
 #include <cstring>
@@ -124,3 +125,5 @@ class FakeI2cBus final : public hal::I2cBus {
         return BSP_I2C2_OK;
     }
 };
+
+#endif

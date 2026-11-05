@@ -1,5 +1,6 @@
 #include <cassert>
 #include "DataProc.h"
+#include "TestDataNode.h"
 
 class FakeSignals final : public hal::ChargerSignals {
   public:
@@ -68,7 +69,7 @@ static void test_init_failure() {
     FakeSignals signals;
     signals.init_ok = false;
     dp::ChargerNode charger(signals);
-    DataNode sub;
+    TestDataNode sub;
     assert(charger.init(broker, 0U));
     assert(sub.init(broker, "sub") == DataNode::RES_OK);
     assert(dp::Charger::subscribe(sub) == DataNode::RES_OK);

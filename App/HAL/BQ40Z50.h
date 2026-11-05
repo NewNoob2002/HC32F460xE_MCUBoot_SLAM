@@ -1,4 +1,5 @@
-#pragma once
+#ifndef APP_HAL_BQ40Z50_H
+#define APP_HAL_BQ40Z50_H
 #include "I2cBus.h"
 
 namespace hal {
@@ -62,3 +63,5 @@ class BQ40Z50 {
     int readWord(uint8_t command, uint16_t* value);
 };
 } // namespace hal
+
+#endif

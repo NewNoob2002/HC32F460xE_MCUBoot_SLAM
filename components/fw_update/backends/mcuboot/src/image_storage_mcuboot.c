@@ -1,4 +1,4 @@
-#include "fw_update/storage_mcuboot.h"
+#include "fw_update/image_storage_mcuboot.h"
 
 #include <stddef.h>
 
@@ -78,7 +78,7 @@ static const struct fw_update_storage_ops ops = {
     .read = read,
 };
 
-void fw_update_storage_mcuboot_init(struct fw_update_storage* storage) {
+void fw_update_image_storage_mcuboot_init(struct fw_update_storage* storage) {
     if (storage == NULL)
         return;
     storage->ops = &ops;

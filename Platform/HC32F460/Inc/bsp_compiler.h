@@ -1,4 +1,5 @@
-#pragma once
+#ifndef BSP_COMPILER_H
+#define BSP_COMPILER_H
 #include <stdint.h>
 #if defined(__GNUC__) || defined(__clang__)
 #include <cmsis_gcc.h>
@@ -7,4 +8,6 @@
 #else
 #define BSP_ATTR_UNUSED
 #define BSP_ATTR_ALWAYS_INLINE
+#endif
+
 #endif

@@ -20,7 +20,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#pragma once
+#ifndef APP_FRAMEWORK_DATABROKER_DATANODE_H
+#define APP_FRAMEWORK_DATABROKER_DATANODE_H
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -63,7 +64,6 @@ class DataNode {
     using Callback = int (*)(DataNode*, EventParam*);
     static constexpr std::size_t MaxLinks = 8U;
     constexpr DataNode() = default;
-    ~DataNode();
     DataNode(const DataNode&) = delete;
     DataNode& operator=(const DataNode&) = delete;
     /** The id string must outlive the node. Failure preserves existing nodes and links. */
@@ -98,6 +98,9 @@ class DataNode {
     static int replyPull(const EventParam* event, const void* state, std::size_t size);
     virtual int onEvent(EventParam* event);
 
+  protected:
+    ~DataNode();
+
   private:
     friend class DataBroker;
     using Links = std::array<DataNode*, MaxLinks>;
@@ -112,3 +115,5 @@ class DataNode {
     DataTimer timer_{};
     int sendEvent(DataNode& receiver, EventCode event, void* data, std::size_t size);
 };
+
+#endif

@@ -1,4 +1,4 @@
-#include "fw_update/product_config_flashdb.h"
+#include "fw_update/flashdb_product_config.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -128,7 +128,7 @@ static const struct fw_update_product_config_ops ops = {
     .set = set_config,
 };
 
-enum fw_update_result fw_update_product_config_flashdb_init(struct fw_update_product_config* config,
+enum fw_update_result fw_update_flashdb_product_config_init(struct fw_update_product_config* config,
                                                             const struct fw_update_product_identity* default_identity) {
     if (config == NULL || default_identity == NULL)
         return FW_UPDATE_ERR_INVALID_ARGUMENT;

@@ -1,4 +1,4 @@
-#include "fw_update/boot_control_mcuboot.h"
+#include "fw_update/image_control_mcuboot.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -83,8 +83,8 @@ static const struct fw_update_boot_control_ops ops = {
     .confirm_running_image = confirm_running_image,
 };
 
-void fw_update_boot_control_mcuboot_init(struct fw_update_boot_control* control,
-                                         const struct fw_update_product_config* product_config) {
+void fw_update_image_control_mcuboot_init(struct fw_update_boot_control* control,
+                                          const struct fw_update_product_config* product_config) {
     if (control == NULL)
         return;
     control->ops = &ops;

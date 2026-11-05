@@ -2,13 +2,13 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "bsp_boot_info.h"
+#include "bsp_image_info.h"
 #include "bsp_status_led.h"
 #include "bsp_usb.h"
-#include "fw_update/boot_control_mcuboot.h"
-#include "fw_update/product_config_flashdb.h"
+#include "fw_update/flashdb_product_config.h"
+#include "fw_update/image_control_mcuboot.h"
+#include "fw_update/image_storage_mcuboot.h"
 #include "fw_update/protocol.h"
-#include "fw_update/storage_mcuboot.h"
 #include "usb_fw_update.h"
 #include "usbd_core.h"
 
@@ -83,7 +83,7 @@ void bsp_status_led_poll(uint32_t now_ms) {
 }
 
 /* The real reader dereferences Boot Flash at 0x420; the host has no such record. */
-bool bsp_boot_info_read(struct bsp_boot_info* info) {
+bool bsp_image_info_read(struct bsp_image_info* info) {
     (void)info;
     return false;
 }
@@ -167,19 +167,19 @@ static const struct fw_update_product_config_ops product_config_ops = {
     .set = fake_product_set,
 };
 
-void fw_update_storage_mcuboot_init(struct fw_update_storage* storage) {
+void fw_update_image_storage_mcuboot_init(struct fw_update_storage* storage) {
     storage->ops = &storage_ops;
     storage->context = NULL;
 }
 
-void fw_update_boot_control_mcuboot_init(struct fw_update_boot_control* control,
-                                         const struct fw_update_product_config* product_config) {
+void fw_update_image_control_mcuboot_init(struct fw_update_boot_control* control,
+                                          const struct fw_update_product_config* product_config) {
     (void)product_config;
     control->ops = &boot_control_ops;
     control->context = NULL;
 }
 
-enum fw_update_result fw_update_product_config_flashdb_init(struct fw_update_product_config* config,
+enum fw_update_result fw_update_flashdb_product_config_init(struct fw_update_product_config* config,
                                                             const struct fw_update_product_identity* default_identity) {
     memset(&product_state, 0, sizeof(product_state));
     product_state.identity = *default_identity;

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef APP_HAL_CHARGERDEVICES_H
+#define APP_HAL_CHARGERDEVICES_H
 #include "I2cBus.h"
 
 namespace hal {
@@ -162,3 +163,5 @@ class MP2762A {
     }
 };
 } // namespace hal
+
+#endif

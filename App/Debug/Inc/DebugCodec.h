@@ -1,4 +1,5 @@
-#pragma once
+#ifndef APP_DEBUG_DEBUGCODEC_H
+#define APP_DEBUG_DEBUGCODEC_H
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -42,3 +43,5 @@ class Parser {
     std::size_t expected_ = 0U;
 };
 } // namespace debug
+
+#endif

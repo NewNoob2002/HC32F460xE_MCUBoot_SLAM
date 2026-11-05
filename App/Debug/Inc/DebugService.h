@@ -1,4 +1,5 @@
-#pragma once
+#ifndef APP_DEBUG_DEBUGSERVICE_H
+#define APP_DEBUG_DEBUGSERVICE_H
 #include "DataProc.h"
 #include "DebugCodec.h"
 
@@ -63,3 +64,5 @@ class Service final : public DataNode {
     bool send(uint8_t command, uint8_t flags, uint32_t sequence, const uint8_t* payload, std::size_t length);
 };
 } // namespace debug
+
+#endif

@@ -3,6 +3,7 @@
 #include <cstring>
 #include "DebugService.h"
 #include "FakeI2cBus.h"
+#include "TestDataNode.h"
 #include "fw_update/protocol.h"
 #include "usb_debug_link.h"
 
@@ -172,7 +173,7 @@ void settingsTests() {
         dp::SettingsNode settings(store);
         Signals signals;
         dp::ChargerNode charger(signals);
-        DataNode reader;
+        TestDataNode reader;
         assert(settings.init(broker) && charger.init(broker, 0U));
         assert(reader.init(broker, "Reader") == DataNode::RES_OK);
         assert(reader.subscribe(dp::names::Charger) == DataNode::RES_OK);

@@ -1,5 +1,6 @@
 #include "DataProc.h"
 #include "FakeI2cBus.h"
+#include "TestDataNode.h"
 
 /** In-memory settings store; nothing is preloaded, so the table defaults apply. */
 class Store final : public hal::SettingsStore {
@@ -21,7 +22,7 @@ static void check(int alternate_result, int init_result) {
     bus.probe_results[2] = BSP_I2C2_ERR_BUS_BUSY;
     bus.init_result = init_result;
     dp::PowerNode power(bus);
-    DataNode sub;
+    TestDataNode sub;
     assert(power.init(broker, 0U));
     assert(!power.init(broker, 0U));
     assert(bus.init_count == 1U && bus.probe_count == 4U);
@@ -61,7 +62,7 @@ static void batteryRefresh() {
     FakeI2cBus bus;
     bus.probe_results[1] = BSP_I2C2_ERR_ADDR_NACK; // skip the identity read
     dp::PowerNode power(bus);
-    DataNode sub;
+    TestDataNode sub;
     assert(power.init(broker, 0U));
     assert(sub.init(broker, "sub") == DataNode::RES_OK && dp::Power::subscribe(sub) == DataNode::RES_OK);
     bus.reads = 0U; // ignore the init-time input limit write
@@ -102,7 +103,7 @@ static void chargerSuspend() {
     FakeI2cBus bus;
     bus.probe_results[1] = BSP_I2C2_ERR_ADDR_NACK;
     dp::PowerNode power(bus);
-    DataNode sub;
+    TestDataNode sub;
     assert(power.init(broker, 0U));
     assert(sub.init(broker, "sub") == DataNode::RES_OK && dp::Power::subscribe(sub) == DataNode::RES_OK);
     bus.sbs = true;
@@ -180,7 +181,7 @@ static void sourceLimit() {
     bus.husb_regs = {0x34U, 0x40U};
     assert(settings.init(broker));
     dp::PowerNode power(bus);
-    DataNode sub;
+    TestDataNode sub;
     assert(power.init(broker, 0U));
     assert(sub.init(broker, "sub") == DataNode::RES_OK && dp::Power::subscribe(sub) == DataNode::RES_OK);
     dp::PowerState state{};
@@ -214,7 +215,7 @@ static void chargeLimits() {
     bus.probe_results[1] = BSP_I2C2_ERR_ADDR_NACK;
     assert(settings.init(broker));
     dp::PowerNode power(bus);
-    DataNode sub;
+    TestDataNode sub;
     assert(power.init(broker, 0U));
     assert(sub.init(broker, "sub") == DataNode::RES_OK && dp::Power::subscribe(sub) == DataNode::RES_OK);
     bus.sbs = true;

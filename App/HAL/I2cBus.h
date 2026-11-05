@@ -1,4 +1,5 @@
-#pragma once
+#ifndef APP_HAL_I2CBUS_H
+#define APP_HAL_I2CBUS_H
 #include <cstdint>
 #include "bsp_i2c2.h"
 
@@ -27,3 +28,5 @@ class Hc32I2cBus final : public I2cBus {
     uint32_t recoveries() override;
 };
 } // namespace hal
+
+#endif

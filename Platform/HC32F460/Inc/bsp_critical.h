@@ -1,5 +1,7 @@
-#pragma once
+#ifndef BSP_CRITICAL_H
+#define BSP_CRITICAL_H
 
+#include <stdbool.h>
 #include <stdint.h>
 #if !defined(BOOT_HOST_TEST)
 #include "bsp_compiler.h"
@@ -21,7 +23,7 @@ static inline void bsp_exit_critical(bsp_irq_state_t state) {
 }
 #else
 /**
- * @brief Enter a short IRQ critical section and save previous PRIMASK.
+ * @brief Enter a bounded IRQ critical section and save previous PRIMASK.
  */
 static inline BSP_ATTR_UNUSED BSP_ATTR_ALWAYS_INLINE bsp_irq_state_t bsp_enter_critical(void) {
     bsp_irq_state_t state = __get_PRIMASK();
@@ -31,7 +33,7 @@ static inline BSP_ATTR_UNUSED BSP_ATTR_ALWAYS_INLINE bsp_irq_state_t bsp_enter_c
 }
 
 /**
- * @brief Exit a short IRQ critical section and restore previous PRIMASK.
+ * @brief Exit a bounded IRQ critical section and restore previous PRIMASK.
  */
 static inline BSP_ATTR_UNUSED BSP_ATTR_ALWAYS_INLINE void bsp_exit_critical(bsp_irq_state_t state) {
     __DMB();
@@ -39,6 +41,16 @@ static inline BSP_ATTR_UNUSED BSP_ATTR_ALWAYS_INLINE void bsp_exit_critical(bsp_
 }
 #endif
 
+static inline bool bsp_in_isr(void) {
+#if defined(BOOT_HOST_TEST)
+    return false;
+#else
+    return __get_IPSR() != 0U;
+#endif
+}
+
 #ifdef __cplusplus
 }
+#endif
+
 #endif

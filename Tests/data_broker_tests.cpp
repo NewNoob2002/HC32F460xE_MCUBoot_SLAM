@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "DataBroker.h"
+#include "TestDataNode.h"
 
 struct probe {
     unsigned int publish_count;
@@ -48,9 +49,9 @@ static int on_event(DataNode* node, DataNode::EventParam* param) {
 
 static void test_registration(void) {
     DataBroker broker;
-    DataNode nodes[DataBroker::MaxNodes + 1U];
+    TestDataNode nodes[DataBroker::MaxNodes + 1U];
     static char ids[DataBroker::MaxNodes + 1U][4];
-    DataNode duplicate;
+    TestDataNode duplicate;
 
     for (size_t i = 0U; i < DataBroker::MaxNodes; ++i) {
         ids[i][0] = 'n';
@@ -70,9 +71,9 @@ static void test_registration(void) {
 
 static void test_publish_pull_notify(void) {
     DataBroker broker;
-    DataNode pub;
-    DataNode sub_a;
-    DataNode sub_b;
+    TestDataNode pub;
+    TestDataNode sub_a;
+    TestDataNode sub_b;
     struct probe pub_probe = {};
     struct probe probe_a = {};
     struct probe probe_b = {};
@@ -136,9 +137,9 @@ static void test_publish_pull_notify(void) {
 
 static void test_link_capacity(void) {
     DataBroker broker;
-    DataNode pubs[DataNode::MaxLinks + 1U];
+    TestDataNode pubs[DataNode::MaxLinks + 1U];
     static char ids[DataNode::MaxLinks + 1U][4];
-    DataNode sub;
+    TestDataNode sub;
 
     assert(sub.init(broker, "sub", DataNode::EVENT_ALL, on_event, nullptr) == DataNode::RES_OK);
     for (size_t i = 0U; i <= DataNode::MaxLinks; ++i) {
@@ -154,8 +155,8 @@ static void test_link_capacity(void) {
 
 static void test_timers(void) {
     DataBroker broker;
-    DataNode fast;
-    DataNode slow;
+    TestDataNode fast;
+    TestDataNode slow;
     struct probe fast_probe = {};
     struct probe slow_probe = {};
 
@@ -190,10 +191,10 @@ static void test_timers(void) {
 // Dispatch from the snapshot when callbacks change links; new subscriptions wait until the next publish.
 static void test_snapshot_and_errors() {
     DataBroker broker;
-    DataNode publisher;
+    TestDataNode publisher;
     struct Mutator final : DataNode {
-        DataNode* remove = nullptr;
-        DataNode* add = nullptr;
+        TestDataNode* remove = nullptr;
+        TestDataNode* add = nullptr;
         int onEvent(EventParam* event) override {
             if (remove) {
                 assert(remove->unsubscribe(event->tran->getID()) == RES_OK);
@@ -206,7 +207,7 @@ static void test_snapshot_and_errors() {
             return RES_OK;
         }
     } mutator;
-    DataNode removed, added, filtered;
+    TestDataNode removed, added, filtered;
     probe removed_probe{}, added_probe{};
     assert(publisher.init(broker, "pub") == DataNode::RES_OK);
     assert(mutator.init(broker, "mutator") == DataNode::RES_OK);
@@ -237,8 +238,8 @@ static void test_snapshot_and_errors() {
 }
 static void test_subscriber_capacity_and_lifetime() {
     DataBroker broker;
-    DataNode publisher;
-    DataNode subscribers[DataNode::MaxLinks + 1U];
+    TestDataNode publisher;
+    TestDataNode subscribers[DataNode::MaxLinks + 1U];
     char ids[DataNode::MaxLinks + 1U][2]{};
     assert(publisher.init(broker, "pub") == DataNode::RES_OK);
     for (size_t i = 0U; i <= DataNode::MaxLinks; ++i) {
@@ -248,12 +249,12 @@ static void test_subscriber_capacity_and_lifetime() {
     }
     assert(subscribers[DataNode::MaxLinks].publisherCount() == 0U);
     {
-        DataNode transient;
+        TestDataNode transient;
         assert(transient.init(broker, "transient") == DataNode::RES_OK);
         assert(subscribers[0].subscribe("transient") == DataNode::RES_OK);
     }
     assert(broker.search("transient") == nullptr && subscribers[0].publisherCount() == 1U);
-    DataNode no_callback;
+    TestDataNode no_callback;
     assert(no_callback.init(broker, "empty") == DataNode::RES_OK);
     assert(subscribers[0].subscribe("empty") == DataNode::RES_OK);
     uint32_t value = 0U;
@@ -287,16 +288,16 @@ static void test_nested_timers() {
 // Nodes rebuilt at the same address must not receive PUBLISH or TIMER events from an old snapshot.
 static void test_recreated_node_snapshots() {
     DataBroker broker;
-    DataNode publisher;
-    std::optional<DataNode> replacement;
+    TestDataNode publisher;
+    std::optional<TestDataNode> replacement;
     probe replacement_probe{};
     struct Recreator final : DataNode {
         DataBroker& owner;
-        std::optional<DataNode>& replacement;
+        std::optional<TestDataNode>& replacement;
         probe& payload;
         bool replace = true;
         bool timer_mode = false;
-        Recreator(DataBroker& broker, std::optional<DataNode>& target, probe& state)
+        Recreator(DataBroker& broker, std::optional<TestDataNode>& target, probe& state)
             : owner(broker), replacement(target), payload(state) {}
         int onEvent(EventParam* event) override {
             if (!replace)

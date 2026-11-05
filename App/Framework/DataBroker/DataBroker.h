@@ -20,7 +20,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#pragma once
+#ifndef APP_FRAMEWORK_DATABROKER_DATABROKER_H
+#define APP_FRAMEWORK_DATABROKER_DATABROKER_H
 #include "DataNode.h"
 
 /** Fixed-capacity synchronous routing with explicit subscriptions; call only from the main loop. */
@@ -48,3 +49,5 @@ class DataBroker {
     void remove(DataNode& node);
     bool alive(const Entry& entry) const;
 };
+
+#endif

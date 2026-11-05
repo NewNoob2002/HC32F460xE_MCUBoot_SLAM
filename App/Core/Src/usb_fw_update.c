@@ -4,14 +4,14 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "bsp_boot_info.h"
 #include "bsp_critical.h"
+#include "bsp_image_info.h"
 #include "bsp_status_led.h"
 #include "bsp_usb.h"
-#include "fw_update/boot_control_mcuboot.h"
+#include "fw_update/flashdb_product_config.h"
+#include "fw_update/image_control_mcuboot.h"
+#include "fw_update/image_storage_mcuboot.h"
 #include "fw_update/manager.h"
-#include "fw_update/product_config_flashdb.h"
-#include "fw_update/storage_mcuboot.h"
 #include "product_identity.h"
 #include "usbd_core.h"
 
@@ -51,7 +51,7 @@
 #endif
 #if HC32_ADMIN_AUTH_ENABLED
 #include "bsp_trng.h"
-#include "fw_update/admin_auth_ecdsa.h"
+#include "fw_update/admin_ecdsa_auth.h"
 extern const uint8_t hc32_admin_public_key[FW_UPDATE_ADMIN_PUBLIC_KEY_SIZE];
 #endif
 
@@ -376,8 +376,8 @@ static struct fw_update_version application_version(void) {
 
 /* Both Boot and Application read the record at its fixed Flash address; a Boot without one reports 0.0.0. */
 static struct fw_update_version bootloader_version(void) {
-    struct bsp_boot_info info;
-    if (!bsp_boot_info_read(&info))
+    struct bsp_image_info info;
+    if (!bsp_image_info_read(&info))
         return (struct fw_update_version){0};
     return (struct fw_update_version){
         .major = info.major,
@@ -395,8 +395,8 @@ int usb_fw_update_init(void) {
         .application_pid = HC32_PRODUCT_USB_APPLICATION_PID,
     };
     struct fw_update_product_config_state product_config_state;
-    fw_update_storage_mcuboot_init(&storage);
-    if (fw_update_product_config_flashdb_init(&product_config, &default_identity) != FW_UPDATE_OK)
+    fw_update_image_storage_mcuboot_init(&storage);
+    if (fw_update_flashdb_product_config_init(&product_config, &default_identity) != FW_UPDATE_OK)
         return -1;
     if (fw_update_product_config_get(&product_config, &product_config_state) != FW_UPDATE_OK)
         return -1;
@@ -406,12 +406,12 @@ int usb_fw_update_init(void) {
     device_descriptor[USB_DEVICE_PID_OFFSET] = (uint8_t)product_config_state.identity.application_pid;
     device_descriptor[USB_DEVICE_PID_OFFSET + 1U] = (uint8_t)(product_config_state.identity.application_pid >> 8U);
 #endif
-    fw_update_boot_control_mcuboot_init(&boot_control, &product_config);
+    fw_update_image_control_mcuboot_init(&boot_control, &product_config);
 #if HC32_ADMIN_AUTH_ENABLED
     /* Without entropy or with an invalid key, recovery still works but never advertises administrator mode. */
     const struct fw_update_admin_auth* admin =
         bsp_trng_init()
-                && fw_update_admin_auth_ecdsa_init(&admin_auth, hc32_admin_public_key, bsp_trng_read) == FW_UPDATE_OK
+                && fw_update_admin_ecdsa_auth_init(&admin_auth, hc32_admin_public_key, bsp_trng_read) == FW_UPDATE_OK
             ? &admin_auth
             : NULL;
 #else

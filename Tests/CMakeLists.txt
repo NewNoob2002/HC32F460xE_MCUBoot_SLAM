@@ -134,7 +134,7 @@ set(FLASHDB_TEST_SOURCES
 add_executable(product_config_flashdb_tests
     product_config_flashdb_tests.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/product_config.c
-    ${PROJECT_SOURCE_DIR}/components/fw_update/backends/flashdb/src/product_config_flashdb.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/backends/flashdb/src/flashdb_product_config.c
     ${FLASHDB_TEST_SOURCES}
 )
 set_source_files_properties(${FLASHDB_TEST_SOURCES} PROPERTIES COMPILE_OPTIONS "-w")
@@ -153,8 +153,8 @@ add_executable(fw_update_mcuboot_backend_tests
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/storage.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/boot_control.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/product_config.c
-    ${PROJECT_SOURCE_DIR}/components/fw_update/backends/mcuboot/src/storage_mcuboot.c
-    ${PROJECT_SOURCE_DIR}/components/fw_update/backends/mcuboot/src/boot_control_mcuboot.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/backends/mcuboot/src/image_storage_mcuboot.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/backends/mcuboot/src/image_control_mcuboot.c
 )
 target_include_directories(fw_update_mcuboot_backend_tests PRIVATE
     ${PROJECT_SOURCE_DIR}/components/fw_update/include
@@ -319,7 +319,7 @@ set(TINYCRYPT_TEST_ROOT ${PROJECT_SOURCE_DIR}/components/mcuboot-2.4.0/ext/tinyc
 add_executable(fw_update_admin_auth_tests
     fw_update_admin_auth_tests.c
     ${PROJECT_SOURCE_DIR}/components/fw_update/src/admin_auth.c
-    ${PROJECT_SOURCE_DIR}/components/fw_update/backends/mcuboot/src/admin_auth_ecdsa.c
+    ${PROJECT_SOURCE_DIR}/components/fw_update/backends/mcuboot/src/admin_ecdsa_auth.c
     ${TINYCRYPT_TEST_ROOT}/source/ecc.c
     ${TINYCRYPT_TEST_ROOT}/source/ecc_dsa.c
     ${TINYCRYPT_TEST_ROOT}/source/ecc_platform_specific.c

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef APP_HAL_SETTINGSSTORE_H
+#define APP_HAL_SETTINGSSTORE_H
 #include <cstddef>
 #include <cstdint>
 
@@ -22,3 +23,5 @@ class Hc32SettingsStore final : public SettingsStore {
     bool ready_ = false;
 };
 } // namespace hal
+
+#endif

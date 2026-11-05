@@ -1,4 +1,5 @@
-#pragma once
+#ifndef APP_DATAPROC_SETTINGS_H
+#define APP_DATAPROC_SETTINGS_H
 #include <array>
 #include "DataBroker.h"
 #include "SettingsStore.h"
@@ -80,3 +81,5 @@ class SettingsNode final : public DataNode {
     SettingResult commit(const SettingsState& next);
 };
 } // namespace dp
+
+#endif

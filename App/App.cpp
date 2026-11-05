@@ -1,17 +1,14 @@
 #include "App.h"
-#include "bsp_boot_request.h"
 #include "bsp_clock.h"
+#include "bsp_critical.h"
 #include "bsp_log_uart.h"
 #include "bsp_panic.h"
+#include "bsp_recovery_request.h"
 #include "bsp_reset.h"
 #include "bsp_status_led.h"
 #include "bsp_timebase.h"
 #include "bsp_write_protection.h"
 #include "core_debug.h"
-
-extern "C" {
-#include "cmsis_gcc.h"
-}
 
 namespace {
 constexpr uint32_t AppSystemClockHz = 50000000U;
@@ -25,7 +22,7 @@ debug::Service* g_log_sink = nullptr;
 /* Copies each EasyLogger line into the Debug Link log ring, like the UART/RTT console. */
 extern "C" void core_debug_forward(const char* line, size_t size) {
     // EasyLogger may be called from an interrupt handler, but the Debug Service ring is main-loop only.
-    if (g_log_sink != nullptr && __get_IPSR() == 0U)
+    if (g_log_sink != nullptr && !bsp_in_isr())
         g_log_sink->log_line(line, size, bsp_millis());
 }
 #endif
@@ -94,7 +91,7 @@ void App::applyLedOverride() {
         (void)broker_.handleTimers(now_ms);
         const bool debug_reset = debug_.poll(now_ms);
         if (action == USB_FW_UPDATE_ACTION_RESET_TO_RECOVERY)
-            bsp_boot_request_recovery();
+            bsp_recovery_request_set();
         if (action != USB_FW_UPDATE_ACTION_NONE || debug_reset)
             bsp_system_reset();
         bsp_status_led_poll(bsp_millis());
@@ -120,7 +117,7 @@ void App::applyLedOverride() {
     g_log_sink = &debug_;
 #endif
     CORE_DEBUG_INIT();
-    CORE_DEBUG_PRINTF("app startup");
+    CORE_DEBUG_PRINTF("%s", "app startup");
     if (!bsp_status_led_init())
         bsp_panic("app status LED init failed");
 #if APP_PHASE2_HIL_MODE != 0

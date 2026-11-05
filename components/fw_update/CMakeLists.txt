@@ -10,10 +10,10 @@ target_include_directories(fw_update_core PUBLIC include)
 target_link_libraries(fw_update_core PRIVATE hc32_project_options)
 
 add_library(fw_update_mcuboot STATIC
-    backends/flashdb/src/product_config_flashdb.c
-    backends/mcuboot/src/storage_mcuboot.c
-    backends/mcuboot/src/boot_control_mcuboot.c
-    backends/mcuboot/src/admin_auth_ecdsa.c
+    backends/flashdb/src/flashdb_product_config.c
+    backends/mcuboot/src/image_storage_mcuboot.c
+    backends/mcuboot/src/image_control_mcuboot.c
+    backends/mcuboot/src/admin_ecdsa_auth.c
 )
 target_include_directories(fw_update_mcuboot PUBLIC
     backends/flashdb/include

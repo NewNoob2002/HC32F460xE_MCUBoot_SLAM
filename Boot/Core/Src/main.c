@@ -1,12 +1,12 @@
 #include "boot_handover.h"
 #include "boot_memory_map.h"
 #include "bootutil/bootutil.h"
-#include "bsp_boot_request.h"
 #include "bsp_clock.h"
 #include "bsp_external_watchdog.h"
 #include "bsp_flash.h"
 #include "bsp_log_uart.h"
 #include "bsp_panic.h"
+#include "bsp_recovery_request.h"
 #include "bsp_reset.h"
 #include "bsp_status_led.h"
 #include "bsp_timebase.h"
@@ -65,7 +65,7 @@ static _Noreturn void run_recovery_updater(void) {
             factory_erase();
         /* REBOOT to recovery from recovery behaves as from the Application: boot_go() runs, then recovery again. */
         if (action == USB_FW_UPDATE_ACTION_RESET_TO_RECOVERY)
-            bsp_boot_request_recovery();
+            bsp_recovery_request_set();
         if (action != USB_FW_UPDATE_ACTION_NONE)
             bsp_system_reset();
         __WFI();
@@ -76,7 +76,7 @@ int main(void) {
     struct boot_rsp rsp = {0};
     FIH_DECLARE(rc, FIH_FAILURE);
     /* Taken before anything else so a request never survives into a second boot. */
-    const bool recovery_requested = bsp_boot_request_take_recovery(bsp_reset_capture());
+    const bool recovery_requested = bsp_recovery_request_take(bsp_reset_capture());
 
     bsp_write_protection_unlock();
     if (!bsp_clock_init())
@@ -86,7 +86,7 @@ int main(void) {
     (void)bsp_log_uart_init();
 
     CORE_DEBUG_INIT();
-    CORE_DEBUG_PRINTF("boot startup");
+    CORE_DEBUG_PRINTF("%s", "boot startup");
     if (!bsp_status_led_init())
         bsp_panic("boot status LED init failed");
     bsp_status_led_set_mode(BSP_STATUS_LED_MODE_BOOT);

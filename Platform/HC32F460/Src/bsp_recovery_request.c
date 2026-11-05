@@ -1,4 +1,4 @@
-#include "bsp_boot_request.h"
+#include "bsp_recovery_request.h"
 
 #include "bsp_reset.h"
 
@@ -22,14 +22,14 @@ static void boot_request_clear(void) {
     boot_request.reserved = 0U;
 }
 
-void bsp_boot_request_recovery(void) {
+void bsp_recovery_request_set(void) {
     boot_request.request = BOOT_REQUEST_RECOVERY;
     boot_request.request_inverse = ~BOOT_REQUEST_RECOVERY;
     boot_request.reserved = 0U;
     boot_request.magic = BOOT_REQUEST_MAGIC;
 }
 
-bool bsp_boot_request_take_recovery(uint32_t reset_flags) {
+bool bsp_recovery_request_take(uint32_t reset_flags) {
     /* Power-on SRAM contents are undefined; only a software reset can carry a request written by the Application. */
     const bool requested = bsp_reset_was_software(reset_flags) && boot_request.magic == BOOT_REQUEST_MAGIC
                            && boot_request.request == BOOT_REQUEST_RECOVERY

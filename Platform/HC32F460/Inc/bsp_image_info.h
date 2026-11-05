@@ -1,5 +1,5 @@
-#ifndef BSP_BOOT_INFO_H
-#define BSP_BOOT_INFO_H
+#ifndef BSP_IMAGE_INFO_H
+#define BSP_IMAGE_INFO_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,7 +14,7 @@ extern "C" {
 #define BSP_BOOT_INFO_ADDRESS 0x00000420UL
 #define BSP_BOOT_INFO_MAGIC   0x4F464942UL /* "BIFO" */
 
-struct bsp_boot_info {
+struct bsp_image_info {
     uint32_t magic;
     uint8_t major;
     uint8_t minor;
@@ -28,7 +28,7 @@ struct bsp_boot_info {
        ^ (uint32_t)(build)))
 
 /** Copies the Boot record into *info; returns false (leaving *info untouched) when the record is absent or invalid. */
-bool bsp_boot_info_read(struct bsp_boot_info* info);
+bool bsp_image_info_read(struct bsp_image_info* info);
 
 #ifdef __cplusplus
 }
