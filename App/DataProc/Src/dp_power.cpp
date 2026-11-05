@@ -18,13 +18,13 @@ bool PowerNode::init(DataBroker& broker, uint32_t now_ms) {
     state_.bq_alternate_probe_result = alternate_pack.probe();
     state_.husb238_probe_result = husb.probe();
     state_.mp2762a_probe_result = mp.probe();
-    state_.bq_alternate_identity_result = state_.bq_alternate_probe_result == BSP_I2C2_OK
+    state_.bq_alternate_identity_result = state_.bq_alternate_probe_result == hal::Ok
                                               ? alternate_pack.readIdentity(&state_.bq_alternate_identity)
                                               : state_.bq_alternate_probe_result;
     CORE_DEBUG_PRINTF("i2c2=%d bq@0b=%d bq@0c=%d husb@08=%d mp@5c=%d bq_identity=%d", state_.i2c_init_result,
                       state_.bq_default_probe_result, state_.bq_alternate_probe_result, state_.husb238_probe_result,
                       state_.mp2762a_probe_result, state_.bq_alternate_identity_result);
-    if (state_.i2c_init_result == BSP_I2C2_OK) {
+    if (state_.i2c_init_result == hal::Ok) {
         // The MP2762A powers up with its OTP 1.5 A input limit; cap it to the source before the first tick so a
         // 500 mA USB port is not dragged down while the pack is still being detected.
         state_.husb238_status_result = husb.readStatus(&state_.husb238_status);
@@ -53,9 +53,9 @@ void PowerNode::refreshDevices() {
         CORE_DEBUG_PRINTF("i2c bus recovered, total=%lu", static_cast<unsigned long>(recoveries));
     state_.i2c_recoveries = recoveries;
 }
-uint16_t sourceCurrentLimitMa(int husb238_result, const hal::Husb238Status& status) {
+uint16_t sourceCurrentLimitMa(hal::Status husb238_result, const hal::Husb238Status& status) {
     constexpr uint16_t UsbDefaultMa = 500U;
-    if (husb238_result != BSP_I2C2_OK)
+    if (husb238_result != hal::Ok)
         return UsbDefaultMa;
     // PD_SRC_CURRENT codes 0..15 (Register Information Rev 1.1, Table 2).
     static constexpr uint16_t PdCurrentMa[16] = {500U,  700U,  1000U, 1250U, 1500U, 1750U, 2000U, 2250U,
@@ -80,7 +80,7 @@ void PowerNode::updateInputLimit() {
 }
 void PowerNode::updateChargerMode() {
     // Only the J2 pack is charged; the output-only pack must not keep the charger awake.
-    const bool present = state_.bq_status_result[ChargedPackSlot] == hal::BQ40Z50_OK;
+    const bool present = state_.bq_status_result[ChargedPackSlot] == hal::Ok;
     const ChargerMode previous = state_.charger_mode;
     if (present) {
         state_.charger_mode = ChargerMode::Active;
@@ -109,23 +109,23 @@ void PowerNode::updateChargerMode() {
         const auto current = static_cast<uint16_t>(settingValue(settings_, ChargeCurrentKey));
         const bool charge = settingValue(settings_, ChargeEnableKey) != 0 && current >= hal::MP2762A::MinChargeMa;
         // Stop before unrelated writes; a failed input-limit write must never bypass an explicit disable.
-        const int stop_result = suspend || !charge ? charger.setSuspended(suspend, false) : BSP_I2C2_OK;
-        state_.charger_control_result = suspend ? BSP_I2C2_OK : charger.setInputCurrentLimit(state_.input_limit_ma);
-        if (stop_result != BSP_I2C2_OK)
+        const hal::Status stop_result = suspend || !charge ? charger.setSuspended(suspend, false) : hal::Ok;
+        state_.charger_control_result = suspend ? hal::Ok : charger.setInputCurrentLimit(state_.input_limit_ma);
+        if (stop_result != hal::Ok)
             state_.charger_control_result = stop_result;
-        if (state_.charger_control_result == BSP_I2C2_OK && !suspend && charge) {
+        if (state_.charger_control_result == hal::Ok && !suspend && charge) {
             state_.charger_control_result = charger.setChargeCurrent(current);
-            if (state_.charger_control_result == BSP_I2C2_OK)
+            if (state_.charger_control_result == hal::Ok)
                 state_.charger_control_result = charger.setSuspended(false, true);
         }
-        if (state_.charger_control_result != BSP_I2C2_OK)
+        if (state_.charger_control_result != hal::Ok)
             (void)charger.setSuspended(suspend, false);
     }
     if (state_.charger_mode != previous)
         CORE_DEBUG_PRINTF("charger mode %u->%u result=%d", static_cast<unsigned>(previous),
                           static_cast<unsigned>(state_.charger_mode), state_.charger_control_result);
 }
-int PowerNode::applyChargeLimits(hal::MP2762A& charger) {
+hal::Status PowerNode::applyChargeLimits(hal::MP2762A& charger) {
     // BQ40Z50 BatteryStatus alarms that require charging to stop: OCA, TCA and OTA.
     constexpr uint16_t StopChargeAlarms = 0x8000U | 0x4000U | 0x1000U;
     const auto& pack = state_.bq_status[ChargedPackSlot];
@@ -147,19 +147,19 @@ int PowerNode::applyChargeLimits(hal::MP2762A& charger) {
     state_.charge_target_mv = allowed ? voltage : 0U;
     state_.charge_target_ma = allowed ? current : 0U;
     if (!allowed) {
-        const int stop_result = charger.setSuspended(false, false);
-        const int input_result = charger.setInputCurrentLimit(state_.input_limit_ma);
-        return stop_result != BSP_I2C2_OK ? stop_result : input_result;
+        const hal::Status stop_result = charger.setSuspended(false, false);
+        const hal::Status input_result = charger.setInputCurrentLimit(state_.input_limit_ma);
+        return stop_result != hal::Ok ? stop_result : input_result;
     }
-    int result = charger.setInputCurrentLimit(state_.input_limit_ma);
+    hal::Status result = charger.setInputCurrentLimit(state_.input_limit_ma);
     // Apply both fast-charge and pre-charge limits before charging is (re)enabled.
-    if (result == BSP_I2C2_OK)
+    if (result == hal::Ok)
         result = charger.setChargeVoltage(voltage);
-    if (result == BSP_I2C2_OK)
+    if (result == hal::Ok)
         result = charger.setChargeCurrent(current);
-    if (result == BSP_I2C2_OK)
+    if (result == hal::Ok)
         result = charger.setSuspended(false, true);
-    if (result != BSP_I2C2_OK)
+    if (result != hal::Ok)
         (void)charger.setSuspended(false, false);
     return result;
 }
@@ -168,12 +168,12 @@ bsp_status_led_mode batteryLedMode(const PowerState& power, const ChargerState& 
     constexpr int16_t ChargingThresholdMa = 20;
     constexpr uint16_t LowPercent = 20U;
     constexpr uint16_t CriticalPercent = 10U;
-    if (power.i2c_init_result != BSP_I2C2_OK)
+    if (power.i2c_init_result != hal::Ok)
         return BSP_STATUS_LED_MODE_APP_NO_PACK;
     // The LEDs describe the J2 pack only; the output-only pack at 0x0C is not shown.
-    const int result = power.bq_status_result[ChargedPackSlot];
-    const bool pending = result == BSP_I2C2_ERR_NOT_READY;
-    const bool present = result == hal::BQ40Z50_OK;
+    const hal::Status result = power.bq_status_result[ChargedPackSlot];
+    const bool pending = result == hal::NotReady;
+    const bool present = result == hal::Ok;
     const auto& pack = power.bq_status[ChargedPackSlot];
     const bool charging = present && pack.current_ma > ChargingThresholdMa;
     const bool full = present && (pack.battery_status & FullyCharged) != 0U;

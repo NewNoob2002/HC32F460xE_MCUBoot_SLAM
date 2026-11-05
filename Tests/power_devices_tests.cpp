@@ -14,12 +14,12 @@ class Store final : public hal::SettingsStore {
     }
 };
 
-static void check(int alternate_result, int init_result) {
+static void check(hal::Status alternate_result, hal::Status init_result) {
     DataBroker broker;
     FakeI2cBus bus;
-    bus.probe_results[0] = BSP_I2C2_ERR_ADDR_NACK;
+    bus.probe_results[0] = hal::AddressNack;
     bus.probe_results[1] = alternate_result;
-    bus.probe_results[2] = BSP_I2C2_ERR_BUS_BUSY;
+    bus.probe_results[2] = hal::BusBusy;
     bus.init_result = init_result;
     dp::PowerNode power(bus);
     TestDataNode sub;
@@ -32,42 +32,42 @@ static void check(int alternate_result, int init_result) {
     dp::PowerState state{};
     assert(dp::Power::pull(sub, state) == DataNode::RES_OK);
     assert(state.i2c_init_result == init_result);
-    assert(state.bq_default_probe_result == BSP_I2C2_ERR_ADDR_NACK);
+    assert(state.bq_default_probe_result == hal::AddressNack);
     assert(state.bq_alternate_probe_result == alternate_result);
-    assert(state.husb238_probe_result == BSP_I2C2_ERR_BUS_BUSY);
-    assert(state.mp2762a_probe_result == BSP_I2C2_OK);
+    assert(state.husb238_probe_result == hal::BusBusy);
+    assert(state.mp2762a_probe_result == hal::Ok);
     // A working bus also caps the MP2762A input limit at init: REG0FH and REG00H, each read plus read-back (no HUSB238 here,
     // so 90% of the 500 mA USB default).
-    const unsigned charger_reads = init_result == BSP_I2C2_OK ? 4U : 0U;
-    if (init_result == BSP_I2C2_OK)
+    const unsigned charger_reads = init_result == hal::Ok ? 4U : 0U;
+    if (init_result == hal::Ok)
         assert(state.input_limit_ma == 450U && bus.mp_regs[0x00] == 9U && bus.mp_regs[0x0F] == 9U
                && bus.mp_writes == 2U);
-    if (alternate_result == BSP_I2C2_OK) {
+    if (alternate_result == hal::Ok) {
         assert(bus.reads == 4U + charger_reads && state.bq_alternate_identity.device_type == 0x4500U);
-        assert(state.bq_alternate_identity_result == hal::BQ40Z50_OK);
+        assert(state.bq_alternate_identity_result == hal::Ok);
     } else {
         assert(bus.reads == charger_reads && bus.writes == 0U);
         assert(state.bq_alternate_identity_result == alternate_result);
     }
     assert(sub.notify(dp::names::Power, &state, sizeof(state)) == DataNode::RES_UNSUPPORTED_REQUEST);
     // Battery polling starts only on a working bus; until the first tick both slots stay invalid.
-    assert(power.hasTimer() == (init_result == BSP_I2C2_OK));
-    assert(state.bq_status_result[0] == BSP_I2C2_ERR_NOT_READY);
-    assert(state.bq_status_result[1] == BSP_I2C2_ERR_NOT_READY);
+    assert(power.hasTimer() == (init_result == hal::Ok));
+    assert(state.bq_status_result[0] == hal::NotReady);
+    assert(state.bq_status_result[1] == hal::NotReady);
 }
 
 /* Each timer tick reads both pack addresses and keeps a per-slot result. */
 static void batteryRefresh() {
     DataBroker broker;
     FakeI2cBus bus;
-    bus.probe_results[1] = BSP_I2C2_ERR_ADDR_NACK; // skip the identity read
+    bus.probe_results[1] = hal::AddressNack; // skip the identity read
     dp::PowerNode power(bus);
     TestDataNode sub;
     assert(power.init(broker, 0U));
     assert(sub.init(broker, "sub") == DataNode::RES_OK && dp::Power::subscribe(sub) == DataNode::RES_OK);
     bus.reads = 0U; // ignore the init-time input limit write
     bus.sbs = true;
-    bus.read_result = BSP_I2C2_ERR_ADDR_NACK;
+    bus.read_result = hal::AddressNack;
     bus.sbs_absent_address = hal::BQ40Z50::DefaultAddress;
     bus.sbs_words[0x09] = 7900U;
     bus.sbs_words[0x0D] = 55U;
@@ -82,32 +82,32 @@ static void batteryRefresh() {
     assert(bus.mp_regs[0x08] == 0x10U);
     dp::PowerState state{};
     assert(dp::Power::pull(sub, state) == DataNode::RES_OK);
-    assert(state.bq_status_result[0] == BSP_I2C2_ERR_ADDR_NACK);
-    assert(state.bq_status_result[1] == hal::BQ40Z50_OK);
+    assert(state.bq_status_result[0] == hal::AddressNack);
+    assert(state.bq_status_result[1] == hal::Ok);
     assert(state.bq_status[1].voltage_mv == 7900U && state.bq_status[1].relative_soc_percent == 55U);
-    assert(state.mp2762a_status_result == BSP_I2C2_OK);
+    assert(state.mp2762a_status_result == hal::Ok);
     assert(state.mp2762a_status.status == 0x08U && state.mp2762a_status.fault == 0x40U);
     assert(state.mp2762a_status.battery_voltage == 0x1234U && state.mp2762a_status.input_current == 0xAB00U);
 
     // A failed charger read keeps the previous registers and reports the error.
-    bus.mp_result = BSP_I2C2_ERR_ADDR_NACK;
+    bus.mp_result = hal::AddressNack;
     bus.mp_regs[0x13] = 0U;
     (void)broker.handleTimers(2U * dp::BatteryPeriodMs);
     assert(dp::Power::pull(sub, state) == DataNode::RES_OK);
-    assert(state.mp2762a_status_result == BSP_I2C2_ERR_ADDR_NACK && state.mp2762a_status.status == 0x08U);
-    assert(state.charger_mode == dp::ChargerMode::Active && state.charger_control_result == BSP_I2C2_ERR_ADDR_NACK);
+    assert(state.mp2762a_status_result == hal::AddressNack && state.mp2762a_status.status == 0x08U);
+    assert(state.charger_mode == dp::ChargerMode::Active && state.charger_control_result == hal::AddressNack);
 }
 /* No pack: suspend the charger after a debounce, keep re-applying it, and lift it periodically for a sleeping pack. */
 static void chargerSuspend() {
     DataBroker broker;
     FakeI2cBus bus;
-    bus.probe_results[1] = BSP_I2C2_ERR_ADDR_NACK;
+    bus.probe_results[1] = hal::AddressNack;
     dp::PowerNode power(bus);
     TestDataNode sub;
     assert(power.init(broker, 0U));
     assert(sub.init(broker, "sub") == DataNode::RES_OK && dp::Power::subscribe(sub) == DataNode::RES_OK);
     bus.sbs = true;
-    bus.read_result = BSP_I2C2_ERR_ADDR_NACK;
+    bus.read_result = hal::AddressNack;
     bus.sbs_absent_address = hal::BQ40Z50::DefaultAddress;
     bus.sbs_fail_reg = 0x03;   // the alternate pack fails its first word: both packs absent
     bus.mp_regs[0x08] = 0x96U; // V1.1 read-back 0x16 plus a set REG_RST bit, which must never be written back
@@ -125,7 +125,7 @@ static void chargerSuspend() {
     assert(bus.mp_regs[0x08] == 0x16U); // REG_RST cleared, charging allowed during debounce
     tick();
     // Suspend sets SUSP_EN and clears CHG_EN and nothing else.
-    assert(state.charger_mode == dp::ChargerMode::Suspended && state.charger_control_result == BSP_I2C2_OK);
+    assert(state.charger_mode == dp::ChargerMode::Suspended && state.charger_control_result == hal::Ok);
     assert(bus.mp_regs[0x08] == 0x0EU);
     tick();
     assert(state.charger_mode == dp::ChargerMode::Suspended && bus.mp_regs[0x08] == 0x0EU);
@@ -146,7 +146,7 @@ static void chargerSuspend() {
     // The output-only pack (0x0C) answering must not wake the charger.
     bus.sbs_fail_reg = -1;
     tick();
-    assert(state.bq_status_result[1] == hal::BQ40Z50_OK && state.charger_mode == dp::ChargerMode::Suspended);
+    assert(state.bq_status_result[1] == hal::Ok && state.charger_mode == dp::ChargerMode::Suspended);
     // The charged pack (0x0B) answering resumes charging at once, with its request applied.
     bus.expected_address = hal::BQ40Z50::DefaultAddress;
     bus.sbs_absent_address = hal::BQ40Z50::AlternateAddress;
@@ -154,30 +154,30 @@ static void chargerSuspend() {
     bus.sbs_words[0x14] = 2000U;
     tick();
     assert(state.charger_mode == dp::ChargerMode::Active && state.charge_allowed);
-    assert(bus.mp_regs[0x08] == 0x16U && state.charger_control_result == BSP_I2C2_OK);
+    assert(bus.mp_regs[0x08] == 0x16U && state.charger_control_result == hal::Ok);
     // A register that does not take the value is reported, not assumed.
     bus.sbs_fail_reg = 0x03;
     bus.mp_stuck_bits = 0x10U;
     for (uint8_t i = 0U; i < dp::ChargerSuspendAfterTicks; ++i)
         tick();
-    assert(state.charger_mode == dp::ChargerMode::Suspended && state.charger_control_result == hal::Mp2762aErrVerify);
+    assert(state.charger_mode == dp::ChargerMode::Suspended && state.charger_control_result == hal::VerifyError);
 }
 /* The source decides the input limit: a PD contract, else the Type-C advertisement, else USB 2.0's 500 mA. */
 static void sourceLimit() {
     using dp::sourceCurrentLimitMa;
-    assert(sourceCurrentLimitMa(BSP_I2C2_ERR_ADDR_NACK, {0x3AU, 0x40U}) == 500U); // unreadable: USB default
-    assert(sourceCurrentLimitMa(BSP_I2C2_OK, {0x34U, 0x40U}) == 1500U);           // PD 12 V / 1.5 A
-    assert(sourceCurrentLimitMa(BSP_I2C2_OK, {0x6FU, 0x40U}) == 5000U);           // PD 20 V / 5 A
-    assert(sourceCurrentLimitMa(BSP_I2C2_OK, {0x00U, 0x40U}) == 500U);            // Type-C default current
-    assert(sourceCurrentLimitMa(BSP_I2C2_OK, {0x00U, 0x43U}) == 3000U);           // Type-C 3 A
-    assert(sourceCurrentLimitMa(BSP_I2C2_OK, {0x7AU, 0x41U}) == 1500U);           // reserved PD voltage: Type-C
+    assert(sourceCurrentLimitMa(hal::AddressNack, {0x3AU, 0x40U}) == 500U); // unreadable: USB default
+    assert(sourceCurrentLimitMa(hal::Ok, {0x34U, 0x40U}) == 1500U);         // PD 12 V / 1.5 A
+    assert(sourceCurrentLimitMa(hal::Ok, {0x6FU, 0x40U}) == 5000U);         // PD 20 V / 5 A
+    assert(sourceCurrentLimitMa(hal::Ok, {0x00U, 0x40U}) == 500U);          // Type-C default current
+    assert(sourceCurrentLimitMa(hal::Ok, {0x00U, 0x43U}) == 3000U);         // Type-C 3 A
+    assert(sourceCurrentLimitMa(hal::Ok, {0x7AU, 0x41U}) == 1500U);         // reserved PD voltage: Type-C
     // The applied limit keeps 10% headroom below the source and never exceeds the setting.
     DataBroker broker;
     Store store;
     dp::SettingsNode settings(store);
     FakeI2cBus bus;
-    bus.probe_results[1] = BSP_I2C2_ERR_ADDR_NACK;
-    bus.husb_result = BSP_I2C2_OK;
+    bus.probe_results[1] = hal::AddressNack;
+    bus.husb_result = hal::Ok;
     bus.husb_regs = {0x34U, 0x40U};
     assert(settings.init(broker));
     dp::PowerNode power(bus);
@@ -190,7 +190,7 @@ static void sourceLimit() {
     assert(bus.mp_regs[0x0F] == 27U); // IIN_LIM2 matches, so the two-level limit cannot exceed it
     // A source change (replug to a PC port without PD) is picked up on the next tick, even while no pack answers.
     bus.sbs = true;
-    bus.read_result = BSP_I2C2_ERR_ADDR_NACK;
+    bus.read_result = hal::AddressNack;
     bus.sbs_absent_address = hal::BQ40Z50::DefaultAddress;
     bus.sbs_fail_reg = 0x03;
     bus.husb_regs = {0x00U, 0x40U};
@@ -202,7 +202,7 @@ static void sourceLimit() {
     bus.mp_regs[0x25] = 0x80U;
     (void)broker.handleTimers(2U * dp::BatteryPeriodMs);
     assert(dp::Power::pull(sub, state) == DataNode::RES_OK);
-    assert(state.mp2762a_config_result == BSP_I2C2_OK && state.mp2762a_config.input_limit == 9U);
+    assert(state.mp2762a_config_result == hal::Ok && state.mp2762a_config.input_limit == 9U);
     assert(state.mp2762a_config.input_limit2 == 9U);
     assert(state.mp2762a_config.junction_temp == 0x80C0U);
 }
@@ -212,19 +212,19 @@ static void chargeLimits() {
     Store store;
     dp::SettingsNode settings(store);
     FakeI2cBus bus;
-    bus.probe_results[1] = BSP_I2C2_ERR_ADDR_NACK;
+    bus.probe_results[1] = hal::AddressNack;
     assert(settings.init(broker));
     dp::PowerNode power(bus);
     TestDataNode sub;
     assert(power.init(broker, 0U));
     assert(sub.init(broker, "sub") == DataNode::RES_OK && dp::Power::subscribe(sub) == DataNode::RES_OK);
     bus.sbs = true;
-    bus.read_result = BSP_I2C2_ERR_ADDR_NACK;
+    bus.read_result = hal::AddressNack;
     bus.expected_address = hal::BQ40Z50::DefaultAddress;
     bus.sbs_absent_address = hal::BQ40Z50::AlternateAddress;
     bus.sbs_words[0x15] = 8200U; // ChargingVoltage
     bus.sbs_words[0x14] = 2000U; // ChargingCurrent
-    bus.husb_result = BSP_I2C2_OK;
+    bus.husb_result = hal::Ok;
     bus.husb_regs = {0x3AU, 0x40U}; // PD 12 V / 3 A contract, attached
     bus.mp_regs[0x00] = 0x1EU;      // V1.1 OTP defaults: 1.5 A input, 1 A charge, 8.4 V with VRECH_OS kept
     bus.mp_regs[0x02] = 0x14U;
@@ -273,7 +273,7 @@ static void chargeLimits() {
     bus.mp_stuck_bits = 0x01U;
     bus.mp_regs[0x02] = 0U;
     tick();
-    assert(state.charger_control_result == hal::Mp2762aErrVerify && (bus.mp_regs[0x08] & 0x10U) == 0U);
+    assert(state.charger_control_result == hal::VerifyError && (bus.mp_regs[0x08] & 0x10U) == 0U);
     bus.mp_stuck_bits = 0U;
     tick();
     assert(state.charge_allowed && (bus.mp_regs[0x08] & 0x10U) != 0U);
@@ -295,7 +295,7 @@ static void chargeLimits() {
         assert(settings.set(dp::InputCurrentKey, 1000) == dp::SettingResult::Ok);
         bus.mp_stuck_bits = 0x01U;
         tick();
-        assert(state.charger_control_result == hal::Mp2762aErrVerify);
+        assert(state.charger_control_result == hal::VerifyError);
         assert((bus.mp_regs[0x08] & 0x10U) == 0U);
         assert(state.charge_allowed == (reason == 0U));
     }
@@ -309,7 +309,7 @@ static void chargeLimits() {
     assert(settings.set(dp::InputCurrentKey, 1500) == dp::SettingResult::Ok);
     bus.mp_stuck_bits = 0x01U;
     tick();
-    assert(state.charger_control_result == hal::Mp2762aErrVerify && (bus.mp_regs[0x08] & 0x10U) == 0U);
+    assert(state.charger_control_result == hal::VerifyError && (bus.mp_regs[0x08] & 0x10U) == 0U);
     bus.mp_stuck_bits = 0U;
     bool woke = false;
     for (unsigned i = 0U; i < dp::ChargerSuspendAfterTicks + dp::ChargerWakeIntervalTicks + dp::ChargerWakeWindowTicks;
@@ -317,7 +317,7 @@ static void chargeLimits() {
         tick();
         woke = woke || state.charger_mode == dp::ChargerMode::WakeProbe;
         assert(!state.charge_allowed && (bus.mp_regs[0x08] & 0x10U) == 0U);
-        assert(state.charger_control_result == BSP_I2C2_OK);
+        assert(state.charger_control_result == hal::Ok);
     }
     assert(woke && state.charger_mode == dp::ChargerMode::Suspended);
     bus.sbs_fail_reg = -1;
@@ -342,7 +342,7 @@ static void chargeLimits() {
     bus.mp_regs[0x03] = 0xF2U;
     bus.mp_stuck_bits = 0x40U;
     tick();
-    assert(state.charger_control_result == hal::Mp2762aErrVerify && (bus.mp_regs[0x08] & 0x10U) == 0U);
+    assert(state.charger_control_result == hal::VerifyError && (bus.mp_regs[0x08] & 0x10U) == 0U);
     bus.mp_stuck_bits = 0U;
     tick();
     assert(state.charge_allowed && bus.mp_regs[0x03] == 0x32U && (bus.mp_regs[0x08] & 0x10U) != 0U);
@@ -358,12 +358,12 @@ static void chargeLimits() {
 static void batteryLed() {
     dp::PowerState power{};
     dp::ChargerState charger{};
-    power.i2c_init_result = BSP_I2C2_OK;
+    power.i2c_init_result = hal::Ok;
     assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_UPDATER);
-    power.bq_status_result[0] = BSP_I2C2_ERR_ADDR_NACK;
-    power.bq_status_result[1] = BSP_I2C2_ERR_ADDR_NACK;
+    power.bq_status_result[0] = hal::AddressNack;
+    power.bq_status_result[1] = hal::AddressNack;
     assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_NO_PACK);
-    power.bq_status_result[0] = hal::BQ40Z50_OK;
+    power.bq_status_result[0] = hal::Ok;
     power.bq_status[0].relative_soc_percent = 21U;
     assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_UPDATER);
     power.bq_status[0].relative_soc_percent = 20U;
@@ -379,13 +379,13 @@ static void batteryLed() {
     power.bq_status[0].battery_status = 0x0020U;
     assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_FULL);
     // The output-only pack is never shown: a low or absent 0x0C pack does not change the J2 pattern.
-    power.bq_status_result[1] = hal::BQ40Z50_OK;
+    power.bq_status_result[1] = hal::Ok;
     power.bq_status[1].relative_soc_percent = 5U;
     assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_FULL);
-    power.bq_status_result[0] = BSP_I2C2_ERR_ADDR_NACK;
+    power.bq_status_result[0] = hal::AddressNack;
     assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_NO_PACK);
-    power.bq_status_result[0] = hal::BQ40Z50_OK;
-    power.i2c_init_result = BSP_I2C2_ERR_INIT;
+    power.bq_status_result[0] = hal::Ok;
+    power.i2c_init_result = hal::InitError;
     assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_NO_PACK);
 }
 int main() {
@@ -394,8 +394,8 @@ int main() {
     chargerSuspend();
     chargeLimits();
     sourceLimit();
-    check(BSP_I2C2_OK, BSP_I2C2_OK);
-    check(BSP_I2C2_ERR_ADDR_NACK, BSP_I2C2_OK);
-    check(BSP_I2C2_ERR_NOT_READY, BSP_I2C2_ERR_INIT);
+    check(hal::Ok, hal::Ok);
+    check(hal::AddressNack, hal::Ok);
+    check(hal::NotReady, hal::InitError);
     return 0;
 }

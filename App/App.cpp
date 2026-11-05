@@ -1,6 +1,6 @@
 #include "App.h"
 #include "bsp_clock.h"
-#include "bsp_critical.h"
+#include "bsp_isr.h"
 #include "bsp_log_uart.h"
 #include "bsp_panic.h"
 #include "bsp_recovery_request.h"
@@ -95,7 +95,7 @@ void App::applyLedOverride() {
         if (action != USB_FW_UPDATE_ACTION_NONE || debug_reset)
             bsp_system_reset();
         bsp_status_led_poll(bsp_millis());
-        __WFI();
+        bsp_wait_for_interrupt();
     }
 }
 #endif

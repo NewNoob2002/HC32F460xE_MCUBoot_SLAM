@@ -75,6 +75,10 @@ app_cpp_options(app_test_framework)
 add_library(app_test_hal STATIC ${PROJECT_SOURCE_DIR}/App/HAL/BQ40Z50.cpp)
 app_cpp_options(app_test_hal)
 
+add_executable(hal_status_tests hal_status_tests.cpp)
+app_cpp_options(hal_status_tests)
+add_test(NAME hal_status COMMAND hal_status_tests)
+
 add_executable(bq40z50_tests bq40z50_tests.cpp)
 app_cpp_options(bq40z50_tests)
 target_link_libraries(bq40z50_tests PRIVATE app_test_hal)

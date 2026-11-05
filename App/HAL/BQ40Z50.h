@@ -3,12 +3,6 @@
 #include "I2cBus.h"
 
 namespace hal {
-enum BqResult {
-    BQ40Z50_OK = 0,
-    BQ40Z50_ERR_ARGUMENT = -16,
-    BQ40Z50_ERR_PROTOCOL = -17,
-};
-
 struct BqFirmwareVersion {
     uint16_t device_number;
     uint16_t version;
@@ -46,12 +40,12 @@ class BQ40Z50 {
     static constexpr uint8_t DefaultAddress = 0x0BU;
     static constexpr uint8_t AlternateAddress = 0x0CU;
     constexpr BQ40Z50(I2cBus& bus, uint8_t address) : bus_(bus), address_(address) {}
-    int probe() {
+    Status probe() {
         return bus_.probe(address_);
     }
-    int readIdentity(BqIdentity* identity);
+    Status readIdentity(BqIdentity* identity);
     /** Read-only SBS word reads; *status is written only if every read succeeds. */
-    int readStatus(BqStatus* status);
+    Status readStatus(BqStatus* status);
     uint8_t address() const {
         return address_;
     }
@@ -59,8 +53,8 @@ class BQ40Z50 {
   private:
     I2cBus& bus_;
     uint8_t address_;
-    int readManufacturerBlock(uint16_t command, uint8_t* payload, uint8_t payload_size);
-    int readWord(uint8_t command, uint16_t* value);
+    Status readManufacturerBlock(uint16_t command, uint8_t* payload, uint8_t payload_size);
+    Status readWord(uint8_t command, uint16_t* value);
 };
 } // namespace hal
 

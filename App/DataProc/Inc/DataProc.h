@@ -35,35 +35,35 @@ inline constexpr unsigned ChargedPackSlot = 0U;
 inline constexpr uint16_t ChargeVoltageCeilingMv = 8400U;
 /** Input current the source allows, from the HUSB238 PD contract or the Type-C 5 V advertisement. An unreadable
  * HUSB238 or a default-current source falls back to USB 2.0's 500 mA. */
-uint16_t sourceCurrentLimitMa(int husb238_result, const hal::Husb238Status& status);
+uint16_t sourceCurrentLimitMa(hal::Status husb238_result, const hal::Husb238Status& status);
 /** The MP2762A input limit leaves headroom for the main board and HUSB238 on the same input and for the MP2762A
  * IIN_LIM tolerance (+/-5% at 1.5 A, datasheet Rev 1.1). */
 inline constexpr unsigned SourceHeadroomPercent = 90U;
 
 struct PowerState {
-    int i2c_init_result = 0;
-    int bq_default_probe_result = 0;
-    int bq_alternate_probe_result = 0;
-    int husb238_probe_result = 0;
-    int mp2762a_probe_result = 0;
-    int bq_alternate_identity_result = 0;
+    hal::Status i2c_init_result = hal::Ok;
+    hal::Status bq_default_probe_result = hal::Ok;
+    hal::Status bq_alternate_probe_result = hal::Ok;
+    hal::Status husb238_probe_result = hal::Ok;
+    hal::Status mp2762a_probe_result = hal::Ok;
+    hal::Status bq_alternate_identity_result = hal::Ok;
     hal::BqIdentity bq_alternate_identity{};
     // Not read until the first BatteryPeriodMs tick; nonzero result keeps the previous status invalid.
-    int bq_status_result[BatteryCount] = {BSP_I2C2_ERR_NOT_READY, BSP_I2C2_ERR_NOT_READY};
+    hal::Status bq_status_result[BatteryCount] = {hal::NotReady, hal::NotReady};
     hal::BqStatus bq_status[BatteryCount]{};
-    int mp2762a_status_result = BSP_I2C2_ERR_NOT_READY;
+    hal::Status mp2762a_status_result = hal::NotReady;
     hal::Mp2762aStatus mp2762a_status{};
     ChargerMode charger_mode = ChargerMode::Active;
-    int charger_control_result = BSP_I2C2_ERR_NOT_READY;
+    hal::Status charger_control_result = hal::NotReady;
     // Last limits computed from the charged pack's request and the settings; zero while charging is not allowed.
     bool charge_allowed = false;
     uint16_t charge_target_mv = 0U;
     uint16_t charge_target_ma = 0U;
-    int husb238_status_result = BSP_I2C2_ERR_NOT_READY;
+    hal::Status husb238_status_result = hal::NotReady;
     hal::Husb238Status husb238_status{};
     uint16_t source_limit_ma = 0U; // what the source allows
     uint16_t input_limit_ma = 0U;  // what was written to REG00H
-    int mp2762a_config_result = BSP_I2C2_ERR_NOT_READY;
+    hal::Status mp2762a_config_result = hal::NotReady;
     hal::Mp2762aConfig mp2762a_config{};
     uint32_t i2c_recoveries = 0U;
 };
@@ -150,7 +150,7 @@ class PowerNode final : public ValueNode<PowerState> {
     void refreshDevices();
     void updateInputLimit();
     void updateChargerMode();
-    int applyChargeLimits(hal::MP2762A& charger);
+    hal::Status applyChargeLimits(hal::MP2762A& charger);
 };
 class ChargerNode final : public ValueNode<ChargerState> {
   public:

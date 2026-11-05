@@ -14,7 +14,7 @@ static uint16_t read_u16_be(const uint8_t* data) {
     return static_cast<uint16_t>((static_cast<uint16_t>(data[0]) << 8U) | static_cast<uint16_t>(data[1]));
 }
 
-int BQ40Z50::readManufacturerBlock(uint16_t command, uint8_t* payload, uint8_t payload_size) {
+Status BQ40Z50::readManufacturerBlock(uint16_t command, uint8_t* payload, uint8_t payload_size) {
     const uint8_t request[] = {
         BQ40Z50_MANUFACTURER_ACCESS_REG,
         static_cast<uint8_t>(command),
@@ -23,31 +23,31 @@ int BQ40Z50::readManufacturerBlock(uint16_t command, uint8_t* payload, uint8_t p
     uint8_t response[BQ40Z50_FIRMWARE_VERSION_SIZE + 1U];
 
     if (payload == nullptr || payload_size == 0U || payload_size > BQ40Z50_FIRMWARE_VERSION_SIZE)
-        return BQ40Z50_ERR_ARGUMENT;
+        return BatteryInvalidArgument;
 
-    int result = bus_.write(address_, request, sizeof(request));
-    if (result != BSP_I2C2_OK)
+    Status result = bus_.write(address_, request, sizeof(request));
+    if (result != Ok)
         return result;
     result = bus_.readReg(address_, BQ40Z50_MANUFACTURER_DATA_REG, response, static_cast<uint32_t>(payload_size) + 1U);
-    if (result != BSP_I2C2_OK)
+    if (result != Ok)
         return result;
     if (response[0] != payload_size)
-        return BQ40Z50_ERR_PROTOCOL;
+        return ProtocolError;
 
     memcpy(payload, &response[1], payload_size);
-    return BQ40Z50_OK;
+    return Ok;
 }
 
-int BQ40Z50::readWord(uint8_t command, uint16_t* value) {
+Status BQ40Z50::readWord(uint8_t command, uint16_t* value) {
     uint8_t word[2];
-    const int result = bus_.readReg(address_, command, word, sizeof(word));
-    if (result != BSP_I2C2_OK)
+    const Status result = bus_.readReg(address_, command, word, sizeof(word));
+    if (result != Ok)
         return result;
     *value = read_u16_le(word);
-    return BQ40Z50_OK;
+    return Ok;
 }
 
-int BQ40Z50::readStatus(BqStatus* status) {
+Status BQ40Z50::readStatus(BqStatus* status) {
     // Smart Battery Data Specification 1.1 command codes, all SMBus read-word.
     struct Field {
         uint8_t command;
@@ -64,40 +64,40 @@ int BQ40Z50::readStatus(BqStatus* status) {
     uint16_t current = 0U;
 
     if (address_ > 0x7FU || status == nullptr)
-        return BQ40Z50_ERR_ARGUMENT;
+        return BatteryInvalidArgument;
     for (const auto& field : fields) {
-        const int result = readWord(field.command, &(next.*field.member));
-        if (result != BQ40Z50_OK)
+        const Status result = readWord(field.command, &(next.*field.member));
+        if (result != Ok)
             return result;
     }
-    const int result = readWord(0x0AU, &current);
-    if (result != BQ40Z50_OK)
+    const Status result = readWord(0x0AU, &current);
+    if (result != Ok)
         return result;
     next.current_ma = static_cast<int16_t>(current);
     *status = next;
-    return BQ40Z50_OK;
+    return Ok;
 }
 
-int BQ40Z50::readIdentity(BqIdentity* identity) {
+Status BQ40Z50::readIdentity(BqIdentity* identity) {
     uint8_t device_type[2];
     uint8_t firmware[BQ40Z50_FIRMWARE_VERSION_SIZE];
     uint8_t hardware_version[2];
     uint8_t chemistry_id[2];
 
     if (address_ > 0x7FU || identity == nullptr)
-        return BQ40Z50_ERR_ARGUMENT;
+        return BatteryInvalidArgument;
 
-    int result = readManufacturerBlock(0x0001U, device_type, sizeof(device_type));
-    if (result != BQ40Z50_OK)
+    Status result = readManufacturerBlock(0x0001U, device_type, sizeof(device_type));
+    if (result != Ok)
         return result;
     result = readManufacturerBlock(0x0002U, firmware, sizeof(firmware));
-    if (result != BQ40Z50_OK)
+    if (result != Ok)
         return result;
     result = readManufacturerBlock(0x0003U, hardware_version, sizeof(hardware_version));
-    if (result != BQ40Z50_OK)
+    if (result != Ok)
         return result;
     result = readManufacturerBlock(0x0006U, chemistry_id, sizeof(chemistry_id));
-    if (result != BQ40Z50_OK)
+    if (result != Ok)
         return result;
 
     identity->device_type = read_u16_le(device_type);
@@ -110,7 +110,7 @@ int BQ40Z50::readIdentity(BqIdentity* identity) {
     identity->firmware.execution_context = firmware[10];
     identity->hardware_version = read_u16_le(hardware_version);
     identity->chemistry_id = read_u16_le(chemistry_id);
-    return BQ40Z50_OK;
+    return Ok;
 }
 
 } // namespace hal

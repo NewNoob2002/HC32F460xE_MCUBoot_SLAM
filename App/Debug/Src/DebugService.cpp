@@ -102,15 +102,15 @@ std::size_t Service::snapshot(uint8_t* output, uint32_t now_ms) {
     u32(0x01U, now_ms);
     u32(0x02U, system.loop_count);
     uint8_t mask = 0U;
-    if (have_power && power.i2c_init_result == BSP_I2C2_OK) {
-        const int probes[] = {power.mp2762a_probe_result, power.bq_default_probe_result,
-                              power.bq_alternate_probe_result, power.husb238_probe_result};
+    if (have_power && power.i2c_init_result == hal::Ok) {
+        const hal::Status probes[] = {power.mp2762a_probe_result, power.bq_default_probe_result,
+                                      power.bq_alternate_probe_result, power.husb238_probe_result};
         for (unsigned i = 0U; i < 4U; ++i)
-            if (probes[i] == BSP_I2C2_OK)
+            if (probes[i] == hal::Ok)
                 mask = static_cast<uint8_t>(mask | (1U << i));
     }
     u8(0x10U, mask);
-    if ((mask & 4U) != 0U && power.bq_alternate_identity_result == hal::BQ40Z50_OK) {
+    if ((mask & 4U) != 0U && power.bq_alternate_identity_result == hal::Ok) {
         output[n++] = 0x11U;
         output[n++] = 17U;
         const auto& id = power.bq_alternate_identity;
@@ -131,7 +131,7 @@ std::size_t Service::snapshot(uint8_t* output, uint32_t now_ms) {
     }
     // 0x50 + slot: one SBS block per pack that answered its last refresh (DEBUG_LINK_V1.md).
     for (unsigned slot = 0U; have_power && slot < dp::BatteryCount; ++slot) {
-        if (power.bq_status_result[slot] != hal::BQ40Z50_OK)
+        if (power.bq_status_result[slot] != hal::Ok)
             continue;
         const auto& battery = power.bq_status[slot];
         const uint16_t words[] = {
@@ -147,7 +147,7 @@ std::size_t Service::snapshot(uint8_t* output, uint32_t now_ms) {
         }
     }
     // 0x12: raw MP2762A registers from the last refresh, decoded by the host (DEBUG_LINK_V1.md).
-    if (have_power && power.mp2762a_status_result == BSP_I2C2_OK) {
+    if (have_power && power.mp2762a_status_result == hal::Ok) {
         const auto& mp = power.mp2762a_status;
         output[n++] = 0x12U;
         output[n++] = 12U;
@@ -173,7 +173,7 @@ std::size_t Service::snapshot(uint8_t* output, uint32_t now_ms) {
             n += 2U;
         };
         // 0x13: MP2762A control registers read back after the Power node applied them, plus the die temperature.
-        if (power.mp2762a_config_result == BSP_I2C2_OK) {
+        if (power.mp2762a_config_result == hal::Ok) {
             const auto& cfg = power.mp2762a_config;
             output[n++] = 0x13U;
             output[n++] = 7U;
@@ -195,7 +195,7 @@ std::size_t Service::snapshot(uint8_t* output, uint32_t now_ms) {
         word(power.source_limit_ma);
         word(static_cast<uint16_t>(static_cast<int16_t>(power.charger_control_result)));
         // 0x15: raw HUSB238 PD_STATUS0/1.
-        if (power.husb238_status_result == BSP_I2C2_OK) {
+        if (power.husb238_status_result == hal::Ok) {
             output[n++] = 0x15U;
             output[n++] = 2U;
             output[n++] = power.husb238_status.pd_status0;
@@ -327,7 +327,7 @@ void Service::dispatch(const Frame& r, uint32_t now_ms) {
                 const auto count = r.payload[2];
                 if (device >= sizeof(addresses) || count == 0U || count > 32U)
                     status = Status::OutOfRange;
-                else if (bus_.readReg(addresses[device], r.payload[1], payload + length, count) != BSP_I2C2_OK)
+                else if (bus_.readReg(addresses[device], r.payload[1], payload + length, count) != hal::Ok)
                     status = Status::DeviceError;
                 else
                     length += count;

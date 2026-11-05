@@ -41,14 +41,6 @@ static inline BSP_ATTR_UNUSED BSP_ATTR_ALWAYS_INLINE void bsp_exit_critical(bsp_
 }
 #endif
 
-static inline bool bsp_in_isr(void) {
-#if defined(BOOT_HOST_TEST)
-    return false;
-#else
-    return __get_IPSR() != 0U;
-#endif
-}
-
 #ifdef __cplusplus
 }
 #endif

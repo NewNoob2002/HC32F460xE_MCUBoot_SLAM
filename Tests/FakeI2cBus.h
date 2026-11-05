@@ -9,15 +9,15 @@
 /** Fake bus for device protocol tests; no BSP link-time replacements. */
 class FakeI2cBus final : public hal::I2cBus {
   public:
-    int init_result = BSP_I2C2_OK;
-    std::array<int, 4> probe_results{};
+    hal::Status init_result = hal::Ok;
+    std::array<hal::Status, 4> probe_results{};
     std::array<uint8_t, 4> probes{};
     unsigned probe_count = 0U;
     unsigned init_count = 0U;
     unsigned writes = 0U;
     unsigned reads = 0U;
-    int write_result = BSP_I2C2_OK;
-    int read_result = BSP_I2C2_OK;
+    hal::Status write_result = hal::Ok;
+    hal::Status read_result = hal::Ok;
     unsigned fail_read_at = 0U;
     bool bad_count = false;
     bool raw_read = false;
@@ -31,15 +31,15 @@ class FakeI2cBus final : public hal::I2cBus {
     uint8_t sbs_absent_address = 0U;
     // MP2762A byte registers, answered in SBS mode for address 0x5C.
     std::array<uint8_t, 0x50> mp_regs{};
-    int mp_result = BSP_I2C2_OK;
+    hal::Status mp_result = hal::Ok;
     // HUSB238 PD_STATUS0/1, answered in SBS mode for address 0x08. Default: no reply, as on a board without it.
     std::array<uint8_t, 2> husb_regs{};
-    int husb_result = BSP_I2C2_ERR_ADDR_NACK;
-    int init() override {
+    hal::Status husb_result = hal::AddressNack;
+    hal::Status init() override {
         ++init_count;
         return init_result;
     }
-    int probe(uint8_t address) override {
+    hal::Status probe(uint8_t address) override {
         assert(probe_count < probes.size());
         probes[probe_count] = address;
         return probe_results[probe_count++];
@@ -47,7 +47,7 @@ class FakeI2cBus final : public hal::I2cBus {
     unsigned mp_writes = 0U;
     // Bits forced back on after every MP2762A write, to emulate a register that does not take the value.
     uint8_t mp_stuck_bits = 0U;
-    int write(uint8_t address, const uint8_t* data, uint32_t length) override {
+    hal::Status write(uint8_t address, const uint8_t* data, uint32_t length) override {
         if (address == hal::MP2762A::Address) {
             assert(data && length == 2U && data[0] < mp_regs.size());
             ++mp_writes;
@@ -59,7 +59,7 @@ class FakeI2cBus final : public hal::I2cBus {
         ++writes;
         return write_result;
     }
-    int readReg(uint8_t address, uint8_t reg, uint8_t* data, uint32_t length) override {
+    hal::Status readReg(uint8_t address, uint8_t reg, uint8_t* data, uint32_t length) override {
         // Charger-side devices answer outside raw (REG_READ) mode too: the Power node touches them during init.
         if (!raw_read && address == hal::HUSB238::Address) {
             assert(data && reg + length <= husb_regs.size());
@@ -80,7 +80,7 @@ class FakeI2cBus final : public hal::I2cBus {
                 return read_result;
             data[0] = static_cast<uint8_t>(sbs_words[reg]);
             data[1] = static_cast<uint8_t>(sbs_words[reg] >> 8U);
-            return BSP_I2C2_OK;
+            return hal::Ok;
         }
         if (raw_read) {
             assert(address == expected_address && reg == expected_reg && data && length >= 1U && length <= 32U);
@@ -92,7 +92,7 @@ class FakeI2cBus final : public hal::I2cBus {
                                                0x00U, 0x03U, 0x85U, 0x02U, 0x00U};
         assert(address == expected_address && reg == 0x23U && data);
         ++reads;
-        if (read_result != BSP_I2C2_OK && (fail_read_at == 0U || reads == fail_read_at))
+        if (read_result != hal::Ok && (fail_read_at == 0U || reads == fail_read_at))
             return read_result;
         const uint8_t* payload = nullptr;
         uint8_t word[2]{};
@@ -122,7 +122,7 @@ class FakeI2cBus final : public hal::I2cBus {
         assert(length == static_cast<uint32_t>(size) + 1U);
         data[0] = bad_count ? 0U : size;
         std::memcpy(data + 1, payload, size);
-        return BSP_I2C2_OK;
+        return hal::Ok;
     }
 };
 
