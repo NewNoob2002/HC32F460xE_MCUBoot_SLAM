@@ -19,4 +19,6 @@ WarningsAsErrors: '*'
 HeaderFilterRegex: '(App|Boot|Platform/HC32F460|components/fw_update)/'
 FormatStyle: file
 CheckOptions:
+  # Newlib and the C runtime call these ABI names directly.
+  bugprone-reserved-identifier.AllowedIdentifiers: '^(_(close|lseek|read|write|fstat|isatty|getpid|kill|sbrk|exit)|__assert_func)$'
   readability-function-size.LineThreshold: 100

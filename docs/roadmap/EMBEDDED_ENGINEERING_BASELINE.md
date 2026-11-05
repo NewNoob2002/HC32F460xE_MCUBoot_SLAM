@@ -1,6 +1,6 @@
 # Embedded Engineering Baseline Refactor
 
-Status: **Approved on 2026-11-05; implementation in progress**
+Status: **Completed on 2026-11-05**
 
 Baseline commit: `0e203b133a3d2b1fe56b15e81821caea1d4efabe`
 
@@ -62,7 +62,7 @@ The defects are at the boundaries around this sound design:
 | Low | BARR-C 4.1.b | C module stems collide in their first eight characters in several pairs, including `bsp_boot_info`/`bsp_boot_request`, `admin_auth`/`admin_auth_ecdsa`, `boot_control`/`boot_control_mcuboot` and `product_config`/`product_config_flashdb`. | Rename project-owned modules and update includes/CMake; exclude vendored code. |
 | Low | C-018 | C targets do not pin a language standard. Owned sources already use C11 `_Noreturn` and `_Static_assert`, so C99 is not a valid mechanical target without a downgrade. | Declare C11 explicitly as the project exception, keep GNU extensions where the vendor toolchain requires them and document the choice. |
 
-The machine architecture check currently reports seven violations:
+At baseline, the machine architecture check reported seven violations:
 
 ```text
 App/App.cpp:13                                  forbidden cmsis_gcc.h include
@@ -140,7 +140,7 @@ Recorded build sizes at baseline:
 | Image | Configuration | Flash used | Limit | RAM used |
 | --- | --- | ---: | ---: | ---: |
 | App | Debug | 71,888 B | 195,072 B | 16,276 B |
-| Boot | Debug with administrator key | 61,272 B | 65,536 B | 8,704 B |
+| Boot | Debug with administrator key | 61,272 B | 65,536 B | 10,272 B |
 | App | Release | 52,972 B | 195,072 B | 14,724 B |
 | Boot | Release without administrator key | 44,648 B | 65,536 B | 8,704 B |
 
@@ -204,15 +204,39 @@ restore, clean or stash is used, so unrelated work and evidence remain intact.
 
 ## Decision
 
-Current architecture conformance: **FAIL** because mandatory ARCH and CPP/C
-rules are violated.
+Architecture conformance after implementation: **PASS** for the mechanically
+checked ARCH, CPP and C rules.
 
-Proposed target architecture: **Proceed**, with no platform or OS change and no
+Implemented target architecture: **PASS**, with no platform or OS change and no
 change to update, boot or recovery security boundaries.
 
 The user approved this concrete target design and the eight-checkpoint
 implementation sequence, including the App composition, DataProc and USB
 interfaces described above.
 
-HIL remains a separate hardware authorization. The plan does not flash, reset or
+## Acceptance result
+
+The final acceptance run used the committed checkpoint 7 configuration plus the
+checkpoint 8 cleanup below:
+
+| Check | Result | Evidence |
+| --- | --- | --- |
+| HostTests | PASS | Fresh clean configure/build and `ctest`: 30/30 passed. |
+| Debug firmware | PASS | Clean full build; App 72,856 B, Boot 61,364 B, App RAM 16,288 B. |
+| Debug verifiers | PASS | `verify_app_image`, `verify_winusb_descriptors` and `verify_newlib_syscalls`. |
+| Release firmware | PASS | Clean full build; App 53,724 B, Boot 44,736 B. |
+| Release verifiers | PASS | `verify_app_image`, `verify_winusb_descriptors` and `verify_newlib_syscalls`. |
+| Architecture gate | PASS | Skill `arch_lint`: 0 violations, 136/146 files mapped; application/platform boundary check passed. |
+| BARR-C project C scope | PASS | 40 production C sources passed character, module, format, lexical and compile-database-driven clang-tidy gates. |
+| Project formatting | PASS | All owned C/C++ sources and headers passed `.clang-format` after excluding vendored EasyLogger internals. |
+| C++ resource gate | PASS | `cpp_cost.py check ... --tier T1`; Debug-only newlib heap/format warnings are retained. |
+| Retained evidence | PASS | `verify_evidence.py`: 24 evidence bundles verified. |
+| HIL / hardware behavior | NOT_RUN | No hardware was flashed, reset or otherwise exercised in this refactor. |
+
+The resource delta remains within the approved limits: App Flash is 968 B and
+App RAM is 12 B above the original baseline; Boot Flash is 92 B above and Boot
+RAM is 4 B below it. BARR-C leaves ten reviewed `goto out` cleanup sites under
+advisory rule `BARR-C 1.7.c`; the enforceable lexical and static gates pass.
+
+HIL remains a separate hardware authorization. The plan did not flash, reset or
 modify target hardware.

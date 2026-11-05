@@ -1,6 +1,6 @@
 # Current Repository State
 
-Audit date: 2026-10-28
+Audit date: 2026-11-05
 
 This file is the compact source of truth for the implemented repository. Detailed
 history remains in Git, ADRs and retained evidence bundles.
@@ -50,7 +50,7 @@ history remains in Git, ADRs and retained evidence bundles.
 | `Boot/` | MCUboot entry, recovery fallback and handover |
 | `App/App.{h,cpp}`, `App/Core/` | C++ startup/loop sequencing; shared confirmation and USB remain C |
 | `App/Framework/DataBroker/` | Bounded C++ DataNode, DataBroker and embedded DataTimer |
-| `App/HAL/` | Injected I2cBus/ChargerSignals, device addresses/decoding and HC32 C BSP adapters |
+| `App/HAL/` | Injected I2cBus, PowerDevices, ExternalWatchdog and ChargerSignals contracts plus HC32 adapters |
 | `App/DataProc/` | Typed Power, Charger, Update, System and Settings provider nodes |
 | `App/Debug/` | DBG1 codec, command service and fixed application log ring |
 | `App/Diagnostics/` | Fixed-size startup/runtime status and periodic Debug reports |
@@ -112,6 +112,11 @@ Diagnostics, then restore write protection before the loop. The image is
 confirmed in the loop on the first host USB configuration, not at startup.
 Power probes `0x0B`, `0x0C`, `0x08`, `0x5C` in order and reads BQ identity
 only at `0x0C` after ACK; missing devices are degraded status.
+PowerNode consumes the caller-owned `PowerDevices` contract and SystemNode
+consumes `ExternalWatchdog`; the HC32 adapters are bound in the App composition
+root. DataProc has no BSP, USB or concrete-device header dependency. The shared
+USB updater exposes transport activity while Boot and App apply their own LED
+policy.
 
 The cooperative loop polls watchdog and USB directly on every pass, handles
 node timers, performs any deferred USB reset, polls the LED, then executes WFI.
@@ -260,6 +265,12 @@ Known deferred host issues for a later node:
   GUI installation and exact restoration.
 - Hosted CI covers strict HostTests, Rust fmt/clippy/fake E2E, Debug/Release
   firmware, signed-image verification, signing policy and newlib syscall maps.
+- The embedded engineering baseline refactor passes HostTests 30/30, strict
+  Debug and Release builds plus image/USB/newlib verification, application/
+  platform and skill architecture checks, project-owned BARR-C gates, formatting
+  and the C++ T1 resource gate on 2026-11-05. Debug App is 72,856 B and Boot is
+  61,364 B. The refactor has not been flashed; physical USB, I2C, watchdog, LED,
+  reset, swap and rollback behavior remain unverified.
 - Host/build tests do not prove physical swap timing, USB enumeration, power-loss
   behavior or Windows execution.
 

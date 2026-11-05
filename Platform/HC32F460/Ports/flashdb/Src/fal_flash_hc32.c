@@ -15,26 +15,25 @@ static int config_flash_init(void) {
     return config_area_open(&area) == 0 && area->fa_off == RESERVED_BASE && area->fa_size == RESERVED_SIZE ? 0 : -1;
 }
 
-static int config_flash_read(long offset, uint8_t* buffer, size_t size) {
+static int config_flash_read(long offset, uint8_t* buffer, size_t size) { // barr-c:allow: FAL callback ABI
     const struct flash_area* area = NULL;
-    if (offset < 0L || buffer == NULL || size == 0U || size > INT_MAX || (unsigned long)offset > UINT32_MAX
+    if (offset < 0 || buffer == NULL || size == 0U || size > INT_MAX || (uint64_t)offset > UINT32_MAX
         || config_area_open(&area) != 0)
         return -1;
     return flash_area_read(area, (uint32_t)offset, buffer, (uint32_t)size) == 0 ? (int)size : -1;
 }
 
-static int config_flash_write(long offset, const uint8_t* buffer, size_t size) {
+static int config_flash_write(long offset, const uint8_t* buffer, size_t size) { // barr-c:allow: FAL callback ABI
     const struct flash_area* area = NULL;
-    if (offset < 0L || buffer == NULL || size == 0U || size > INT_MAX || (unsigned long)offset > UINT32_MAX
+    if (offset < 0 || buffer == NULL || size == 0U || size > INT_MAX || (uint64_t)offset > UINT32_MAX
         || config_area_open(&area) != 0)
         return -1;
     return flash_area_write(area, (uint32_t)offset, buffer, (uint32_t)size) == 0 ? (int)size : -1;
 }
 
-static int config_flash_erase(long offset, size_t size) {
+static int config_flash_erase(long offset, size_t size) { // barr-c:allow: FAL callback ABI
     const struct flash_area* area = NULL;
-    if (offset < 0L || size == 0U || size > INT_MAX || (unsigned long)offset > UINT32_MAX
-        || config_area_open(&area) != 0)
+    if (offset < 0 || size == 0U || size > INT_MAX || (uint64_t)offset > UINT32_MAX || config_area_open(&area) != 0)
         return -1;
     return flash_area_erase(area, (uint32_t)offset, (uint32_t)size) == 0 ? (int)size : -1;
 }

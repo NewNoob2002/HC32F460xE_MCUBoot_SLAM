@@ -1,6 +1,7 @@
 #include "core_debug.h"
 #include "elog.h"
 
+#include <inttypes.h>
 #include <stdio.h>
 
 #include "SEGGER_RTT.h"
@@ -35,7 +36,7 @@ void elog_port_output_lock(void) {}
 void elog_port_output_unlock(void) {}
 
 const char* elog_port_get_time(void) {
-    (void)snprintf(g_time_buffer, sizeof(g_time_buffer), "%lu", (unsigned long)bsp_millis());
+    (void)snprintf(g_time_buffer, sizeof(g_time_buffer), "%" PRIu32, bsp_millis());
     return g_time_buffer;
 }
 

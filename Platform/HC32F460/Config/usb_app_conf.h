@@ -12,9 +12,9 @@
 #define TX4_FIFO_FS_SIZE (32U)
 #define TX5_FIFO_FS_SIZE (32U)
 
-#if ((RX_FIFO_FS_SIZE + TX0_FIFO_FS_SIZE + TX1_FIFO_FS_SIZE + \
-      TX2_FIFO_FS_SIZE + TX3_FIFO_FS_SIZE + TX4_FIFO_FS_SIZE + \
-      TX5_FIFO_FS_SIZE) > 320U)
+#if ((RX_FIFO_FS_SIZE + TX0_FIFO_FS_SIZE + TX1_FIFO_FS_SIZE + TX2_FIFO_FS_SIZE + TX3_FIFO_FS_SIZE + TX4_FIFO_FS_SIZE   \
+      + TX5_FIFO_FS_SIZE)                                                                                              \
+     > 320U)
 #error "HC32F460 USB FIFO allocation exceeds 320 words"
 #endif
 
