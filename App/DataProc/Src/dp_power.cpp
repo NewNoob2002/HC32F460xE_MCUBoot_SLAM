@@ -158,13 +158,13 @@ hal::Status PowerNode::applyChargeLimits() {
         (void)devices_.setChargerState(false, false);
     return result;
 }
-bsp_status_led_mode batteryLedMode(const PowerState& power, const ChargerState& charger) {
+BatteryLedMode batteryLedMode(const PowerState& power, const ChargerState& charger) {
     constexpr uint16_t FullyCharged = 0x0020U; // BatteryStatus FC
     constexpr int16_t ChargingThresholdMa = 20;
     constexpr uint16_t LowPercent = 20U;
     constexpr uint16_t CriticalPercent = 10U;
     if (power.bus_init_result != hal::Ok)
-        return BSP_STATUS_LED_MODE_APP_NO_PACK;
+        return BatteryLedMode::NoPack;
     // The LEDs describe the J2 pack only; the output-only pack at 0x0C is not shown.
     const hal::Status result = power.battery_status_result[ChargedPackSlot];
     const bool pending = result == hal::NotReady;
@@ -175,15 +175,15 @@ bsp_status_led_mode batteryLedMode(const PowerState& power, const ChargerState& 
     const uint16_t soc = present ? pack.relative_soc_percent : 100U;
     // Before the first refresh keep the plain heartbeat instead of flashing "no pack".
     if (!present)
-        return pending ? BSP_STATUS_LED_MODE_APP_UPDATER : BSP_STATUS_LED_MODE_APP_NO_PACK;
+        return pending ? BatteryLedMode::Updater : BatteryLedMode::NoPack;
     // With input power the pack is either charging or full, even while the charger is in pre-charge or termination.
     if (charging || (charger.valid && charger.power_good))
-        return full ? BSP_STATUS_LED_MODE_APP_FULL : BSP_STATUS_LED_MODE_APP_CHARGING;
+        return full ? BatteryLedMode::Full : BatteryLedMode::Charging;
     if (soc < CriticalPercent)
-        return BSP_STATUS_LED_MODE_APP_CRITICAL;
+        return BatteryLedMode::Critical;
     if (soc <= LowPercent)
-        return BSP_STATUS_LED_MODE_APP_LOW;
-    return BSP_STATUS_LED_MODE_APP_UPDATER;
+        return BatteryLedMode::Low;
+    return BatteryLedMode::Updater;
 }
 int PowerNode::onEvent(EventParam* event) {
     if (event && event->event == EVENT_TIMER) {

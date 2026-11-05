@@ -97,7 +97,7 @@ static int usb_low_level_init(void) {
 }
 
 static USB_DEV_EP* usb_ep(uint8_t address) {
-    uint8_t index = USB_EP_GET_IDX(address);
+    uint8_t index = (uint8_t)USB_EP_GET_IDX(address);
 
     if (index >= USB_MAX_EP_NUM) {
         return NULL;
@@ -108,7 +108,7 @@ static USB_DEV_EP* usb_ep(uint8_t address) {
 static void usb_open_ep(uint8_t address, uint16_t mps, uint8_t type) {
     USB_DEV_EP* ep = usb_ep(address);
 
-    ep->epidx = USB_EP_GET_IDX(address);
+    ep->epidx = (uint8_t)USB_EP_GET_IDX(address);
     ep->ep_dir = USB_EP_DIR_IS_IN(address) ? 1U : 0U;
     ep->maxpacket = mps;
     ep->trans_type = type;
@@ -121,7 +121,7 @@ static void usb_start_write(uint8_t address, const uint8_t* data, uint32_t lengt
     USB_DEV_EP* ep = usb_ep(address);
 
     ep->ep_dir = 1U;
-    ep->epidx = USB_EP_GET_IDX(address);
+    ep->epidx = (uint8_t)USB_EP_GET_IDX(address);
     ep->xfer_buff = (uint8_t*)data;
     ep->xfer_count = 0UL;
     ep->xfer_len = length;
@@ -136,7 +136,7 @@ static void usb_start_read(uint8_t address, uint8_t* data, uint32_t length) {
     USB_DEV_EP* ep = usb_ep(address);
 
     ep->ep_dir = 0U;
-    ep->epidx = USB_EP_GET_IDX(address);
+    ep->epidx = (uint8_t)USB_EP_GET_IDX(address);
     ep->xfer_buff = data;
     ep->xfer_count = 0UL;
     ep->xfer_len = length;
@@ -403,7 +403,7 @@ int usbd_ep_open(uint8_t busid, const struct usb_endpoint_descriptor* descriptor
     if ((busid != HC32_USB_BUS_ID) || (descriptor == NULL)) {
         return -1;
     }
-    index = USB_EP_GET_IDX(descriptor->bEndpointAddress);
+    index = (uint8_t)USB_EP_GET_IDX(descriptor->bEndpointAddress);
     if (index >= USB_MAX_EP_NUM) {
         return -1;
     }

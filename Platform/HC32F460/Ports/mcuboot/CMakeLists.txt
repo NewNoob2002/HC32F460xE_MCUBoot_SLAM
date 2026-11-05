@@ -6,6 +6,7 @@ add_library(mcuboot_port_hc32 STATIC
     Src/keys.c
     ${MCUBOOT_PUBLIC_KEY_SOURCE}
 )
+hc32_apply_project_options(mcuboot_port_hc32)
 target_include_directories(mcuboot_port_hc32 PUBLIC Inc)
-target_include_directories(mcuboot_port_hc32 PRIVATE ${MCUBOOT_ROOT}/boot/bootutil/include)
+target_include_directories(mcuboot_port_hc32 SYSTEM PRIVATE ${MCUBOOT_ROOT}/boot/bootutil/include)
 target_link_libraries(mcuboot_port_hc32 PUBLIC hc32_platform)

@@ -1,0 +1,143 @@
+{
+  "exclude": [
+    "build/**",
+    "Tests/**",
+    "Tools/**",
+    "Drivers/**",
+    "Libraries/**",
+    "components/mcuboot-2.4.0/**",
+    "components/FlashDB-2.2.0/**",
+    "components/cherryusb/**",
+    "components/SEGGER_RTT/**"
+  ],
+  "shared": [],
+  "layers": [
+    {
+      "name": "interface",
+      "globs": [
+        "App/Core/Inc/app_confirm.h",
+        "App/Core/Inc/usb_debug_link.h",
+        "App/Core/Inc/usb_fw_update.h",
+        "App/HAL/Status.h",
+        "App/HAL/I2cBus.h",
+        "App/HAL/PowerDevices.h",
+        "App/HAL/ExternalWatchdog.h",
+        "App/HAL/ChargerSignals.h",
+        "App/HAL/SettingsStore.h",
+        "App/HAL/BQ40Z50.h",
+        "App/HAL/ChargerDevices.h",
+        "components/fw_update/include/**"
+      ],
+      "allow": ["interface"],
+      "forbid_includes": ["@vendor", "@rtos"],
+      "forbid_code": ["hal_call", "register_access"]
+    },
+    {
+      "name": "driver_device",
+      "globs": [
+        "App/HAL/BQ40Z50.cpp"
+      ],
+      "allow": ["driver_device", "interface"],
+      "forbid_includes": ["@vendor", "@rtos"],
+      "forbid_code": ["hal_call", "register_access"]
+    },
+    {
+      "name": "bsp",
+      "globs": [
+        "App/Core/Src/app_confirm.c",
+        "App/Core/Src/usb_debug_link.c",
+        "App/Core/Src/usb_fw_update.c",
+        "App/HAL/Hc32*.cpp",
+        "components/fw_update/backends/**",
+        "Platform/HC32F460/**"
+      ],
+      "allow": ["bsp", "interface", "driver_bus", "driver_device", "platform", "middleware"],
+      "forbid_includes": [],
+      "forbid_code": []
+    },
+    {
+      "name": "module",
+      "globs": [
+        "App/DataProc/**",
+        "App/Debug/**",
+        "App/Diagnostics/**",
+        "App/Framework/**",
+        "components/fw_update/src/**"
+      ],
+      "allow": ["module", "interface", "driver_bus"],
+      "forbid_includes": ["@vendor", "@rtos"],
+      "forbid_code": ["hal_call", "register_access"]
+    },
+    {
+      "name": "driver_bus",
+      "globs": [
+        "components/fw_update/backends/**"
+      ],
+      "allow": ["driver_bus", "interface", "platform", "middleware"],
+      "forbid_includes": [],
+      "forbid_code": []
+    },
+    {
+      "name": "app",
+      "globs": [
+        "App/App.cpp",
+        "App/App.h",
+        "App/Core/Src/main.cpp",
+        "Boot/**"
+      ],
+      "allow": ["app", "module", "interface", "bsp", "driver_bus", "driver_device", "middleware"],
+      "forbid_includes": ["hc32*.h", "usbd*.h", "flash_map_backend.h"],
+      "forbid_code": ["hal_call", "register_access"]
+    },
+    {
+      "name": "platform",
+      "globs": [
+        "Drivers/**",
+        "Libraries/**",
+        "components/mcuboot-2.4.0/**"
+      ],
+      "allow": ["platform"],
+      "forbid_includes": [],
+      "forbid_code": []
+    },
+    {
+      "name": "middleware",
+      "globs": [
+        "components/cherryusb/**",
+        "components/SEGGER_RTT/**",
+        "components/FlashDB-2.2.0/**"
+      ],
+      "allow": ["middleware", "platform"],
+      "forbid_includes": [],
+      "forbid_code": []
+    }
+  ],
+  "cycle_check_layers": ["module"],
+  "include_sets": {
+    "vendor": [
+      "hc32*.h",
+      "bootutil*.h",
+      "flash_map_backend.h",
+      "usbd*.h",
+      "usb_*.h",
+      "fal.h",
+      "flashdb.h",
+      "SEGGER_RTT.h",
+      "tinycrypt*.h"
+    ],
+    "rtos": [
+      "FreeRTOS.h",
+      "task.h",
+      "queue.h",
+      "semphr.h",
+      "event_groups.h",
+      "timers.h",
+      "cmsis_os.h",
+      "cmsis_os2.h"
+    ]
+  },
+  "code_patterns": {
+    "hal_call": "\\b(?:HAL|LL)_[A-Za-z0-9_]+\\s*\\(",
+    "register_access": "\\b[A-Z][A-Z0-9_]*\\s*->\\s*[A-Z][A-Z0-9_]*\\b"
+  }
+}

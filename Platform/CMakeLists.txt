@@ -18,17 +18,21 @@ add_library(hc32_platform STATIC
     HC32F460/Src/bsp_usb.c
     HC32F460/Src/bsp_write_protection.c
 )
+hc32_apply_project_options(hc32_platform)
 target_include_directories(hc32_platform PUBLIC HC32F460/Inc)
 target_include_directories(hc32_platform PRIVATE
     HC32F460/Config
-    ${PROJECT_SOURCE_DIR}/components/mcuboot-2.4.0/boot/bootutil/include
     ${CMAKE_CURRENT_SOURCE_DIR}/HC32F460/Ports/mcuboot/Inc
+)
+target_include_directories(hc32_platform SYSTEM PRIVATE
+    ${PROJECT_SOURCE_DIR}/components/mcuboot-2.4.0/boot/bootutil/include
 )
 target_link_libraries(hc32_platform PUBLIC hc32_ll)
 
 add_library(hc32_newlib OBJECT
     HC32F460/Src/syscalls.c
 )
+hc32_apply_project_options(hc32_newlib)
 target_include_directories(hc32_newlib PRIVATE HC32F460/Inc)
 target_link_libraries(hc32_newlib PRIVATE hc32_device)
 
@@ -39,6 +43,7 @@ add_subdirectory(HC32F460/Ports/easylogger EXCLUDE_FROM_ALL)
 add_library(hc32_usb_device_port STATIC
     HC32F460/Src/usb_dc_hc32f460.c
 )
+hc32_apply_project_options(hc32_usb_device_port)
 target_include_directories(hc32_usb_device_port SYSTEM PRIVATE
     HC32F460/Config
     ${PROJECT_SOURCE_DIR}/components/cherryusb/common
@@ -50,5 +55,6 @@ target_link_libraries(hc32_usb_device_port PUBLIC hc32_platform)
 add_library(hc32_boot_fault OBJECT
     HC32F460/Src/boot_fault.c
 )
+hc32_apply_project_options(hc32_boot_fault)
 target_include_directories(hc32_boot_fault PRIVATE HC32F460/Inc)
 target_link_libraries(hc32_boot_fault PRIVATE hc32_device)

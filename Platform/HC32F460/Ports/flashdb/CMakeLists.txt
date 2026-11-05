@@ -9,8 +9,20 @@ add_library(flashdb_port_hc32 STATIC
     ${FLASHDB_ROOT}/port/fal/src/fal_partition.c
     Src/fal_flash_hc32.c
 )
+hc32_apply_project_options(flashdb_port_hc32)
+set_source_files_properties(
+    ${FLASHDB_ROOT}/src/fdb.c
+    ${FLASHDB_ROOT}/src/fdb_kvdb.c
+    ${FLASHDB_ROOT}/src/fdb_utils.c
+    ${FLASHDB_ROOT}/port/fal/src/fal.c
+    ${FLASHDB_ROOT}/port/fal/src/fal_flash.c
+    ${FLASHDB_ROOT}/port/fal/src/fal_partition.c
+    PROPERTIES COMPILE_OPTIONS "-w"
+)
 target_include_directories(flashdb_port_hc32 PUBLIC
     Inc
+)
+target_include_directories(flashdb_port_hc32 SYSTEM PUBLIC
     ${FLASHDB_ROOT}/inc
     ${FLASHDB_ROOT}/port/fal/inc
 )

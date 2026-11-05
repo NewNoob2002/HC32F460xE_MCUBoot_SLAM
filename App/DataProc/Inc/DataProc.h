@@ -8,7 +8,6 @@
 #include "ExternalWatchdog.h"
 #include "PowerDevices.h"
 #include "Settings.h"
-#include "bsp_status_led.h"
 #include "usb_fw_update.h"
 
 namespace dp {
@@ -137,8 +136,10 @@ template <class State> class ValueNode : public DataNode {
     }
 };
 
-/** App idle LED pattern from the last battery refresh and the charger PG pin (DEBUG_LINK_V1.md has the units). */
-bsp_status_led_mode batteryLedMode(const PowerState& power, const ChargerState& charger);
+enum class BatteryLedMode : uint8_t { Updater, Charging, Full, Low, Critical, NoPack };
+
+/** Idle battery display from the last battery refresh and the charger PG pin. */
+BatteryLedMode batteryLedMode(const PowerState& power, const ChargerState& charger);
 
 class PowerNode final : public ValueNode<PowerState> {
   public:

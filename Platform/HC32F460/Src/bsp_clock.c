@@ -92,14 +92,11 @@ bool bsp_clock_set_pll_hz(uint32_t hz) {
     stc_clock_pll_init_t pll;
     if (CLK_PLLStructInit(&pll) != LL_OK)
         return false;
-    pll.PLLCFGR = 0UL;
-    pll.PLLCFGR_f.PLLM = 1UL - 1UL;
-    pll.PLLCFGR_f.PLLN = 50UL - 1UL;
-    pll.PLLCFGR_f.PLLP = pll_p - 1UL;
-    pll.PLLCFGR_f.PLLQ = 2UL - 1UL;
-    pll.PLLCFGR_f.PLLR = 2UL - 1UL;
+    /* M=1, N=50, R=2, Q=2, P=pll_p and PLLSRC=XTAL. A raw write avoids narrowing
+     * diagnostics for SDK bitfields whose values are validated above. */
+    pll.PLLCFGR =
+        ((UINT32_C(50) - 1U) << 8U) | ((UINT32_C(2) - 1U) << 20U) | ((UINT32_C(2) - 1U) << 24U) | ((pll_p - 1U) << 28U);
     pll.u8PLLState = CLK_PLL_ON;
-    pll.PLLCFGR_f.PLLSRC = CLK_PLL_SRC_XTAL;
     if (CLK_PLLInit(&pll) != LL_OK || CLK_GetStableStatus(CLK_STB_FLAG_PLL) != SET)
         return false;
     CLK_SetSysClockSrc(CLK_SYSCLK_SRC_PLL);

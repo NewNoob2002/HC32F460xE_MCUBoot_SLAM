@@ -33,7 +33,10 @@ _Noreturn void __assert_func(const char* file, int line, const char* func, const
     (void)expression;
     memcpy(reason, prefix, length);
     if (file != NULL) {
-        const size_t file_length = strnlen(file, sizeof(reason) - length - sizeof(digits) - 2U);
+        const size_t max_file_length = sizeof(reason) - length - sizeof(digits) - 2U;
+        size_t file_length = 0U;
+        while (file_length < max_file_length && file[file_length] != '\0')
+            ++file_length;
         memcpy(&reason[length], file, file_length);
         length += file_length;
     }

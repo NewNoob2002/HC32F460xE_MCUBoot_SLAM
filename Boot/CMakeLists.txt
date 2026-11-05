@@ -10,6 +10,7 @@ add_executable(boot_firmware
     ${HC32_ADMIN_PUBLIC_KEY_SOURCE}
 )
 set_target_properties(boot_firmware PROPERTIES SUFFIX .elf)
+hc32_apply_project_options(boot_firmware)
 target_include_directories(boot_firmware PRIVATE
     Core/Inc
     ${PROJECT_SOURCE_DIR}/App/Core/Inc
@@ -25,12 +26,6 @@ target_compile_definitions(boot_firmware PRIVATE
     BOOT_VERSION_REVISION=${BOOT_VERSION_REVISION_VALUE}
     BOOT_VERSION_BUILD=${BOOT_VERSION_BUILD_VALUE}
     $<$<BOOL:${HC32_ADMIN_PUBLIC_KEY_SOURCE}>:HC32_ADMIN_AUTH_ENABLED=1>
-)
-set_source_files_properties(
-    Core/Src/boot_info.c
-    Core/Src/main.c
-    ${PROJECT_SOURCE_DIR}/App/Core/Src/usb_fw_update.c
-    PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wconversion;-Wshadow;-Werror"
 )
 target_link_libraries(boot_firmware PRIVATE
     cherryusb_device

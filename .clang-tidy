@@ -1,0 +1,22 @@
+# Project-wide low-noise correctness checks. Type/function naming differs by
+# language in this codebase (C uses snake_case; C++ uses PascalCase/camelCase),
+# so naming checks are configured separately by language rather than globally.
+# Vendored diagnostics are filtered by HeaderFilterRegex.
+---
+Checks: >
+  -*,
+  bugprone-assignment-in-if-condition,
+  bugprone-macro-parentheses,
+  bugprone-macro-repeated-side-effects,
+  bugprone-reserved-identifier,
+  bugprone-switch-missing-default-case,
+  misc-unused-parameters,
+  modernize-use-equals-delete,
+  modernize-use-nullptr,
+  modernize-use-override,
+  readability-function-size
+WarningsAsErrors: '*'
+HeaderFilterRegex: '(App|Boot|Platform/HC32F460|components/fw_update)/'
+FormatStyle: file
+CheckOptions:
+  readability-function-size.LineThreshold: 100

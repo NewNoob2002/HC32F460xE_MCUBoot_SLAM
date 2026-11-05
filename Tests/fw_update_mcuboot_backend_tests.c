@@ -105,10 +105,11 @@ uint8_t flash_area_erased_val(const struct flash_area* area) {
 }
 
 int flash_area_get_sector(const struct flash_area* area, uint32_t offset, struct flash_sector* sector) {
+    const uint32_t sector_size = (uint32_t)FLASH_SECTOR_SIZE;
     assert(area == &secondary);
     if (offset >= area->fa_size || sector == NULL)
         return -1;
-    sector->fs_off = offset - (offset % FLASH_SECTOR_SIZE);
+    sector->fs_off = offset - (offset % sector_size);
     sector->fs_size = FLASH_SECTOR_SIZE;
     return 0;
 }

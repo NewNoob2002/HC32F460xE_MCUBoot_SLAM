@@ -62,10 +62,6 @@ set(APP_CPP_TEST_INCLUDES
     ${PROJECT_SOURCE_DIR}/Platform/HC32F460/Inc
 )
 function(app_cpp_options target)
-    set_target_properties(${target} PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS NO)
-    target_compile_options(${target} PRIVATE
-        -fno-exceptions -fno-rtti -fno-threadsafe-statics -fno-use-cxa-atexit
-        -Wall -Wextra -Wconversion -Wshadow -Werror)
     target_include_directories(${target} PUBLIC ${APP_CPP_TEST_INCLUDES})
 endfunction()
 add_library(app_test_framework STATIC
@@ -258,8 +254,6 @@ target_compile_definitions(usb_fw_update_tests PRIVATE
     APP_VERSION_REVISION=0
     APP_VERSION_BUILD=0
 )
-set_source_files_properties(${PROJECT_SOURCE_DIR}/App/Core/Src/usb_fw_update.c TARGET_DIRECTORY usb_fw_update_tests
-    PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wconversion;-Wshadow;-Werror")
 add_test(NAME usb_fw_update COMMAND usb_fw_update_tests)
 
 find_program(CARGO_EXECUTABLE cargo REQUIRED)
@@ -319,7 +313,6 @@ target_include_directories(usb_debug_link_tests PRIVATE
 target_include_directories(usb_debug_link_tests SYSTEM PRIVATE
     ${PROJECT_SOURCE_DIR}/components/cherryusb/common ${PROJECT_SOURCE_DIR}/components/cherryusb/core)
 target_compile_definitions(usb_debug_link_tests PRIVATE BOOT_HOST_TEST)
-target_compile_options(usb_debug_link_tests PRIVATE -Wall -Wextra -Wconversion -Wshadow -Werror)
 add_test(NAME usb_debug_link COMMAND usb_debug_link_tests)
 
 set(TINYCRYPT_TEST_ROOT ${PROJECT_SOURCE_DIR}/components/mcuboot-2.4.0/ext/tinycrypt/lib)
@@ -347,3 +340,36 @@ target_include_directories(fw_update_admin_auth_tests PRIVATE
 )
 target_include_directories(fw_update_admin_auth_tests SYSTEM PRIVATE ${TINYCRYPT_TEST_ROOT}/include)
 add_test(NAME fw_update_admin_auth COMMAND fw_update_admin_auth_tests)
+
+set(HC32_PROJECT_TEST_TARGETS
+    memory_map_tests
+    flash_map_tests
+    boot_handover_tests
+    uart_brr_tests
+    status_led_tests
+    app_confirm_tests
+    app_test_framework
+    app_test_hal
+    hal_status_tests
+    bq40z50_tests
+    power_devices_tests
+    data_broker_tests
+    dp_charger_tests
+    app_diagnostics_tests
+    dp_runtime_tests
+    fw_update_contract_tests
+    product_config_flashdb_tests
+    fw_update_mcuboot_backend_tests
+    fw_protocol_tests
+    fw_update_manager_tests
+    fw_update_fake_device
+    usb_fw_update_tests
+    debug_crc
+    app_debug_logic
+    debug_link_tests
+    usb_debug_link_tests
+    fw_update_admin_auth_tests
+)
+foreach(target IN LISTS HC32_PROJECT_TEST_TARGETS)
+    hc32_apply_project_options(${target})
+endforeach()

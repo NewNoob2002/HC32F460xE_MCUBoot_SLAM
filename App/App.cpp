@@ -82,7 +82,26 @@ void App::applyLedOverride() {
         const uint32_t now_ms = bsp_millis();
         system_.poll(now_ms);
         const auto action = update_.poll(now_ms);
-        enum bsp_status_led_mode led_mode = dp::batteryLedMode(power_.state(), charger_.state());
+        enum bsp_status_led_mode led_mode = BSP_STATUS_LED_MODE_APP_UPDATER;
+        switch (dp::batteryLedMode(power_.state(), charger_.state())) {
+            case dp::BatteryLedMode::Updater:
+                break;
+            case dp::BatteryLedMode::Charging:
+                led_mode = BSP_STATUS_LED_MODE_APP_CHARGING;
+                break;
+            case dp::BatteryLedMode::Full:
+                led_mode = BSP_STATUS_LED_MODE_APP_FULL;
+                break;
+            case dp::BatteryLedMode::Low:
+                led_mode = BSP_STATUS_LED_MODE_APP_LOW;
+                break;
+            case dp::BatteryLedMode::Critical:
+                led_mode = BSP_STATUS_LED_MODE_APP_CRITICAL;
+                break;
+            case dp::BatteryLedMode::NoPack:
+                led_mode = BSP_STATUS_LED_MODE_APP_NO_PACK;
+                break;
+        }
         if (update_.state().usb.activity == USB_FW_UPDATE_ACTIVITY_ACTIVE)
             led_mode = BSP_STATUS_LED_MODE_UPDATE;
         else if (update_.state().usb.activity == USB_FW_UPDATE_ACTIVITY_ERROR)

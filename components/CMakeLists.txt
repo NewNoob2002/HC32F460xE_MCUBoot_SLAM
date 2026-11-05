@@ -6,7 +6,7 @@ set(BOOTUTIL_ROOT ${MCUBOOT_ROOT}/boot/bootutil)
 add_subdirectory(cherryusb)
 
 add_library(segger_rtt STATIC EXCLUDE_FROM_ALL SEGGER_RTT/SEGGER_RTT.c)
-target_include_directories(segger_rtt PUBLIC SEGGER_RTT)
+target_include_directories(segger_rtt SYSTEM PUBLIC SEGGER_RTT)
 target_link_libraries(segger_rtt PRIVATE hc32_project_options)
 
 add_library(tinycrypt STATIC
@@ -16,14 +16,14 @@ add_library(tinycrypt STATIC
     ${TINYCRYPT_ROOT}/source/ecc_dsa.c
     ${TINYCRYPT_ROOT}/source/ecc_platform_specific.c
 )
-target_include_directories(tinycrypt PUBLIC ${TINYCRYPT_ROOT}/include)
+target_include_directories(tinycrypt SYSTEM PUBLIC ${TINYCRYPT_ROOT}/include)
 target_link_libraries(tinycrypt PRIVATE hc32_project_options)
 
 add_library(mcuboot_asn1 STATIC
     ${MCUBOOT_ASN1_ROOT}/src/asn1parse.c
     ${MCUBOOT_ASN1_ROOT}/src/platform_util.c
 )
-target_include_directories(mcuboot_asn1 PUBLIC ${MCUBOOT_ASN1_ROOT}/include)
+target_include_directories(mcuboot_asn1 SYSTEM PUBLIC ${MCUBOOT_ASN1_ROOT}/include)
 target_link_libraries(mcuboot_asn1 PRIVATE hc32_project_options)
 
 add_library(mcuboot_bootutil STATIC
@@ -44,7 +44,7 @@ add_library(mcuboot_bootutil STATIC
     ${BOOTUTIL_ROOT}/src/tlv.c
 )
 target_include_directories(mcuboot_bootutil
-    PUBLIC
+    SYSTEM PUBLIC
         ${BOOTUTIL_ROOT}/include
     PRIVATE
         ${BOOTUTIL_ROOT}/src

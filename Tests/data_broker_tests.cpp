@@ -55,7 +55,7 @@ static void test_registration(void) {
 
     for (size_t i = 0U; i < DataBroker::MaxNodes; ++i) {
         ids[i][0] = 'n';
-        ids[i][1] = (char)('a' + i);
+        ids[i][1] = static_cast<char>('a' + i);
         ids[i][2] = '\0';
         assert(nodes[i].init(broker, ids[i], DataNode::EVENT_ALL, on_event, nullptr) == DataNode::RES_OK);
     }
@@ -144,7 +144,7 @@ static void test_link_capacity(void) {
     assert(sub.init(broker, "sub", DataNode::EVENT_ALL, on_event, nullptr) == DataNode::RES_OK);
     for (size_t i = 0U; i <= DataNode::MaxLinks; ++i) {
         ids[i][0] = 'p';
-        ids[i][1] = (char)('a' + i);
+        ids[i][1] = static_cast<char>('a' + i);
         ids[i][2] = '\0';
         assert(pubs[i].init(broker, ids[i], DataNode::EVENT_ALL, on_event, nullptr) == DataNode::RES_OK);
         assert(sub.subscribe(ids[i]) == (i < DataNode::MaxLinks ? DataNode::RES_OK : DataNode::RES_CAPACITY));

@@ -5,5 +5,7 @@ set(EASYLOGGER_SOURCES
 )
 
 add_library(easylogger_port_hc32 STATIC ${EASYLOGGER_SOURCES})
-target_include_directories(easylogger_port_hc32 PUBLIC inc port)
+hc32_apply_project_options(easylogger_port_hc32)
+set_source_files_properties(src/elog.c src/elog_utils.c PROPERTIES COMPILE_OPTIONS "-w")
+target_include_directories(easylogger_port_hc32 SYSTEM PUBLIC inc port)
 target_link_libraries(easylogger_port_hc32 PUBLIC hc32_platform hc32_project_options segger_rtt)

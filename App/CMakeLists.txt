@@ -34,6 +34,7 @@ set_target_properties(app_firmware PROPERTIES
     OUTPUT_NAME "app-${APP_VERSION}"
     SUFFIX .elf
 )
+hc32_apply_project_options(app_firmware)
 target_include_directories(app_firmware PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     Core/Inc
@@ -51,12 +52,6 @@ target_compile_definitions(app_firmware PRIVATE
     APP_VERSION_REVISION=${APP_VERSION_REVISION_VALUE}
     APP_VERSION_BUILD=${APP_VERSION_BUILD_VALUE}
 )
-set_target_properties(app_firmware PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS NO)
-target_compile_options(app_firmware PRIVATE
-    $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions;-fno-rtti;-fno-threadsafe-statics;-fno-use-cxa-atexit;-Wall;-Wextra;-Wconversion;-Wshadow;-Werror>
-)
-set_source_files_properties(Core/Src/usb_fw_update.c Core/Src/usb_debug_link.c PROPERTIES
-    COMPILE_OPTIONS "-Wall;-Wextra;-Wconversion;-Wshadow;-Werror")
 target_include_directories(app_firmware SYSTEM PRIVATE
     ${PROJECT_SOURCE_DIR}/components/cherryusb/common
     ${PROJECT_SOURCE_DIR}/components/cherryusb/core

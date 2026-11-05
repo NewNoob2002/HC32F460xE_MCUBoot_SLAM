@@ -98,9 +98,10 @@ int flash_area_get_sectors(int area_id, uint32_t* count, struct flash_sector* se
 }
 
 int flash_area_get_sector(const struct flash_area* area, uint32_t off, struct flash_sector* sector) {
+    const uint32_t sector_size = (uint32_t)FLASH_SECTOR_SIZE;
     if (!known_area(area) || sector == NULL || off >= area->fa_size)
         return -1;
-    sector->fs_off = off - (off % FLASH_SECTOR_SIZE);
+    sector->fs_off = off - (off % sector_size);
     sector->fs_size = FLASH_SECTOR_SIZE;
     return 0;
 }

@@ -366,34 +366,34 @@ static void batteryLed() {
     dp::PowerState power{};
     dp::ChargerState charger{};
     power.bus_init_result = hal::Ok;
-    assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_UPDATER);
+    assert(dp::batteryLedMode(power, charger) == dp::BatteryLedMode::Updater);
     power.battery_status_result[0] = hal::AddressNack;
     power.battery_status_result[1] = hal::AddressNack;
-    assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_NO_PACK);
+    assert(dp::batteryLedMode(power, charger) == dp::BatteryLedMode::NoPack);
     power.battery_status_result[0] = hal::Ok;
     power.battery_telemetry[0].relative_soc_percent = 21U;
-    assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_UPDATER);
+    assert(dp::batteryLedMode(power, charger) == dp::BatteryLedMode::Updater);
     power.battery_telemetry[0].relative_soc_percent = 20U;
-    assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_LOW);
+    assert(dp::batteryLedMode(power, charger) == dp::BatteryLedMode::Low);
     power.battery_telemetry[0].relative_soc_percent = 9U;
-    assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_CRITICAL);
+    assert(dp::batteryLedMode(power, charger) == dp::BatteryLedMode::Critical);
     power.battery_telemetry[0].current_ma = 21;
-    assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_CHARGING);
+    assert(dp::batteryLedMode(power, charger) == dp::BatteryLedMode::Charging);
     power.battery_telemetry[0].current_ma = 0;
     charger.valid = true;
     charger.power_good = true;
-    assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_CHARGING);
+    assert(dp::batteryLedMode(power, charger) == dp::BatteryLedMode::Charging);
     power.battery_telemetry[0].status_flags = 0x0020U;
-    assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_FULL);
+    assert(dp::batteryLedMode(power, charger) == dp::BatteryLedMode::Full);
     // The output-only pack is never shown: a low or absent 0x0C pack does not change the J2 pattern.
     power.battery_status_result[1] = hal::Ok;
     power.battery_telemetry[1].relative_soc_percent = 5U;
-    assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_FULL);
+    assert(dp::batteryLedMode(power, charger) == dp::BatteryLedMode::Full);
     power.battery_status_result[0] = hal::AddressNack;
-    assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_NO_PACK);
+    assert(dp::batteryLedMode(power, charger) == dp::BatteryLedMode::NoPack);
     power.battery_status_result[0] = hal::Ok;
     power.bus_init_result = hal::InitError;
-    assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_NO_PACK);
+    assert(dp::batteryLedMode(power, charger) == dp::BatteryLedMode::NoPack);
 }
 int main() {
     batteryLed();

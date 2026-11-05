@@ -7,6 +7,7 @@ option(BOOT_BUILD_HOST_TESTS "Build host-only validation tests" OFF)
 
 include(cmake/MemoryMap.cmake)
 include(cmake/ProductIdentity.cmake)
+include(cmake/CompilerOptions.cmake)
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/generated/Config")
 configure_file(
     Config/Memory/boot_memory_map.h.in
@@ -30,6 +31,8 @@ include(cmake/FirmwareArtifacts.cmake)
 include(cmake/Imgtool.cmake)
 
 add_subdirectory(Drivers)
+# Keep the vendored HC32 SDK include interface out of project warning gates.
+set_property(TARGET hc32_device PROPERTY SYSTEM TRUE)
 add_subdirectory(Platform)
 add_subdirectory(components)
 add_subdirectory(Boot)
