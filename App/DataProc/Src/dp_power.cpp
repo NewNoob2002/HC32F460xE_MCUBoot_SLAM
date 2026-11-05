@@ -101,16 +101,25 @@ void PowerNode::updateChargerMode() {
     if (present) {
         state_.charger_control_result = applyChargeLimits(charger);
     } else {
-        // Debounce and wake windows keep the charger on so a sleeping pack can wake; no pack data means no new
-        // limits are written.
+        // Wake the sleeping pack only when settings permit charging; no pack request is available yet.
         state_.charge_allowed = false;
         state_.charge_target_mv = 0U;
         state_.charge_target_ma = 0U;
         const bool suspend = state_.charger_mode == ChargerMode::Suspended;
-        // The debounce and wake windows run the DC/DC, so they must respect the source limit too.
+        const auto current = static_cast<uint16_t>(settingValue(settings_, ChargeCurrentKey));
+        const bool charge = settingValue(settings_, ChargeEnableKey) != 0 && current >= hal::MP2762A::MinChargeMa;
+        // Stop before unrelated writes; a failed input-limit write must never bypass an explicit disable.
+        const int stop_result = suspend || !charge ? charger.setSuspended(suspend, false) : BSP_I2C2_OK;
         state_.charger_control_result = suspend ? BSP_I2C2_OK : charger.setInputCurrentLimit(state_.input_limit_ma);
-        if (state_.charger_control_result == BSP_I2C2_OK)
-            state_.charger_control_result = charger.setSuspended(suspend);
+        if (stop_result != BSP_I2C2_OK)
+            state_.charger_control_result = stop_result;
+        if (state_.charger_control_result == BSP_I2C2_OK && !suspend && charge) {
+            state_.charger_control_result = charger.setChargeCurrent(current);
+            if (state_.charger_control_result == BSP_I2C2_OK)
+                state_.charger_control_result = charger.setSuspended(false, true);
+        }
+        if (state_.charger_control_result != BSP_I2C2_OK)
+            (void)charger.setSuspended(suspend, false);
     }
     if (state_.charger_mode != previous)
         CORE_DEBUG_PRINTF("charger mode %u->%u result=%d", static_cast<unsigned>(previous),
@@ -127,7 +136,7 @@ int PowerNode::applyChargeLimits(hal::MP2762A& charger) {
     const uint16_t voltage =
         clamp(clamp(pack.charging_voltage_mv, settingValue(settings_, ChargeVoltageKey)), ChargeVoltageCeilingMv);
     const uint16_t current = clamp(pack.charging_current_ma, settingValue(settings_, ChargeCurrentKey));
-    const bool allowed = settingValue(settings_, ChargeEnableKey) != 0 && current > 0U
+    const bool allowed = settingValue(settings_, ChargeEnableKey) != 0 && current >= hal::MP2762A::MinChargeMa
                          && voltage >= hal::MP2762A::MinChargeMv && (pack.battery_status & StopChargeAlarms) == 0U;
     if (allowed != state_.charge_allowed || voltage != state_.charge_target_mv || current != state_.charge_target_ma)
         CORE_DEBUG_PRINTF("charge allowed=%u target=%umV/%umA request=%umV/%umA status=0x%04x", allowed ? 1U : 0U,
@@ -137,21 +146,22 @@ int PowerNode::applyChargeLimits(hal::MP2762A& charger) {
     state_.charge_allowed = allowed;
     state_.charge_target_mv = allowed ? voltage : 0U;
     state_.charge_target_ma = allowed ? current : 0U;
+    if (!allowed) {
+        const int stop_result = charger.setSuspended(false, false);
+        const int input_result = charger.setInputCurrentLimit(state_.input_limit_ma);
+        return stop_result != BSP_I2C2_OK ? stop_result : input_result;
+    }
     int result = charger.setInputCurrentLimit(state_.input_limit_ma);
-    if (result != BSP_I2C2_OK)
-        return result;
-    if (!allowed) // stop first; the limits stay as last written
-        return charger.setSuspended(false, false);
-    // Lower the limits before charging is (re)enabled so the charger never runs above the new request.
-    result = charger.setChargeVoltage(voltage);
+    // Apply both fast-charge and pre-charge limits before charging is (re)enabled.
+    if (result == BSP_I2C2_OK)
+        result = charger.setChargeVoltage(voltage);
     if (result == BSP_I2C2_OK)
         result = charger.setChargeCurrent(current);
-    if (result != BSP_I2C2_OK) {
-        // Never keep charging on limits that did not take; the next tick retries.
+    if (result == BSP_I2C2_OK)
+        result = charger.setSuspended(false, true);
+    if (result != BSP_I2C2_OK)
         (void)charger.setSuspended(false, false);
-        return result;
-    }
-    return charger.setSuspended(false, true);
+    return result;
 }
 bsp_status_led_mode batteryLedMode(const PowerState& power, const ChargerState& charger) {
     constexpr uint16_t FullyCharged = 0x0020U; // BatteryStatus FC

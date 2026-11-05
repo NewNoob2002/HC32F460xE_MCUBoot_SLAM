@@ -98,7 +98,7 @@ class MP2762A {
     }
     /** Suspend turns the DC/DC off (REG08H SUSP_EN) and stops charging (CHG_EN); resume restores DC/DC and sets
      * CHG_EN to `charge`. REG_RST/WTD_RST are self-clearing commands and always written as 0. */
-    int setSuspended(bool suspended, bool charge = true) {
+    int setSuspended(bool suspended, bool charge) {
         constexpr uint8_t Commands = 0xC0U; // REG_RST | WTD_RST
         constexpr uint8_t SuspEn = 0x08U;
         constexpr uint8_t ChgEn = 0x10U;
@@ -111,9 +111,15 @@ class MP2762A {
             return BSP_I2C2_ERR_ARGUMENT;
         return updateBits(0x04U, 0x7EU, static_cast<uint8_t>(((millivolts - MinChargeMv) / 25U) << 1U));
     }
-    /** REG02H ICC: 50 mA steps, 0..6350 mA; rounds down. */
+    /** REG02H ICC rounds down in 50 mA steps. REG03H IPRE stays at its 180 mA minimum (Rev 1.1, p33);
+     * lower requests cannot be honored across automatic phase changes and must leave charging disabled. */
     int setChargeCurrent(uint16_t milliamps) {
-        return updateBits(0x02U, 0x7FU, stepOf50(milliamps));
+        if (milliamps < MinChargeMa)
+            return BSP_I2C2_ERR_ARGUMENT;
+        int result = updateBits(0x03U, 0xF0U, 0x30U);
+        if (result == BSP_I2C2_OK)
+            result = updateBits(0x02U, 0x7FU, stepOf50(milliamps));
+        return result;
     }
     /** REG00H IIN_LIM1 and REG0FH IIN_LIM2 (RS = 10 mOhm): 50 mA steps, 0..6350 mA; rounds down. Both get the same
      * value: by default IIN_LIM2 (1.5 A OTP) may run for 700 us of every 1.6 ms (REG10H/REG11H), which lifts the
@@ -126,6 +132,7 @@ class MP2762A {
         return result;
     }
     static constexpr uint16_t MinChargeMv = 7425U;
+    static constexpr uint16_t MinChargeMa = 180U;
 
   private:
     I2cBus& bus_;

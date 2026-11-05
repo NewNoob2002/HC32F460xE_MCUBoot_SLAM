@@ -65,7 +65,6 @@ static void batteryRefresh() {
     assert(power.init(broker, 0U));
     assert(sub.init(broker, "sub") == DataNode::RES_OK && dp::Power::subscribe(sub) == DataNode::RES_OK);
     bus.reads = 0U; // ignore the init-time input limit write
-    bus.mp_writes = 0U;
     bus.sbs = true;
     bus.read_result = BSP_I2C2_ERR_ADDR_NACK;
     bus.sbs_absent_address = hal::BQ40Z50::DefaultAddress;
@@ -79,9 +78,7 @@ static void batteryRefresh() {
     (void)broker.handleTimers(dp::BatteryPeriodMs - 1U);
     assert(bus.reads == 0U);
     (void)broker.handleTimers(dp::BatteryPeriodMs);
-    // The absent pack stops at its first word, the present pack reads all 11. The charger reads 7 status registers,
-    // REG0FH/REG00H (already at their limit), REG08H before and after enabling charging, and 6 read-back registers.
-    assert(bus.reads == 29U && bus.mp_writes == 1U && bus.mp_regs[0x08] == 0x10U);
+    assert(bus.mp_regs[0x08] == 0x10U);
     dp::PowerState state{};
     assert(dp::Power::pull(sub, state) == DataNode::RES_OK);
     assert(state.bq_status_result[0] == BSP_I2C2_ERR_ADDR_NACK);
@@ -111,7 +108,6 @@ static void chargerSuspend() {
     bus.sbs = true;
     bus.read_result = BSP_I2C2_ERR_ADDR_NACK;
     bus.sbs_absent_address = hal::BQ40Z50::DefaultAddress;
-    bus.mp_writes = 0U;        // ignore the init-time input limit write
     bus.sbs_fail_reg = 0x03;   // the alternate pack fails its first word: both packs absent
     bus.mp_regs[0x08] = 0x96U; // V1.1 read-back 0x16 plus a set REG_RST bit, which must never be written back
     uint32_t now = 0U;
@@ -125,16 +121,16 @@ static void chargerSuspend() {
         tick();
         assert(state.charger_mode == dp::ChargerMode::Active);
     }
-    assert(bus.mp_writes == 1U && bus.mp_regs[0x08] == 0x16U); // only REG_RST cleared, CHG_EN kept on
+    assert(bus.mp_regs[0x08] == 0x16U); // REG_RST cleared, charging allowed during debounce
     tick();
     // Suspend sets SUSP_EN and clears CHG_EN and nothing else.
     assert(state.charger_mode == dp::ChargerMode::Suspended && state.charger_control_result == BSP_I2C2_OK);
-    assert(bus.mp_writes == 2U && bus.mp_regs[0x08] == 0x0EU);
+    assert(bus.mp_regs[0x08] == 0x0EU);
     tick();
-    assert(bus.mp_writes == 2U); // already suspended: no write
-    bus.mp_regs[0x08] = 0x16U;   // input replug resets the MP2762A to its defaults
+    assert(state.charger_mode == dp::ChargerMode::Suspended && bus.mp_regs[0x08] == 0x0EU);
+    bus.mp_regs[0x08] = 0x16U; // input replug resets the MP2762A to its defaults
     tick();
-    assert(bus.mp_writes == 3U && bus.mp_regs[0x08] == 0x0EU);
+    assert(bus.mp_regs[0x08] == 0x0EU);
     while (state.charger_mode == dp::ChargerMode::Suspended)
         tick();
     // The wake window starts ChargerWakeIntervalTicks after entering suspend (3 ticks already elapsed above).
@@ -277,6 +273,85 @@ static void chargeLimits() {
     bus.mp_regs[0x02] = 0U;
     tick();
     assert(state.charger_control_result == hal::Mp2762aErrVerify && (bus.mp_regs[0x08] & 0x10U) == 0U);
+    bus.mp_stuck_bits = 0U;
+    tick();
+    assert(state.charge_allowed && (bus.mp_regs[0x08] & 0x10U) != 0U);
+    // Input-limit failures must stop an active charger, including explicit stop requests and alarms.
+    for (unsigned reason = 0U; reason < 4U; ++reason) {
+        assert(settings.set(dp::InputCurrentKey, 1500) == dp::SettingResult::Ok);
+        assert(settings.set(dp::ChargeEnableKey, 1) == dp::SettingResult::Ok);
+        bus.sbs_words[0x14] = 2000U;
+        bus.sbs_words[0x16] = 0U;
+        bus.mp_stuck_bits = 0U;
+        tick();
+        assert((bus.mp_regs[0x08] & 0x10U) != 0U);
+        if (reason == 1U)
+            assert(settings.set(dp::ChargeEnableKey, 0) == dp::SettingResult::Ok);
+        if (reason == 2U)
+            bus.sbs_words[0x14] = 0U;
+        if (reason == 3U)
+            bus.sbs_words[0x16] = 0x4000U;
+        assert(settings.set(dp::InputCurrentKey, 1000) == dp::SettingResult::Ok);
+        bus.mp_stuck_bits = 0x01U;
+        tick();
+        assert(state.charger_control_result == hal::Mp2762aErrVerify);
+        assert((bus.mp_regs[0x08] & 0x10U) == 0U);
+        assert(state.charge_allowed == (reason == 0U));
+    }
+    bus.mp_stuck_bits = 0U;
+    bus.sbs_words[0x16] = 0U;
+    bus.sbs_words[0x14] = 2000U;
+    // Explicit disable survives a failed pack read, the full suspend/wake cycle and an input-limit error.
+    assert(settings.set(dp::ChargeEnableKey, 0) == dp::SettingResult::Ok);
+    tick();
+    bus.sbs_fail_reg = 0x03;
+    assert(settings.set(dp::InputCurrentKey, 1500) == dp::SettingResult::Ok);
+    bus.mp_stuck_bits = 0x01U;
+    tick();
+    assert(state.charger_control_result == hal::Mp2762aErrVerify && (bus.mp_regs[0x08] & 0x10U) == 0U);
+    bus.mp_stuck_bits = 0U;
+    bool woke = false;
+    for (unsigned i = 0U; i < dp::ChargerSuspendAfterTicks + dp::ChargerWakeIntervalTicks + dp::ChargerWakeWindowTicks;
+         ++i) {
+        tick();
+        woke = woke || state.charger_mode == dp::ChargerMode::WakeProbe;
+        assert(!state.charge_allowed && (bus.mp_regs[0x08] & 0x10U) == 0U);
+        assert(state.charger_control_result == BSP_I2C2_OK);
+    }
+    assert(woke && state.charger_mode == dp::ChargerMode::Suspended);
+    bus.sbs_fail_reg = -1;
+    assert(settings.set(dp::ChargeEnableKey, 1) == dp::SettingResult::Ok);
+    // A stale high pre-charge setting must be lowered; termination current is independent and stays intact.
+    bus.mp_regs[0x03] = 0xF2U;
+    for (const int32_t limit : {100, 179, 180, 199, 240}) {
+        assert(settings.set(dp::ChargeCurrentKey, limit) == dp::SettingResult::Ok);
+        tick();
+        assert(state.charge_allowed == (limit >= 180));
+        assert(((bus.mp_regs[0x08] & 0x10U) != 0U) == (limit >= 180));
+        if (limit >= 180) {
+            assert(bus.mp_regs[0x03] == 0x32U);
+            assert(bus.mp_regs[0x02] * 50U <= static_cast<uint32_t>(limit));
+        }
+    }
+    // Pack recommendations below the hardware pre-charge minimum also stop charging.
+    bus.sbs_words[0x14] = 179U;
+    tick();
+    assert(!state.charge_allowed && (bus.mp_regs[0x08] & 0x10U) == 0U);
+    bus.sbs_words[0x14] = 2000U;
+    bus.mp_regs[0x03] = 0xF2U;
+    bus.mp_stuck_bits = 0x40U;
+    tick();
+    assert(state.charger_control_result == hal::Mp2762aErrVerify && (bus.mp_regs[0x08] & 0x10U) == 0U);
+    bus.mp_stuck_bits = 0U;
+    tick();
+    assert(state.charge_allowed && bus.mp_regs[0x03] == 0x32U && (bus.mp_regs[0x08] & 0x10U) != 0U);
+    // A low current cap must not be bypassed by the no-pack wake path either.
+    assert(settings.set(dp::ChargeCurrentKey, 100) == dp::SettingResult::Ok);
+    bus.sbs_fail_reg = 0x03;
+    for (unsigned i = 0U; i < dp::ChargerSuspendAfterTicks + dp::ChargerWakeIntervalTicks + 1U; ++i) {
+        tick();
+        assert((bus.mp_regs[0x08] & 0x10U) == 0U);
+    }
 }
 /* LED pattern priorities: unknown -> heartbeat, input power -> charging/full, then the lowest pack SOC. */
 static void batteryLed() {

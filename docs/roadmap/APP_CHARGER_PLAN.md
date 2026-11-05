@@ -84,17 +84,21 @@ preserved; see [ADR-007](../adr/ADR-007-app-cpp-databroker.md).
   cross-device consistency on V1.1; the former ADC node is removed.
 - A4 (started): without a pack the MP2762A keeps cycling between fast charge
   and battery OVP while its DC/DC boosts SYS. The Power node now suspends it
-  (REG08H `SUSP_EN=1`, `CHG_EN=0`, read-back checked) after 3 s with neither
-  BQ40Z50 address answering, re-applies that every second because a replug
+  (REG08H `SUSP_EN=1`, `CHG_EN=0`, read-back checked) after 3 s with the J2
+  BQ40Z50 (`0x0B`) not answering, re-applies that every second because a replug
   resets the charger, and lifts suspend for 5 s every 60 s so a pack in BQ
   shutdown can be driven awake. J4 needs no power without a pack. HIL
   2026-11-04 confirmed the transitions and a quiet `INT#`; the wake window
   still has to be proven against a sleeping pack.
 - A4 (charge limits): while the J2 pack (`0x0B`) answers, the Power node
   writes REG04H/REG02H/REG00H from min(pack request, settings, 8.4 V ceiling)
-  and enables CHG_EN only with `charge_enable=1`, a nonzero request and no
-  OCA/TCA/OTA alarm. Every write is read back and re-applied each second; a
-  failed limit write leaves charging off. The `0x0C` pack is output-only.
+  and enables CHG_EN only with `charge_enable=1`, a capped request of at least
+  180 mA and no OCA/TCA/OTA alarm. REG03H pre-charge is held at the hardware
+  minimum of 180 mA; lower caps/requests keep charging off across automatic
+  phase changes. Debounce/wake windows also honor disable and the current cap.
+  Every write is read back and re-applied each second; explicit stop requests
+  precede input-limit writes, and failed limit/control writes trigger a stop
+  attempt without hiding the error. The `0x0C` pack is output-only.
 - A4 (input limit): the MP2762A input limit is min(setting, 90% of the
   HUSB238 PD contract, else Type-C advertisement, else 500 mA), applied at
   startup and every second. Telemetry tags `0x13`-`0x15` expose the charger

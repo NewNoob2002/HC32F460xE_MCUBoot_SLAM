@@ -147,9 +147,21 @@ IIN_LIM1 (REG00H) and IIN_LIM2 (REG0FH) so the two-level limit cannot lift
 the average above it, and is also applied at
 startup and whenever the DC/DC runs without a pack. The source limit is the
 HUSB238 PD contract current, else its Type-C 5 V advertisement, else 500 mA
-(USB 2.0 default, also used when the HUSB238 does not answer). Charging is enabled only when `charge_enable` is 1, the
-pack requests a nonzero current and BatteryStatus has none of OCA, TCA or OTA.
-The output-only pack at `0x0C` is monitored but never charged.
+(USB 2.0 default, also used when the HUSB238 does not answer). With a responding
+pack, charging is enabled only when `charge_enable` is 1, the capped current
+request is at least 180 mA, the voltage is supported and BatteryStatus has none
+of OCA, TCA or OTA. REG02H rounds fast-charge current down in 50 mA steps;
+REG03H pre-charge current is explicitly held at 180 mA while preserving the
+termination setting. The MP2762A cannot pre-charge below 180 mA (datasheet
+Rev 1.1, pages 24 and 33), so a lower cap or pack request disables charging
+across all phases, even if the charger currently reports fast charge.
+The advertised 100..2000 mA settings range is retained; 100..179 mA means no
+charging. Without a responding pack, debounce and wake windows also honor
+`charge_enable` and this current floor, and apply the configured current cap
+before enabling charging. Explicit stop requests run before input-limit writes;
+any failed limit/control write triggers a stop attempt and reports the error.
+A bus failure that also prevents the stop write cannot guarantee physical
+shutdown. The output-only pack at `0x0C` is monitored but never charged.
 
 `led_override` (`0x0006`, flags `0x06`) is runtime-only: it never reaches Flash,
 returns to `0` on every reset and on CONFIG_RESET, and is applied to the status
