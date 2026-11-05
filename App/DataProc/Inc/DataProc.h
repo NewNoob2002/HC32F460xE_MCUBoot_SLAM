@@ -1,11 +1,11 @@
 #ifndef APP_DATAPROC_DATAPROC_H
 #define APP_DATAPROC_DATAPROC_H
+#include <array>
 #include <cstring>
 #include <type_traits>
-#include "BQ40Z50.h"
-#include "ChargerDevices.h"
 #include "ChargerSignals.h"
 #include "DataBroker.h"
+#include "PowerDevices.h"
 #include "Settings.h"
 #include "usb_fw_update.h"
 
@@ -19,53 +19,54 @@ inline constexpr char Diagnostics[] = "Diagnostics";
 } // namespace names
 inline constexpr uint32_t ChargerPeriodMs = 100U;
 inline constexpr uint32_t BatteryPeriodMs = 1000U;
-/** Battery slot 0 is the default 0x0B pack, slot 1 the alternate 0x0C pack. */
+/** Battery slot 0 is the default pack, slot 1 the alternate pack. */
 inline constexpr unsigned BatteryCount = 2U;
+inline constexpr std::array<hal::BatterySlot, BatteryCount> BatterySlots{hal::BatterySlot::Default,
+                                                                         hal::BatterySlot::Alternate};
 /** Without a pack the charger DC/DC only cycles into battery OVP, so it is suspended after this many absent ticks. */
 inline constexpr uint8_t ChargerSuspendAfterTicks = 3U;
-/** A pack in BQ40Z50 shutdown answers I2C only once the charger drives PACK+, so suspend is lifted periodically.
+/** A pack in shutdown answers only after the charger drives its power path, so suspend is lifted periodically.
  * Window length is a first guess that HIL must confirm against a sleeping pack. */
 inline constexpr uint8_t ChargerWakeIntervalTicks = 60U;
 inline constexpr uint8_t ChargerWakeWindowTicks = 5U;
 enum class ChargerMode : uint8_t { Active, Suspended, WakeProbe };
-/** Slot of the pack charged through J2 (BQ40Z50 default address 0x0B). Slot 1 (0x0C) is an output-only pack that
- * is monitored but never charged. */
-inline constexpr unsigned ChargedPackSlot = 0U;
+/** The default slot is charged through J2; the alternate pack is output-only and never charged. */
+inline constexpr unsigned ChargedPackSlot = static_cast<unsigned>(hal::BatterySlot::Default);
 /** Hard 2S charge-voltage ceiling, independent of settings and pack requests. */
 inline constexpr uint16_t ChargeVoltageCeilingMv = 8400U;
-/** Input current the source allows, from the HUSB238 PD contract or the Type-C 5 V advertisement. An unreadable
- * HUSB238 or a default-current source falls back to USB 2.0's 500 mA. */
-uint16_t sourceCurrentLimitMa(hal::Status husb238_result, const hal::Husb238Status& status);
-/** The MP2762A input limit leaves headroom for the main board and HUSB238 on the same input and for the MP2762A
- * IIN_LIM tolerance (+/-5% at 1.5 A, datasheet Rev 1.1). */
+/** Input current the source allows, from an explicit PD contract or the Type-C 5 V advertisement. An unreadable
+ * source or a default-current source falls back to USB 2.0's 500 mA. */
+uint16_t sourceCurrentLimitMa(hal::Status source_result, const hal::SourceContract& contract);
+/** The charger input limit leaves headroom for the main board and source on the same input and for the charger's
+ * current-limit tolerance. */
 inline constexpr unsigned SourceHeadroomPercent = 90U;
 
 struct PowerState {
-    hal::Status i2c_init_result = hal::Ok;
-    hal::Status bq_default_probe_result = hal::Ok;
-    hal::Status bq_alternate_probe_result = hal::Ok;
-    hal::Status husb238_probe_result = hal::Ok;
-    hal::Status mp2762a_probe_result = hal::Ok;
-    hal::Status bq_alternate_identity_result = hal::Ok;
-    hal::BqIdentity bq_alternate_identity{};
+    hal::Status bus_init_result = hal::Ok;
+    hal::Status battery_default_probe_result = hal::Ok;
+    hal::Status battery_alternate_probe_result = hal::Ok;
+    hal::Status source_probe_result = hal::Ok;
+    hal::Status charger_probe_result = hal::Ok;
+    hal::Status battery_alternate_identity_result = hal::Ok;
+    hal::BatteryIdentity battery_alternate_identity{};
     // Not read until the first BatteryPeriodMs tick; nonzero result keeps the previous status invalid.
-    hal::Status bq_status_result[BatteryCount] = {hal::NotReady, hal::NotReady};
-    hal::BqStatus bq_status[BatteryCount]{};
-    hal::Status mp2762a_status_result = hal::NotReady;
-    hal::Mp2762aStatus mp2762a_status{};
+    hal::Status battery_status_result[BatteryCount] = {hal::NotReady, hal::NotReady};
+    hal::BatteryTelemetry battery_telemetry[BatteryCount]{};
+    hal::Status charger_status_result = hal::NotReady;
+    hal::ChargerTelemetry charger_telemetry{};
     ChargerMode charger_mode = ChargerMode::Active;
     hal::Status charger_control_result = hal::NotReady;
     // Last limits computed from the charged pack's request and the settings; zero while charging is not allowed.
     bool charge_allowed = false;
     uint16_t charge_target_mv = 0U;
     uint16_t charge_target_ma = 0U;
-    hal::Status husb238_status_result = hal::NotReady;
-    hal::Husb238Status husb238_status{};
+    hal::Status source_status_result = hal::NotReady;
+    hal::SourceContract source_contract{};
     uint16_t source_limit_ma = 0U; // what the source allows
     uint16_t input_limit_ma = 0U;  // what was written to REG00H
-    hal::Status mp2762a_config_result = hal::NotReady;
-    hal::Mp2762aConfig mp2762a_config{};
-    uint32_t i2c_recoveries = 0U;
+    hal::Status charger_configuration_result = hal::NotReady;
+    hal::ChargerConfiguration charger_configuration{};
+    uint32_t bus_recoveries = 0U;
 };
 struct ChargerState {
     bool valid = false;
@@ -139,18 +140,18 @@ bsp_status_led_mode batteryLedMode(const PowerState& power, const ChargerState& 
 
 class PowerNode final : public ValueNode<PowerState> {
   public:
-    explicit constexpr PowerNode(hal::I2cBus& bus) : bus_(bus) {}
+    explicit constexpr PowerNode(hal::PowerDevices& devices) : devices_(devices) {}
     bool init(DataBroker& broker, uint32_t now_ms);
     int onEvent(EventParam* event) override;
 
   private:
-    hal::I2cBus& bus_;
+    hal::PowerDevices& devices_;
     uint8_t charger_ticks_ = 0U;
     SettingsState settings_{};
     void refreshDevices();
     void updateInputLimit();
     void updateChargerMode();
-    hal::Status applyChargeLimits(hal::MP2762A& charger);
+    hal::Status applyChargeLimits();
 };
 class ChargerNode final : public ValueNode<ChargerState> {
   public:

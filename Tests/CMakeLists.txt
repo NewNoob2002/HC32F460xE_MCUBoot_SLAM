@@ -72,7 +72,10 @@ add_library(app_test_framework STATIC
     ${PROJECT_SOURCE_DIR}/App/Framework/DataBroker/DataBroker.cpp
     ${PROJECT_SOURCE_DIR}/App/Framework/DataBroker/DataNode.cpp)
 app_cpp_options(app_test_framework)
-add_library(app_test_hal STATIC ${PROJECT_SOURCE_DIR}/App/HAL/BQ40Z50.cpp)
+add_library(app_test_hal STATIC
+    ${PROJECT_SOURCE_DIR}/App/HAL/BQ40Z50.cpp
+    ${PROJECT_SOURCE_DIR}/App/HAL/Hc32PowerDevices.cpp
+)
 app_cpp_options(app_test_hal)
 
 add_executable(hal_status_tests hal_status_tests.cpp)

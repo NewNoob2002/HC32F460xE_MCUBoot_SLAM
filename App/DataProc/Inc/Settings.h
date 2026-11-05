@@ -28,8 +28,8 @@ inline constexpr uint16_t LedOverrideKey = 6U;
 /** led_override values: 0 follows the normal pattern; 1..4 hold the LEDs off, red, blue or red+blue. */
 enum class LedOverride : int32_t { Auto = 0, Off, Red, Blue, RedBlue };
 inline constexpr std::array<SettingSpec, 6> SettingTable{{
-    // Charger limits cap the charged pack's own request (BQ40Z50 ChargingVoltage/ChargingCurrent) before they reach
-    // the MP2762A. The voltage range is 2S: REG04H starts at 7425 mV and 8400 mV is the hard ceiling.
+    // Charger limits cap the charged pack's voltage/current request before it reaches the charger. The voltage range
+    // is for a 2S pack: 7425 mV is the device minimum and 8400 mV is the hard system ceiling.
     {ChargeEnableKey, "charge_enable", 1U, 0U, 0, 1, 1, SettingPersisted | SettingRequiresUnlock | SettingApplied},
     {ChargeCurrentKey, "charge_current_limit", 0U, 1U, 100, 2000, 2000,
      SettingPersisted | SettingRequiresUnlock | SettingApplied},

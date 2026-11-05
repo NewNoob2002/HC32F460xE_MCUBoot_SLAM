@@ -18,7 +18,7 @@ int main() {
     assert(charger.init(broker, dp::names::Charger, DataNode::EVENT_PULL) == DataNode::RES_OK);
     assert(update.init(broker, dp::names::Update, DataNode::EVENT_PULL) == DataNode::RES_OK);
     assert(system.init(broker, dp::names::System, DataNode::EVENT_PULL) == DataNode::RES_OK);
-    power.state().bq_default_probe_result = hal::AddressNack;
+    power.state().battery_default_probe_result = hal::AddressNack;
     update.state().usb.manager_state = 1;
     system.state().loop_count = 3U;
     system.state().watchdog_ready = true;
@@ -28,7 +28,7 @@ int main() {
     app::Diagnostics diagnostics(snapshot);
     assert(diagnostics.init(broker, 1000U));
     assert(diagnostics.publisherCount() == 4U);
-    assert(snapshot.power.bq_default_probe_result == hal::AddressNack);
+    assert(snapshot.power.battery_default_probe_result == hal::AddressNack);
     assert(snapshot.system.loop_count == 3U);
     assert(snapshot.charger.interrupt_asserted);
     assert(snapshot.update.usb.manager_state == 1);
@@ -44,11 +44,11 @@ int main() {
     system.state().loop_count = 99U;
     system.state().watchdog_pulse_active = true;
     update.state().usb = {2U, -1, 3, 1U};
-    power.state().i2c_init_result = hal::InitError;
+    power.state().bus_init_result = hal::InitError;
     assert(broker.handleTimers(6000U) == app::DiagnosticsPeriodMs);
     assert(snapshot.report_count == 1U && snapshot.uptime_ms == 5000U);
     assert(snapshot.system.loop_count == 99U && snapshot.system.watchdog_pulse_active);
-    assert(snapshot.update.usb.errors == 2U && snapshot.power.i2c_init_result == hal::InitError);
+    assert(snapshot.update.usb.errors == 2U && snapshot.power.bus_init_result == hal::InitError);
     const dp::ChargerState change{true, false, true, 2U};
     assert(charger.publish(&change, sizeof(change)) == DataNode::RES_OK);
     assert(snapshot.charger.power_good && !snapshot.charger.interrupt_asserted);

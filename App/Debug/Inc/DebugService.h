@@ -2,6 +2,7 @@
 #define APP_DEBUG_DEBUGSERVICE_H
 #include "DataProc.h"
 #include "DebugCodec.h"
+#include "I2cBus.h"
 
 namespace debug {
 enum class Status : uint16_t {

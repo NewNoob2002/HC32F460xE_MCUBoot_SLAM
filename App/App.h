@@ -3,6 +3,8 @@
 #include "DataProc.h"
 #include "DebugService.h"
 #include "Diagnostics.h"
+#include "Hc32PowerDevices.h"
+#include "I2cBus.h"
 
 /** Assembles static resources and sequences startup and the cooperative loop; nodes own domain behavior. */
 class App final {
@@ -14,11 +16,12 @@ class App final {
     // Members construct in declaration order and destruct in reverse; the broker outlives all nodes.
     DataBroker broker_{};
     hal::Hc32I2cBus bus_{};
+    hal::Hc32PowerDevices power_devices_{bus_};
     hal::Hc32ChargerSignals signals_{};
     hal::Hc32SettingsStore settings_store_{};
     dp::SettingsNode settings_{settings_store_};
     debug::Service debug_{settings_, bus_};
-    dp::PowerNode power_{bus_};
+    dp::PowerNode power_{power_devices_};
     dp::ChargerNode charger_{signals_};
     dp::SystemNode system_{};
     dp::UpdateNode update_{};

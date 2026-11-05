@@ -1,5 +1,6 @@
 #include "DataProc.h"
 #include "FakeI2cBus.h"
+#include "Hc32PowerDevices.h"
 #include "TestDataNode.h"
 
 /** In-memory settings store; nothing is preloaded, so the table defaults apply. */
@@ -21,7 +22,8 @@ static void check(hal::Status alternate_result, hal::Status init_result) {
     bus.probe_results[1] = alternate_result;
     bus.probe_results[2] = hal::BusBusy;
     bus.init_result = init_result;
-    dp::PowerNode power(bus);
+    hal::Hc32PowerDevices devices(bus);
+    dp::PowerNode power(devices);
     TestDataNode sub;
     assert(power.init(broker, 0U));
     assert(!power.init(broker, 0U));
@@ -31,11 +33,11 @@ static void check(hal::Status alternate_result, hal::Status init_result) {
     assert(dp::Power::subscribe(sub) == DataNode::RES_OK);
     dp::PowerState state{};
     assert(dp::Power::pull(sub, state) == DataNode::RES_OK);
-    assert(state.i2c_init_result == init_result);
-    assert(state.bq_default_probe_result == hal::AddressNack);
-    assert(state.bq_alternate_probe_result == alternate_result);
-    assert(state.husb238_probe_result == hal::BusBusy);
-    assert(state.mp2762a_probe_result == hal::Ok);
+    assert(state.bus_init_result == init_result);
+    assert(state.battery_default_probe_result == hal::AddressNack);
+    assert(state.battery_alternate_probe_result == alternate_result);
+    assert(state.source_probe_result == hal::BusBusy);
+    assert(state.charger_probe_result == hal::Ok);
     // A working bus also caps the MP2762A input limit at init: REG0FH and REG00H, each read plus read-back (no HUSB238 here,
     // so 90% of the 500 mA USB default).
     const unsigned charger_reads = init_result == hal::Ok ? 4U : 0U;
@@ -43,17 +45,17 @@ static void check(hal::Status alternate_result, hal::Status init_result) {
         assert(state.input_limit_ma == 450U && bus.mp_regs[0x00] == 9U && bus.mp_regs[0x0F] == 9U
                && bus.mp_writes == 2U);
     if (alternate_result == hal::Ok) {
-        assert(bus.reads == 4U + charger_reads && state.bq_alternate_identity.device_type == 0x4500U);
-        assert(state.bq_alternate_identity_result == hal::Ok);
+        assert(bus.reads == 4U + charger_reads && state.battery_alternate_identity.device_type == 0x4500U);
+        assert(state.battery_alternate_identity_result == hal::Ok);
     } else {
         assert(bus.reads == charger_reads && bus.writes == 0U);
-        assert(state.bq_alternate_identity_result == alternate_result);
+        assert(state.battery_alternate_identity_result == alternate_result);
     }
     assert(sub.notify(dp::names::Power, &state, sizeof(state)) == DataNode::RES_UNSUPPORTED_REQUEST);
     // Battery polling starts only on a working bus; until the first tick both slots stay invalid.
     assert(power.hasTimer() == (init_result == hal::Ok));
-    assert(state.bq_status_result[0] == hal::NotReady);
-    assert(state.bq_status_result[1] == hal::NotReady);
+    assert(state.battery_status_result[0] == hal::NotReady);
+    assert(state.battery_status_result[1] == hal::NotReady);
 }
 
 /* Each timer tick reads both pack addresses and keeps a per-slot result. */
@@ -61,7 +63,8 @@ static void batteryRefresh() {
     DataBroker broker;
     FakeI2cBus bus;
     bus.probe_results[1] = hal::AddressNack; // skip the identity read
-    dp::PowerNode power(bus);
+    hal::Hc32PowerDevices devices(bus);
+    dp::PowerNode power(devices);
     TestDataNode sub;
     assert(power.init(broker, 0U));
     assert(sub.init(broker, "sub") == DataNode::RES_OK && dp::Power::subscribe(sub) == DataNode::RES_OK);
@@ -82,19 +85,20 @@ static void batteryRefresh() {
     assert(bus.mp_regs[0x08] == 0x10U);
     dp::PowerState state{};
     assert(dp::Power::pull(sub, state) == DataNode::RES_OK);
-    assert(state.bq_status_result[0] == hal::AddressNack);
-    assert(state.bq_status_result[1] == hal::Ok);
-    assert(state.bq_status[1].voltage_mv == 7900U && state.bq_status[1].relative_soc_percent == 55U);
-    assert(state.mp2762a_status_result == hal::Ok);
-    assert(state.mp2762a_status.status == 0x08U && state.mp2762a_status.fault == 0x40U);
-    assert(state.mp2762a_status.battery_voltage == 0x1234U && state.mp2762a_status.input_current == 0xAB00U);
+    assert(state.battery_status_result[0] == hal::AddressNack);
+    assert(state.battery_status_result[1] == hal::Ok);
+    assert(state.battery_telemetry[1].voltage_mv == 7900U && state.battery_telemetry[1].relative_soc_percent == 55U);
+    assert(state.charger_status_result == hal::Ok);
+    assert(state.charger_telemetry.status_flags == 0x08U && state.charger_telemetry.fault_flags == 0x40U);
+    assert(state.charger_telemetry.battery_voltage_code == 0x1234U
+           && state.charger_telemetry.input_current_code == 0xAB00U);
 
     // A failed charger read keeps the previous registers and reports the error.
     bus.mp_result = hal::AddressNack;
     bus.mp_regs[0x13] = 0U;
     (void)broker.handleTimers(2U * dp::BatteryPeriodMs);
     assert(dp::Power::pull(sub, state) == DataNode::RES_OK);
-    assert(state.mp2762a_status_result == hal::AddressNack && state.mp2762a_status.status == 0x08U);
+    assert(state.charger_status_result == hal::AddressNack && state.charger_telemetry.status_flags == 0x08U);
     assert(state.charger_mode == dp::ChargerMode::Active && state.charger_control_result == hal::AddressNack);
 }
 /* No pack: suspend the charger after a debounce, keep re-applying it, and lift it periodically for a sleeping pack. */
@@ -102,7 +106,8 @@ static void chargerSuspend() {
     DataBroker broker;
     FakeI2cBus bus;
     bus.probe_results[1] = hal::AddressNack;
-    dp::PowerNode power(bus);
+    hal::Hc32PowerDevices devices(bus);
+    dp::PowerNode power(devices);
     TestDataNode sub;
     assert(power.init(broker, 0U));
     assert(sub.init(broker, "sub") == DataNode::RES_OK && dp::Power::subscribe(sub) == DataNode::RES_OK);
@@ -146,7 +151,7 @@ static void chargerSuspend() {
     // The output-only pack (0x0C) answering must not wake the charger.
     bus.sbs_fail_reg = -1;
     tick();
-    assert(state.bq_status_result[1] == hal::Ok && state.charger_mode == dp::ChargerMode::Suspended);
+    assert(state.battery_status_result[1] == hal::Ok && state.charger_mode == dp::ChargerMode::Suspended);
     // The charged pack (0x0B) answering resumes charging at once, with its request applied.
     bus.expected_address = hal::BQ40Z50::DefaultAddress;
     bus.sbs_absent_address = hal::BQ40Z50::AlternateAddress;
@@ -180,7 +185,8 @@ static void sourceLimit() {
     bus.husb_result = hal::Ok;
     bus.husb_regs = {0x34U, 0x40U};
     assert(settings.init(broker));
-    dp::PowerNode power(bus);
+    hal::Hc32PowerDevices devices(bus);
+    dp::PowerNode power(devices);
     TestDataNode sub;
     assert(power.init(broker, 0U));
     assert(sub.init(broker, "sub") == DataNode::RES_OK && dp::Power::subscribe(sub) == DataNode::RES_OK);
@@ -202,9 +208,9 @@ static void sourceLimit() {
     bus.mp_regs[0x25] = 0x80U;
     (void)broker.handleTimers(2U * dp::BatteryPeriodMs);
     assert(dp::Power::pull(sub, state) == DataNode::RES_OK);
-    assert(state.mp2762a_config_result == hal::Ok && state.mp2762a_config.input_limit == 9U);
-    assert(state.mp2762a_config.input_limit2 == 9U);
-    assert(state.mp2762a_config.junction_temp == 0x80C0U);
+    assert(state.charger_configuration_result == hal::Ok && state.charger_configuration.input_current_limit_code == 9U);
+    assert(state.charger_configuration.secondary_input_current_limit_code == 9U);
+    assert(state.charger_configuration.junction_temperature_code == 0x80C0U);
 }
 /* The charged pack's request, capped by the settings and the 8.4 V ceiling, is written before charging is enabled. */
 static void chargeLimits() {
@@ -214,7 +220,8 @@ static void chargeLimits() {
     FakeI2cBus bus;
     bus.probe_results[1] = hal::AddressNack;
     assert(settings.init(broker));
-    dp::PowerNode power(bus);
+    hal::Hc32PowerDevices devices(bus);
+    dp::PowerNode power(devices);
     TestDataNode sub;
     assert(power.init(broker, 0U));
     assert(sub.init(broker, "sub") == DataNode::RES_OK && dp::Power::subscribe(sub) == DataNode::RES_OK);
@@ -358,34 +365,34 @@ static void chargeLimits() {
 static void batteryLed() {
     dp::PowerState power{};
     dp::ChargerState charger{};
-    power.i2c_init_result = hal::Ok;
+    power.bus_init_result = hal::Ok;
     assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_UPDATER);
-    power.bq_status_result[0] = hal::AddressNack;
-    power.bq_status_result[1] = hal::AddressNack;
+    power.battery_status_result[0] = hal::AddressNack;
+    power.battery_status_result[1] = hal::AddressNack;
     assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_NO_PACK);
-    power.bq_status_result[0] = hal::Ok;
-    power.bq_status[0].relative_soc_percent = 21U;
+    power.battery_status_result[0] = hal::Ok;
+    power.battery_telemetry[0].relative_soc_percent = 21U;
     assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_UPDATER);
-    power.bq_status[0].relative_soc_percent = 20U;
+    power.battery_telemetry[0].relative_soc_percent = 20U;
     assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_LOW);
-    power.bq_status[0].relative_soc_percent = 9U;
+    power.battery_telemetry[0].relative_soc_percent = 9U;
     assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_CRITICAL);
-    power.bq_status[0].current_ma = 21;
+    power.battery_telemetry[0].current_ma = 21;
     assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_CHARGING);
-    power.bq_status[0].current_ma = 0;
+    power.battery_telemetry[0].current_ma = 0;
     charger.valid = true;
     charger.power_good = true;
     assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_CHARGING);
-    power.bq_status[0].battery_status = 0x0020U;
+    power.battery_telemetry[0].status_flags = 0x0020U;
     assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_FULL);
     // The output-only pack is never shown: a low or absent 0x0C pack does not change the J2 pattern.
-    power.bq_status_result[1] = hal::Ok;
-    power.bq_status[1].relative_soc_percent = 5U;
+    power.battery_status_result[1] = hal::Ok;
+    power.battery_telemetry[1].relative_soc_percent = 5U;
     assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_FULL);
-    power.bq_status_result[0] = hal::AddressNack;
+    power.battery_status_result[0] = hal::AddressNack;
     assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_NO_PACK);
-    power.bq_status_result[0] = hal::Ok;
-    power.i2c_init_result = hal::InitError;
+    power.battery_status_result[0] = hal::Ok;
+    power.bus_init_result = hal::InitError;
     assert(dp::batteryLedMode(power, charger) == BSP_STATUS_LED_MODE_APP_NO_PACK);
 }
 int main() {

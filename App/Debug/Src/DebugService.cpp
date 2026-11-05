@@ -102,18 +102,18 @@ std::size_t Service::snapshot(uint8_t* output, uint32_t now_ms) {
     u32(0x01U, now_ms);
     u32(0x02U, system.loop_count);
     uint8_t mask = 0U;
-    if (have_power && power.i2c_init_result == hal::Ok) {
-        const hal::Status probes[] = {power.mp2762a_probe_result, power.bq_default_probe_result,
-                                      power.bq_alternate_probe_result, power.husb238_probe_result};
+    if (have_power && power.bus_init_result == hal::Ok) {
+        const hal::Status probes[] = {power.charger_probe_result, power.battery_default_probe_result,
+                                      power.battery_alternate_probe_result, power.source_probe_result};
         for (unsigned i = 0U; i < 4U; ++i)
             if (probes[i] == hal::Ok)
                 mask = static_cast<uint8_t>(mask | (1U << i));
     }
     u8(0x10U, mask);
-    if ((mask & 4U) != 0U && power.bq_alternate_identity_result == hal::Ok) {
+    if ((mask & 4U) != 0U && power.battery_alternate_identity_result == hal::Ok) {
         output[n++] = 0x11U;
         output[n++] = 17U;
-        const auto& id = power.bq_alternate_identity;
+        const auto& id = power.battery_alternate_identity;
         const auto word = [&output, &n](uint16_t value) {
             write16(output + n, value);
             n += 2U;
@@ -131,14 +131,14 @@ std::size_t Service::snapshot(uint8_t* output, uint32_t now_ms) {
     }
     // 0x50 + slot: one SBS block per pack that answered its last refresh (DEBUG_LINK_V1.md).
     for (unsigned slot = 0U; have_power && slot < dp::BatteryCount; ++slot) {
-        if (power.bq_status_result[slot] != hal::Ok)
+        if (power.battery_status_result[slot] != hal::Ok)
             continue;
-        const auto& battery = power.bq_status[slot];
+        const auto& battery = power.battery_telemetry[slot];
         const uint16_t words[] = {
             battery.battery_mode,         battery.voltage_mv,           static_cast<uint16_t>(battery.current_ma),
             battery.temperature_dk,       battery.relative_soc_percent, battery.remaining_capacity,
-            battery.full_charge_capacity, battery.charging_voltage_mv,  battery.charging_current_ma,
-            battery.battery_status,       battery.cycle_count};
+            battery.full_charge_capacity, battery.requested_voltage_mv, battery.requested_current_ma,
+            battery.status_flags,         battery.cycle_count};
         output[n++] = static_cast<uint8_t>(0x50U + slot);
         output[n++] = static_cast<uint8_t>(sizeof(words));
         for (const uint16_t word : words) {
@@ -147,14 +147,15 @@ std::size_t Service::snapshot(uint8_t* output, uint32_t now_ms) {
         }
     }
     // 0x12: raw MP2762A registers from the last refresh, decoded by the host (DEBUG_LINK_V1.md).
-    if (have_power && power.mp2762a_status_result == hal::Ok) {
-        const auto& mp = power.mp2762a_status;
+    if (have_power && power.charger_status_result == hal::Ok) {
+        const auto& charger_telemetry = power.charger_telemetry;
         output[n++] = 0x12U;
         output[n++] = 12U;
-        output[n++] = mp.status;
-        output[n++] = mp.fault;
-        for (const uint16_t word :
-             {mp.battery_voltage, mp.system_voltage, mp.charge_current, mp.input_voltage, mp.input_current}) {
+        output[n++] = charger_telemetry.status_flags;
+        output[n++] = charger_telemetry.fault_flags;
+        for (const uint16_t word : {charger_telemetry.battery_voltage_code, charger_telemetry.system_voltage_code,
+                                    charger_telemetry.charge_current_code, charger_telemetry.input_voltage_code,
+                                    charger_telemetry.input_current_code}) {
             write16(output + n, word);
             n += 2U;
         }
@@ -167,22 +168,22 @@ std::size_t Service::snapshot(uint8_t* output, uint32_t now_ms) {
     u32(0x40U, usb_debug_link_dropped() + log_dropped_);
     u32(0x41U, reset_cause_);
     if (have_power) {
-        u32(0x42U, power.i2c_recoveries);
+        u32(0x42U, power.bus_recoveries);
         const auto word = [&output, &n](uint16_t value) {
             write16(output + n, value);
             n += 2U;
         };
         // 0x13: MP2762A control registers read back after the Power node applied them, plus the die temperature.
-        if (power.mp2762a_config_result == hal::Ok) {
-            const auto& cfg = power.mp2762a_config;
+        if (power.charger_configuration_result == hal::Ok) {
+            const auto& cfg = power.charger_configuration;
             output[n++] = 0x13U;
             output[n++] = 7U;
-            output[n++] = cfg.input_limit;
-            output[n++] = cfg.input_limit2;
-            output[n++] = cfg.charge_current;
-            output[n++] = cfg.charge_voltage;
-            output[n++] = cfg.control;
-            word(cfg.junction_temp);
+            output[n++] = cfg.input_current_limit_code;
+            output[n++] = cfg.secondary_input_current_limit_code;
+            output[n++] = cfg.charge_current_code;
+            output[n++] = cfg.charge_voltage_code;
+            output[n++] = cfg.control_flags;
+            word(cfg.junction_temperature_code);
         }
         // 0x14: the charge decision and the limits it produced.
         output[n++] = 0x14U;
@@ -195,11 +196,11 @@ std::size_t Service::snapshot(uint8_t* output, uint32_t now_ms) {
         word(power.source_limit_ma);
         word(static_cast<uint16_t>(static_cast<int16_t>(power.charger_control_result)));
         // 0x15: raw HUSB238 PD_STATUS0/1.
-        if (power.husb238_status_result == hal::Ok) {
+        if (power.source_status_result == hal::Ok) {
             output[n++] = 0x15U;
             output[n++] = 2U;
-            output[n++] = power.husb238_status.pd_status0;
-            output[n++] = power.husb238_status.pd_status1;
+            output[n++] = power.source_contract.power_delivery_status;
+            output[n++] = power.source_contract.attachment_status;
         }
     }
     return n;

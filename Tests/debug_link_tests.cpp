@@ -439,14 +439,14 @@ bool usb_debug_link_send(const uint8_t* frame, size_t length, bool is_response) 
 void batteryTelemetryTests() {
     Fixture f;
     auto& power = f.power.value();
-    power.i2c_init_result = hal::Ok;
-    power.bq_status_result[0] = hal::AddressNack;
-    power.bq_status_result[1] = hal::Ok;
-    power.bq_status[1] = {0x6001U, 7920U, -1200, 3015U, 76U, 2340U, 3100U, 8400U, 2000U, 0x00C0U, 12U};
-    power.mp2762a_status_result = hal::Ok;
-    power.mp2762a_status = {0x08U, 0x40U, 0x1111U, 0x2222U, 0x3333U, 0x4444U, 0x5555U};
-    power.mp2762a_config_result = hal::Ok;
-    power.mp2762a_config = {27U, 27U, 40U, 0x3FU, 0x16U, 0x80C0U};
+    power.bus_init_result = hal::Ok;
+    power.battery_status_result[0] = hal::AddressNack;
+    power.battery_status_result[1] = hal::Ok;
+    power.battery_telemetry[1] = {0x6001U, 7920U, -1200, 3015U, 76U, 2340U, 3100U, 8400U, 2000U, 0x00C0U, 12U};
+    power.charger_status_result = hal::Ok;
+    power.charger_telemetry = {0x08U, 0x40U, 0x1111U, 0x2222U, 0x3333U, 0x4444U, 0x5555U};
+    power.charger_configuration_result = hal::Ok;
+    power.charger_configuration = {27U, 27U, 40U, 0x3FU, 0x16U, 0x80C0U};
     power.charger_mode = dp::ChargerMode::Active;
     power.charge_allowed = true;
     power.charge_target_mv = 8200U;
@@ -454,8 +454,8 @@ void batteryTelemetryTests() {
     power.input_limit_ma = 1350U;
     power.source_limit_ma = 1500U;
     power.charger_control_result = hal::VerifyError;
-    power.husb238_status_result = hal::Ok;
-    power.husb238_status = {0x34U, 0x40U};
+    power.source_status_result = hal::Ok;
+    power.source_contract = {0x34U, 0x40U};
     const auto r = f.request(2U);
     // TLVs follow the two-byte status; only the answering 0x0C pack (slot 1) is encoded.
     std::size_t at = 2U;

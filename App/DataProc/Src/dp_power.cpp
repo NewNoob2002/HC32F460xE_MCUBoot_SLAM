@@ -1,4 +1,3 @@
-#include "ChargerDevices.h"
 #include "DataProc.h"
 #include "core_debug.h"
 
@@ -9,78 +8,73 @@ bool PowerNode::init(DataBroker& broker, uint32_t now_ms) {
     // Settings come from FlashDB at startup and from host CONFIG_SET later; both arrive as Settings publications.
     if (subscribe(SettingsName) == RES_OK)
         (void)pull(SettingsName, &settings_, sizeof(settings_));
-    state_.i2c_init_result = bus_.init();
-    hal::BQ40Z50 default_pack(bus_, hal::BQ40Z50::DefaultAddress);
-    hal::BQ40Z50 alternate_pack(bus_, hal::BQ40Z50::AlternateAddress);
-    hal::HUSB238 husb(bus_);
-    hal::MP2762A mp(bus_);
-    state_.bq_default_probe_result = default_pack.probe();
-    state_.bq_alternate_probe_result = alternate_pack.probe();
-    state_.husb238_probe_result = husb.probe();
-    state_.mp2762a_probe_result = mp.probe();
-    state_.bq_alternate_identity_result = state_.bq_alternate_probe_result == hal::Ok
-                                              ? alternate_pack.readIdentity(&state_.bq_alternate_identity)
-                                              : state_.bq_alternate_probe_result;
-    CORE_DEBUG_PRINTF("i2c2=%d bq@0b=%d bq@0c=%d husb@08=%d mp@5c=%d bq_identity=%d", state_.i2c_init_result,
-                      state_.bq_default_probe_result, state_.bq_alternate_probe_result, state_.husb238_probe_result,
-                      state_.mp2762a_probe_result, state_.bq_alternate_identity_result);
-    if (state_.i2c_init_result == hal::Ok) {
-        // The MP2762A powers up with its OTP 1.5 A input limit; cap it to the source before the first tick so a
+    state_.bus_init_result = devices_.init();
+    state_.battery_default_probe_result = devices_.probe(hal::BatterySlot::Default);
+    state_.battery_alternate_probe_result = devices_.probe(hal::BatterySlot::Alternate);
+    state_.source_probe_result = devices_.probeSource();
+    state_.charger_probe_result = devices_.probeCharger();
+    state_.battery_alternate_identity_result =
+        state_.battery_alternate_probe_result == hal::Ok
+            ? devices_.readIdentity(hal::BatterySlot::Alternate, &state_.battery_alternate_identity)
+            : state_.battery_alternate_probe_result;
+    CORE_DEBUG_PRINTF("bus=%d battery_default=%d battery_alternate=%d source=%d charger=%d identity=%d",
+                      state_.bus_init_result, state_.battery_default_probe_result,
+                      state_.battery_alternate_probe_result, state_.source_probe_result, state_.charger_probe_result,
+                      state_.battery_alternate_identity_result);
+    if (state_.bus_init_result == hal::Ok) {
+        // The charger powers up with a 1.5 A input limit; cap it to the source before the first tick so a
         // 500 mA USB port is not dragged down while the pack is still being detected.
-        state_.husb238_status_result = husb.readStatus(&state_.husb238_status);
+        state_.source_status_result = devices_.readSource(&state_.source_contract);
         updateInputLimit();
-        state_.charger_control_result = mp.setInputCurrentLimit(state_.input_limit_ma);
+        state_.charger_control_result = devices_.setInputCurrentLimit(state_.input_limit_ma);
         // Packs may be inserted after startup, so both addresses are polled regardless of the init probe.
         startTimer(BatteryPeriodMs, now_ms);
     }
     return true;
 }
 void PowerNode::refreshDevices() {
-    const uint8_t addresses[BatteryCount] = {hal::BQ40Z50::DefaultAddress, hal::BQ40Z50::AlternateAddress};
     for (unsigned i = 0U; i < BatteryCount; ++i) {
-        hal::BQ40Z50 pack(bus_, addresses[i]);
-        state_.bq_status_result[i] = pack.readStatus(&state_.bq_status[i]);
+        state_.battery_status_result[i] = devices_.readBattery(BatterySlots[i], &state_.battery_telemetry[i]);
     }
-    hal::MP2762A charger(bus_);
-    state_.mp2762a_status_result = charger.readStatus(&state_.mp2762a_status);
-    hal::HUSB238 husb(bus_);
-    state_.husb238_status_result = husb.readStatus(&state_.husb238_status);
+    state_.charger_status_result = devices_.readCharger(&state_.charger_telemetry);
+    state_.source_status_result = devices_.readSource(&state_.source_contract);
     updateChargerMode();
     // Read back after control so telemetry shows what the charger actually holds.
-    state_.mp2762a_config_result = charger.readConfig(&state_.mp2762a_config);
-    const uint32_t recoveries = bus_.recoveries();
-    if (recoveries != state_.i2c_recoveries)
-        CORE_DEBUG_PRINTF("i2c bus recovered, total=%lu", static_cast<unsigned long>(recoveries));
-    state_.i2c_recoveries = recoveries;
+    state_.charger_configuration_result = devices_.readChargerConfiguration(&state_.charger_configuration);
+    const uint32_t recoveries = devices_.recoveries();
+    if (recoveries != state_.bus_recoveries)
+        CORE_DEBUG_PRINTF("bus recovered, total=%lu", static_cast<unsigned long>(recoveries));
+    state_.bus_recoveries = recoveries;
 }
-uint16_t sourceCurrentLimitMa(hal::Status husb238_result, const hal::Husb238Status& status) {
+uint16_t sourceCurrentLimitMa(hal::Status source_result, const hal::SourceContract& contract) {
     constexpr uint16_t UsbDefaultMa = 500U;
-    if (husb238_result != hal::Ok)
+    if (source_result != hal::Ok)
         return UsbDefaultMa;
     // PD_SRC_CURRENT codes 0..15 (Register Information Rev 1.1, Table 2).
     static constexpr uint16_t PdCurrentMa[16] = {500U,  700U,  1000U, 1250U, 1500U, 1750U, 2000U, 2250U,
                                                  2500U, 2750U, 3000U, 3250U, 3500U, 4000U, 4500U, 5000U};
-    const unsigned pd_voltage = status.pd_status0 >> 4U;
+    const unsigned pd_voltage = contract.power_delivery_status >> 4U;
     if (pd_voltage >= 1U && pd_voltage <= 6U)
-        return PdCurrentMa[status.pd_status0 & 0x0FU];
+        return PdCurrentMa[contract.power_delivery_status & 0x0FU];
     // No explicit contract: Type-C 5V_CURRENT (Table 3); "default" is USB 2.0 500 mA.
     static constexpr uint16_t TypeCCurrentMa[4] = {UsbDefaultMa, 1500U, 2400U, 3000U};
-    return TypeCCurrentMa[status.pd_status1 & 0x03U];
+    return TypeCCurrentMa[contract.attachment_status & 0x03U];
 }
 void PowerNode::updateInputLimit() {
     const uint16_t previous = state_.source_limit_ma;
-    state_.source_limit_ma = sourceCurrentLimitMa(state_.husb238_status_result, state_.husb238_status);
+    state_.source_limit_ma = sourceCurrentLimitMa(state_.source_status_result, state_.source_contract);
     const auto headroom = static_cast<uint16_t>(state_.source_limit_ma * SourceHeadroomPercent / 100U);
     const auto setting = static_cast<uint16_t>(settingValue(settings_, InputCurrentKey));
     state_.input_limit_ma = setting < headroom ? setting : headroom;
     if (state_.source_limit_ma != previous)
-        CORE_DEBUG_PRINTF("source pd=0x%02x/0x%02x result=%d limit=%umA input=%umA", state_.husb238_status.pd_status0,
-                          state_.husb238_status.pd_status1, state_.husb238_status_result,
-                          static_cast<unsigned>(state_.source_limit_ma), static_cast<unsigned>(state_.input_limit_ma));
+        CORE_DEBUG_PRINTF("source pd=0x%02x/0x%02x result=%d limit=%umA input=%umA",
+                          state_.source_contract.power_delivery_status, state_.source_contract.attachment_status,
+                          state_.source_status_result, static_cast<unsigned>(state_.source_limit_ma),
+                          static_cast<unsigned>(state_.input_limit_ma));
 }
 void PowerNode::updateChargerMode() {
     // Only the J2 pack is charged; the output-only pack must not keep the charger awake.
-    const bool present = state_.bq_status_result[ChargedPackSlot] == hal::Ok;
+    const bool present = state_.battery_status_result[ChargedPackSlot] == hal::Ok;
     const ChargerMode previous = state_.charger_mode;
     if (present) {
         state_.charger_mode = ChargerMode::Active;
@@ -95,11 +89,10 @@ void PowerNode::updateChargerMode() {
             charger_ticks_ = 0U;
         }
     }
-    // Applied every tick: the MP2762A is powered from the input and returns to its defaults after a replug.
-    hal::MP2762A charger(bus_);
+    // Applied every tick: the charger is input powered and returns to its defaults after a replug.
     updateInputLimit();
     if (present) {
-        state_.charger_control_result = applyChargeLimits(charger);
+        state_.charger_control_result = applyChargeLimits();
     } else {
         // Wake the sleeping pack only when settings permit charging; no pack request is available yet.
         state_.charge_allowed = false;
@@ -107,60 +100,62 @@ void PowerNode::updateChargerMode() {
         state_.charge_target_ma = 0U;
         const bool suspend = state_.charger_mode == ChargerMode::Suspended;
         const auto current = static_cast<uint16_t>(settingValue(settings_, ChargeCurrentKey));
-        const bool charge = settingValue(settings_, ChargeEnableKey) != 0 && current >= hal::MP2762A::MinChargeMa;
+        const bool charge =
+            settingValue(settings_, ChargeEnableKey) != 0 && current >= hal::PowerDevices::MinChargeCurrentMa;
         // Stop before unrelated writes; a failed input-limit write must never bypass an explicit disable.
-        const hal::Status stop_result = suspend || !charge ? charger.setSuspended(suspend, false) : hal::Ok;
-        state_.charger_control_result = suspend ? hal::Ok : charger.setInputCurrentLimit(state_.input_limit_ma);
+        const hal::Status stop_result = suspend || !charge ? devices_.setChargerState(suspend, false) : hal::Ok;
+        state_.charger_control_result = suspend ? hal::Ok : devices_.setInputCurrentLimit(state_.input_limit_ma);
         if (stop_result != hal::Ok)
             state_.charger_control_result = stop_result;
         if (state_.charger_control_result == hal::Ok && !suspend && charge) {
-            state_.charger_control_result = charger.setChargeCurrent(current);
+            state_.charger_control_result = devices_.setChargeCurrent(current);
             if (state_.charger_control_result == hal::Ok)
-                state_.charger_control_result = charger.setSuspended(false, true);
+                state_.charger_control_result = devices_.setChargerState(false, true);
         }
         if (state_.charger_control_result != hal::Ok)
-            (void)charger.setSuspended(suspend, false);
+            (void)devices_.setChargerState(suspend, false);
     }
     if (state_.charger_mode != previous)
         CORE_DEBUG_PRINTF("charger mode %u->%u result=%d", static_cast<unsigned>(previous),
                           static_cast<unsigned>(state_.charger_mode), state_.charger_control_result);
 }
-hal::Status PowerNode::applyChargeLimits(hal::MP2762A& charger) {
-    // BQ40Z50 BatteryStatus alarms that require charging to stop: OCA, TCA and OTA.
+hal::Status PowerNode::applyChargeLimits() {
+    // Battery status alarms that require charging to stop: overcurrent, overtemperature and termination alarms.
     constexpr uint16_t StopChargeAlarms = 0x8000U | 0x4000U | 0x1000U;
-    const auto& pack = state_.bq_status[ChargedPackSlot];
+    const auto& pack = state_.battery_telemetry[ChargedPackSlot];
     const auto clamp = [](uint32_t value, int32_t limit) {
         return static_cast<uint16_t>(limit > 0 && value > static_cast<uint32_t>(limit) ? static_cast<uint32_t>(limit)
                                                                                        : value);
     };
     const uint16_t voltage =
-        clamp(clamp(pack.charging_voltage_mv, settingValue(settings_, ChargeVoltageKey)), ChargeVoltageCeilingMv);
-    const uint16_t current = clamp(pack.charging_current_ma, settingValue(settings_, ChargeCurrentKey));
-    const bool allowed = settingValue(settings_, ChargeEnableKey) != 0 && current >= hal::MP2762A::MinChargeMa
-                         && voltage >= hal::MP2762A::MinChargeMv && (pack.battery_status & StopChargeAlarms) == 0U;
+        clamp(clamp(pack.requested_voltage_mv, settingValue(settings_, ChargeVoltageKey)), ChargeVoltageCeilingMv);
+    const uint16_t current = clamp(pack.requested_current_ma, settingValue(settings_, ChargeCurrentKey));
+    const bool allowed =
+        settingValue(settings_, ChargeEnableKey) != 0 && current >= hal::PowerDevices::MinChargeCurrentMa
+        && voltage >= hal::PowerDevices::MinChargeVoltageMv && (pack.status_flags & StopChargeAlarms) == 0U;
     if (allowed != state_.charge_allowed || voltage != state_.charge_target_mv || current != state_.charge_target_ma)
         CORE_DEBUG_PRINTF("charge allowed=%u target=%umV/%umA request=%umV/%umA status=0x%04x", allowed ? 1U : 0U,
                           static_cast<unsigned>(voltage), static_cast<unsigned>(current),
-                          static_cast<unsigned>(pack.charging_voltage_mv),
-                          static_cast<unsigned>(pack.charging_current_ma), static_cast<unsigned>(pack.battery_status));
+                          static_cast<unsigned>(pack.requested_voltage_mv),
+                          static_cast<unsigned>(pack.requested_current_ma), static_cast<unsigned>(pack.status_flags));
     state_.charge_allowed = allowed;
     state_.charge_target_mv = allowed ? voltage : 0U;
     state_.charge_target_ma = allowed ? current : 0U;
     if (!allowed) {
-        const hal::Status stop_result = charger.setSuspended(false, false);
-        const hal::Status input_result = charger.setInputCurrentLimit(state_.input_limit_ma);
+        const hal::Status stop_result = devices_.setChargerState(false, false);
+        const hal::Status input_result = devices_.setInputCurrentLimit(state_.input_limit_ma);
         return stop_result != hal::Ok ? stop_result : input_result;
     }
-    hal::Status result = charger.setInputCurrentLimit(state_.input_limit_ma);
+    hal::Status result = devices_.setInputCurrentLimit(state_.input_limit_ma);
     // Apply both fast-charge and pre-charge limits before charging is (re)enabled.
     if (result == hal::Ok)
-        result = charger.setChargeVoltage(voltage);
+        result = devices_.setChargeVoltage(voltage);
     if (result == hal::Ok)
-        result = charger.setChargeCurrent(current);
+        result = devices_.setChargeCurrent(current);
     if (result == hal::Ok)
-        result = charger.setSuspended(false, true);
+        result = devices_.setChargerState(false, true);
     if (result != hal::Ok)
-        (void)charger.setSuspended(false, false);
+        (void)devices_.setChargerState(false, false);
     return result;
 }
 bsp_status_led_mode batteryLedMode(const PowerState& power, const ChargerState& charger) {
@@ -168,15 +163,15 @@ bsp_status_led_mode batteryLedMode(const PowerState& power, const ChargerState& 
     constexpr int16_t ChargingThresholdMa = 20;
     constexpr uint16_t LowPercent = 20U;
     constexpr uint16_t CriticalPercent = 10U;
-    if (power.i2c_init_result != hal::Ok)
+    if (power.bus_init_result != hal::Ok)
         return BSP_STATUS_LED_MODE_APP_NO_PACK;
     // The LEDs describe the J2 pack only; the output-only pack at 0x0C is not shown.
-    const hal::Status result = power.bq_status_result[ChargedPackSlot];
+    const hal::Status result = power.battery_status_result[ChargedPackSlot];
     const bool pending = result == hal::NotReady;
     const bool present = result == hal::Ok;
-    const auto& pack = power.bq_status[ChargedPackSlot];
+    const auto& pack = power.battery_telemetry[ChargedPackSlot];
     const bool charging = present && pack.current_ma > ChargingThresholdMa;
-    const bool full = present && (pack.battery_status & FullyCharged) != 0U;
+    const bool full = present && (pack.status_flags & FullyCharged) != 0U;
     const uint16_t soc = present ? pack.relative_soc_percent : 100U;
     // Before the first refresh keep the plain heartbeat instead of flashing "no pack".
     if (!present)
