@@ -1,6 +1,6 @@
 # Project-wide low-noise correctness checks. Type/function naming differs by
 # language in this codebase (C uses snake_case; C++ uses PascalCase/camelCase),
-# so naming checks are configured separately by language rather than globally.
+# so this correctness gate leaves naming to the per-language review.
 # Vendored diagnostics are filtered by HeaderFilterRegex.
 ---
 Checks: >

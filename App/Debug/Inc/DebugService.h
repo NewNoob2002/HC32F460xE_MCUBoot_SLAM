@@ -61,6 +61,8 @@ class Service final : public DataNode {
     Log* push_log(uint8_t level, uint32_t now_ms);
     void expire(uint32_t now_ms);
     void dispatch(const Frame& request, uint32_t now_ms);
+    static std::size_t powerControlSnapshot(uint8_t* output, const dp::PowerState& power);
+    Status settingsRequest(const Frame& request, uint8_t* payload, std::size_t& length);
     std::size_t snapshot(uint8_t* output, uint32_t now_ms);
     bool send(uint8_t command, uint8_t flags, uint32_t sequence, const uint8_t* payload, std::size_t length);
 };

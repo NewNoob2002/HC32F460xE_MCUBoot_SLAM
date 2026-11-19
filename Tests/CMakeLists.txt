@@ -52,6 +52,7 @@ target_include_directories(app_confirm_tests PRIVATE
 add_test(NAME app_confirm COMMAND app_confirm_tests)
 
 set(APP_CPP_TEST_INCLUDES
+    ${PROJECT_SOURCE_DIR}/App
     ${PROJECT_SOURCE_DIR}/App/Core/Inc
     ${PROJECT_SOURCE_DIR}/App/DataProc/Inc
     ${PROJECT_SOURCE_DIR}/App/Debug/Inc
@@ -77,6 +78,14 @@ app_cpp_options(app_test_hal)
 add_executable(hal_status_tests hal_status_tests.cpp)
 app_cpp_options(hal_status_tests)
 add_test(NAME hal_status COMMAND hal_status_tests)
+
+add_executable(hal_adapter_tests hal_adapter_tests.cpp ${PROJECT_SOURCE_DIR}/App/HAL/Hc32I2cBus.cpp)
+app_cpp_options(hal_adapter_tests)
+add_test(NAME hal_adapter COMMAND hal_adapter_tests)
+
+add_executable(status_led_policy_tests status_led_policy_tests.cpp ${PROJECT_SOURCE_DIR}/App/StatusLedPolicy.cpp)
+app_cpp_options(status_led_policy_tests)
+add_test(NAME status_led_policy COMMAND status_led_policy_tests)
 
 add_executable(bq40z50_tests bq40z50_tests.cpp)
 app_cpp_options(bq40z50_tests)
@@ -279,6 +288,10 @@ add_test(
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Architecture/check_application_platform_boundary.py
 )
 add_test(
+    NAME layer_boundary_regressions
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Architecture/layer_boundary_tests.py
+)
+add_test(
     NAME usb_device_port_boundary
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/Architecture/check_usb_boundary.py
 )
@@ -351,6 +364,8 @@ set(HC32_PROJECT_TEST_TARGETS
     app_test_framework
     app_test_hal
     hal_status_tests
+    hal_adapter_tests
+    status_led_policy_tests
     bq40z50_tests
     power_devices_tests
     data_broker_tests

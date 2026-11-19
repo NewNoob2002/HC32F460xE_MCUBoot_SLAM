@@ -14,11 +14,7 @@ class ChargerSignals {
   protected:
     ~ChargerSignals() = default;
 };
-class Hc32ChargerSignals final : public ChargerSignals {
-  public:
-    bool init() override;
-    bool read(ChargerSample& sample) override;
-};
+
 } // namespace hal
 
 #endif

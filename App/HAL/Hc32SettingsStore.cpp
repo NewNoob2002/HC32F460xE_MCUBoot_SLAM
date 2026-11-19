@@ -1,4 +1,4 @@
-#include "SettingsStore.h"
+#include "Hc32SettingsStore.h"
 extern "C" {
 #include <flashdb.h>
 }

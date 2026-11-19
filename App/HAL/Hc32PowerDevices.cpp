@@ -5,6 +5,16 @@
 #include "I2cBus.h"
 
 namespace {
+uint16_t sourceCurrentLimitMa(const hal::Husb238Status& status) {
+    // HUSB238 Register Information Rev 1.1, Tables 2/3: PD_SRC_CURRENT and Type-C 5V_CURRENT.
+    static constexpr uint16_t PdCurrentMa[] = {500U,  700U,  1000U, 1250U, 1500U, 1750U, 2000U, 2250U,
+                                               2500U, 2750U, 3000U, 3250U, 3500U, 4000U, 4500U, 5000U};
+    static constexpr uint16_t TypeCCurrentMa[] = {500U, 1500U, 2400U, 3000U};
+    const unsigned voltage = status.pd_status0 >> 4U;
+    return voltage >= 1U && voltage <= 6U ? PdCurrentMa[status.pd_status0 & 0x0FU]
+                                          : TypeCCurrentMa[status.pd_status1 & 0x03U];
+}
+
 uint8_t batteryAddress(hal::BatterySlot slot) {
     return slot == hal::BatterySlot::Alternate ? hal::BQ40Z50::AlternateAddress : hal::BQ40Z50::DefaultAddress;
 }
@@ -105,7 +115,7 @@ Status Hc32PowerDevices::readSource(SourceContract* contract) {
     Husb238Status device_contract{};
     const Status result = source.readStatus(&device_contract);
     if (result == Ok)
-        *contract = {device_contract.pd_status0, device_contract.pd_status1};
+        *contract = {sourceCurrentLimitMa(device_contract), {device_contract.pd_status0, device_contract.pd_status1}};
     return result;
 }
 

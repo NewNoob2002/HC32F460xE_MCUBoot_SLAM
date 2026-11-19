@@ -46,31 +46,15 @@ void PowerNode::refreshDevices() {
         CORE_DEBUG_PRINTF("bus recovered, total=%lu", static_cast<unsigned long>(recoveries));
     state_.bus_recoveries = recoveries;
 }
-uint16_t sourceCurrentLimitMa(hal::Status source_result, const hal::SourceContract& contract) {
-    constexpr uint16_t UsbDefaultMa = 500U;
-    if (source_result != hal::Ok)
-        return UsbDefaultMa;
-    // PD_SRC_CURRENT codes 0..15 (Register Information Rev 1.1, Table 2).
-    static constexpr uint16_t PdCurrentMa[16] = {500U,  700U,  1000U, 1250U, 1500U, 1750U, 2000U, 2250U,
-                                                 2500U, 2750U, 3000U, 3250U, 3500U, 4000U, 4500U, 5000U};
-    const unsigned pd_voltage = contract.power_delivery_status >> 4U;
-    if (pd_voltage >= 1U && pd_voltage <= 6U)
-        return PdCurrentMa[contract.power_delivery_status & 0x0FU];
-    // No explicit contract: Type-C 5V_CURRENT (Table 3); "default" is USB 2.0 500 mA.
-    static constexpr uint16_t TypeCCurrentMa[4] = {UsbDefaultMa, 1500U, 2400U, 3000U};
-    return TypeCCurrentMa[contract.attachment_status & 0x03U];
-}
 void PowerNode::updateInputLimit() {
     const uint16_t previous = state_.source_limit_ma;
-    state_.source_limit_ma = sourceCurrentLimitMa(state_.source_status_result, state_.source_contract);
+    state_.source_limit_ma = state_.source_status_result == hal::Ok ? state_.source_contract.current_limit_ma : 500U;
     const auto headroom = static_cast<uint16_t>(state_.source_limit_ma * SourceHeadroomPercent / 100U);
     const auto setting = static_cast<uint16_t>(settingValue(settings_, InputCurrentKey));
     state_.input_limit_ma = setting < headroom ? setting : headroom;
     if (state_.source_limit_ma != previous)
-        CORE_DEBUG_PRINTF("source pd=0x%02x/0x%02x result=%d limit=%umA input=%umA",
-                          state_.source_contract.power_delivery_status, state_.source_contract.attachment_status,
-                          state_.source_status_result, static_cast<unsigned>(state_.source_limit_ma),
-                          static_cast<unsigned>(state_.input_limit_ma));
+        CORE_DEBUG_PRINTF("source result=%d limit=%umA input=%umA", state_.source_status_result,
+                          static_cast<unsigned>(state_.source_limit_ma), static_cast<unsigned>(state_.input_limit_ma));
 }
 void PowerNode::updateChargerMode() {
     // Only the J2 pack is charged; the output-only pack must not keep the charger awake.

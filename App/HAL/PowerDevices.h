@@ -39,10 +39,16 @@ struct BatteryTelemetry {
     uint16_t cycle_count;
 };
 
-/** Raw HUSB238 power-delivery status bytes; the debug protocol exposes the same two bytes. */
+/** Only the debug protocol consumes these raw HUSB238 PD_STATUS0/1 bytes. */
+struct SourceDiagnostics {
+    uint8_t pd_status0;
+    uint8_t pd_status1;
+};
+
+/** Source capability in physical units; consumers apply their own budget/headroom policy. */
 struct SourceContract {
-    uint8_t power_delivery_status;
-    uint8_t attachment_status;
+    uint16_t current_limit_ma;
+    SourceDiagnostics diagnostics;
 };
 
 /** Raw MP2762A status and ADC register words; the host applies the documented scaling. */

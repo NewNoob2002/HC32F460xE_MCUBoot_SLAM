@@ -169,13 +169,30 @@ static void chargerSuspend() {
 }
 /* The source decides the input limit: a PD contract, else the Type-C advertisement, else USB 2.0's 500 mA. */
 static void sourceLimit() {
-    using dp::sourceCurrentLimitMa;
-    assert(sourceCurrentLimitMa(hal::AddressNack, {0x3AU, 0x40U}) == 500U); // unreadable: USB default
-    assert(sourceCurrentLimitMa(hal::Ok, {0x34U, 0x40U}) == 1500U);         // PD 12 V / 1.5 A
-    assert(sourceCurrentLimitMa(hal::Ok, {0x6FU, 0x40U}) == 5000U);         // PD 20 V / 5 A
-    assert(sourceCurrentLimitMa(hal::Ok, {0x00U, 0x40U}) == 500U);          // Type-C default current
-    assert(sourceCurrentLimitMa(hal::Ok, {0x00U, 0x43U}) == 3000U);         // Type-C 3 A
-    assert(sourceCurrentLimitMa(hal::Ok, {0x7AU, 0x41U}) == 1500U);         // reserved PD voltage: Type-C
+    // HUSB238 Register Information Rev 1.1 Tables 2/3; decoded at the adapter, not in DataProc.
+    {
+        FakeI2cBus source_bus;
+        hal::Hc32PowerDevices devices(source_bus);
+        struct Case {
+            uint8_t pd;
+            uint8_t type_c;
+            uint16_t milliamps;
+        };
+        constexpr Case cases[] = {{0x34U, 0x40U, 1500U}, {0x6FU, 0x40U, 5000U}, {0x00U, 0x40U, 500U},
+                                  {0x00U, 0x43U, 3000U}, {0x7AU, 0x41U, 1500U}, {0x00U, 0x42U, 2400U}};
+        hal::SourceContract contract{};
+        source_bus.husb_result = hal::Ok;
+        for (const auto& test : cases) {
+            source_bus.husb_regs = {test.pd, test.type_c};
+            assert(devices.readSource(&contract) == hal::Ok);
+            assert(contract.current_limit_ma == test.milliamps);
+            assert(contract.diagnostics.pd_status0 == test.pd && contract.diagnostics.pd_status1 == test.type_c);
+        }
+        source_bus.husb_result = hal::AddressNack;
+        assert(devices.readSource(&contract) == hal::AddressNack && contract.current_limit_ma == 2400U);
+        assert(contract.diagnostics.pd_status0 == 0U && contract.diagnostics.pd_status1 == 0x42U);
+        assert(devices.readSource(nullptr) == hal::InvalidArgument);
+    }
     // The applied limit keeps 10% headroom below the source and never exceeds the setting.
     DataBroker broker;
     Store store;
@@ -211,6 +228,10 @@ static void sourceLimit() {
     assert(state.charger_configuration_result == hal::Ok && state.charger_configuration.input_current_limit_code == 9U);
     assert(state.charger_configuration.secondary_input_current_limit_code == 9U);
     assert(state.charger_configuration.junction_temperature_code == 0x80C0U);
+    bus.husb_result = hal::AddressNack;
+    (void)broker.handleTimers(3U * dp::BatteryPeriodMs);
+    assert(dp::Power::pull(sub, state) == DataNode::RES_OK);
+    assert(state.source_limit_ma == 500U && state.input_limit_ma == 450U);
 }
 /* The charged pack's request, capped by the settings and the 8.4 V ceiling, is written before charging is enabled. */
 static void chargeLimits() {

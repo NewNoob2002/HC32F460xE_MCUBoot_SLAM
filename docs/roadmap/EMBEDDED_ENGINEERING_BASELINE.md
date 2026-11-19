@@ -2,6 +2,12 @@
 
 Status: **Completed on 2026-11-05**
 
+Follow-up on 2026-11-06: [review items 1–4 are completed and independently
+software-verified](EMBEDDED_ENGINEERING_FOLLOWUP.md). This historical report's
+mechanical BARR-C PASS does not mean full standard conformance. The subsequent
+[167-item source review](BARR_C_2018_REVIEW.md) records existing non-conformities
+and approval gaps; formal overall W10 acceptance remains open.
+
 Baseline commit: `0e203b133a3d2b1fe56b15e81821caea1d4efabe`
 
 This document records the W02 architecture review and approved W09 refactor plan

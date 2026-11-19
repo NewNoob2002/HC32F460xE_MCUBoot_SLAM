@@ -32,7 +32,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            libfontconfig1-dev ninja-build python3-venv
+            clang-format clang-tidy libfontconfig1-dev ninja-build python3-venv
           archive="xpack-arm-none-eabi-gcc-${ARM_GCC_VERSION}-linux-x64.tar.gz"
           curl -fsSL \
             "https://github.com/xpack-dev-tools/arm-none-eabi-gcc-xpack/releases/download/v${ARM_GCC_VERSION}/${archive}" \
@@ -87,6 +87,9 @@ jobs:
           cmake --build build/Debug --target verify_winusb_descriptors
           cmake --build build/Debug --target verify_newlib_syscalls
           arm-none-eabi-size build/Debug/Boot/boot_firmware.elf build/Debug/App/app-1.0.0.elf
+
+      - name: Check firmware formatting and static analysis
+        run: python3 Tools/check_firmware_quality.py --build-dir build/Debug
 
       - name: Check Release signing-key policy
         run: |

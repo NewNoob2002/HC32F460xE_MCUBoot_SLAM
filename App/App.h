@@ -3,9 +3,11 @@
 #include "DataProc.h"
 #include "DebugService.h"
 #include "Diagnostics.h"
+#include "Hc32ChargerSignals.h"
 #include "Hc32ExternalWatchdog.h"
+#include "Hc32I2cBus.h"
 #include "Hc32PowerDevices.h"
-#include "I2cBus.h"
+#include "Hc32SettingsStore.h"
 
 /** Assembles static resources and sequences startup and the cooperative loop; nodes own domain behavior. */
 class App final {
@@ -28,8 +30,6 @@ class App final {
     dp::SystemNode system_{watchdog_};
     dp::UpdateNode update_{};
     app::Diagnostics diagnostics_{g_app_diagnostics};
-    /** Applies the runtime-only led_override setting on top of the battery/update LED pattern. */
-    void applyLedOverride();
     [[noreturn]] void runApplication();
 #else
     [[noreturn]] void runPhase2Hil();

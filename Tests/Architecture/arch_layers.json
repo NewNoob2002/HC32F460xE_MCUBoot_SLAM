@@ -24,8 +24,6 @@
         "App/HAL/ExternalWatchdog.h",
         "App/HAL/ChargerSignals.h",
         "App/HAL/SettingsStore.h",
-        "App/HAL/BQ40Z50.h",
-        "App/HAL/ChargerDevices.h",
         "components/fw_update/include/**"
       ],
       "allow": ["interface"],
@@ -35,7 +33,9 @@
     {
       "name": "driver_device",
       "globs": [
-        "App/HAL/BQ40Z50.cpp"
+        "App/HAL/BQ40Z50.cpp",
+        "App/HAL/BQ40Z50.h",
+        "App/HAL/ChargerDevices.h"
       ],
       "allow": ["driver_device", "interface"],
       "forbid_includes": ["@vendor", "@rtos"],
@@ -48,6 +48,7 @@
         "App/Core/Src/usb_debug_link.c",
         "App/Core/Src/usb_fw_update.c",
         "App/HAL/Hc32*.cpp",
+        "App/HAL/Hc32*.h",
         "components/fw_update/backends/**",
         "Platform/HC32F460/**"
       ],
@@ -64,7 +65,7 @@
         "App/Framework/**",
         "components/fw_update/src/**"
       ],
-      "allow": ["module", "interface", "driver_bus"],
+      "allow": ["module", "interface"],
       "forbid_includes": ["@vendor", "@rtos"],
       "forbid_code": ["hal_call", "register_access"]
     },
@@ -82,6 +83,7 @@
       "globs": [
         "App/App.cpp",
         "App/App.h",
+        "App/StatusLedPolicy.*",
         "App/Core/Src/main.cpp",
         "Boot/**"
       ],

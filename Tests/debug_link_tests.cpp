@@ -455,7 +455,7 @@ void batteryTelemetryTests() {
     power.source_limit_ma = 1500U;
     power.charger_control_result = hal::VerifyError;
     power.source_status_result = hal::Ok;
-    power.source_contract = {0x34U, 0x40U};
+    power.source_contract = {1500U, {0x34U, 0x40U}};
     const auto r = f.request(2U);
     // TLVs follow the two-byte status; only the answering 0x0C pack (slot 1) is encoded.
     std::size_t at = 2U;

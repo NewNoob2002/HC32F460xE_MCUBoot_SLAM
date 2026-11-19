@@ -265,12 +265,17 @@ Known deferred host issues for a later node:
   GUI installation and exact restoration.
 - Hosted CI covers strict HostTests, Rust fmt/clippy/fake E2E, Debug/Release
   firmware, signed-image verification, signing policy and newlib syscall maps.
-- The embedded engineering baseline refactor passes HostTests 30/30, strict
-  Debug and Release builds plus image/USB/newlib verification, application/
-  platform and skill architecture checks, project-owned BARR-C gates, formatting
-  and the C++ T1 resource gate on 2026-11-05. Debug App is 72,856 B and Boot is
-  61,364 B. The refactor has not been flashed; physical USB, I2C, watchdog, LED,
-  reset, swap and rollback behavior remain unverified.
+- The [embedded engineering follow-up](EMBEDDED_ENGINEERING_FOLLOWUP.md) closes
+  review items 1–4 with independent HostTests 33/33, strict Debug/Release builds,
+  image/USB/newlib verification, executable architecture rules with negative
+  tests, formatting of 134 files, clang-tidy on 40 C and 19 C++ sources, and the
+  C++ T1 resource gates on 2026-11-06. CI invokes the same static quality command.
+  Debug App is 73,132 B and Boot is 61,364 B; App RAM is unchanged by this follow-up.
+  The [full 167-item BARR-C review](BARR_C_2018_REVIEW.md) is complete but strict
+  conformance is FAIL, with unapproved deviations and process/ABI evidence gaps.
+  Formal overall W10 acceptance remains open. Board simulation is
+  BLOCKED_BY_MODEL by user decision. The refactor has not been flashed; physical
+  USB, I2C, watchdog, LED, reset, swap and rollback behavior remain unverified.
 - Host/build tests do not prove physical swap timing, USB enumeration, power-loss
   behavior or Windows execution.
 

@@ -1,4 +1,5 @@
 #include "App.h"
+#include "StatusLedPolicy.h"
 #include "bsp_clock.h"
 #include "bsp_isr.h"
 #include "bsp_log_uart.h"
@@ -47,16 +48,6 @@ extern "C" {
 app::DiagnosticsSnapshot g_app_diagnostics{};
 }
 
-void App::applyLedOverride() {
-    int32_t value = 0;
-    (void)settings_.get(dp::LedOverrideKey, value);
-    static constexpr uint8_t Channels[] = {0U, 0U, BSP_STATUS_LED_RED, BSP_STATUS_LED_BLUE,
-                                           BSP_STATUS_LED_RED | BSP_STATUS_LED_BLUE};
-    const bool enabled =
-        value > static_cast<int32_t>(dp::LedOverride::Auto) && value <= static_cast<int32_t>(dp::LedOverride::RedBlue);
-    bsp_status_led_set_override(enabled, enabled ? Channels[value] : 0U);
-}
-
 [[noreturn]] void App::runApplication() {
     bsp_status_led_set_mode(BSP_STATUS_LED_MODE_APP_UPDATER);
     // Settings fall back to defaults without storage; keep running but report it once the log sink exists.
@@ -82,32 +73,12 @@ void App::applyLedOverride() {
         const uint32_t now_ms = bsp_millis();
         system_.poll(now_ms);
         const auto action = update_.poll(now_ms);
-        enum bsp_status_led_mode led_mode = BSP_STATUS_LED_MODE_APP_UPDATER;
-        switch (dp::batteryLedMode(power_.state(), charger_.state())) {
-            case dp::BatteryLedMode::Updater:
-                break;
-            case dp::BatteryLedMode::Charging:
-                led_mode = BSP_STATUS_LED_MODE_APP_CHARGING;
-                break;
-            case dp::BatteryLedMode::Full:
-                led_mode = BSP_STATUS_LED_MODE_APP_FULL;
-                break;
-            case dp::BatteryLedMode::Low:
-                led_mode = BSP_STATUS_LED_MODE_APP_LOW;
-                break;
-            case dp::BatteryLedMode::Critical:
-                led_mode = BSP_STATUS_LED_MODE_APP_CRITICAL;
-                break;
-            case dp::BatteryLedMode::NoPack:
-                led_mode = BSP_STATUS_LED_MODE_APP_NO_PACK;
-                break;
-        }
-        if (update_.state().usb.activity == USB_FW_UPDATE_ACTIVITY_ACTIVE)
-            led_mode = BSP_STATUS_LED_MODE_UPDATE;
-        else if (update_.state().usb.activity == USB_FW_UPDATE_ACTIVITY_ERROR)
-            led_mode = BSP_STATUS_LED_MODE_ERROR;
-        applyLedOverride();
-        bsp_status_led_set_mode(led_mode);
+        int32_t override_setting = 0;
+        (void)settings_.get(dp::LedOverrideKey, override_setting);
+        const auto led = app::statusLedPolicy(dp::batteryLedMode(power_.state(), charger_.state()),
+                                              update_.state().usb.activity, override_setting);
+        bsp_status_led_set_override(led.override_enabled, led.override_channels);
+        bsp_status_led_set_mode(led.mode);
         // A failed confirm write leaves the image unconfirmed; the panic stops feeding the external watchdog, whose
         // reset lets MCUboot revert to the previous image.
         if (system_.confirmAfterHost(update_.state().usb.configured != 0U, APP_AUTO_CONFIRM != 0) != 0)

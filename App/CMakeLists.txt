@@ -12,6 +12,7 @@ add_executable(app_firmware
     Core/Src/usb_fw_update.c
     Core/Src/usb_debug_link.c
     App.cpp
+    StatusLedPolicy.cpp
     DataProc/Src/dp_settings.cpp
     Debug/Src/DebugCodec.cpp
     Debug/Src/DebugService.cpp
@@ -24,7 +25,8 @@ add_executable(app_firmware
     Framework/DataBroker/DataBroker.cpp
     Framework/DataBroker/DataNode.cpp
     HAL/BQ40Z50.cpp
-    HAL/Hc32.cpp
+    HAL/Hc32I2cBus.cpp
+    HAL/Hc32ChargerSignals.cpp
     HAL/Hc32ExternalWatchdog.cpp
     HAL/Hc32PowerDevices.cpp
     $<TARGET_OBJECTS:hc32_newlib>

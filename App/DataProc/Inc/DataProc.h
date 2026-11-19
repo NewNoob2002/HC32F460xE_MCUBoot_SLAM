@@ -35,9 +35,6 @@ enum class ChargerMode : uint8_t { Active, Suspended, WakeProbe };
 inline constexpr unsigned ChargedPackSlot = static_cast<unsigned>(hal::BatterySlot::Default);
 /** Hard 2S charge-voltage ceiling, independent of settings and pack requests. */
 inline constexpr uint16_t ChargeVoltageCeilingMv = 8400U;
-/** Input current the source allows, from an explicit PD contract or the Type-C 5 V advertisement. An unreadable
- * source or a default-current source falls back to USB 2.0's 500 mA. */
-uint16_t sourceCurrentLimitMa(hal::Status source_result, const hal::SourceContract& contract);
 /** The charger input limit leaves headroom for the main board and source on the same input and for the charger's
  * current-limit tolerance. */
 inline constexpr unsigned SourceHeadroomPercent = 90U;

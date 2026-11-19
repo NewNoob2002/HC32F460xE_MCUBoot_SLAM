@@ -13,15 +13,7 @@ class SettingsStore {
   protected:
     ~SettingsStore() = default;
 };
-class Hc32SettingsStore final : public SettingsStore {
-  public:
-    bool init();
-    bool load(uint8_t* data, std::size_t capacity, std::size_t& length) override;
-    bool save(const uint8_t* data, std::size_t length) override;
 
-  private:
-    bool ready_ = false;
-};
 } // namespace hal
 
 #endif

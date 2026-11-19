@@ -78,6 +78,43 @@ void Service::receive(const uint8_t* data, std::size_t length, uint32_t now_ms) 
         }
     }
 }
+std::size_t Service::powerControlSnapshot(uint8_t* output, const dp::PowerState& power) {
+    std::size_t n = 0U;
+    const auto word = [&output, &n](uint16_t value) {
+        write16(output + n, value);
+        n += 2U;
+    };
+    // 0x13: MP2762A control registers read back after the Power node applied them, plus the die temperature.
+    if (power.charger_configuration_result == hal::Ok) {
+        const auto& cfg = power.charger_configuration;
+        output[n++] = 0x13U;
+        output[n++] = 7U;
+        output[n++] = cfg.input_current_limit_code;
+        output[n++] = cfg.secondary_input_current_limit_code;
+        output[n++] = cfg.charge_current_code;
+        output[n++] = cfg.charge_voltage_code;
+        output[n++] = cfg.control_flags;
+        word(cfg.junction_temperature_code);
+    }
+    // 0x14: the charge decision and the limits it produced.
+    output[n++] = 0x14U;
+    output[n++] = 12U;
+    output[n++] = static_cast<uint8_t>(power.charger_mode);
+    output[n++] = power.charge_allowed ? 1U : 0U;
+    word(power.charge_target_mv);
+    word(power.charge_target_ma);
+    word(power.input_limit_ma);
+    word(power.source_limit_ma);
+    word(static_cast<uint16_t>(static_cast<int16_t>(power.charger_control_result)));
+    // 0x15: raw HUSB238 PD_STATUS0/1.
+    if (power.source_status_result == hal::Ok) {
+        output[n++] = 0x15U;
+        output[n++] = 2U;
+        output[n++] = power.source_contract.diagnostics.pd_status0;
+        output[n++] = power.source_contract.diagnostics.pd_status1;
+    }
+    return n;
+}
 std::size_t Service::snapshot(uint8_t* output, uint32_t now_ms) {
     dp::PowerState power{};
     dp::ChargerState charger{};
@@ -169,41 +206,83 @@ std::size_t Service::snapshot(uint8_t* output, uint32_t now_ms) {
     u32(0x41U, reset_cause_);
     if (have_power) {
         u32(0x42U, power.bus_recoveries);
-        const auto word = [&output, &n](uint16_t value) {
-            write16(output + n, value);
-            n += 2U;
-        };
-        // 0x13: MP2762A control registers read back after the Power node applied them, plus the die temperature.
-        if (power.charger_configuration_result == hal::Ok) {
-            const auto& cfg = power.charger_configuration;
-            output[n++] = 0x13U;
-            output[n++] = 7U;
-            output[n++] = cfg.input_current_limit_code;
-            output[n++] = cfg.secondary_input_current_limit_code;
-            output[n++] = cfg.charge_current_code;
-            output[n++] = cfg.charge_voltage_code;
-            output[n++] = cfg.control_flags;
-            word(cfg.junction_temperature_code);
-        }
-        // 0x14: the charge decision and the limits it produced.
-        output[n++] = 0x14U;
-        output[n++] = 12U;
-        output[n++] = static_cast<uint8_t>(power.charger_mode);
-        output[n++] = power.charge_allowed ? 1U : 0U;
-        word(power.charge_target_mv);
-        word(power.charge_target_ma);
-        word(power.input_limit_ma);
-        word(power.source_limit_ma);
-        word(static_cast<uint16_t>(static_cast<int16_t>(power.charger_control_result)));
-        // 0x15: raw HUSB238 PD_STATUS0/1.
-        if (power.source_status_result == hal::Ok) {
-            output[n++] = 0x15U;
-            output[n++] = 2U;
-            output[n++] = power.source_contract.power_delivery_status;
-            output[n++] = power.source_contract.attachment_status;
-        }
+        n += powerControlSnapshot(output + n, power);
     }
     return n;
+}
+Status Service::settingsRequest(const Frame& r, uint8_t* payload, std::size_t& length) {
+    Status status = Status::Ok;
+    const auto require = [&r, &status](uint16_t size) {
+        if (r.length != size) {
+            status = Status::BadFrame;
+            return false;
+        }
+        return true;
+    };
+    switch (r.command) {
+        case 0x10U:
+            if (require(1U)) {
+                const std::size_t start = r.payload[0];
+                if (start > dp::SettingTable.size()) {
+                    status = Status::OutOfRange;
+                    break;
+                }
+                payload[length++] = static_cast<uint8_t>(dp::SettingTable.size());
+                const auto count_at = length++;
+                for (std::size_t i = start; i < dp::SettingTable.size(); ++i) {
+                    const auto& spec = dp::SettingTable[i];
+                    const auto name_len = std::strlen(spec.name);
+                    if (length + 22U + name_len > MaxPayload)
+                        break;
+                    int32_t current = 0;
+                    (void)settings_.get(spec.key, current);
+                    write16(payload + length, spec.key);
+                    length += 2U;
+                    payload[length++] = spec.type;
+                    payload[length++] = spec.flags;
+                    for (int32_t value : {spec.min, spec.max, spec.initial, current}) {
+                        write32(payload + length, static_cast<uint32_t>(value));
+                        length += 4U;
+                    }
+                    payload[length++] = spec.unit;
+                    payload[length++] = static_cast<uint8_t>(name_len);
+                    std::memcpy(payload + length, spec.name, name_len);
+                    length += name_len;
+                    ++payload[count_at];
+                }
+            }
+            break;
+        case 0x11U:
+        case 0x12U:
+            if (require(r.command == 0x11U ? 2U : 6U)) {
+                const auto key = read16(r.payload);
+                int32_t value = 0;
+                if (r.command == 0x12U) {
+                    if (!unlocked_) {
+                        status = Status::Locked;
+                        break;
+                    }
+                    const uint32_t raw = read32(r.payload + 2U);
+                    std::memcpy(&value, &raw, sizeof(value));
+                    status = statusFor(settings_.set(key, value));
+                }
+                if (status == Status::Ok)
+                    status = statusFor(settings_.get(key, value));
+                if (status == Status::Ok) {
+                    write32(payload + length, static_cast<uint32_t>(value));
+                    length += 4U;
+                }
+            }
+            break;
+        case 0x13U:
+            if (require(0U))
+                status = unlocked_ ? statusFor(settings_.reset()) : Status::Locked;
+            break;
+        default:
+            status = Status::UnknownCommand;
+            break;
+    }
+    return status;
 }
 void Service::dispatch(const Frame& r, uint32_t now_ms) {
     uint8_t payload[MaxPayload]{};
@@ -251,62 +330,10 @@ void Service::dispatch(const Frame& r, uint32_t now_ms) {
             }
             break;
         case 0x10U:
-            if (require(1U)) {
-                const std::size_t start = r.payload[0];
-                if (start > dp::SettingTable.size()) {
-                    status = Status::OutOfRange;
-                    break;
-                }
-                payload[length++] = static_cast<uint8_t>(dp::SettingTable.size());
-                const auto count_at = length++;
-                for (std::size_t i = start; i < dp::SettingTable.size(); ++i) {
-                    const auto& spec = dp::SettingTable[i];
-                    const auto name_len = std::strlen(spec.name);
-                    if (length + 22U + name_len > sizeof(payload))
-                        break;
-                    int32_t current = 0;
-                    (void)settings_.get(spec.key, current);
-                    write16(payload + length, spec.key);
-                    length += 2U;
-                    payload[length++] = spec.type;
-                    payload[length++] = spec.flags;
-                    for (int32_t value : {spec.min, spec.max, spec.initial, current}) {
-                        write32(payload + length, static_cast<uint32_t>(value));
-                        length += 4U;
-                    }
-                    payload[length++] = spec.unit;
-                    payload[length++] = static_cast<uint8_t>(name_len);
-                    std::memcpy(payload + length, spec.name, name_len);
-                    length += name_len;
-                    ++payload[count_at];
-                }
-            }
-            break;
         case 0x11U:
         case 0x12U:
-            if (require(r.command == 0x11U ? 2U : 6U)) {
-                const auto key = read16(r.payload);
-                int32_t value = 0;
-                if (r.command == 0x12U) {
-                    if (!unlocked_) {
-                        status = Status::Locked;
-                        break;
-                    }
-                    const uint32_t raw = read32(r.payload + 2U);
-                    std::memcpy(&value, &raw, sizeof(value));
-                    status = statusFor(settings_.set(key, value));
-                }
-                if (status == Status::Ok)
-                    status = statusFor(settings_.get(key, value));
-                if (status == Status::Ok) {
-                    write32(payload + length, static_cast<uint32_t>(value));
-                    length += 4U;
-                }
-            }
-            break;
         case 0x13U:
-            if (require(0U))
-                status = unlocked_ ? statusFor(settings_.reset()) : Status::Locked;
+            status = settingsRequest(r, payload, length);
             break;
         case 0x20U:
             if (r.length < 2U || r.payload[0] == 0U || r.length != 1U + r.payload[0])
